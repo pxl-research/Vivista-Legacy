@@ -15,6 +15,7 @@ public class MouseLook : MonoBehaviour
 
 	public float sensivity = 0.5f;
 	public bool mouseClickRequired = true;
+	public bool LookEnabled = true;
 
 	public Quaternion originalRotation;
 
@@ -29,9 +30,8 @@ public class MouseLook : MonoBehaviour
 		var mouseDelta = Input.mousePosition - mousePos;
 		mousePos = Input.mousePosition;
 
-		if (!mouseClickRequired || Input.GetMouseButton(0))
+		if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)))
 		{
-			
 			mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
 			mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
 			mouseRotX = ClampAngle(mouseRotX, minX, maxX);

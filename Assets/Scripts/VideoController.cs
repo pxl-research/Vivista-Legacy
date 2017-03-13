@@ -12,7 +12,6 @@ public class VideoController : MonoBehaviour
 	public double currentTime;
 	public double currentFractionalTime;
 
-	public RectTransform seekbarClickable;
 	public RectTransform seekbar;
 	public Text timeText;
 
