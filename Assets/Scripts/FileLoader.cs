@@ -37,7 +37,7 @@ public class FileLoader : MonoBehaviour
 		if (!Image)		{ Debug.LogError(string.Format("Hey you forgot to hook up Image to the FileLoader script at {0}",		name)); }
 		if (!Camera)	{ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
 
-		var fileType = FileType.Video360;
+		var fileType = FileType.Video;
 		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Video\video2.mp4";
 
 		GameObject newCamera = null;
