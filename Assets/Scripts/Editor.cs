@@ -33,13 +33,16 @@ public class Editor : MonoBehaviour
 
 				if (Physics.Raycast(ray, out hit))
 				{
-					var drawLocation = hit.point + ray.direction.normalized / 50;
+					var drawLocation = hit.point + ray.direction.normalized / 25;
 					interactionPointTemp.transform.position = drawLocation;
 					interactionPointTemp.transform.rotation = Camera.main.transform.rotation;
 				}
 			}
 			if (Input.GetMouseButtonUp(0))
 			{
+				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
+				interactionPoints.Add(newPoint);
+				interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 
 			}
 		}
