@@ -65,8 +65,8 @@ public class VideoController : MonoBehaviour
 		return formatted;
 	}
 
-	public void Seek(float time)
+	public void Seek(float fractionalTime)
 	{
-		video.time = time * videoLength;
+		video.time = fractionalTime * videoLength;
 	}
 }

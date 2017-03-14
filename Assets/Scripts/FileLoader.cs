@@ -37,7 +37,7 @@ public class FileLoader : MonoBehaviour
 		if (!Image)		{ Debug.LogError(string.Format("Hey you forgot to hook up Image to the FileLoader script at {0}",		name)); }
 		if (!Camera)	{ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
 
-		var fileType = FileType.Video180;
+		var fileType = FileType.Video360;
 		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Video\video2.mp4";
 
 		GameObject newCamera = null;
@@ -47,17 +47,17 @@ public class FileLoader : MonoBehaviour
 		{
 			case FileType.Image360:
 			{
-				newCamera = Instantiate(Camera360);
+				Instantiate(Camera360);
 				break;
 			}
 			case FileType.Image180:
 			{
-				newCamera = Instantiate(Camera180);
+				Instantiate(Camera180);
 				break;
 			}
 			case FileType.Image:
 			{
-				newCamera = Instantiate(Camera);
+				Instantiate(Camera);
 				break;
 			}
 
@@ -65,19 +65,19 @@ public class FileLoader : MonoBehaviour
 
 			case FileType.Video360:
 			{
-				newCamera = Instantiate(Camera360);
+				Instantiate(Camera360);
 				videoPlayer = Instantiate(Video360);
 				break;
 			}
 			case FileType.Video180:
 			{
-				newCamera = Instantiate(Camera180);
+				Instantiate(Camera180);
 				videoPlayer = Instantiate(Video180);
 				break;
 			}
 			case FileType.Video:
 			{
-				newCamera = Instantiate(Camera);
+				Instantiate(Camera);
 				videoPlayer = Instantiate(Video);
 				break;
 			}
