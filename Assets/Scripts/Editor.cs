@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Editor : MonoBehaviour 
 {
@@ -8,7 +9,6 @@ public class Editor : MonoBehaviour
 	public GameObject interactionPointTemp;
 	public List<GameObject> interactionPoints;
 
-	public Canvas canvas;
 	public GameObject textPanelPrefab;
 	public GameObject imagePanelPrefab;
 
@@ -79,9 +79,10 @@ public class Editor : MonoBehaviour
 			{
 				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
 				interactionPoints.Add(newPoint);
-				var panel = Instantiate(imagePanelPrefab);
-				panel.transform.SetParent(canvas.transform, false);
-				panel.GetComponent<ImagePanel>().Init("TestImage", @"C:\Users\20003613\Desktop\Test\kitteh.jpg");
+
+				var panel = Instantiate(textPanelPrefab);
+				panel.GetComponent<TextPanel>().Init(newPoint, "TestImage", @"C:\Users\20003613\Desktop\Test\kitteh.jpg");
+
 				ResetInteractionPointTemp();
 				editorState = EditorState.Reset;
 			}

@@ -6,12 +6,11 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 	public VideoController controller;
 	public RectTransform seekbar;
 
-	public bool seekbarGrowing = false;
+	public bool hovering = false;
 	public float minSeekbarHeight = 0.1f;
 	public float curSeekbarHeight;
 	public float maxSeekbarHeight = 0.25f;
 	public float seekbarAnimationDuration = 0.2f;
-
 
 	public void Start()
 	{
@@ -26,9 +25,9 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		var coords = new Vector3[4];
 		seekbar.parent.GetComponent<RectTransform>().GetWorldCorners(coords);
 
-		var mouseInArea = Input.mousePosition.y < coords[1].y;
+		hovering = Input.mousePosition.y < coords[1].y;
 
-		if (mouseInArea)
+		if (hovering)
 		{
 			var newHeight = curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
 			curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
@@ -44,11 +43,11 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 	public void OnPointerUp(PointerEventData e)
 	{
-		var pos = e.pressPosition.x;
-		var max = GetComponent<RectTransform>().rect.width;
+			var pos = e.pressPosition.x;
+			var max = GetComponent<RectTransform>().rect.width;
 		
-		var time = pos / max;
+			var time = pos / max;
 
-		controller.Seek(time);
+			controller.Seek(time);
 	}
 }

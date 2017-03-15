@@ -18,7 +18,7 @@ public class FileLoader : MonoBehaviour
 
 	public GameObject playerInfoGUI;
 
-	FileType fileType = FileType.Video360;
+	public FileType fileType = FileType.Video360;
 
 
 	public enum FileType {
@@ -97,9 +97,8 @@ public class FileLoader : MonoBehaviour
 			player.waitForFirstFrame = true;
 			player.Play();
 
-			var canvas = FindObjectOfType<Canvas>();
 			var playerInfo = Instantiate(playerInfoGUI);
-			playerInfo.transform.SetParent(canvas.transform, false);
+			playerInfo.transform.SetParent(Canvass.main.transform, false);
 
 			var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
 			var controller = videoPlayer.GetComponent<VideoController>();
