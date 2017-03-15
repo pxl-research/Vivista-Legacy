@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class Editor : MonoBehaviour 
@@ -9,16 +8,29 @@ public class Editor : MonoBehaviour
 	public GameObject interactionPointTemp;
 	public List<GameObject> interactionPoints;
 
+	public EditorState editorState;
+
+	public enum EditorState {
+		PlacingInteractionPoint,
+		Reset
+	}
+
 	void Start () 
 	{
-		interactionPointTemp = Instantiate(interactionPointPrefab, new Vector3(1000, 1000, 1000), Quaternion.identity);
+		interactionPointTemp = Instantiate(interactionPointPrefab);
+		ResetInteractionPointTemp();
 		Physics.queriesHitBackfaces = true;
+		editorState = EditorState.Reset;
 	}
 	
 	void Update () 
 	{
 		if (Input.GetKeyDown(KeyCode.F1))
 		{
+			if (editorActive)
+			{
+				ResetInteractionPointTemp();
+			}
 			editorActive = !editorActive;
 			Debug.Log(string.Format("Editor active: {0}", editorActive));
 		}
@@ -30,14 +42,17 @@ public class Editor : MonoBehaviour
 			ray.origin = ray.GetPoint(10);
 			ray.direction = -ray.direction;
 
-			Debug.DrawLine(ray.origin, ray.GetPoint(10));
-
 			foreach(var point in interactionPoints)
 			{
 				point.GetComponent<MeshRenderer>().material.color = Color.white;
 			}
 
-			if (Input.GetMouseButton(0))
+			if (Input.GetMouseButtonDown(0))
+			{
+				editorState = EditorState.PlacingInteractionPoint;
+			}
+
+			if (editorState == EditorState.PlacingInteractionPoint)
 			{
 				if (Physics.Raycast(ray, out hit, 10))
 				{
@@ -48,7 +63,7 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			if (!Input.GetMouseButton(0))
+			if (editorState == EditorState.Reset)
 			{
 				if (Physics.Raycast(ray, out hit, 10, 1 << LayerMask.NameToLayer("interactionPoints")))
 				{
@@ -56,13 +71,28 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-
-			if (Input.GetMouseButtonUp(0))
+			if (Input.GetMouseButtonUp(0) && editorState == EditorState.PlacingInteractionPoint)
 			{
 				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
 				interactionPoints.Add(newPoint);
-				interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
+				ResetInteractionPointTemp();
+				editorState = EditorState.Reset;
+			}
+
+			if (Input.GetKeyUp(KeyCode.Escape))
+			{
+				if (editorState == EditorState.PlacingInteractionPoint)
+				{
+					ResetInteractionPointTemp();
+					editorState = EditorState.Reset;
+				}
 			}
 		}
+	}
+
+	void ResetInteractionPointTemp()
+	{
+		Vector3 resetPos = new Vector3(1000, 1000, 1000);
+		interactionPointTemp.transform.position = resetPos;
 	}
 }

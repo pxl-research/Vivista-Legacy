@@ -40,6 +40,12 @@ public class MouseLook : MonoBehaviour
 
 			transform.localRotation = originalRotation * newRotx * newRoty;
 		}
+
+		if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+			&& Input.GetKeyDown(KeyCode.Space))
+		{
+			LookEnabled = !LookEnabled;
+		}
 	}
 
 	public static float ClampAngle (float angle, float min, float max)

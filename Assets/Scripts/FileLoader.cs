@@ -5,18 +5,21 @@ using UnityEngine.Video;
 
 public class FileLoader : MonoBehaviour 
 {
-	public GameObject Video360;
-	public GameObject Video180;
-	public GameObject Video;
-	public GameObject Image360;
-	public GameObject Image180;
-	public GameObject Image;
+	public GameObject video360;
+	public GameObject video180;
+	public GameObject video;
+	public GameObject image360;
+	public GameObject image180;
+	public GameObject imageFlat;
 
-	public GameObject Camera360;
-	public GameObject Camera180;
-	public GameObject Camera;
+	public GameObject camera360;
+	public GameObject camera180;
+	public GameObject cameraFlat;
 
-	public GameObject PlayerInfoGUI;
+	public GameObject playerInfoGUI;
+
+	FileType fileType = FileType.Video360;
+
 
 	public enum FileType {
 		Video360,
@@ -29,15 +32,14 @@ public class FileLoader : MonoBehaviour
 
 	void Start () 
 	{
-		if (!Video360)	{ Debug.LogError(string.Format("Hey you forgot to hook up Video360 to the FileLoader script at {0}",	name)); }
-		if (!Video180)	{ Debug.LogError(string.Format("Hey you forgot to hook up Video180 to the FileLoader script at {0}",	name)); }
-		if (!Video)		{ Debug.LogError(string.Format("Hey you forgot to hook up Video to the FileLoader script at {0}",		name)); }
-		if (!Image360)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image360 to the FileLoader script at {0}",	name)); }
-		if (!Image180)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image180 to the FileLoader script at {0}",	name)); }
-		if (!Image)		{ Debug.LogError(string.Format("Hey you forgot to hook up Image to the FileLoader script at {0}",		name)); }
-		if (!Camera)	{ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
+		if (!video360)	{ Debug.LogError(string.Format("Hey you forgot to hook up Video360 to the FileLoader script at {0}",	name)); }
+		if (!video180)	{ Debug.LogError(string.Format("Hey you forgot to hook up Video180 to the FileLoader script at {0}",	name)); }
+		if (!video)		{ Debug.LogError(string.Format("Hey you forgot to hook up Video to the FileLoader script at {0}",		name)); }
+		if (!image360)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image360 to the FileLoader script at {0}",	name)); }
+		if (!image180)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image180 to the FileLoader script at {0}",	name)); }
+		if (!imageFlat)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image to the FileLoader script at {0}",		name)); }
+		if (!cameraFlat){ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
 
-		var fileType = FileType.Video;
 		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Video\video2.mp4";
 
 		GameObject newCamera = null;
@@ -47,17 +49,17 @@ public class FileLoader : MonoBehaviour
 		{
 			case FileType.Image360:
 			{
-				Instantiate(Camera360);
+				Instantiate(camera360);
 				break;
 			}
 			case FileType.Image180:
 			{
-				Instantiate(Camera180);
+				Instantiate(camera180);
 				break;
 			}
 			case FileType.Image:
 			{
-				Instantiate(Camera);
+				Instantiate(cameraFlat);
 				break;
 			}
 
@@ -65,20 +67,20 @@ public class FileLoader : MonoBehaviour
 
 			case FileType.Video360:
 			{
-				Instantiate(Camera360);
-				videoPlayer = Instantiate(Video360);
+				Instantiate(camera360);
+				videoPlayer = Instantiate(video360);
 				break;
 			}
 			case FileType.Video180:
 			{
-				Instantiate(Camera180);
-				videoPlayer = Instantiate(Video180);
+				Instantiate(camera180);
+				videoPlayer = Instantiate(video180);
 				break;
 			}
 			case FileType.Video:
 			{
-				Instantiate(Camera);
-				videoPlayer = Instantiate(Video);
+				Instantiate(cameraFlat);
+				videoPlayer = Instantiate(video);
 				break;
 			}
 
@@ -96,7 +98,7 @@ public class FileLoader : MonoBehaviour
 			player.Play();
 
 			var canvas = FindObjectOfType<Canvas>();
-			var playerInfo = Instantiate(PlayerInfoGUI);
+			var playerInfo = Instantiate(playerInfoGUI);
 			playerInfo.transform.SetParent(canvas.transform, false);
 
 			var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
