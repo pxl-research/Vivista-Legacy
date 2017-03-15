@@ -22,7 +22,8 @@ public class VideoController : MonoBehaviour
 	
 	void Update () 
 	{
-		if (Input.GetKeyDown(KeyCode.Space))
+		if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+			&& Input.GetKeyDown(KeyCode.Space))
 		{
 			if (!playing)
 			{
