@@ -18,6 +18,7 @@ public class VideoController : MonoBehaviour
 	void Start () 
 	{
 		video = GetComponent<VideoPlayer>();
+		playing = video.isPlaying;
 	}
 	
 	void Update () 

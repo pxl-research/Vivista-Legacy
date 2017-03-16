@@ -6,7 +6,7 @@ public class Canvass : MonoBehaviour
 { 
 	public static Canvas main 
 	{
-		get { return _canvass ?? (_canvass = GameObject.Find("Canvas").GetComponent<Canvas>()); }
+		get { return _canvas ?? (_canvas = GameObject.Find("Canvas").GetComponent<Canvas>()); }
 	}
-	private static Canvas _canvass;
+	private static Canvas _canvas;
 }

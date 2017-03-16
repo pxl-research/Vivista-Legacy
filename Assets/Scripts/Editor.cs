@@ -94,6 +94,10 @@ public class Editor : MonoBehaviour
 					ResetInteractionPointTemp();
 					editorState = EditorState.Reset;
 				}
+				else if (Application.platform == RuntimePlatform.Android)
+				{
+					editorActive = false;
+				}
 			}
 		}
 	}

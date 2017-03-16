@@ -40,7 +40,8 @@ public class FileLoader : MonoBehaviour
 		if (!imageFlat)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image to the FileLoader script at {0}",		name)); }
 		if (!cameraFlat){ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
 
-		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Video\video2.mp4";
+		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
+		//var fileName = @"http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
 
 		GameObject newCamera = null;
 		GameObject videoPlayer = null;

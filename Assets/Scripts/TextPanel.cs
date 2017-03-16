@@ -40,6 +40,6 @@ public class TextPanel : MonoBehaviour
 	
 	public void Update()
 	{
-		this.canvas.transform.rotation = Camera.main.transform.rotation;
+		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 }
