@@ -5,18 +5,19 @@ public class TextPanel : MonoBehaviour
 {
 	public Text title;
 	public Text body;
+	public RectTransform panel;
 	public Canvas canvas;
 	public GameObject interactionPoint;
 
-	public void Init(GameObject interactionPoint, string title, string body)
+	public void Init(GameObject newInteractionPoint, string newTitle, string newBody)
 	{
-		this.title.text = title;
-		this.body.text = body;
+		title.text = newTitle;
+		body.text = newBody;
 
-		this.canvas = GetComponent<Canvas>();
-		this.interactionPoint = interactionPoint;
+		canvas = GetComponent<Canvas>();
+		interactionPoint = newInteractionPoint;
 
-		var newPos = interactionPoint.transform.position;
+		var newPos = newInteractionPoint.transform.position;
 
 		if (!Camera.main.orthographic)
 		{
@@ -28,8 +29,13 @@ public class TextPanel : MonoBehaviour
 			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
 			newPos.y += 0.015f;
 		}
-		canvas.GetComponent<RectTransform>().position = newPos;
 
+		var width = Mathf.Max(200, newBody.Length / 2f);
+		var height = Mathf.Max(200, newBody.Length / 3f);
+
+		var canvasTransform = canvas.GetComponent<RectTransform>();
+		canvasTransform.position = newPos;
+		canvasTransform.sizeDelta = new Vector2(width, height);
 	}
 	
 	public void Update()
