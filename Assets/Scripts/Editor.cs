@@ -80,8 +80,9 @@ public class Editor : MonoBehaviour
 				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
 				interactionPoints.Add(newPoint);
 
-				var panel = Instantiate(textPanelPrefab);
-				panel.GetComponent<TextPanel>().Init(newPoint, "TestImage", @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut in tortor eu neque fringilla tempor vel nec metus. Nullam ultricies sed turpis finibus consequat. Quisque fermentum massa lectus. Integer iaculis facilisis elit et posuere. Sed dapibus gravida diam et sollicitudin. Vestibulum feugiat dapibus egestas. Suspendisse eget orci mollis, posuere sapien vel, tempus mi. Sed elementum metus massa, sit amet viverra arcu molestie sed. Curabitur lacinia nec odio tristique condimentum. Pellentesque sit amet tempor eros, dictum varius lacus. Praesent hendrerit neque et nisl euismod, sed ultrices ex imperdiet. Fusce sodales, lacus eu sodales volutpat, turpis sem ullamcorper turpis, sed maximus sapien nunc at sem. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec pulvinar malesuada libero eu accumsan. Donec ac ligula pellentesque, dapibus ipsum vitae, condimentum libero. Nulla facilisi. ");
+				var panel = Instantiate(imagePanelPrefab);
+
+				panel.GetComponent<ImagePanel>().Init(newPoint, "TestImage", Random.value > 0.5 ? @"C:\Users\20003613\Documents\Git\360video\Assets\cats-animals-kittens-background-us.jpg" : @"C:\Users\20003613\Documents\Git\360video\Assets\cats2.jpg");
 
 				ResetInteractionPointTemp();
 				editorState = EditorState.Reset;

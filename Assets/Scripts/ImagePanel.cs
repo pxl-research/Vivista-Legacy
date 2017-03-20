@@ -9,19 +9,19 @@ public class ImagePanel : MonoBehaviour
 	public Canvas canvas;
 	public GameObject interactionPoint;
 
-	public void Init(GameObject interactionPoint, string title, string imageLocation)
+	public void Init(GameObject newInteractionPoint, string newTitle, string newImageURL)
 	{
-		this.title.text = title;
+		title.text = newTitle;
 
-		var data = File.ReadAllBytes(imageLocation);
+		var data = File.ReadAllBytes(newImageURL);
 		var texture = new Texture2D(0, 0);
 		texture.LoadImage(data);
 		
-		this.image.texture = texture;
-		this.canvas = GetComponent<Canvas>();
-		this.interactionPoint = interactionPoint;
+		image.texture = texture;
+		canvas = GetComponent<Canvas>();
+		interactionPoint = newInteractionPoint;
 
-		var newPos = interactionPoint.transform.position;
+		var newPos = newInteractionPoint.transform.position;
 
 		if (!Camera.main.orthographic)
 		{
@@ -33,12 +33,33 @@ public class ImagePanel : MonoBehaviour
 			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
 			newPos.y += 0.015f;
 		}
-		canvas.GetComponent<RectTransform>().position = newPos;
+
+		var canvasTransform = canvas.GetComponent<RectTransform>();
+		canvasTransform.position = newPos;
+
+		//NOTE(Simon): Title + Triangle + bottomMargin
+		const float extraHeight = 40 + 16 + 10;
+		//NOTE(Simon): LeftMargin + RightMargin;
+		const float extraWidth = 10 + 10;
+
+		float width = texture.width;
+		float height = texture.height;
+		var ratio = width / height;
+
+		if (ratio > 1)
+		{
+			canvasTransform.sizeDelta = new Vector2(300 * ratio + extraWidth, 300 + extraHeight);
+		}
+		else
+		{
+			canvasTransform.sizeDelta = new Vector2(300 + extraWidth, 300 * (1 / ratio) + extraHeight);
+		}
+
 
 	}
 
 	public void Update()
 	{
-		this.canvas.transform.rotation = Camera.main.transform.rotation;
+		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 }
