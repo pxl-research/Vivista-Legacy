@@ -1,104 +1,171 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
+
+public enum EditorState {
+	Inactive,
+	Active,
+	PlacingInteractionPoint,
+	PickingInteractionType
+}
+
+public enum InteractionType {
+	Text,
+	Image,
+}
 
 public class Editor : MonoBehaviour 
 {
-	public bool editorActive = true;
 	public GameObject interactionPointPrefab;
 	public GameObject interactionPointTemp;
 	public List<GameObject> interactionPoints;
 
+	public GameObject interactionTypePrefab;
 	public GameObject textPanelPrefab;
 	public GameObject imagePanelPrefab;
 
-	public EditorState editorState;
+	public GameObject interactionTypePicker;
 
-	public enum EditorState {
-		PlacingInteractionPoint,
-		Reset
-	}
+	public EditorState editorState;
 
 	void Start () 
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		ResetInteractionPointTemp();
-		Physics.queriesHitBackfaces = true;
-		editorState = EditorState.Reset;
+		editorState = EditorState.Active;
 	}
 	
 	void Update () 
 	{
-		if (Input.GetKeyDown(KeyCode.F1))
+		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+		ray.origin = ray.GetPoint(10);
+		ray.direction = -ray.direction;
+
+		foreach (var point in interactionPoints)
 		{
-			if (editorActive)
+			point.GetComponent<MeshRenderer>().material.color = Color.white;
+		}
+		
+		if (editorState == EditorState.Inactive)
+		{
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				editorState = EditorState.Active;
+				//Note(Simon): Early return so we don't intergere with the rest of the state machine
+				return;
+			}
+		}
+				
+		if (editorState == EditorState.PlacingInteractionPoint)
+		{
+			if (Physics.Raycast(ray, out hit, 10))
+			{
+				var drawLocation = hit.point + ray.direction.normalized / 50;
+				interactionPointTemp.transform.position = drawLocation;
+				//Rotate to match sphere's normal
+				interactionPointTemp.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+			}
+
+			if (Input.GetMouseButtonUp(0))
+			{
+				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
+				interactionPoints.Add(newPoint);
+
+				interactionTypePicker = Instantiate(interactionTypePrefab);
+				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint);
+
+				editorState = EditorState.PickingInteractionType;
+			}
+
+			if (Input.GetKeyUp(KeyCode.Escape))
 			{
 				ResetInteractionPointTemp();
+				editorState = EditorState.Active;
 			}
-			editorActive = !editorActive;
-			Debug.Log(string.Format("Editor active: {0}", editorActive));
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				ResetInteractionPointTemp();
+				editorState = EditorState.Inactive;
+			}
 		}
 
-		if (editorActive)
+		if (editorState == EditorState.Active)
 		{
-			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-			ray.origin = ray.GetPoint(10);
-			ray.direction = -ray.direction;
-
-			foreach(var point in interactionPoints)
-			{
-				point.GetComponent<MeshRenderer>().material.color = Color.white;
-			}
-
 			if (Input.GetMouseButtonDown(0))
 			{
 				editorState = EditorState.PlacingInteractionPoint;
 			}
 
-			if (editorState == EditorState.PlacingInteractionPoint)
+			if (Physics.Raycast(ray, out hit, 10, 1 << LayerMask.NameToLayer("interactionPoints")))
 			{
-				if (Physics.Raycast(ray, out hit, 10))
-				{
-					var drawLocation = hit.point + ray.direction.normalized / 50;
-					interactionPointTemp.transform.position = drawLocation;
-					//Rotate to match sphere's normal
-					interactionPointTemp.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
-				}
+				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
 			}
-
-			if (editorState == EditorState.Reset)
+			
+			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				if (Physics.Raycast(ray, out hit, 10, 1 << LayerMask.NameToLayer("interactionPoints")))
-				{
-					hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
-				}
-			}
-
-			if (Input.GetMouseButtonUp(0) && editorState == EditorState.PlacingInteractionPoint)
-			{
-				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
-				interactionPoints.Add(newPoint);
-
-				var panel = Instantiate(imagePanelPrefab);
-
-				panel.GetComponent<ImagePanel>().Init(newPoint, "TestImage", Random.value > 0.5 ? @"C:\Users\20003613\Documents\Git\360video\Assets\cats-animals-kittens-background-us.jpg" : @"C:\Users\20003613\Documents\Git\360video\Assets\cats2.jpg");
-
 				ResetInteractionPointTemp();
-				editorState = EditorState.Reset;
+				editorState = EditorState.Inactive;
+			}
+		}
+
+		if (editorState == EditorState.PickingInteractionType)
+		{
+			if (interactionTypePicker != null)
+			{
+				var picker = interactionTypePicker.GetComponent<InteractionTypePicker>();
+				if (picker.answered)
+				{
+					var type = picker.answer;
+					var lastInteractionPoint = interactionPoints[interactionPoints.Count - 1];
+
+					switch (type)
+					{
+						case InteractionType.Image:
+						{
+							var panel = Instantiate(imagePanelPrefab);
+							panel.GetComponent<ImagePanel>().Init(lastInteractionPoint, "TestNewSystem", @"C:\Users\20003613\Documents\Git\360video\Assets\cats2.jpg");
+							break;
+						}
+						case InteractionType.Text:
+						{
+							var panel = Instantiate(textPanelPrefab);
+							panel.GetComponent<TextPanel>().Init(lastInteractionPoint, "TestNewText", "Lorem Ipsum Dolor Sit Amet");
+							break;
+						}
+						default:
+						{
+							throw new Exception("FFS, you shoulda added it here");
+						}
+					}
+
+					Destroy(interactionTypePicker);
+					editorState = EditorState.Active;
+					ResetInteractionPointTemp();
+				}
+			}
+			else
+			{
+				Debug.Log("interactionTypePicker is null");
 			}
 
-			if (Input.GetKeyUp(KeyCode.Escape))
+			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
-				if (editorState == EditorState.PlacingInteractionPoint)
-				{
-					ResetInteractionPointTemp();
-					editorState = EditorState.Reset;
-				}
-				else if (Application.platform == RuntimePlatform.Android)
-				{
-					editorActive = false;
-				}
+				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
+				interactionPoints.RemoveAt(interactionPoints.Count - 1);
+				Destroy(lastPlacedPoint);
+				Destroy(interactionTypePicker);
+				ResetInteractionPointTemp();
+			}
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				editorState = EditorState.Active;
+			}
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				editorState = EditorState.Inactive;
 			}
 		}
 	}

@@ -7,7 +7,6 @@ public class TextPanel : MonoBehaviour
 	public Text body;
 	public RectTransform panel;
 	public Canvas canvas;
-	public GameObject interactionPoint;
 
 	public void Init(GameObject newInteractionPoint, string newTitle, string newBody)
 	{
@@ -15,7 +14,6 @@ public class TextPanel : MonoBehaviour
 		body.text = newBody;
 
 		canvas = GetComponent<Canvas>();
-		interactionPoint = newInteractionPoint;
 
 		var newPos = newInteractionPoint.transform.position;
 
