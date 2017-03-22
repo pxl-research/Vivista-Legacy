@@ -20,7 +20,6 @@ public class FileLoader : MonoBehaviour
 
 	public FileType fileType = FileType.Video360;
 
-
 	public enum FileType {
 		Video360,
 		Video180,
@@ -43,7 +42,6 @@ public class FileLoader : MonoBehaviour
 		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
 		//var fileName = @"http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
 
-		GameObject newCamera = null;
 		GameObject videoPlayer = null;
 
 		switch (fileType)
@@ -107,10 +105,5 @@ public class FileLoader : MonoBehaviour
 			controller.seekbar = seekbar.transform.GetChild(0).GetComponent<RectTransform>();
 			controller.timeText = seekbar.transform.parent.GetComponentInChildren<Text>();
 		}
-	}
-	
-	void Update () 
-	{
-		
 	}
 }

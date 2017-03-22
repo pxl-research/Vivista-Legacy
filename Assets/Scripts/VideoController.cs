@@ -48,11 +48,11 @@ public class VideoController : MonoBehaviour
 
 	string FormatSeconds(double time)
 	{
-		int hours = (int)(time / (60 * 60));
+		var hours = (int)(time / (60 * 60));
 		time -= hours * 60;
-		int minutes = (int)(time / 60);
+		var minutes = (int)(time / 60);
 		time -= minutes * 60;
-		int seconds = (int) time;
+		var seconds = (int) time;
 
 		var formatted = "";
 		if (hours > 0)

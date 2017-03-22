@@ -42,20 +42,11 @@ public class ImagePanel : MonoBehaviour
 		//NOTE(Simon): LeftMargin + RightMargin;
 		const float extraWidth = 10 + 10;
 
-		float width = texture.width;
-		float height = texture.height;
-		var ratio = width / height;
+		var ratio = texture.width / (float)texture.height;
 
-		if (ratio > 1)
-		{
-			canvasTransform.sizeDelta = new Vector2(300 * ratio + extraWidth, 300 + extraHeight);
-		}
-		else
-		{
-			canvasTransform.sizeDelta = new Vector2(300 + extraWidth, 300 * (1 / ratio) + extraHeight);
-		}
-
-
+		canvasTransform.sizeDelta = ratio > 1 
+			? new Vector2(300 * ratio + extraWidth, 300 + extraHeight) 
+			: new Vector2(300 + extraWidth, 300 * (1 / ratio) + extraHeight);
 	}
 
 	public void Update()

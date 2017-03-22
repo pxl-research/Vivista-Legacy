@@ -22,7 +22,6 @@ public class InteractionTypePicker : MonoBehaviour
 		}
 		
 		canvas = GetComponent<Canvas>();
-
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 

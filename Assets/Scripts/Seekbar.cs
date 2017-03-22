@@ -27,18 +27,12 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 		hovering = Input.mousePosition.y < coords[1].y;
 
-		if (hovering)
-		{
-			var newHeight = curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
-			curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
-			seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
-		}
-		else
-		{
-			var newHeight = curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
-			curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
-			seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
-		}
+		var newHeight = hovering
+			? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
+			: curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
+
+		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
+		seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
 	}
 
 	public void OnPointerUp(PointerEventData e)
