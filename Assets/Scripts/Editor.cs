@@ -8,7 +8,8 @@ public enum EditorState {
 	Inactive,
 	Active,
 	PlacingInteractionPoint,
-	PickingInteractionType
+	PickingInteractionType,
+	FillingPanelDetails
 }
 
 public enum InteractionType {
@@ -29,6 +30,8 @@ public class Editor : MonoBehaviour
 	public GameObject interactionTypePicker;
 
 	public EditorState editorState;
+
+	public InteractionType lastInteractionPointType;
 
 	void Start () 
 	{
@@ -54,7 +57,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				editorState = EditorState.Active;
-				//Note(Simon): Early return so we don't intergere with the rest of the state machine
+				//Note(Simon): Early return so we don't interfere with the rest of the state machine
 				return;
 			}
 		}
@@ -118,10 +121,10 @@ public class Editor : MonoBehaviour
 				var picker = interactionTypePicker.GetComponent<InteractionTypePicker>();
 				if (picker.answered)
 				{
-					var type = picker.answer;
+					lastInteractionPointType = picker.answer;
 					var lastInteractionPoint = interactionPoints[interactionPoints.Count - 1];
 
-					switch (type)
+					switch (lastInteractionPointType)
 					{
 						case InteractionType.Image:
 						{
@@ -137,18 +140,55 @@ public class Editor : MonoBehaviour
 						}
 						default:
 						{
-							throw new Exception("FFS, you shoulda added it here");
+							Assert.IsTrue(true, "FFS, you shoulda added it here");
+							break;
 						}
 					}
 
 					Destroy(interactionTypePicker);
-					editorState = EditorState.Active;
-					ResetInteractionPointTemp();
+					editorState = EditorState.FillingPanelDetails;
+
 				}
 			}
 			else
 			{
 				Debug.Log("interactionTypePicker is null");
+			}
+
+			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
+			{
+				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
+				interactionPoints.RemoveAt(interactionPoints.Count - 1);
+				Destroy(lastPlacedPoint);
+				Destroy(interactionTypePicker);
+				ResetInteractionPointTemp();
+			}
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				editorState = EditorState.Active;
+			}
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				editorState = EditorState.Inactive;
+			}
+		}
+
+		if (editorState == EditorState.FillingPanelDetails)
+		{
+			switch (lastInteractionPointType)
+			{
+				case InteractionType.Image:
+				{
+					break;
+				}
+				case InteractionType.Text:
+				{
+					break;
+				}
+				default:
+				{
+					throw new ArgumentOutOfRangeException();
+				}
 			}
 
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
