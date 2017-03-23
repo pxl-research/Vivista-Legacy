@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Text.RegularExpressions;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class ImagePanelEditor : MonoBehaviour
@@ -8,10 +10,15 @@ public class ImagePanelEditor : MonoBehaviour
 	public InputField title;
 	public InputField url;
 	public Button done;
+	public RawImage imagePreview;
 
 	public bool answered;
 	public string answerTitle;
 	public string answerURL;
+
+	private string prevURL = "";
+	private bool downloading = false;
+	private WWW www;
 
 	public void Init(GameObject newInteractionPoint, string initialTitle, string initialUrl)
 	{
@@ -43,9 +50,36 @@ public class ImagePanelEditor : MonoBehaviour
 		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
 			title.GetComponent<RectTransform>().sizeDelta.y
 			+ url.GetComponent<RectTransform>().sizeDelta.y
+			+ imagePreview.rectTransform.sizeDelta.y
 			//Padding, spacing, button, fudge factor
-			+ 20 + 20 + 30 + 20);
+			+ 20 + 30 + 30 + 20);
 
 		canvas.transform.rotation = Camera.main.transform.rotation;
+
+		if (url.text != prevURL && !String.IsNullOrEmpty(url.text))
+		{
+			answerURL = url.text;
+			prevURL = url.text;
+
+			if (!Regex.IsMatch(answerURL, "http://|https://"))
+			{
+				answerURL = "file:///" + url.text;
+			}
+
+			www = new WWW(answerURL);
+			downloading = true;
+		}
+
+		if (downloading && www.isDone)
+		{
+			var texture = www.texture;
+			imagePreview.texture = texture;
+			var width = imagePreview.rectTransform.sizeDelta.x;
+			var ratio = texture.width / width;
+			var height = texture.height / ratio;
+			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
+
+			downloading = false;
+		}
 	}
 }
