@@ -24,10 +24,14 @@ public class Editor : MonoBehaviour
 	public List<GameObject> interactionPoints;
 
 	public GameObject interactionTypePrefab;
+
 	public GameObject textPanelPrefab;
+	public GameObject textPanelEditorPrefab;
 	public GameObject imagePanelPrefab;
+	public GameObject imagePanelEditorPrefab;
 
 	public GameObject interactionTypePicker;
+	public GameObject interactionEditor;
 
 	public EditorState editorState;
 
@@ -128,14 +132,14 @@ public class Editor : MonoBehaviour
 					{
 						case InteractionType.Image:
 						{
-							var panel = Instantiate(imagePanelPrefab);
-							panel.GetComponent<ImagePanel>().Init(lastInteractionPoint, "TestNewSystem", @"C:\Users\20003613\Documents\Git\360video\Assets\cats2.jpg");
+							interactionEditor = Instantiate(imagePanelEditorPrefab);
+							interactionEditor.GetComponent<ImagePanelEditor>().Init(lastInteractionPoint, "", "");
 							break;
 						}
 						case InteractionType.Text:
 						{
-							var panel = Instantiate(textPanelPrefab);
-							panel.GetComponent<TextPanel>().Init(lastInteractionPoint, "TestNewText", "Lorem Ipsum Dolor Sit Amet");
+							interactionEditor = Instantiate(textPanelEditorPrefab);
+							interactionEditor.GetComponent<TextPanelEditor>().Init(lastInteractionPoint, "", "");
 							break;
 						}
 						default:
@@ -175,14 +179,33 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
+			var lastInteractionPoint = interactionPoints[interactionPoints.Count - 1];
 			switch (lastInteractionPointType)
 			{
 				case InteractionType.Image:
 				{
+					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
+					if (editor.answered)
+					{
+						var panel = Instantiate(imagePanelPrefab);
+						panel.GetComponent<ImagePanel>().Init(lastInteractionPoint, editor.answerTitle, editor.answerURL);
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+					}
 					break;
 				}
 				case InteractionType.Text:
 				{
+					var editor = interactionEditor.GetComponent<TextPanelEditor>(); 
+					if (editor.answered)
+					{
+						var panel = Instantiate(textPanelPrefab);
+						panel.GetComponent<TextPanel>().Init(lastInteractionPoint, editor.answerTitle, editor.answerBody);
+						
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+					}
 					break;
 				}
 				default:

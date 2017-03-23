@@ -14,6 +14,27 @@ public class TextPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public string answerBody;
 
+	public void Init(GameObject newInteractionPoint, string initialTitle, string initialBody)
+	{
+		title.text = initialTitle;
+		body.text = initialBody;
+
+		var newPos = newInteractionPoint.transform.position;
+
+		if (!Camera.main.orthographic)
+		{
+			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.3f);
+			newPos.y += 0.01f;
+		}
+		else
+		{
+			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
+			newPos.y += 0.015f;
+		}
+
+		canvas.GetComponent<RectTransform>().position = newPos;
+	}
+
 	void Update () 
 	{
 		resizeElement(title, 30);
@@ -58,12 +79,14 @@ public class TextPanelEditor : MonoBehaviour
 		}
 		
 		rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, Mathf.Max(currentHeight, minHeight));
+	
+		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 
 	public void Answer()
 	{
 		answered = true;
 		answerTitle = title.text;
-		answerBody = title.text;
+		answerBody = body.text;
 	}
 }

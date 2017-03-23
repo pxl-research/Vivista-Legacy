@@ -28,8 +28,8 @@ public class TextPanel : MonoBehaviour
 			newPos.y += 0.015f;
 		}
 
-		var width = Mathf.Max(200, newBody.Length / 2f);
-		var height = Mathf.Max(200, newBody.Length / 3f);
+		var width = Mathf.Max(200, newBody.Length);
+		var height = Mathf.Max(200, newBody.Length / 2);
 
 		var canvasTransform = canvas.GetComponent<RectTransform>();
 		canvasTransform.position = newPos;
