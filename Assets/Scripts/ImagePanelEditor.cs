@@ -82,4 +82,11 @@ public class ImagePanelEditor : MonoBehaviour
 			downloading = false;
 		}
 	}
+
+	public void Answer()
+	{
+		answered = true;
+		answerTitle = title.text;
+		//NOTE(Simon): AnswerURL already up to date
+	}
 }

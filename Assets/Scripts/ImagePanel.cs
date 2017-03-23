@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,19 +9,17 @@ public class ImagePanel : MonoBehaviour
 	public RawImage image;
 	public Canvas canvas;
 	public GameObject interactionPoint;
+	
+	private bool downloading = false;
+	private WWW www;
 
 	public void Init(GameObject newInteractionPoint, string newTitle, string newImageURL)
 	{
 		title.text = newTitle;
+		www = new WWW(newImageURL);
+		downloading = true;
 
-		var data = File.ReadAllBytes(newImageURL);
-		var texture = new Texture2D(0, 0);
-		texture.LoadImage(data);
-		
-		image.texture = texture;
-		canvas = GetComponent<Canvas>();
 		interactionPoint = newInteractionPoint;
-
 		var newPos = newInteractionPoint.transform.position;
 
 		if (!Camera.main.orthographic)
@@ -34,23 +33,36 @@ public class ImagePanel : MonoBehaviour
 			newPos.y += 0.015f;
 		}
 
-		var canvasTransform = canvas.GetComponent<RectTransform>();
-		canvasTransform.position = newPos;
-
-		//NOTE(Simon): Title + Triangle + bottomMargin
-		const float extraHeight = 40 + 16 + 10;
-		//NOTE(Simon): LeftMargin + RightMargin;
-		const float extraWidth = 10 + 10;
-
-		var ratio = texture.width / (float)texture.height;
-
-		canvasTransform.sizeDelta = ratio > 1 
-			? new Vector2(300 * ratio + extraWidth, 300 + extraHeight) 
-			: new Vector2(300 + extraWidth, 300 * (1 / ratio) + extraHeight);
+		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Update()
 	{
+		if (downloading && www.isDone)
+		{
+			var texture = www.texture;
+			image.texture = texture;
+			var width = image.rectTransform.sizeDelta.x;
+			var ratio = texture.width / width;
+			var height = texture.height / ratio;
+			image.rectTransform.sizeDelta = new Vector2(width, height);
+
+			/*
+			//NOTE(Simon): Title + Triangle + bottomMargin
+			const float extraHeight = 40 + 16 + 10;
+			//NOTE(Simon): LeftMargin + RightMargin;
+			const float extraWidth = 10 + 10;
+
+			var textureRatio = texture.width / (float)texture.height;
+
+			canvasTransform.sizeDelta = textureRatio > 1 
+				? new Vector2(300 * textureRatio + extraWidth, 300 + extraHeight) 
+				: new Vector2(300 + extraWidth, 300 * (1 / textureRatio) + extraHeight);
+			*/
+			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
+			downloading = false;
+		}
+
 		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 }
