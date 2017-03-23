@@ -219,7 +219,7 @@ public class Editor : MonoBehaviour
 				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 				interactionPoints.RemoveAt(interactionPoints.Count - 1);
 				Destroy(lastPlacedPoint);
-				Destroy(interactionTypePicker);
+				Destroy(interactionEditor);
 				ResetInteractionPointTemp();
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
