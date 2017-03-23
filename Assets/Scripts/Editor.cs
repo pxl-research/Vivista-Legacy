@@ -37,7 +37,7 @@ public class Editor : MonoBehaviour
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		ResetInteractionPointTemp();
-		editorState = EditorState.Active;
+		editorState = EditorState.Inactive;
 	}
 	
 	void Update () 
@@ -212,7 +212,6 @@ public class Editor : MonoBehaviour
 
 	void ResetInteractionPointTemp()
 	{
-		Vector3 resetPos = new Vector3(1000, 1000, 1000);
-		interactionPointTemp.transform.position = resetPos;
+		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
 }

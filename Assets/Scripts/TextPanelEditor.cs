@@ -4,6 +4,8 @@ using UnityEngine.UI;
 
 public class TextPanelEditor : MonoBehaviour 
 {
+	public Canvas canvas;
+	public RectTransform resizePanel;
 	public InputField title;
 	public InputField body;
 	public Button done;
@@ -14,13 +16,17 @@ public class TextPanelEditor : MonoBehaviour
 
 	void Update () 
 	{
-		var bodyRect = body.GetComponent<RectTransform>();
-		var titleRect = body.GetComponent<RectTransform>();
-		resizeElement(title);
-		//resizeElement(body);
+		resizeElement(title, 30);
+		resizeElement(body, 100);
+
+		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
+			title.GetComponent<RectTransform>().sizeDelta.y
+			+ body.GetComponent<RectTransform>().sizeDelta.y
+			//Padding, spacing, button, fudge factor
+			+ 20 + 20 + 30 + 20);
 	}
 
-	public void resizeElement(InputField element)
+	public void resizeElement(InputField element, int minHeight)
 	{
 		var style = new GUIStyle
 		{
@@ -51,7 +57,7 @@ public class TextPanelEditor : MonoBehaviour
 			}
 		}
 		
-		rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, Mathf.Max(currentHeight, 30));
+		rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, Mathf.Max(currentHeight, minHeight));
 	}
 
 	public void Answer()
