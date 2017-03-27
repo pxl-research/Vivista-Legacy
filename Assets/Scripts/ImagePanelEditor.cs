@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -88,5 +89,26 @@ public class ImagePanelEditor : MonoBehaviour
 		answered = true;
 		answerTitle = title.text;
 		//NOTE(Simon): AnswerURL already up to date
+	}
+
+	public void Browse()
+	{
+		var dialog = new System.Windows.Forms.OpenFileDialog
+		{
+			Filter = "Images (*.jpg;*.jpeg;*.bmp;*.png)|*.jpg;*.jpeg;*.bmp;*.png"
+		};
+
+		var result = dialog.ShowDialog();
+		if (result == System.Windows.Forms.DialogResult.OK)
+		{
+			try
+			{
+				answerTitle = url.text = dialog.FileName;
+			}
+			catch(Exception e)
+			{
+				Debug.Log("File Loading error: " + e.StackTrace);
+			}
+		}
 	}
 }

@@ -48,7 +48,7 @@ public class Editor : MonoBehaviour
 	{
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
-		ray.origin = ray.GetPoint(10);
+		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
 		foreach (var point in interactionPoints)
@@ -68,11 +68,11 @@ public class Editor : MonoBehaviour
 				
 		if (editorState == EditorState.PlacingInteractionPoint)
 		{
-			if (Physics.Raycast(ray, out hit, 10))
+			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = hit.point + ray.direction.normalized / 50;
+				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, 0.4f);
 				interactionPointTemp.transform.position = drawLocation;
-				//Rotate to match sphere's normal
+				//NOTE(Simon): Rotate to match sphere's normal
 				interactionPointTemp.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
 			}
 
