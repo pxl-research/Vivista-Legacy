@@ -8,14 +8,14 @@ public class TextPanel : MonoBehaviour
 	public RectTransform panel;
 	public Canvas canvas;
 
-	public void Init(GameObject newInteractionPoint, string newTitle, string newBody)
+	public void Init(Vector3 position, string newTitle, string newBody)
 	{
 		title.text = newTitle;
 		body.text = newBody;
 
 		canvas = GetComponent<Canvas>();
 
-		var newPos = newInteractionPoint.transform.position;
+		var newPos = position;
 
 		if (!Camera.main.orthographic)
 		{

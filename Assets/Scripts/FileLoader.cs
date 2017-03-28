@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Compression;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -40,7 +41,6 @@ public class FileLoader : MonoBehaviour
 		if (!cameraFlat){ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
 
 		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
-		//var fileName = @"http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
 
 		GameObject videoPlayer = null;
 
@@ -93,11 +93,14 @@ public class FileLoader : MonoBehaviour
 		{
 			var player = videoPlayer.GetComponent<VideoPlayer>();
 			player.url = fileName;
+
 			player.waitForFirstFrame = true;
 			player.Play();
 
 			var playerInfo = Instantiate(playerInfoGUI);
-			playerInfo.transform.SetParent(Canvass.main.transform, false);
+			var newParent = Canvass.main.transform.FindChild("LayoutSplitter");
+			playerInfo.transform.SetParent(newParent, false);
+			playerInfo.transform.SetAsFirstSibling();
 
 			var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
 			var controller = videoPlayer.GetComponent<VideoController>();

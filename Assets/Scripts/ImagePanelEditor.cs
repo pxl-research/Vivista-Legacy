@@ -21,12 +21,12 @@ public class ImagePanelEditor : MonoBehaviour
 	private bool downloading = false;
 	private WWW www;
 
-	public void Init(GameObject newInteractionPoint, string initialTitle, string initialUrl)
+	public void Init(Vector3 position, string initialTitle, string initialUrl)
 	{
 		title.text = initialTitle;
 		url.text = initialUrl;
 
-		var newPos = newInteractionPoint.transform.position;
+		var newPos = position;
 
 		if (!Camera.main.orthographic)
 		{

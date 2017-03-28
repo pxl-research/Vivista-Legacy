@@ -13,12 +13,12 @@ public class TextPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public string answerBody;
 
-	public void Init(GameObject newInteractionPoint, string initialTitle, string initialBody)
+	public void Init(Vector3 position, string initialTitle, string initialBody)
 	{
 		title.text = initialTitle;
 		body.text = initialBody;
 
-		var newPos = newInteractionPoint.transform.position;
+		var newPos = position;
 
 		if (!Camera.main.orthographic)
 		{

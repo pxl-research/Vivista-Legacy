@@ -13,14 +13,13 @@ public class ImagePanel : MonoBehaviour
 	private bool downloading = false;
 	private WWW www;
 
-	public void Init(GameObject newInteractionPoint, string newTitle, string newImageURL)
+	public void Init(Vector3 position, string newTitle, string newImageURL)
 	{
 		title.text = newTitle;
 		www = new WWW(newImageURL);
 		downloading = true;
 
-		interactionPoint = newInteractionPoint;
-		var newPos = newInteractionPoint.transform.position;
+		var newPos = position;
 
 		if (!Camera.main.orthographic)
 		{

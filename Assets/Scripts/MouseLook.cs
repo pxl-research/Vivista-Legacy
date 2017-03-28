@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class MouseLook : MonoBehaviour 
 {
@@ -28,7 +29,7 @@ public class MouseLook : MonoBehaviour
 		var mouseDelta = Input.mousePosition - mousePos;
 		mousePos = Input.mousePosition;
 
-		if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)))
+		if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
 		{
 			mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
 			mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
