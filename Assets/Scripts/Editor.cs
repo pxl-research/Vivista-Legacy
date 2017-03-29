@@ -129,11 +129,10 @@ public class Editor : MonoBehaviour
 					endTime = videoController.currentTime + 10,
 				};
 
-				interactionPoints.Add(point);
 				AddItemToTimeline(point);
 
 				interactionTypePicker = Instantiate(interactionTypePrefab);
-				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint);
+				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint.transform.position);
 
 				editorState = EditorState.PickingInteractionType;
 			}
@@ -181,7 +180,6 @@ public class Editor : MonoBehaviour
 
 					Destroy(interactionTypePicker);
 					editorState = EditorState.FillingPanelDetails;
-
 				}
 			}
 			else
@@ -192,8 +190,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
 				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
-				interactionPoints.RemoveAt(interactionPoints.Count - 1);
-				Destroy(lastPlacedPoint.point);
+				RemoveItemFromTimeline(lastPlacedPoint);
 				Destroy(interactionTypePicker);
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -234,7 +231,9 @@ public class Editor : MonoBehaviour
 					{
 						var panel = Instantiate(textPanelPrefab);
 						panel.GetComponent<TextPanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerBody);
-						
+						lastInteractionPoint.title = editor.answerTitle;
+						lastInteractionPoint.body = editor.answerBody;
+
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
 					}
@@ -249,8 +248,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
 				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
-				interactionPoints.RemoveAt(interactionPoints.Count - 1);
-				Destroy(lastPlacedPoint.point);
+				RemoveItemFromTimeline(lastPlacedPoint);
 				Destroy(interactionEditor);
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -298,8 +296,7 @@ public class Editor : MonoBehaviour
 		var newRow = Instantiate(timelineRow);
 		point.timelineRow = newRow;
 		newRow.transform.SetParent(timeline.transform);
-
-		
+		interactionPoints.Add(point);
 	}
 
 	void UpdateTimeline()
@@ -322,7 +319,9 @@ public class Editor : MonoBehaviour
 
 	void RemoveItemFromTimeline(InteractionPoint point)
 	{
-		
+		Destroy(point.timelineRow);
+		interactionPoints.Remove(point);
+		Destroy(point.point);
 	}
 
 	bool SaveToFile()

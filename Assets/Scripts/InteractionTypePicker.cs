@@ -6,9 +6,9 @@ public class InteractionTypePicker : MonoBehaviour
 	public InteractionType answer;
 	public Canvas canvas;
 
-	public void Init(GameObject newInteractionPoint)
+	public void Init(Vector3 position)
 	{
-		var newPos = newInteractionPoint.transform.position;
+		var newPos = position;
 
 		if (!Camera.main.orthographic)
 		{
