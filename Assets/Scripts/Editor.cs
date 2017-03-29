@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public enum EditorState {
 	Inactive,
@@ -22,18 +23,19 @@ public enum InteractionType {
 public class InteractionPoint
 {
 	public GameObject point;
+	public GameObject timelineRow;
 	public InteractionType type;
 	public string title;
 	public string body;
-	public long startTime;
-	public DateTime endTime;
+	public double startTime;
+	public double endTime;
 }
 
 public class Editor : MonoBehaviour 
 {
 	public GameObject interactionPointPrefab;
-	public GameObject interactionPointTemp;
-	public List<InteractionPoint> interactionPoints;
+	private GameObject interactionPointTemp;
+	private List<InteractionPoint> interactionPoints;
 
 	public GameObject interactionTypePrefab;
 
@@ -42,23 +44,32 @@ public class Editor : MonoBehaviour
 	public GameObject imagePanelPrefab;
 	public GameObject imagePanelEditorPrefab;
 
-	public GameObject interactionTypePicker;
-	public GameObject interactionEditor;
+	private GameObject interactionTypePicker;
+	private GameObject interactionEditor;
 
-	public EditorState editorState;
+	public GameObject timelineContainer;
+	public GameObject timeline;
+	public GameObject timelineRow;
+	private VideoController videoController;
 
-	public InteractionType lastInteractionPointType;
+	private EditorState editorState;
+
+	private InteractionType lastInteractionPointType;
 
 	void Start () 
 	{
+		videoController = FileLoader.videoController.GetComponent<VideoController>();
+
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPoint>();
-		ResetInteractionPointTemp();
-		editorState = EditorState.Inactive;
+
+		SetActive(false);
 	}
 	
 	void Update () 
 	{
+		UpdateTimeline();
+
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
@@ -73,7 +84,7 @@ public class Editor : MonoBehaviour
 		{
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				editorState = EditorState.Active;
+				SetActive(true);
 				//Note(Simon): Early return so we don't interfere with the rest of the state machine
 				return;
 			}
@@ -86,19 +97,18 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.PlacingInteractionPoint;
 			}
 
-			if (Physics.Raycast(ray, out hit, 10, 1 << LayerMask.NameToLayer("interactionPoints")))
+			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints")))
 			{
 				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
 			}
 			
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				ResetInteractionPointTemp();
-				editorState = EditorState.Inactive;
+				SetActive(false);
 			}
 		}
 
-		if (editorState == EditorState.PlacingInteractionPoint)
+		if (editorState == EditorState.PlacingInteractionPoint && !EventSystem.current.IsPointerOverGameObject())
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
@@ -114,10 +124,13 @@ public class Editor : MonoBehaviour
 				var point = new InteractionPoint
 				{
 					point = newPoint,
-					type = InteractionType.None
+					type = InteractionType.None,
+					startTime = videoController.currentTime,
+					endTime = videoController.currentTime + 10,
 				};
 
 				interactionPoints.Add(point);
+				AddItemToTimeline(point);
 
 				interactionTypePicker = Instantiate(interactionTypePrefab);
 				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint);
@@ -127,13 +140,11 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
-				ResetInteractionPointTemp();
-				editorState = EditorState.Active;
+				SetActive(true);
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				ResetInteractionPointTemp();
-				editorState = EditorState.Inactive;
+				SetActive(false);
 			}
 		}
 
@@ -184,21 +195,21 @@ public class Editor : MonoBehaviour
 				interactionPoints.RemoveAt(interactionPoints.Count - 1);
 				Destroy(lastPlacedPoint.point);
 				Destroy(interactionTypePicker);
-				ResetInteractionPointTemp();
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
-				editorState = EditorState.Active;
+				SetActive(true);
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				editorState = EditorState.Inactive;
+				SetActive(false);
 			}
 		}
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
-			var lastInteractionPointPos = interactionPoints[interactionPoints.Count - 1].point.transform.position;
+			var lastInteractionPoint = interactionPoints[interactionPoints.Count - 1];
+			var lastInteractionPointPos = lastInteractionPoint.point.transform.position;
 			switch (lastInteractionPointType)
 			{
 				case InteractionType.Image:
@@ -208,6 +219,8 @@ public class Editor : MonoBehaviour
 					{
 						var panel = Instantiate(imagePanelPrefab);
 						panel.GetComponent<ImagePanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerURL);
+						lastInteractionPoint.title = editor.answerTitle;
+						lastInteractionPoint.body = editor.answerURL;
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
@@ -239,15 +252,14 @@ public class Editor : MonoBehaviour
 				interactionPoints.RemoveAt(interactionPoints.Count - 1);
 				Destroy(lastPlacedPoint.point);
 				Destroy(interactionEditor);
-				ResetInteractionPointTemp();
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
-				editorState = EditorState.Active;
+				SetActive(true);
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				editorState = EditorState.Inactive;
+				SetActive(false);
 			}
 		}
 
@@ -263,6 +275,54 @@ public class Editor : MonoBehaviour
 				Debug.Log("Save error");
 			}
 		}
+	}
+	
+	void SetActive(bool active)
+	{
+		ResetInteractionPointTemp();
+		
+		if (active)
+		{
+			editorState = EditorState.Active;
+			timelineContainer.SetActive(true);
+		}
+		else
+		{
+			editorState = EditorState.Inactive;
+			timelineContainer.SetActive(false);
+		}
+	}
+
+	void AddItemToTimeline(InteractionPoint point)
+	{
+		var newRow = Instantiate(timelineRow);
+		point.timelineRow = newRow;
+		newRow.transform.SetParent(timeline.transform);
+
+		
+	}
+
+	void UpdateTimeline()
+	{
+		foreach(var point in interactionPoints)
+		{
+			var row = point.timelineRow;
+			row.GetComponentInChildren<Text>().text = point.title;
+			var offset = row.GetComponentInChildren<Text>().rectTransform.rect.width;
+			var max = timelineContainer.GetComponent<RectTransform>().rect.width - offset;
+
+			var begin = offset + (point.startTime / videoController.videoLength) * max;
+			var end = offset + (point.endTime / videoController.videoLength) * max;
+
+			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
+			imageRect.position = new Vector2((float)begin, imageRect.position.y);
+			imageRect.sizeDelta = new Vector2((float)end, imageRect.sizeDelta.y);
+		}
+	}
+
+	void RemoveItemFromTimeline(InteractionPoint point)
+	{
+		
 	}
 
 	bool SaveToFile()

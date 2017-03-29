@@ -1,11 +1,12 @@
 ﻿using System;
-using System.IO.Compression;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
 public class FileLoader : MonoBehaviour 
 {
+	public static GameObject videoController;
+
 	public GameObject video360;
 	public GameObject video180;
 	public GameObject video;
@@ -42,7 +43,7 @@ public class FileLoader : MonoBehaviour
 
 		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
 
-		GameObject videoPlayer = null;
+		videoController = null;
 
 		switch (fileType)
 		{
@@ -67,19 +68,19 @@ public class FileLoader : MonoBehaviour
 			case FileType.Video360:
 			{
 				Instantiate(camera360);
-				videoPlayer = Instantiate(video360);
+				videoController = Instantiate(video360);
 				break;
 			}
 			case FileType.Video180:
 			{
 				Instantiate(camera180);
-				videoPlayer = Instantiate(video180);
+				videoController = Instantiate(video180);
 				break;
 			}
 			case FileType.Video:
 			{
 				Instantiate(cameraFlat);
-				videoPlayer = Instantiate(video);
+				videoController = Instantiate(video);
 				break;
 			}
 
@@ -91,7 +92,7 @@ public class FileLoader : MonoBehaviour
 
 		if (fileType == FileType.Video || fileType == FileType.Video180 || fileType == FileType.Video360)
 		{
-			var player = videoPlayer.GetComponent<VideoPlayer>();
+			var player = videoController.GetComponent<VideoPlayer>();
 			player.url = fileName;
 
 			player.waitForFirstFrame = true;
@@ -103,7 +104,7 @@ public class FileLoader : MonoBehaviour
 			playerInfo.transform.SetAsFirstSibling();
 
 			var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
-			var controller = videoPlayer.GetComponent<VideoController>();
+			var controller = videoController.GetComponent<VideoController>();
 			seekbar.controller = controller;
 			controller.seekbar = seekbar.transform.GetChild(0).GetComponent<RectTransform>();
 			controller.timeText = seekbar.transform.parent.GetComponentInChildren<Text>();

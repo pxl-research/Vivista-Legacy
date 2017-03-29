@@ -20,26 +20,15 @@ public class ImagePanelEditor : MonoBehaviour
 	private string prevURL = "";
 	private bool downloading = false;
 	private WWW www;
+	private Vector3 interactionPointPos;
 
 	public void Init(Vector3 position, string initialTitle, string initialUrl)
 	{
 		title.text = initialTitle;
 		url.text = initialUrl;
+		interactionPointPos = position;
 
-		var newPos = position;
-
-		if (!Camera.main.orthographic)
-		{
-			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.3f);
-			newPos.y += 0.01f;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
-			newPos.y += 0.015f;
-		}
-
-		canvas.GetComponent<RectTransform>().position = newPos;
+		SetPos();
 	}
 
 	void Update()
@@ -79,6 +68,8 @@ public class ImagePanelEditor : MonoBehaviour
 			var ratio = texture.width / width;
 			var height = texture.height / ratio;
 			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
+			
+			SetPos();
 
 			downloading = false;
 		}
@@ -89,6 +80,24 @@ public class ImagePanelEditor : MonoBehaviour
 		answered = true;
 		answerTitle = title.text;
 		//NOTE(Simon): AnswerURL already up to date
+	}
+
+	public void SetPos()
+	{
+		Vector3 newPos;
+
+		if (!Camera.main.orthographic)
+		{
+			newPos = Vector3.Lerp(interactionPointPos, Camera.main.transform.position, 0.3f);
+			newPos.y += 0.01f;
+		}
+		else
+		{
+			newPos = Vector3.Lerp(interactionPointPos, Camera.main.transform.position, 0.001f);
+			newPos.y += 0.015f;
+		}
+
+		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Browse()
