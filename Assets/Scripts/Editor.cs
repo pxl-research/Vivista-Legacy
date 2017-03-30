@@ -49,13 +49,19 @@ public class Editor : MonoBehaviour
 
 	public GameObject timelineContainer;
 	public GameObject timeline;
+	public GameObject timelineHeader;
 	public GameObject timelineRow;
+	public Text labelPrefab;
+	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
 	private float timelineStartTime;
 	private float timelineWindowStartTime;
 	private float timelineWindowEndTime;
 	private float timelineEndTime;
+	private int timelineTickSizeSec;
+	private float timelineTickSizePx;
 	private float timelineZoom = 1;
+	private float timelineOffset;
 
 	private EditorState editorState;
 
@@ -237,7 +243,7 @@ public class Editor : MonoBehaviour
 					{
 						var panel = Instantiate(textPanelPrefab);
 						panel.GetComponent<TextPanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerBody);
-						lastInteractionPoint.title = editor.answerTitle;
+						lastInteractionPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						lastInteractionPoint.body = editor.answerBody;
 
 						Destroy(interactionEditor);
@@ -304,11 +310,19 @@ public class Editor : MonoBehaviour
 		newRow.transform.SetParent(timeline.transform);
 		interactionPoints.Add(point);
 	}
+	
+	void RemoveItemFromTimeline(InteractionPoint point)
+	{
+		Destroy(point.timelineRow);
+		interactionPoints.Remove(point);
+		Destroy(point.point);
+	}
 
 	void UpdateTimeline()
 	{
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
+		//Note(Simon): Init if not set yet.
 		if (timelineWindowEndTime == 0)
 		{
 			timelineWindowEndTime = timelineEndTime;
@@ -317,27 +331,71 @@ public class Editor : MonoBehaviour
 		if (Input.mouseScrollDelta.y > 0)
 		{
 			timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
-
-
-			var windowMiddle = (timelineEndTime - timelineStartTime) / 2;
-			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
-			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
 		}
 		else if (Input.mouseScrollDelta.y < 0)
 		{
 			timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
-
-			var windowMiddle = (timelineEndTime - timelineStartTime) / 2;
-			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
-			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
 		}
+
+		var zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
 		
+		var windowMiddle = (timelineEndTime - (timelineStartTime + timelineOffset * timelineZoom)) / 2;
+		timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
+		timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
+		var headerOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
+		var headerWidth = timelineContainer.GetComponent<RectTransform>().rect.width - headerOffset;
+
+		//NOTE(Simon): timeline labels
+		{
+			
+			var maxNumLabels = Math.Floor(headerWidth / 100);
+			var lowerround = FloorTime(zoomedLength / maxNumLabels);
+			var upperround = CeilTime(zoomedLength / maxNumLabels);
+
+			var lowerroundNum = Mathf.FloorToInt(zoomedLength / lowerround);
+			var upperroundNum = Mathf.FloorToInt(zoomedLength / upperround);
+			var closestRounding = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerround : upperround;
+			var realNumLabels = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerroundNum : upperroundNum;
+			realNumLabels += 1;
+
+			timelineTickSizePx = headerWidth / realNumLabels;
+			timelineTickSizeSec = closestRounding;
+		 
+			while (headerLabels.Count < realNumLabels)
+			{
+				var label = Instantiate(labelPrefab, timelineHeader.transform);
+				headerLabels.Add(label);
+			}
+			while (headerLabels.Count > realNumLabels)
+			{
+				Destroy(headerLabels[headerLabels.Count - 1].gameObject);
+				headerLabels.RemoveAt(headerLabels.Count - 1);
+			}
+
+			var fractionBeforeFirstTick = 0.0f;
+			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / timelineTickSizeSec);
+			if (timelineWindowStartTime > 0)
+			{
+				fractionBeforeFirstTick = (timelineWindowStartTime - (numTicksOffScreen * timelineTickSizeSec)) / timelineTickSizeSec;
+			}
+
+			var offset = headerOffset;
+			if (numTicksOffScreen > 0)
+			{
+				offset = (headerOffset + timelineTickSizePx) - fractionBeforeFirstTick * timelineTickSizePx;
+			}
+
+			for (int i = 0; i < realNumLabels; i++)
+			{
+				headerLabels[i].text = FormatSeconds((i + numTicksOffScreen) * timelineTickSizeSec);
+				headerLabels[i].rectTransform.position = new Vector2(offset + i * timelineTickSizePx, headerLabels[i].rectTransform.position.y);
+			}
+		}
+
 		foreach(var point in interactionPoints)
 		{
 			var row = point.timelineRow;
 			row.GetComponentInChildren<Text>().text = point.title;
-			var offset = row.GetComponentInChildren<Text>().rectTransform.rect.width;
-			var max = timelineContainer.GetComponent<RectTransform>().rect.width - offset;
 
 			var zoomedStartTime = point.startTime;
 			var zoomedEndTime = point.endTime;
@@ -349,19 +407,12 @@ public class Editor : MonoBehaviour
 			}
 			else
 			{
-				if (point.startTime < timelineWindowStartTime)
-				{
-					zoomedStartTime = timelineWindowStartTime;
-				}
-				if (point.endTime > timelineWindowEndTime)
-				{
-					zoomedEndTime = timelineWindowEndTime;
-				}
+				if (point.startTime < timelineWindowStartTime)	{ zoomedStartTime = timelineWindowStartTime; }
+				if (point.endTime > timelineWindowEndTime)		{ zoomedEndTime = timelineWindowEndTime; }
 			}
 
-			var zoomedLength = timelineWindowEndTime - timelineWindowStartTime;
-			var begin = offset + ((zoomedStartTime - timelineWindowStartTime) / zoomedLength) * max;
-			var end = (zoomedEndTime - zoomedStartTime) / zoomedLength * max;
+			var begin = headerOffset + ((zoomedStartTime - timelineWindowStartTime) / zoomedLength) * headerWidth;
+			var end = (zoomedEndTime - zoomedStartTime) / zoomedLength * headerWidth;
 
 			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
 			imageRect.position = new Vector2((float)begin, imageRect.position.y);
@@ -369,11 +420,42 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	void RemoveItemFromTimeline(InteractionPoint point)
+	public int FloorTime(double time)
 	{
-		Destroy(point.timelineRow);
-		interactionPoints.Remove(point);
-		Destroy(point.point);
+		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
+		var result = niceTimes[0];
+
+		for (int i = 0; i < niceTimes.Length; i++)
+		{
+			if (time > niceTimes[i])
+			{
+				result = niceTimes[i];
+			}
+		}
+
+		return result;
+
+	}
+	
+	public int CeilTime(double time)
+	{
+		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
+		
+		for (int i = niceTimes.Length - 1; i >= 0; i--)
+		{
+			if (niceTimes[i] < time)
+			{
+				return niceTimes[i + 1];
+			}
+		}
+
+		return niceTimes[0];
+	}
+
+	public void OnDrag(BaseEventData e)
+	{
+		var pointerEvent = (PointerEventData)e;
+		timelineOffset = timelineOffset + pointerEvent.delta.x;
 	}
 
 	bool SaveToFile()
@@ -403,4 +485,26 @@ public class Editor : MonoBehaviour
 	{
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
+
+	string FormatSeconds(double time)
+	{
+		var hours = (int)(time / (60 * 60));
+		time -= hours * 60;
+		var minutes = (int)(time / 60);
+		time -= minutes * 60;
+		var seconds = (int) time;
+
+		var formatted = "";
+		if (hours > 0)
+		{
+			formatted += hours + ":";
+		}
+
+		formatted += minutes.ToString("D2");
+		formatted += ":";
+		formatted += seconds.ToString("D2");
+
+		return formatted;
+	}
+
 }
