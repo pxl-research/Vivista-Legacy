@@ -51,6 +51,11 @@ public class Editor : MonoBehaviour
 	public GameObject timeline;
 	public GameObject timelineRow;
 	private VideoController videoController;
+	private float timelineStartTime;
+	private float timelineWindowStartTime;
+	private float timelineWindowEndTime;
+	private float timelineEndTime;
+	private float timelineZoom = 1;
 
 	private EditorState editorState;
 
@@ -59,6 +64,7 @@ public class Editor : MonoBehaviour
 	void Start () 
 	{
 		videoController = FileLoader.videoController.GetComponent<VideoController>();
+		timelineWindowEndTime = (float)videoController.videoLength;
 
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPoint>();
@@ -301,6 +307,31 @@ public class Editor : MonoBehaviour
 
 	void UpdateTimeline()
 	{
+		timelineStartTime = 0;
+		timelineEndTime = (float)videoController.videoLength;
+		if (timelineWindowEndTime == 0)
+		{
+			timelineWindowEndTime = timelineEndTime;
+		}
+
+		if (Input.mouseScrollDelta.y > 0)
+		{
+			timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
+
+
+			var windowMiddle = (timelineEndTime - timelineStartTime) / 2;
+			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
+			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
+		}
+		else if (Input.mouseScrollDelta.y < 0)
+		{
+			timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+
+			var windowMiddle = (timelineEndTime - timelineStartTime) / 2;
+			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
+			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
+		}
+		
 		foreach(var point in interactionPoints)
 		{
 			var row = point.timelineRow;
@@ -308,8 +339,29 @@ public class Editor : MonoBehaviour
 			var offset = row.GetComponentInChildren<Text>().rectTransform.rect.width;
 			var max = timelineContainer.GetComponent<RectTransform>().rect.width - offset;
 
-			var begin = offset + (point.startTime / videoController.videoLength) * max;
-			var end = (point.endTime - point.startTime) / videoController.videoLength * max;
+			var zoomedStartTime = point.startTime;
+			var zoomedEndTime = point.endTime;
+
+			if (point.endTime < timelineWindowStartTime || point.startTime > timelineWindowEndTime)
+			{
+				zoomedStartTime = 0;
+				zoomedEndTime = 0;
+			}
+			else
+			{
+				if (point.startTime < timelineWindowStartTime)
+				{
+					zoomedStartTime = timelineWindowStartTime;
+				}
+				if (point.endTime > timelineWindowEndTime)
+				{
+					zoomedEndTime = timelineWindowEndTime;
+				}
+			}
+
+			var zoomedLength = timelineWindowEndTime - timelineWindowStartTime;
+			var begin = offset + ((zoomedStartTime - timelineWindowStartTime) / zoomedLength) * max;
+			var end = (zoomedEndTime - zoomedStartTime) / zoomedLength * max;
 
 			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
 			imageRect.position = new Vector2((float)begin, imageRect.position.y);
