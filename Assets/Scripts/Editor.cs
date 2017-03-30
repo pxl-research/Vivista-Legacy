@@ -126,7 +126,7 @@ public class Editor : MonoBehaviour
 					point = newPoint,
 					type = InteractionType.None,
 					startTime = videoController.currentTime,
-					endTime = videoController.currentTime + 10,
+					endTime = videoController.currentTime + 1,
 				};
 
 				AddItemToTimeline(point);
@@ -309,7 +309,7 @@ public class Editor : MonoBehaviour
 			var max = timelineContainer.GetComponent<RectTransform>().rect.width - offset;
 
 			var begin = offset + (point.startTime / videoController.videoLength) * max;
-			var end = offset + (point.endTime / videoController.videoLength) * max;
+			var end = (point.endTime - point.startTime) / videoController.videoLength * max;
 
 			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
 			imageRect.position = new Vector2((float)begin, imageRect.position.y);
