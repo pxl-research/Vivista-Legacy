@@ -58,16 +58,23 @@ public class Editor : MonoBehaviour
 	private float timelineWindowStartTime;
 	private float timelineWindowEndTime;
 	private float timelineEndTime;
-	private int timelineTickSizeSec;
-	private float timelineTickSizePx;
+	private int timelineTickSize;
 	private float timelineZoom = 1;
 	private float timelineOffset;
 	private float timelineWidth;
 	private float timelineXOffset;
-
+	private Vector2 prevMousePosition;
+	private Vector2 mouseDelta;
+	private bool isDraggingTimelineItem;
+	private InteractionPoint timelineItemBeingDragged;
+	private bool isResizingTimelineItem;
+	private bool isResizingStart;
+	private InteractionPoint timelineItemBeingResized;
 	private EditorState editorState;
 
 	private InteractionType lastInteractionPointType;
+
+	public Cursors cursors;
 
 	void Start () 
 	{
@@ -78,10 +85,14 @@ public class Editor : MonoBehaviour
 		interactionPoints = new List<InteractionPoint>();
 
 		SetActive(false);
+		prevMousePosition = Input.mousePosition;
 	}
 	
 	void Update () 
 	{
+		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
+		prevMousePosition = Input.mousePosition;
+
 		UpdateTimeline();
 
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -140,7 +151,7 @@ public class Editor : MonoBehaviour
 					point = newPoint,
 					type = InteractionType.None,
 					startTime = videoController.currentTime,
-					endTime = videoController.currentTime + 1,
+					endTime = videoController.currentTime + 5,
 				};
 
 				AddItemToTimeline(point);
@@ -361,8 +372,7 @@ public class Editor : MonoBehaviour
 			var realNumLabels = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerroundNum : upperroundNum;
 			realNumLabels += 1;
 
-			timelineTickSizePx = timelineWidth / realNumLabels;
-			timelineTickSizeSec = closestRounding;
+			timelineTickSize = closestRounding;
 		 
 			while (headerLabels.Count < realNumLabels)
 			{
@@ -375,19 +385,21 @@ public class Editor : MonoBehaviour
 				headerLabels.RemoveAt(headerLabels.Count - 1);
 			}
 
-			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / timelineTickSizeSec);
+			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / timelineTickSize);
 			
 			for (int i = 0; i < realNumLabels; i++)
 			{
-				var time = (i + numTicksOffScreen) * timelineTickSizeSec;
+				var time = (i + numTicksOffScreen) * timelineTickSize;
 				headerLabels[i].text = FormatSeconds(time);
 				headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
 			}
 		}
 
+		//Note(Simon): Render timeline items
 		foreach(var point in interactionPoints)
 		{
 			var row = point.timelineRow;
+			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
 			row.GetComponentInChildren<Text>().text = point.title;
 
 			var zoomedStartTime = point.startTime;
@@ -404,9 +416,100 @@ public class Editor : MonoBehaviour
 				if (point.endTime > timelineWindowEndTime)		{ zoomedEndTime = timelineWindowEndTime; }
 			}
 
-			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
 			imageRect.position = new Vector2(TimeToPx(zoomedStartTime), imageRect.position.y);
 			imageRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), imageRect.sizeDelta.y);
+		}
+
+		//Note(Simon): Resizing and moving of timeline items
+		foreach(var point in interactionPoints)
+		{
+			var row = point.timelineRow;
+			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
+
+			Vector2 rectPixel;
+			RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, Input.mousePosition, null, out rectPixel);
+			var leftAreaX = 5;
+			var rightAreaX = imageRect.rect.width - 5;
+
+			if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
+			{
+				if (isResizingTimelineItem || rectPixel.x < leftAreaX)
+				{
+					Cursor.SetCursor(cursors.CursorDrag, new Vector2(16, 16), CursorMode.Auto);
+				}
+				else if ( rectPixel.x > rightAreaX)
+				{
+					Cursor.SetCursor(cursors.CursorDrag, new Vector2(16, 16), CursorMode.Auto);
+				}
+				else if (isDraggingTimelineItem)
+				{
+					Cursor.SetCursor(cursors.CursorMove, new Vector2(16, 16), CursorMode.Auto);
+				}
+				else
+				{
+					Cursor.SetCursor(cursors.CursorMove, new Vector2(16, 16), CursorMode.Auto);
+				}
+			}
+			else 
+			{
+				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+			}
+
+			if (!isDraggingTimelineItem && !isResizingTimelineItem
+				&& Input.GetMouseButton(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
+			{
+				if (rectPixel.x < leftAreaX)
+				{
+					isResizingStart = true;
+					isResizingTimelineItem = true;
+					timelineItemBeingResized = point;
+				}
+				else if (rectPixel.x > rightAreaX)
+				{
+					isResizingStart = false;
+					isResizingTimelineItem = true;
+					timelineItemBeingResized = point;
+				}
+				else
+				{
+					isDraggingTimelineItem = true;
+					timelineItemBeingDragged = point;
+				}
+				break;
+			}
+		}
+
+		if (isDraggingTimelineItem)
+		{
+			if (!Input.GetMouseButton(0))
+			{
+				isDraggingTimelineItem = false;
+				timelineItemBeingDragged = null;
+			}
+			else
+			{
+				timelineItemBeingDragged.startTime += (mouseDelta.x / 8) * timelineZoom;
+				timelineItemBeingDragged.endTime += (mouseDelta.x / 8) * timelineZoom;
+			}
+		}
+		else if (isResizingTimelineItem)
+		{
+			if (!Input.GetMouseButton(0))
+			{
+				isResizingTimelineItem = false;
+				timelineItemBeingResized = null;
+			}
+			else
+			{
+				if(isResizingStart)
+				{
+					timelineItemBeingResized.startTime += (mouseDelta.x / 8) * timelineZoom;
+				}
+				else
+				{
+					timelineItemBeingResized.endTime += (mouseDelta.x / 8) * timelineZoom;
+				}
+			}
 		}
 	}
 	
@@ -453,9 +556,9 @@ public class Editor : MonoBehaviour
 
 	public void OnDrag(BaseEventData e)
 	{
-		var pointerEvent = (PointerEventData)e;
 		if (Input.GetMouseButton(1))
 		{
+			var pointerEvent = (PointerEventData)e;
 			timelineOffset = timelineOffset + pointerEvent.delta.x;
 		}
 	}
