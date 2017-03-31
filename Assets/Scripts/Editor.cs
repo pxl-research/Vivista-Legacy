@@ -62,6 +62,8 @@ public class Editor : MonoBehaviour
 	private float timelineTickSizePx;
 	private float timelineZoom = 1;
 	private float timelineOffset;
+	private float timelineWidth;
+	private float timelineXOffset;
 
 	private EditorState editorState;
 
@@ -322,6 +324,7 @@ public class Editor : MonoBehaviour
 	{
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
+		
 		//Note(Simon): Init if not set yet.
 		if (timelineWindowEndTime == 0)
 		{
@@ -342,13 +345,13 @@ public class Editor : MonoBehaviour
 		var windowMiddle = (timelineEndTime - (timelineStartTime + timelineOffset * timelineZoom)) / 2;
 		timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
 		timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
-		var headerOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
-		var headerWidth = timelineContainer.GetComponent<RectTransform>().rect.width - headerOffset;
+		
+		timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
+		timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
 
 		//NOTE(Simon): timeline labels
 		{
-			
-			var maxNumLabels = Math.Floor(headerWidth / 100);
+			var maxNumLabels = Math.Floor(timelineWidth / 100);
 			var lowerround = FloorTime(zoomedLength / maxNumLabels);
 			var upperround = CeilTime(zoomedLength / maxNumLabels);
 
@@ -358,7 +361,7 @@ public class Editor : MonoBehaviour
 			var realNumLabels = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerroundNum : upperroundNum;
 			realNumLabels += 1;
 
-			timelineTickSizePx = headerWidth / realNumLabels;
+			timelineTickSizePx = timelineWidth / realNumLabels;
 			timelineTickSizeSec = closestRounding;
 		 
 			while (headerLabels.Count < realNumLabels)
@@ -372,23 +375,13 @@ public class Editor : MonoBehaviour
 				headerLabels.RemoveAt(headerLabels.Count - 1);
 			}
 
-			var fractionBeforeFirstTick = 0.0f;
 			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / timelineTickSizeSec);
-			if (timelineWindowStartTime > 0)
-			{
-				fractionBeforeFirstTick = (timelineWindowStartTime - (numTicksOffScreen * timelineTickSizeSec)) / timelineTickSizeSec;
-			}
-
-			var offset = headerOffset;
-			if (numTicksOffScreen > 0)
-			{
-				offset = (headerOffset + timelineTickSizePx) - fractionBeforeFirstTick * timelineTickSizePx;
-			}
-
+			
 			for (int i = 0; i < realNumLabels; i++)
 			{
-				headerLabels[i].text = FormatSeconds((i + numTicksOffScreen) * timelineTickSizeSec);
-				headerLabels[i].rectTransform.position = new Vector2(offset + i * timelineTickSizePx, headerLabels[i].rectTransform.position.y);
+				var time = (i + numTicksOffScreen) * timelineTickSizeSec;
+				headerLabels[i].text = FormatSeconds(time);
+				headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
 			}
 		}
 
@@ -411,15 +404,22 @@ public class Editor : MonoBehaviour
 				if (point.endTime > timelineWindowEndTime)		{ zoomedEndTime = timelineWindowEndTime; }
 			}
 
-			var begin = headerOffset + ((zoomedStartTime - timelineWindowStartTime) / zoomedLength) * headerWidth;
-			var end = (zoomedEndTime - zoomedStartTime) / zoomedLength * headerWidth;
-
 			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
-			imageRect.position = new Vector2((float)begin, imageRect.position.y);
-			imageRect.sizeDelta = new Vector2((float)end, imageRect.sizeDelta.y);
+			imageRect.position = new Vector2(TimeToPx(zoomedStartTime), imageRect.position.y);
+			imageRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), imageRect.sizeDelta.y);
 		}
 	}
-
+	
+	public float TimeToPx(double time)
+	{
+		if (time < timelineWindowStartTime || time > timelineWindowEndTime)
+		{
+			return -1000;
+		}
+		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
+		return (float)(timelineXOffset + (fraction * timelineWidth));
+	}
+	
 	public int FloorTime(double time)
 	{
 		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
@@ -434,9 +434,8 @@ public class Editor : MonoBehaviour
 		}
 
 		return result;
-
 	}
-	
+
 	public int CeilTime(double time)
 	{
 		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
@@ -455,7 +454,10 @@ public class Editor : MonoBehaviour
 	public void OnDrag(BaseEventData e)
 	{
 		var pointerEvent = (PointerEventData)e;
-		timelineOffset = timelineOffset + pointerEvent.delta.x;
+		if (Input.GetMouseButton(1))
+		{
+			timelineOffset = timelineOffset + pointerEvent.delta.x;
+		}
 	}
 
 	bool SaveToFile()
