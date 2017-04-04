@@ -52,6 +52,7 @@ public class Editor : MonoBehaviour
 	public GameObject timelineHeader;
 	public GameObject timelineRow;
 	public Text labelPrefab;
+
 	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
 	private float timelineStartTime;
@@ -75,6 +76,8 @@ public class Editor : MonoBehaviour
 	private InteractionType lastInteractionPointType;
 
 	public Cursors cursors;
+	public List<Color> timelineColors;
+	private int colorIndex;
 
 	void Start () 
 	{
@@ -423,6 +426,17 @@ public class Editor : MonoBehaviour
 
 			imageRect.position = new Vector2(TimeToPx(zoomedStartTime), imageRect.position.y);
 			imageRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), imageRect.sizeDelta.y);
+			
+		}
+
+		colorIndex = 0;
+		//Note(Simon): Colors
+		foreach(var point in interactionPoints)
+		{
+			var image = point.timelineRow.transform.GetComponentInChildren<Image>();
+		
+			image.color = timelineColors[colorIndex];
+			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
 		//Note(Simon): Render various stuff
