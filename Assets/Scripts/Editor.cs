@@ -351,6 +351,11 @@ public class Editor : MonoBehaviour
 			timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
 		}
 
+		if (timelineZoom >= 1)
+		{
+			timelineOffset = 0;
+		}
+
 		var zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
 		
 		var windowMiddle = (timelineEndTime - (timelineStartTime + timelineOffset * timelineZoom)) / 2;
@@ -418,6 +423,11 @@ public class Editor : MonoBehaviour
 
 			imageRect.position = new Vector2(TimeToPx(zoomedStartTime), imageRect.position.y);
 			imageRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), imageRect.sizeDelta.y);
+		}
+
+		//Note(Simon): Render various stuff
+		{
+			
 		}
 
 		//Note(Simon): Resizing and moving of timeline items
@@ -488,8 +498,10 @@ public class Editor : MonoBehaviour
 			}
 			else
 			{
-				timelineItemBeingDragged.startTime += (mouseDelta.x / 8) * timelineZoom;
-				timelineItemBeingDragged.endTime += (mouseDelta.x / 8) * timelineZoom;
+				var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
+				var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
+				timelineItemBeingDragged.startTime = newStart;
+				timelineItemBeingDragged.endTime = newEnd;
 			}
 		}
 		else if (isResizingTimelineItem)
@@ -503,11 +515,19 @@ public class Editor : MonoBehaviour
 			{
 				if(isResizingStart)
 				{
-					timelineItemBeingResized.startTime += (mouseDelta.x / 8) * timelineZoom;
+					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
+					if (newStart < timelineItemBeingResized.endTime - 0.2f)
+					{
+						timelineItemBeingResized.startTime = newStart;
+					}
 				}
 				else
 				{
-					timelineItemBeingResized.endTime += (mouseDelta.x / 8) * timelineZoom;
+					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
+					if (newEnd > timelineItemBeingResized.startTime + 0.2f)
+					{
+						timelineItemBeingResized.endTime = newEnd;
+					}
 				}
 			}
 		}
