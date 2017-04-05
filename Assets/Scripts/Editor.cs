@@ -371,7 +371,7 @@ public class Editor : MonoBehaviour
 		timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
 		timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
 
-		//NOTE(Simon): timeline labels
+		//NOTE(Simon): Timeline labels
 		{
 			var maxNumLabels = Math.Floor(timelineWidth / 100);
 			var lowerround = FloorTime(zoomedLength / maxNumLabels);
@@ -442,6 +442,7 @@ public class Editor : MonoBehaviour
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
+		//Note(Simon): timeline buttons
 		for (var i = interactionPoints.Count - 1; i >= 0; i--)
 		{
 			var point = interactionPoints[i];
@@ -468,6 +469,10 @@ public class Editor : MonoBehaviour
 				RemoveItemFromTimeline(point);
 				Destroy(point.point);
 				Destroy(point.panel);
+			}
+			if (edit.state == SelectState.Pressed)
+			{
+				//TODO(Simon): Edit stuff
 			}
 		}
 
