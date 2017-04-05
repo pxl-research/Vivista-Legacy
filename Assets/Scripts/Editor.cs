@@ -24,6 +24,7 @@ public class InteractionPoint
 {
 	public GameObject point;
 	public GameObject timelineRow;
+	public GameObject panel;
 	public InteractionType type;
 	public string title;
 	public string body;
@@ -246,6 +247,7 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<ImagePanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerURL);
 						lastInteractionPoint.title = editor.answerTitle;
 						lastInteractionPoint.body = editor.answerURL;
+						lastInteractionPoint.panel = panel;
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
@@ -261,6 +263,7 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<TextPanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerBody);
 						lastInteractionPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						lastInteractionPoint.body = editor.answerBody;
+						lastInteractionPoint.panel = panel;
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
@@ -439,9 +442,33 @@ public class Editor : MonoBehaviour
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
-		foreach(var point in interactionPoints)
+		for (var i = interactionPoints.Count - 1; i >= 0; i--)
 		{
-			//point.timelineRow.Getc
+			var point = interactionPoints[i];
+			var edit = point.timelineRow.transform.FindChild("Content/Edit").gameObject.GetComponent<Button2>();
+			var delete = point.timelineRow.transform.FindChild("Content/Delete").gameObject.GetComponent<Button2>();
+
+			if (delete.state == SelectState.Pressed)
+			{
+				//Note(Simon): If it is the last placed one, we might still be editing the last placed one. So extra cleanup is necessary
+				if (i == interactionPoints.Count - 1)
+				{
+					if (editorState == EditorState.FillingPanelDetails)
+					{
+						editorState = EditorState.Active;
+						Destroy(interactionEditor);
+					}
+					if (editorState == EditorState.PickingInteractionType)
+					{
+						editorState = EditorState.Active;
+						Destroy(interactionTypePicker);
+					}
+				}
+
+				RemoveItemFromTimeline(point);
+				Destroy(point.point);
+				Destroy(point.panel);
+			}
 		}
 
 		//Note(Simon): Render various stuff
