@@ -439,6 +439,11 @@ public class Editor : MonoBehaviour
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
+		foreach(var point in interactionPoints)
+		{
+			//point.timelineRow.Getc
+		}
+
 		//Note(Simon): Render various stuff
 		{
 			
@@ -459,19 +464,19 @@ public class Editor : MonoBehaviour
 			{
 				if (isResizingTimelineItem || rectPixel.x < leftAreaX)
 				{
-					Cursor.SetCursor(cursors.CursorDrag, new Vector2(16, 16), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
 				}
 				else if ( rectPixel.x > rightAreaX)
 				{
-					Cursor.SetCursor(cursors.CursorDrag, new Vector2(16, 16), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
 				}
 				else if (isDraggingTimelineItem)
 				{
-					Cursor.SetCursor(cursors.CursorMove, new Vector2(16, 16), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorMove, new Vector2(15, 15), CursorMode.Auto);
 				}
 				else
 				{
-					Cursor.SetCursor(cursors.CursorMove, new Vector2(16, 16), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorMove, new Vector2(15, 15), CursorMode.Auto);
 				}
 			}
 			else 
