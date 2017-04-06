@@ -31,6 +31,7 @@ public class InteractionPoint
 	public string body;
 	public double startTime;
 	public double endTime;
+	public bool filled;
 }
 
 public class Editor : MonoBehaviour 
@@ -40,8 +41,7 @@ public class Editor : MonoBehaviour
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPoint> interactionPoints;
-	private InteractionType lastInteractionPointType;
-	private InteractionPoint interactionPointToMove;
+	private InteractionPoint pointToMove;
 
 	public GameObject interactionTypePrefab;
 
@@ -97,6 +97,8 @@ public class Editor : MonoBehaviour
 	
 	void Update () 
 	{
+		Debug.Log(editorState);
+
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
@@ -185,9 +187,25 @@ public class Editor : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100))
 			{
 				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, 0.4f);
-				interactionPointToMove.point.transform.position = drawLocation;
+				var point = pointToMove;
+				point.point.transform.position = drawLocation;
 				
-				interactionPointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+				point.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+
+				switch(point.type)
+				{
+					case InteractionType.Text:
+						
+						point.panel.GetComponent<TextPanel>().Move(point.point.transform.position);
+						break;
+					case InteractionType.Image:
+						point.panel.GetComponent<ImagePanel>().Move(point.point.transform.position);
+						break;
+					case InteractionType.None:
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
 			}
 
 			if (Input.GetKeyUp(KeyCode.Escape))
@@ -207,21 +225,23 @@ public class Editor : MonoBehaviour
 				var picker = interactionTypePicker.GetComponent<InteractionTypePicker>();
 				if (picker.answered)
 				{
-					lastInteractionPointType = picker.answer;
-					var lastInteractionPointPos = interactionPoints[interactionPoints.Count - 1].point.transform.position;
+					var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
+					lastPlacedPoint.type = picker.answer;
+					var lastPlacedPointPos = interactionPoints[interactionPoints.Count - 1].point.transform.position;
 
-					switch (lastInteractionPointType)
+					switch (lastPlacedPoint.type)
 					{
 						case InteractionType.Image:
 						{
 							interactionEditor = Instantiate(imagePanelEditorPrefab);
-							interactionEditor.GetComponent<ImagePanelEditor>().Init(lastInteractionPointPos, "", "");
+							interactionEditor.GetComponent<ImagePanelEditor>().Init(lastPlacedPointPos, "", "");
 							break;
 						}
 						case InteractionType.Text:
 						{
 							interactionEditor = Instantiate(textPanelEditorPrefab);
-							interactionEditor.GetComponent<TextPanelEditor>().Init(lastInteractionPointPos, "", "");
+							interactionEditor.GetComponent<TextPanelEditor>().Init(lastPlacedPointPos, "", "");
+
 							break;
 						}
 						default:
@@ -260,7 +280,7 @@ public class Editor : MonoBehaviour
 		{
 			var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 			var lastPlacePointPos = lastPlacedPoint.point.transform.position;
-			switch (lastInteractionPointType)
+			switch (lastPlacedPoint.type)
 			{
 				case InteractionType.Image:
 				{
@@ -275,6 +295,7 @@ public class Editor : MonoBehaviour
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
+						lastPlacedPoint.filled = true;
 					}
 					break;
 				}
@@ -291,6 +312,7 @@ public class Editor : MonoBehaviour
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
+						lastPlacedPoint.filled = true;
 					}
 					break;
 				}
@@ -465,13 +487,24 @@ public class Editor : MonoBehaviour
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
-		//Note(Simon): timeline buttons
+		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
 		for (var i = interactionPoints.Count - 1; i >= 0; i--)
 		{
 			var point = interactionPoints[i];
 			var edit = point.timelineRow.transform.FindChild("Content/Edit").gameObject.GetComponent<Button2>();
 			var delete = point.timelineRow.transform.FindChild("Content/Delete").gameObject.GetComponent<Button2>();
 			var move = point.timelineRow.transform.FindChild("Content/Move").gameObject.GetComponent<Toggle2>();
+
+			if (!point.filled)
+			{
+				edit.interactable = false;
+				move.interactable  = false;
+			}
+			if (point.filled)
+			{
+				edit.interactable  = true;
+				move.interactable  = true;
+			}
 
 			if (delete.state == SelectState.Pressed)
 			{
@@ -505,13 +538,13 @@ public class Editor : MonoBehaviour
 			if (move.switchedOn)
 			{
 				editorState = EditorState.MovingInteractionPoint;
-				interactionPointToMove = point;
+				pointToMove = point;
 				break;
 			}
 			if (move.switchedOff)
 			{
 				editorState = EditorState.Active;
-				interactionPointToMove = null;
+				pointToMove = null;
 				break;
 			}
 		}

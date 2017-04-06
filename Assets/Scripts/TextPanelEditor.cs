@@ -17,22 +17,27 @@ public class TextPanelEditor : MonoBehaviour
 	{
 		title.text = initialTitle;
 		body.text = initialBody;
-
-		var newPos = position;
+		Move(position);
+	}
+	
+	public void Move(Vector3 position)
+	{
+		Vector3 newPos;
 
 		if (!Camera.main.orthographic)
 		{
-			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.3f);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
 			newPos.y += 0.01f;
 		}
 		else
 		{
-			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
 			newPos.y += 0.015f;
 		}
 
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
+
 
 	void Update () 
 	{

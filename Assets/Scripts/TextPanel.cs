@@ -14,26 +14,32 @@ public class TextPanel : MonoBehaviour
 		body.text = newBody;
 
 		canvas = GetComponent<Canvas>();
+		Move(position);
+		
+		var width = Mathf.Max(200, newBody.Length);
+		var height = Mathf.Max(200, newBody.Length / 2);
+		
 
-		var newPos = position;
+		canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
+
+	}
+
+	public void Move(Vector3 position)
+	{
+		Vector3 newPos;
 
 		if (!Camera.main.orthographic)
 		{
-			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.3f);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
 			newPos.y += 0.01f;
 		}
 		else
 		{
-			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
 			newPos.y += 0.015f;
 		}
-
-		var width = Mathf.Max(200, newBody.Length);
-		var height = Mathf.Max(200, newBody.Length / 2);
-
-		var canvasTransform = canvas.GetComponent<RectTransform>();
-		canvasTransform.position = newPos;
-		canvasTransform.sizeDelta = new Vector2(width, height);
+	
+		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 	
 	public void Update()

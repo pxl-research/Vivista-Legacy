@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,15 +19,12 @@ public class ImagePanelEditor : MonoBehaviour
 	private string prevURL = "";
 	private bool downloading = false;
 	private WWW www;
-	private Vector3 interactionPointPos;
 
 	public void Init(Vector3 position, string initialTitle, string initialUrl)
 	{
 		title.text = initialTitle;
 		url.text = initialUrl;
-		interactionPointPos = position;
-
-		SetPos();
+		Move(position);
 	}
 
 	void Update()
@@ -69,7 +65,7 @@ public class ImagePanelEditor : MonoBehaviour
 			var height = texture.height / ratio;
 			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
 			
-			SetPos();
+
 
 			downloading = false;
 		}
@@ -82,18 +78,18 @@ public class ImagePanelEditor : MonoBehaviour
 		//NOTE(Simon): AnswerURL already up to date
 	}
 
-	public void SetPos()
+	public void Move(Vector3 position)
 	{
 		Vector3 newPos;
 
 		if (!Camera.main.orthographic)
 		{
-			newPos = Vector3.Lerp(interactionPointPos, Camera.main.transform.position, 0.3f);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
 			newPos.y += 0.01f;
 		}
 		else
 		{
-			newPos = Vector3.Lerp(interactionPointPos, Camera.main.transform.position, 0.001f);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
 			newPos.y += 0.015f;
 		}
 
