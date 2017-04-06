@@ -11,7 +11,8 @@ public enum EditorState {
 	Active,
 	PlacingInteractionPoint,
 	PickingInteractionType,
-	FillingPanelDetails
+	FillingPanelDetails,
+	MovingInteractionPoint
 }
 
 public enum InteractionType {
@@ -34,9 +35,13 @@ public class InteractionPoint
 
 public class Editor : MonoBehaviour 
 {
+	private EditorState editorState;
+
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPoint> interactionPoints;
+	private InteractionType lastInteractionPointType;
+	private InteractionPoint interactionPointToMove;
 
 	public GameObject interactionTypePrefab;
 
@@ -72,9 +77,7 @@ public class Editor : MonoBehaviour
 	private bool isResizingTimelineItem;
 	private bool isResizingStart;
 	private InteractionPoint timelineItemBeingResized;
-	private EditorState editorState;
 
-	private InteractionType lastInteractionPointType;
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
@@ -155,7 +158,7 @@ public class Editor : MonoBehaviour
 					point = newPoint,
 					type = InteractionType.None,
 					startTime = videoController.currentTime,
-					endTime = videoController.currentTime + 5,
+					endTime = videoController.currentTime + (videoController.videoLength / 10),
 				};
 
 				AddItemToTimeline(point);
@@ -164,6 +167,27 @@ public class Editor : MonoBehaviour
 				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint.transform.position);
 
 				editorState = EditorState.PickingInteractionType;
+				ResetInteractionPointTemp();
+			}
+
+			if (Input.GetKeyUp(KeyCode.Escape))
+			{
+				SetActive(true);
+			}
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				SetActive(false);
+			}
+		}
+
+		if (editorState == EditorState.MovingInteractionPoint)
+		{
+			if (Physics.Raycast(ray, out hit, 100))
+			{
+				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, 0.4f);
+				interactionPointToMove.point.transform.position = drawLocation;
+				
+				interactionPointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
 			}
 
 			if (Input.GetKeyUp(KeyCode.Escape))
@@ -234,8 +258,8 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
-			var lastInteractionPoint = interactionPoints[interactionPoints.Count - 1];
-			var lastInteractionPointPos = lastInteractionPoint.point.transform.position;
+			var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
+			var lastPlacePointPos = lastPlacedPoint.point.transform.position;
 			switch (lastInteractionPointType)
 			{
 				case InteractionType.Image:
@@ -244,10 +268,10 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerURL);
-						lastInteractionPoint.title = editor.answerTitle;
-						lastInteractionPoint.body = editor.answerURL;
-						lastInteractionPoint.panel = panel;
+						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, editor.answerURL);
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.body = editor.answerURL;
+						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
@@ -260,10 +284,10 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(lastInteractionPointPos, editor.answerTitle, editor.answerBody);
-						lastInteractionPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
-						lastInteractionPoint.body = editor.answerBody;
-						lastInteractionPoint.panel = panel;
+						panel.GetComponent<TextPanel>().Init(lastPlacePointPos, editor.answerTitle, editor.answerBody);
+						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
+						lastPlacedPoint.body = editor.answerBody;
+						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
@@ -278,7 +302,6 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
-				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 				RemoveItemFromTimeline(lastPlacedPoint);
 				Destroy(interactionEditor);
 			}
@@ -448,6 +471,7 @@ public class Editor : MonoBehaviour
 			var point = interactionPoints[i];
 			var edit = point.timelineRow.transform.FindChild("Content/Edit").gameObject.GetComponent<Button2>();
 			var delete = point.timelineRow.transform.FindChild("Content/Delete").gameObject.GetComponent<Button2>();
+			var move = point.timelineRow.transform.FindChild("Content/Move").gameObject.GetComponent<Toggle2>();
 
 			if (delete.state == SelectState.Pressed)
 			{
@@ -469,10 +493,26 @@ public class Editor : MonoBehaviour
 				RemoveItemFromTimeline(point);
 				Destroy(point.point);
 				Destroy(point.panel);
+				break;
 			}
+
 			if (edit.state == SelectState.Pressed)
 			{
 				//TODO(Simon): Edit stuff
+				break;
+			}
+
+			if (move.switchedOn)
+			{
+				editorState = EditorState.MovingInteractionPoint;
+				interactionPointToMove = point;
+				break;
+			}
+			if (move.switchedOff)
+			{
+				editorState = EditorState.Active;
+				interactionPointToMove = null;
+				break;
 			}
 		}
 

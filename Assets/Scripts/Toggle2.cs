@@ -1,17 +1,14 @@
 ﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
-public enum SelectState
+public class Toggle2 : Toggle
 {
-	Normal,
-	Highlighted,
-	Pressed,
-	Disabled,
-	Released
-}
+	private bool WasOn;
+	
+	public bool switchedOn;
+	public bool switchedOff;
 
-public class Button2 : Button 
-{
 	public SelectState state
 	{ 
 		get
@@ -30,5 +27,12 @@ public class Button2 : Button
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+	}
+
+	public void Update()
+	{
+		switchedOn = isOn && !WasOn;
+		switchedOff = !isOn && WasOn;
+		WasOn = isOn;
 	}
 }
