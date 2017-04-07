@@ -146,7 +146,8 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, 0.4f);
+				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.4f : 0.01f);
+
 				interactionPointTemp.transform.position = drawLocation;
 				//NOTE(Simon): Rotate to match sphere's normal
 				interactionPointTemp.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
@@ -186,7 +187,8 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, 0.4f);
+				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.4f : 0.01f);
+
 				pointToMove.point.transform.position = drawLocation;
 				pointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
 
@@ -623,7 +625,7 @@ public class Editor : MonoBehaviour
 			{
 				var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
 				var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
-				if (newStart > 0 && newEnd < timelineEndTime)
+				if (newStart > 0.0f && newEnd < timelineEndTime)
 				{
 					timelineItemBeingDragged.startTime = newStart;
 					timelineItemBeingDragged.endTime = newEnd;
