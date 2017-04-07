@@ -187,19 +187,16 @@ public class Editor : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100))
 			{
 				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, 0.4f);
-				var point = pointToMove;
-				point.point.transform.position = drawLocation;
-				
-				point.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+				pointToMove.point.transform.position = drawLocation;
+				pointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
 
-				switch(point.type)
+				switch(pointToMove.type)
 				{
 					case InteractionType.Text:
-						
-						point.panel.GetComponent<TextPanel>().Move(point.point.transform.position);
+						pointToMove.panel.GetComponent<TextPanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.Image:
-						point.panel.GetComponent<ImagePanel>().Move(point.point.transform.position);
+						pointToMove.panel.GetComponent<ImagePanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.None:
 						break;
@@ -211,10 +208,12 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
 				SetActive(true);
+				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetActive(false);
+				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 			}
 		}
 
