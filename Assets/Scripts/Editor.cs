@@ -623,8 +623,11 @@ public class Editor : MonoBehaviour
 			{
 				var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
 				var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
-				timelineItemBeingDragged.startTime = newStart;
-				timelineItemBeingDragged.endTime = newEnd;
+				if (newStart > 0 && newEnd < timelineEndTime)
+				{
+					timelineItemBeingDragged.startTime = newStart;
+					timelineItemBeingDragged.endTime = newEnd;
+				}
 			}
 		}
 		else if (isResizingTimelineItem)
@@ -666,7 +669,7 @@ public class Editor : MonoBehaviour
 		return (float)(timelineXOffset + (fraction * timelineWidth));
 	}
 	
-	public int FloorTime(double time)
+	private static int FloorTime(double time)
 	{
 		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
 		var result = niceTimes[0];
@@ -682,7 +685,7 @@ public class Editor : MonoBehaviour
 		return result;
 	}
 
-	public int CeilTime(double time)
+	private static int CeilTime(double time)
 	{
 		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
 		
@@ -706,7 +709,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	bool SaveToFile()
+	private bool SaveToFile()
 	{
 		var sb = new StringBuilder();
 		sb.Append("{");
@@ -729,12 +732,12 @@ public class Editor : MonoBehaviour
 		return false;
 	}
 
-	void ResetInteractionPointTemp()
+	private void ResetInteractionPointTemp()
 	{
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
 
-	string FormatSeconds(double time)
+	private static string FormatSeconds(double time)
 	{
 		var hours = (int)(time / (60 * 60));
 		time -= hours * 60;
