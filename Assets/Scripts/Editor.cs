@@ -21,6 +21,7 @@ public enum InteractionType {
 	Image,
 }
 
+[Serializable]
 public class InteractionPoint
 {
 	public GameObject point;
@@ -32,6 +33,16 @@ public class InteractionPoint
 	public double startTime;
 	public double endTime;
 	public bool filled;
+}
+
+public class InteractionpointSerialize
+{
+	public Vector3 position;
+	public InteractionType type;
+	public string title;
+	public string body;
+	public double startTime;
+	public double endTime;
 }
 
 public class Editor : MonoBehaviour 
@@ -568,21 +579,21 @@ public class Editor : MonoBehaviour
 
 			if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
 			{
-				if (isResizingTimelineItem || rectPixel.x < leftAreaX)
+				if (isDraggingTimelineItem)
 				{
 					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
 				}
-				else if ( rectPixel.x > rightAreaX)
+				else if (isResizingTimelineItem)
 				{
-					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
 				}
-				else if (isDraggingTimelineItem)
+				else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
 				{
-					Cursor.SetCursor(cursors.CursorMove, new Vector2(15, 15), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
 				}
 				else
 				{
-					Cursor.SetCursor(cursors.CursorMove, new Vector2(15, 15), CursorMode.Auto);
+					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
 				}
 			}
 			else 
@@ -719,12 +730,25 @@ public class Editor : MonoBehaviour
 		{
 			foreach (var point in interactionPoints)
 			{
-				//sb.Append(NetJSON.NetJSON.Serialize(point));
+				var temp = new InteractionpointSerialize
+				{
+					position = point.point.transform.position,
+					type = point.type,
+					title = point.title,
+					body = point.body,
+					startTime = point.startTime,
+					endTime = point.endTime
+				};
+
+				sb.Append(JsonUtility.ToJson(temp, true));
+				sb.Append(",");
 			}
+
+			sb.Remove(sb.Length - 1, 1);
 		}
 		else
 		{
-				Debug.Log("{}");
+			Debug.Log("{}");
 		}
 
 		sb.Append("}");

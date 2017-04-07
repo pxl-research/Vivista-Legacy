@@ -2,5 +2,5 @@
 
 public class Cursors : MonoBehaviour {
 	public Texture2D CursorDrag;
-	public Texture2D CursorMove;
+	public Texture2D CursorResize;
 }
