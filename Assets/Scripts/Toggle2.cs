@@ -24,7 +24,7 @@ public class Toggle2 : Toggle
 				case SelectionState.Disabled:
 					return SelectState.Disabled;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new ArgumentOutOfRangeException("SelectionState", "Something changed in the Toggle API");
 			}
 		}
 	}

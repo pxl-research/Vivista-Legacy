@@ -520,7 +520,7 @@ public class Editor : MonoBehaviour
 
 			if (delete.state == SelectState.Pressed)
 			{
-				//Note(Simon): If it is the last placed one, we might still be editing the last placed one. So extra cleanup is necessary
+				//Note(Simon): If it is the last placed one, we might still be editing that one. So extra cleanup is necessary
 				if (i == interactionPoints.Count - 1)
 				{
 					if (editorState == EditorState.FillingPanelDetails)
