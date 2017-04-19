@@ -14,7 +14,8 @@ public enum EditorState {
 	PickingInteractionType,
 	FillingPanelDetails,
 	MovingInteractionPoint,
-	Saving
+	Saving,
+	EditingInteractionPoint
 }
 
 public enum InteractionType {
@@ -55,6 +56,7 @@ public class Editor : MonoBehaviour
 	private GameObject interactionPointTemp;
 	private List<InteractionPoint> interactionPoints;
 	private InteractionPoint pointToMove;
+	private InteractionPoint pointToEdit;
 
 	public GameObject interactionTypePrefab;
 
@@ -238,6 +240,49 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		if (editorState == EditorState.EditingInteractionPoint)
+		{
+			switch(pointToEdit.type)
+			{
+				case InteractionType.Image:
+				{
+					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
+					if (editor.answered)
+					{
+						var panel = Instantiate(imagePanelPrefab);
+						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerURL);
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.body = editor.answerURL;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+					break;
+				}
+				case InteractionType.Text:
+				{
+					var editor = interactionEditor.GetComponent<TextPanelEditor>(); 
+					if (editor.answered)
+					{
+						var panel = Instantiate(textPanelPrefab);
+						panel.GetComponent<TextPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerBody);
+						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
+						pointToEdit.body = editor.answerBody;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+					break;
+				}
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
 		if (editorState == EditorState.PickingInteractionType)
 		{
 			if (interactionTypePicker != null)
@@ -361,7 +406,10 @@ public class Editor : MonoBehaviour
 		{
 			if (savePanel.GetComponent<SavePanel>().answered)
 			{
-				SaveToFile(savePanel.GetComponent<SavePanel>().answerFilename);
+				if (!SaveToFile(savePanel.GetComponent<SavePanel>().answerFilename))
+				{
+					Debug.LogError("Something went wrong while saving the file");
+				}
 				SetActive(true);
 				Destroy(savePanel);
 			}
@@ -376,11 +424,10 @@ public class Editor : MonoBehaviour
 
 #if UNITY_EDITOR
 		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S) && editorState != EditorState.Saving)
-		{
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S))
-		{
 #endif
+		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
 				savePanel = Instantiate(savePanelPrefab);
@@ -581,9 +628,33 @@ public class Editor : MonoBehaviour
 				break;
 			}
 
-			if (edit.state == SelectState.Pressed)
+			if (edit.state == SelectState.Pressed && editorState != EditorState.EditingInteractionPoint)
 			{
-				//TODO(Simon): Edit stuff
+				editorState = EditorState.EditingInteractionPoint;
+				pointToEdit = point;
+				var panel = pointToEdit.panel;
+
+				switch (pointToEdit.type)
+				{
+					case InteractionType.Text:
+						interactionEditor = Instantiate(textPanelEditorPrefab);
+						interactionEditor.GetComponent<TextPanelEditor>().Init(panel.transform.position, 
+																				panel.GetComponent<TextPanel>().title.text, 
+																				panel.GetComponent<TextPanel>().body.text, 
+																				true);
+						break;
+					case InteractionType.Image:
+						interactionEditor = Instantiate(imagePanelEditorPrefab);
+						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.transform.position, 
+																				panel.GetComponent<ImagePanel>().title.text, 
+																				panel.GetComponent<ImagePanel>().imageURL, 
+																				true);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				Destroy(pointToEdit.panel);
 				break;
 			}
 

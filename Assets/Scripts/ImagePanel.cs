@@ -5,6 +5,7 @@ public class ImagePanel : MonoBehaviour
 {
 	public Text title;
 	public RawImage image;
+	public string imageURL;
 	public Canvas canvas;
 	public GameObject interactionPoint;
 	
@@ -14,6 +15,7 @@ public class ImagePanel : MonoBehaviour
 	public void Init(Vector3 position, string newTitle, string newImageURL)
 	{
 		title.text = newTitle;
+		imageURL = newImageURL;
 		www = new WWW(newImageURL);
 		downloading = true;
 		Move(position);

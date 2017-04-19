@@ -13,28 +13,34 @@ public class TextPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public string answerBody;
 
-	public void Init(Vector3 position, string initialTitle, string initialBody)
+	public void Init(Vector3 position, string initialTitle, string initialBody, bool exactPos = false)
 	{
 		title.text = initialTitle;
 		body.text = initialBody;
-		Move(position);
+		Move(position, exactPos);
 	}
 	
-	public void Move(Vector3 position)
+	public void Move(Vector3 position, bool exactPos = false)
 	{
 		Vector3 newPos;
 
-		if (!Camera.main.orthographic)
+		if (exactPos)
 		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-			newPos.y += 0.01f;
+			newPos = position;
 		}
 		else
 		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-			newPos.y += 0.015f;
+			if (!Camera.main.orthographic)
+			{
+				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
+				newPos.y += 0.01f;
+			}
+			else
+			{
+				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+				newPos.y += 0.015f;
+			}
 		}
-
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
