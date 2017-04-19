@@ -138,7 +138,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Active)
 		{
-			if (Input.GetMouseButton(0) && !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+			if (Input.GetMouseButtonDown(0) && !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
 			{
 				editorState = EditorState.PlacingInteractionPoint;
 			}
