@@ -362,14 +362,20 @@ public class Editor : MonoBehaviour
 			if (savePanel.GetComponent<SavePanel>().answered)
 			{
 				SaveToFile(savePanel.GetComponent<SavePanel>().answerFilename);
-				editorState = EditorState.Active;
+				SetActive(true);
+				Destroy(savePanel);
+			}
+			
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				SetActive(true);
 				Destroy(savePanel);
 			}
 		}
 
 
 #if UNITY_EDITOR
-		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S))
+		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S) && editorState != EditorState.Saving)
 		{
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S))

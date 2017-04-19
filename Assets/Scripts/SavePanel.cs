@@ -39,7 +39,7 @@ public class SavePanel : MonoBehaviour
 		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
 			filename.GetComponent<RectTransform>().sizeDelta.y
 			//Padding, spacing, button, fudge factor
-			+ 20 + 30 + 30 + 20);
+			+ 20 + 30 + 30 + 30);
 
 		canvas.transform.rotation = Camera.main.transform.rotation;
 
@@ -61,6 +61,7 @@ public class SavePanel : MonoBehaviour
 		}
 
 		fileExistsWarning.enabled = fileExists;
+		done.interactable = !fileExists;
 	}
 
 	public void Answer()
