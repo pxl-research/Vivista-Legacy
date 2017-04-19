@@ -115,6 +115,7 @@ public class Editor : MonoBehaviour
 
 		UpdateTimeline();
 
+		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
@@ -423,19 +424,23 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		//Note(Simon): Reset offset when fully zoomed out.
 		if (timelineZoom >= 1)
 		{
 			timelineOffset = 0;
 		}
 
-		var zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
+		float zoomedLength;
+		//Note(Simon): Correct the timeline offset after zooming
+		{
+			zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
+			var windowMiddle = (timelineEndTime - (timelineStartTime + timelineOffset * timelineZoom)) / 2;
+			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
+			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
 		
-		var windowMiddle = (timelineEndTime - (timelineStartTime + timelineOffset * timelineZoom)) / 2;
-		timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
-		timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
-		
-		timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
-		timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
+			timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
+			timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
+		}
 
 		//NOTE(Simon): Timeline labels
 		{
@@ -576,83 +581,84 @@ public class Editor : MonoBehaviour
 		}
 
 		//Note(Simon): Resizing and moving of timeline items
-		foreach(var point in interactionPoints)
 		{
-			var row = point.timelineRow;
-			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
-
-			Vector2 rectPixel;
-			RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, Input.mousePosition, null, out rectPixel);
-			var leftAreaX = 5;
-			var rightAreaX = imageRect.rect.width - 5;
-
-			if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
+			foreach(var point in interactionPoints)
 			{
-				if (isDraggingTimelineItem)
+				var row = point.timelineRow;
+				var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
+
+				Vector2 rectPixel;
+				RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, Input.mousePosition, null, out rectPixel);
+				var leftAreaX = 5;
+				var rightAreaX = imageRect.rect.width - 5;
+
+				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
 				{
-					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+					if (isDraggingTimelineItem)
+					{
+						Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+					}
+					else if (isResizingTimelineItem)
+					{
+						Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
+					}
+					else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
+					{
+						Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
+					}
+					else
+					{
+						Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+					}
 				}
-				else if (isResizingTimelineItem)
+				else 
 				{
-					Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
+					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
 				}
-				else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
+
+				if (!isDraggingTimelineItem && !isResizingTimelineItem
+					&& Input.GetMouseButton(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
 				{
-					Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
+					if (rectPixel.x < leftAreaX)
+					{
+						isResizingStart = true;
+						isResizingTimelineItem = true;
+						timelineItemBeingResized = point;
+					}
+					else if (rectPixel.x > rightAreaX)
+					{
+						isResizingStart = false;
+						isResizingTimelineItem = true;
+						timelineItemBeingResized = point;
+					}
+					else
+					{
+						isDraggingTimelineItem = true;
+						timelineItemBeingDragged = point;
+					}
+					break;
+				}
+			}
+
+			if (isDraggingTimelineItem)
+			{
+				if (!Input.GetMouseButton(0))
+				{
+					isDraggingTimelineItem = false;
+					timelineItemBeingDragged = null;
 				}
 				else
 				{
-					Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
+					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
+					if (newStart > 0.0f && newEnd < timelineEndTime)
+					{
+						timelineItemBeingDragged.startTime = newStart;
+						timelineItemBeingDragged.endTime = newEnd;
+					}
 				}
 			}
-			else 
-			{
-				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-			}
-
-			if (!isDraggingTimelineItem && !isResizingTimelineItem
-				&& Input.GetMouseButton(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
-			{
-				if (rectPixel.x < leftAreaX)
-				{
-					isResizingStart = true;
-					isResizingTimelineItem = true;
-					timelineItemBeingResized = point;
-				}
-				else if (rectPixel.x > rightAreaX)
-				{
-					isResizingStart = false;
-					isResizingTimelineItem = true;
-					timelineItemBeingResized = point;
-				}
-				else
-				{
-					isDraggingTimelineItem = true;
-					timelineItemBeingDragged = point;
-				}
-				break;
-			}
-		}
-
-		if (isDraggingTimelineItem)
-		{
-			if (!Input.GetMouseButton(0))
-			{
-				isDraggingTimelineItem = false;
-				timelineItemBeingDragged = null;
-			}
-			else
-			{
-				var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
-				var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
-				if (newStart > 0.0f && newEnd < timelineEndTime)
-				{
-					timelineItemBeingDragged.startTime = newStart;
-					timelineItemBeingDragged.endTime = newEnd;
-				}
-			}
-		}
-		else if (isResizingTimelineItem)
+			else if (isResizingTimelineItem)
 		{
 			if (!Input.GetMouseButton(0))
 			{
@@ -678,6 +684,7 @@ public class Editor : MonoBehaviour
 					}
 				}
 			}
+		}
 		}
 	}
 	
