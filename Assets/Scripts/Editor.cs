@@ -138,7 +138,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Active)
 		{
-			if (Input.GetMouseButtonDown(0))
+			if (Input.GetMouseButton(0) && !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
 			{
 				editorState = EditorState.PlacingInteractionPoint;
 			}
@@ -163,6 +163,11 @@ public class Editor : MonoBehaviour
 				interactionPointTemp.transform.position = drawLocation;
 				//NOTE(Simon): Rotate to match sphere's normal
 				interactionPointTemp.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+			}
+
+			if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+			{
+				SetActive(true);
 			}
 
 			if (Input.GetMouseButtonUp(0))
