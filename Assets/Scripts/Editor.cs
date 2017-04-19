@@ -108,7 +108,7 @@ public class Editor : MonoBehaviour
 	
 	void Update () 
 	{
-		Debug.Log(editorState);
+		//Debug.Log(editorState);
 
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
@@ -405,13 +405,22 @@ public class Editor : MonoBehaviour
 			timelineWindowEndTime = timelineEndTime;
 		}
 
-		if (Input.mouseScrollDelta.y > 0)
+		//Note(Simon): Zoom timeline
 		{
-			timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
-		}
-		else if (Input.mouseScrollDelta.y < 0)
-		{
-			timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+			var coords = new Vector3[4];
+			timelineContainer.GetComponentInChildren<RectTransform>().GetWorldCorners(coords);
+
+			if (Input.mousePosition.y < coords[1].y)
+			{
+				if (Input.mouseScrollDelta.y > 0)
+				{
+					timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
+				}
+				else if (Input.mouseScrollDelta.y < 0)
+				{
+					timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+				}
+			}
 		}
 
 		if (timelineZoom >= 1)
@@ -458,7 +467,7 @@ public class Editor : MonoBehaviour
 			for (int i = 0; i < realNumLabels; i++)
 			{
 				var time = (i + numTicksOffScreen) * timelineTickSize;
-				headerLabels[i].text = FormatSeconds(time);
+				headerLabels[i].text = FormatTime(time);
 				headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
 			}
 		}
@@ -763,7 +772,7 @@ public class Editor : MonoBehaviour
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
 
-	private static string FormatSeconds(double time)
+	private static string FormatTime(double time)
 	{
 		var hours = (int)(time / (60 * 60));
 		time -= hours * 60;
