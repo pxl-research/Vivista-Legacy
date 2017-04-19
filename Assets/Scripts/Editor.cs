@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -12,7 +13,8 @@ public enum EditorState {
 	PlacingInteractionPoint,
 	PickingInteractionType,
 	FillingPanelDetails,
-	MovingInteractionPoint
+	MovingInteractionPoint,
+	Saving
 }
 
 public enum InteractionType {
@@ -56,6 +58,7 @@ public class Editor : MonoBehaviour
 
 	public GameObject interactionTypePrefab;
 
+	public GameObject savePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject textPanelEditorPrefab;
 	public GameObject imagePanelPrefab;
@@ -63,6 +66,7 @@ public class Editor : MonoBehaviour
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
+	private GameObject savePanel;
 
 	public GameObject timelineContainer;
 	public GameObject timeline;
@@ -108,8 +112,6 @@ public class Editor : MonoBehaviour
 	
 	void Update () 
 	{
-		//Debug.Log(editorState);
-
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
@@ -355,6 +357,17 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		if (editorState == EditorState.Saving)
+		{
+			if (savePanel.GetComponent<SavePanel>().answered)
+			{
+				SaveToFile(savePanel.GetComponent<SavePanel>().answerFilename);
+				editorState = EditorState.Active;
+				Destroy(savePanel);
+			}
+		}
+
+
 #if UNITY_EDITOR
 		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S))
 		{
@@ -362,9 +375,11 @@ public class Editor : MonoBehaviour
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S))
 		{
 #endif
-			if(!SaveToFile())
+			if (Physics.Raycast(ray, out hit, 100))
 			{
-				Debug.Log("Save error");
+				savePanel = Instantiate(savePanelPrefab);
+				savePanel.GetComponent<SavePanel>().init(hit.point);
+				editorState = EditorState.Saving;
 			}
 		}
 	}
@@ -743,10 +758,10 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	private bool SaveToFile()
+	private bool SaveToFile(string filename)
 	{
 		var sb = new StringBuilder();
-		sb.Append("{");
+		sb.Append("[");
 		if (interactionPoints.Count > 0)
 		{
 			foreach (var point in interactionPoints)
@@ -769,14 +784,28 @@ public class Editor : MonoBehaviour
 		}
 		else
 		{
-			Debug.Log("{}");
+			Debug.Log("[]");
 		}
 
-		sb.Append("}");
+		sb.Append("]");
 
 		Debug.Log(sb.ToString());
 
-		return false;
+		try
+		{
+			using (var file = File.CreateText(Path.Combine(Application.persistentDataPath, filename)))
+			{
+				file.Write(sb.ToString());
+				file.Close();
+			}
+		}
+		catch(Exception e)
+		{
+			Debug.Log(e.ToString());
+			return false;
+		}
+
+		return true;
 	}
 
 	private void ResetInteractionPointTemp()

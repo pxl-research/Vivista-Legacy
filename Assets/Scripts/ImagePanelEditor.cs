@@ -64,8 +64,6 @@ public class ImagePanelEditor : MonoBehaviour
 			var ratio = texture.width / width;
 			var height = texture.height / ratio;
 			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
-			
-
 
 			downloading = false;
 		}
