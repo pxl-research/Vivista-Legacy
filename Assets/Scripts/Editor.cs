@@ -15,7 +15,8 @@ public enum EditorState {
 	FillingPanelDetails,
 	MovingInteractionPoint,
 	Saving,
-	EditingInteractionPoint
+	EditingInteractionPoint,
+	Opening
 }
 
 public enum InteractionType {
@@ -60,6 +61,7 @@ public class Editor : MonoBehaviour
 
 	public GameObject interactionTypePrefab;
 
+	public GameObject openPanelPrefab;
 	public GameObject savePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject textPanelEditorPrefab;
@@ -69,6 +71,7 @@ public class Editor : MonoBehaviour
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
 	private GameObject savePanel;
+	private GameObject openPanel;
 
 	public GameObject timelineContainer;
 	public GameObject timeline;
@@ -421,11 +424,44 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		if (editorState == EditorState.Opening)
+		{
+			if (openPanel.GetComponent<OpenPanel>().answered)
+			{
+				if (!OpenFile(openPanel.GetComponent<OpenPanel>().answerFilename))
+				{
+					Debug.LogError("Something went wrong while loading the file");
+				}
+				SetActive(true);
+				Destroy(openPanel);
+			}
+			
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				SetActive(true);
+				Destroy(openPanel);
+			}
+		}
+
+#if UNITY_EDITOR
+		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O))
+#else
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O))
+#endif
+		{
+			if (Physics.Raycast(ray, out hit, 100))
+			{
+				openPanel = Instantiate(openPanelPrefab);
+				openPanel.GetComponent<OpenPanel>().init();
+				openPanel.transform.SetParent(Canvass.main.transform, false);
+				editorState = EditorState.Opening;
+			}
+		}
 
 #if UNITY_EDITOR
 		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S) && editorState != EditorState.Saving)
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S))
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) && editorState != EditorState.Saving)
 #endif
 		{
 			if (Physics.Raycast(ray, out hit, 100))
@@ -892,6 +928,60 @@ public class Editor : MonoBehaviour
 			return false;
 		}
 
+		return true;
+	}
+
+	private bool OpenFile(string filename)
+	{
+		using (var fileContents = File.OpenText(Path.Combine(Application.persistentDataPath, filename)))
+		{
+			string str = fileContents.ReadToEnd();
+			List<string> stringObjects = new List<string>();
+			
+			var level = 0;
+			var start = 0;
+			var count = 0;
+
+			for(int i = 0; i < str.Length; i++)
+			{
+				if (str[i] == '{')
+				{
+					if (level == 0)
+					{
+						start = i;
+					}
+					level++;
+				}
+				if (str[i] == '}')
+				{
+					level--;
+				}
+				if (level == 0 && (str[i] == ',' || str[i] == ']'))
+				{
+					stringObjects.Add(str.Substring(start, count - 1));
+					count = 0;
+				}
+				if (level < 0)
+				{
+					Debug.Log("Corrupted save file. Aborting");
+					return false;
+				}
+
+				count++;
+			}
+
+			var points = new List<InteractionpointSerialize>();
+
+			foreach (var obj in stringObjects)
+			{
+				points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
+			}
+
+			foreach (var point in points)
+			{
+				
+			}
+		}
 		return true;
 	}
 
