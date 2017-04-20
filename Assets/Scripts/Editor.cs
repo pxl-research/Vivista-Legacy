@@ -593,6 +593,7 @@ public class Editor : MonoBehaviour
 			var edit = point.timelineRow.transform.FindChild("Content/Edit").gameObject.GetComponent<Button2>();
 			var delete = point.timelineRow.transform.FindChild("Content/Delete").gameObject.GetComponent<Button2>();
 			var move = point.timelineRow.transform.FindChild("Content/Move").gameObject.GetComponent<Toggle2>();
+			var view = point.timelineRow.transform.FindChild("Content/View").gameObject.GetComponent<Toggle2>();
 
 			if (!point.filled)
 			{
@@ -669,6 +670,15 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.Active;
 				pointToMove = null;
 				break;
+			}
+
+			if (view.switchedOn)
+			{
+				point.panel.SetActive(false);
+			}
+			else if (view.switchedOff)
+			{
+				point.panel.SetActive(true);
 			}
 		}
 
