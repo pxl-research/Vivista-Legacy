@@ -23,6 +23,10 @@ public class ImagePanelEditor : MonoBehaviour
 	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
 	{
 		title.text = initialTitle;
+		if (initialUrl.StartsWith(@"file:///"))
+		{
+			initialUrl = initialUrl.Substring(8);
+		}
 		url.text = initialUrl;
 		Move(position, exactPos);
 	}
