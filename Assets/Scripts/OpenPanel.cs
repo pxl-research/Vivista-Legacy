@@ -15,6 +15,7 @@ public class OpenPanel : MonoBehaviour
 
 	private List<string> filenames = new List<string>();
 	private List<GameObject> filenameItems = new List<GameObject>();
+	private int selectedIndex = -1;
 
 	public void init()
 	{
@@ -33,15 +34,20 @@ public class OpenPanel : MonoBehaviour
 		}
 	}
 
-	void Update () 
+	void Update ()
 	{
-		foreach (var item in filenameItems)
+		for (var i = 0; i < filenameItems.Count; i++)
 		{
+			var item = filenameItems[i];
 			var coords = new Vector3[4];
 			item.GetComponent<RectTransform>().GetWorldCorners(coords);
 
 			if (Input.mousePosition.x > coords[0].x && Input.mousePosition.x < coords[2].x
 				&& Input.mousePosition.y > coords[0].y && Input.mousePosition.y < coords[2].y)
+			{
+				item.GetComponentInChildren<Text>().color = Color.red;
+			}
+			else if (i == selectedIndex)
 			{
 				item.GetComponentInChildren<Text>().color = Color.red;
 			}
@@ -57,6 +63,7 @@ public class OpenPanel : MonoBehaviour
 				var filename = item.GetComponentInChildren<Text>().text;
 				chosenFile.text = "Chosen file: " + filename;
 				answerFilename = filename + ".json";
+				selectedIndex = i;
 			}
 		}
 	}
