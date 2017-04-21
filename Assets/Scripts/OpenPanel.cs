@@ -39,11 +39,8 @@ public class OpenPanel : MonoBehaviour
 		for (var i = 0; i < filenameItems.Count; i++)
 		{
 			var item = filenameItems[i];
-			var coords = new Vector3[4];
-			item.GetComponent<RectTransform>().GetWorldCorners(coords);
 
-			if (Input.mousePosition.x > coords[0].x && Input.mousePosition.x < coords[2].x
-				&& Input.mousePosition.y > coords[0].y && Input.mousePosition.y < coords[2].y)
+			if (RectTransformUtility.RectangleContainsScreenPoint(item.GetComponent<RectTransform>(), Input.mousePosition))
 			{
 				item.GetComponentInChildren<Text>().color = Color.red;
 			}
@@ -56,8 +53,7 @@ public class OpenPanel : MonoBehaviour
 				item.GetComponentInChildren<Text>().color = Color.black;
 			}
 
-			if (Input.mousePosition.x > coords[0].x && Input.mousePosition.x < coords[2].x
-				&& Input.mousePosition.y > coords[0].y && Input.mousePosition.y < coords[2].y
+			if (RectTransformUtility.RectangleContainsScreenPoint(item.GetComponent<RectTransform>(), Input.mousePosition)
 				&& Input.GetMouseButtonDown(0))
 			{
 				var filename = item.GetComponentInChildren<Text>().text;
