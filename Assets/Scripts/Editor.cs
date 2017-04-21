@@ -208,85 +208,6 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		if (editorState == EditorState.MovingInteractionPoint)
-		{
-			if (Physics.Raycast(ray, out hit, 100))
-			{
-				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.4f : 0.01f);
-
-				pointToMove.point.transform.position = drawLocation;
-				pointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
-
-				switch(pointToMove.type)
-				{
-					case InteractionType.Text:
-						pointToMove.panel.GetComponent<TextPanel>().Move(pointToMove.point.transform.position);
-						break;
-					case InteractionType.Image:
-						pointToMove.panel.GetComponent<ImagePanel>().Move(pointToMove.point.transform.position);
-						break;
-					case InteractionType.None:
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}
-
-			if (Input.GetKeyUp(KeyCode.Escape))
-			{
-				SetEditorActive(true);
-				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
-			}
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(false);
-				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
-			}
-		}
-
-		if (editorState == EditorState.EditingInteractionPoint)
-		{
-			switch(pointToEdit.type)
-			{
-				case InteractionType.Image:
-				{
-					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
-					if (editor.answered)
-					{
-						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerURL);
-						pointToEdit.title = editor.answerTitle;
-						pointToEdit.body = editor.answerURL;
-						pointToEdit.panel = panel;
-
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
-					}
-					break;
-				}
-				case InteractionType.Text:
-				{
-					var editor = interactionEditor.GetComponent<TextPanelEditor>(); 
-					if (editor.answered)
-					{
-						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerBody);
-						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
-						pointToEdit.body = editor.answerBody;
-						pointToEdit.panel = panel;
-
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
-					}
-					break;
-				}
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
-
 		if (editorState == EditorState.PickingInteractionType)
 		{
 			if (interactionTypePicker != null)
@@ -403,6 +324,85 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetEditorActive(false);
+			}
+		}
+		
+		if (editorState == EditorState.MovingInteractionPoint)
+		{
+			if (Physics.Raycast(ray, out hit, 100))
+			{
+				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.4f : 0.01f);
+
+				pointToMove.point.transform.position = drawLocation;
+				pointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+
+				switch(pointToMove.type)
+				{
+					case InteractionType.Text:
+						pointToMove.panel.GetComponent<TextPanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.Image:
+						pointToMove.panel.GetComponent<ImagePanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.None:
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+
+			if (Input.GetKeyUp(KeyCode.Escape))
+			{
+				SetEditorActive(true);
+				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
+			}
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				SetEditorActive(false);
+				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
+			}
+		}
+
+		if (editorState == EditorState.EditingInteractionPoint)
+		{
+			switch(pointToEdit.type)
+			{
+				case InteractionType.Image:
+				{
+					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
+					if (editor.answered)
+					{
+						var panel = Instantiate(imagePanelPrefab);
+						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerURL);
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.body = editor.answerURL;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+					break;
+				}
+				case InteractionType.Text:
+				{
+					var editor = interactionEditor.GetComponent<TextPanelEditor>(); 
+					if (editor.answered)
+					{
+						var panel = Instantiate(textPanelPrefab);
+						panel.GetComponent<TextPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerBody);
+						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
+						pointToEdit.body = editor.answerBody;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+					break;
+				}
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 
@@ -849,37 +849,6 @@ public class Editor : MonoBehaviour
 		return (float)(timelineXOffset + (fraction * timelineWidth));
 	}
 	
-	private static int FloorTime(double time)
-	{
-		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
-		var result = niceTimes[0];
-
-		for (int i = 0; i < niceTimes.Length; i++)
-		{
-			if (time > niceTimes[i])
-			{
-				result = niceTimes[i];
-			}
-		}
-
-		return result;
-	}
-
-	private static int CeilTime(double time)
-	{
-		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
-		
-		for (int i = niceTimes.Length - 1; i >= 0; i--)
-		{
-			if (niceTimes[i] < time)
-			{
-				return niceTimes[i + 1];
-			}
-		}
-
-		return niceTimes[0];
-	}
-
 	public void OnDrag(BaseEventData e)
 	{
 		if (Input.GetMouseButton(1))
@@ -1075,6 +1044,37 @@ public class Editor : MonoBehaviour
 		formatted += seconds.ToString("D2");
 
 		return formatted;
+	}
+	
+	private static int FloorTime(double time)
+	{
+		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
+		var result = niceTimes[0];
+
+		for (int i = 0; i < niceTimes.Length; i++)
+		{
+			if (time > niceTimes[i])
+			{
+				result = niceTimes[i];
+			}
+		}
+
+		return result;
+	}
+
+	private static int CeilTime(double time)
+	{
+		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
+		
+		for (int i = niceTimes.Length - 1; i >= 0; i--)
+		{
+			if (niceTimes[i] < time)
+			{
+				return niceTimes[i + 1];
+			}
+		}
+
+		return niceTimes[0];
 	}
 
 }
