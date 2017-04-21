@@ -410,8 +410,14 @@ public class Editor : MonoBehaviour
 		{
 			if (savePanel.GetComponent<SavePanel>().answered)
 			{
-				if (!SaveToFile(savePanel.GetComponent<SavePanel>().answerFilename))
+				var filename = savePanel.GetComponent<SavePanel>().answerFilename;
+				if (SaveToFile(filename))
 				{
+					openFileName = filename;
+				}
+				else
+				{
+					openFileName = "";
 					Debug.LogError("Something went wrong while saving the file");
 				}
 				SetEditorActive(true);
@@ -431,10 +437,18 @@ public class Editor : MonoBehaviour
 		{
 			if (openPanel.GetComponent<OpenPanel>().answered)
 			{
-				if (!OpenFile(openPanel.GetComponent<OpenPanel>().answerFilename))
+				var filename = openPanel.GetComponent<OpenPanel>().answerFilename;
+
+				if (OpenFile(filename))
 				{
+					openFileName = filename;
+				}
+				else
+				{
+					openFileName = "";
 					Debug.LogError("Something went wrong while loading the file");
 				}
+
 				SetEditorActive(true);
 				Destroy(openPanel);
 				Canvass.modalBackground.SetActive(false);
@@ -471,7 +485,15 @@ public class Editor : MonoBehaviour
 			&& editorState != EditorState.Saving && editorState != EditorState.Opening)
 #endif
 		{
-			if (Physics.Raycast(ray, out hit, 100))
+			if (openFileName != "")
+			{
+				if (!SaveToFile(openFileName))
+				{
+					openFileName = "";
+					Debug.LogError("Something went wrong while saving the file");
+				}
+			}
+			else if (Physics.Raycast(ray, out hit, 100))
 			{
 				savePanel = Instantiate(savePanelPrefab);
 				savePanel.transform.SetParent(Canvass.main.transform, false);
@@ -510,6 +532,10 @@ public class Editor : MonoBehaviour
 		Destroy(point.timelineRow);
 		interactionPoints.Remove(point);
 		Destroy(point.point);
+		if (point.panel != null)
+		{
+			Destroy(point.panel);
+		}
 	}
 
 	void UpdateTimeline()
