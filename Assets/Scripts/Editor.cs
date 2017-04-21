@@ -768,7 +768,7 @@ public class Editor : MonoBehaviour
 				}
 
 				if (!isDraggingTimelineItem && !isResizingTimelineItem
-					&& Input.GetMouseButton(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
+					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
 				{
 					if (rectPixel.x < leftAreaX)
 					{
