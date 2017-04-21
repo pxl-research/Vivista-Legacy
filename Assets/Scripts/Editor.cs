@@ -42,6 +42,7 @@ public class InteractionPoint
 public class InteractionpointSerialize
 {
 	public Vector3 position;
+	public Quaternion rotation;
 	public InteractionType type;
 	public string title;
 	public string body;
@@ -899,6 +900,7 @@ public class Editor : MonoBehaviour
 				var temp = new InteractionpointSerialize
 				{
 					position = point.point.transform.position,
+					rotation = point.point.transform.rotation,
 					type = point.type,
 					title = point.title,
 					body = point.body,
@@ -984,9 +986,50 @@ public class Editor : MonoBehaviour
 				points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
 			}
 
+			for (var i = interactionPoints.Count - 1; i >= 0; i--)
+			{
+				RemoveItemFromTimeline(interactionPoints[i]);
+			}
+
+			interactionPoints.Clear();
+
 			foreach (var point in points)
 			{
-				//TODO MAKE THIS
+				//TODO(Simon): Fix rotation
+				var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
+
+				var newInteractionPoint = new InteractionPoint
+				{
+					startTime = point.startTime,
+					endTime = point.endTime,
+					title = point.title,
+					body = point.body,
+					type = point.type,
+					filled = true,
+					point = newPoint,
+				};
+
+				switch (newInteractionPoint.type)
+				{
+					case InteractionType.Text:
+					{
+						var panel = Instantiate(textPanelPrefab);
+						panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+						newInteractionPoint.panel = panel;
+						break;
+					}
+					case InteractionType.Image:
+					{
+						var panel = Instantiate(imagePanelPrefab);
+						panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+						newInteractionPoint.panel = panel;
+						break;
+					}
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				AddItemToTimeline(newInteractionPoint);
 			}
 		}
 		return true;

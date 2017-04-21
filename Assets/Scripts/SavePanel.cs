@@ -18,13 +18,6 @@ public class SavePanel : MonoBehaviour
 	
 	void Update () 
 	{
-		/*resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
-			filename.GetComponent<RectTransform>().sizeDelta.y
-			//Padding, spacing,, title, button, fudge factor
-			+ 20 + 30 + 30 + 30 + 30);
-		*/
-		canvas.transform.rotation = Camera.main.transform.rotation;
-
 		if (filename.text != prevName && !string.IsNullOrEmpty(filename.text))
 		{
 			prevName = filename.text;
