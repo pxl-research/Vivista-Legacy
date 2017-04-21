@@ -111,7 +111,7 @@ public class Editor : MonoBehaviour
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPoint>();
 
-		SetActive(false);
+		SetEditorActive(false);
 		prevMousePosition = Input.mousePosition;
 	}
 	
@@ -137,7 +137,7 @@ public class Editor : MonoBehaviour
 		{
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 				//Note(Simon): Early return so we don't interfere with the rest of the state machine
 				return;
 			}
@@ -157,7 +157,7 @@ public class Editor : MonoBehaviour
 			
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				SetActive(false);
+				SetEditorActive(false);
 			}
 		}
 
@@ -174,7 +174,7 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 			}
 
 			if (Input.GetMouseButtonUp(0))
@@ -199,11 +199,11 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				SetActive(false);
+				SetEditorActive(false);
 			}
 		}
 
@@ -233,12 +233,12 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				SetActive(false);
+				SetEditorActive(false);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 			}
 		}
@@ -336,11 +336,11 @@ public class Editor : MonoBehaviour
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				SetActive(false);
+				SetEditorActive(false);
 			}
 		}
 
@@ -397,11 +397,11 @@ public class Editor : MonoBehaviour
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				SetActive(false);
+				SetEditorActive(false);
 			}
 		}
 
@@ -413,14 +413,16 @@ public class Editor : MonoBehaviour
 				{
 					Debug.LogError("Something went wrong while saving the file");
 				}
-				SetActive(true);
+				SetEditorActive(true);
 				Destroy(savePanel);
+				Canvass.modalBackground.SetActive(false);
 			}
 			
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 				Destroy(savePanel);
+				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
@@ -432,48 +434,53 @@ public class Editor : MonoBehaviour
 				{
 					Debug.LogError("Something went wrong while loading the file");
 				}
-				SetActive(true);
+				SetEditorActive(true);
 				Destroy(openPanel);
+				Canvass.modalBackground.SetActive(false);
 			}
 			
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
-				SetActive(true);
+				SetEditorActive(true);
 				Destroy(openPanel);
+				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
 #if UNITY_EDITOR
-		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O))
+		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) 
+			&& editorState != EditorState.Opening && editorState != EditorState.Saving)
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O))
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O)
+			&& editorState != EditorState.Opening && editorState != EditorState.Saving)
 #endif
 		{
-			if (Physics.Raycast(ray, out hit, 100))
-			{
-				openPanel = Instantiate(openPanelPrefab);
-				openPanel.GetComponent<OpenPanel>().init();
-				openPanel.transform.SetParent(Canvass.main.transform, false);
-				editorState = EditorState.Opening;
-			}
+			openPanel = Instantiate(openPanelPrefab);
+			openPanel.GetComponent<OpenPanel>().Init();
+			openPanel.transform.SetParent(Canvass.main.transform, false);
+			Canvass.modalBackground.SetActive(true);
+			editorState = EditorState.Opening;
 		}
 
 #if UNITY_EDITOR
-		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S) && editorState != EditorState.Saving)
+		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S)
+			&& editorState != EditorState.Saving && editorState != EditorState.Opening)
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) && editorState != EditorState.Saving)
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
+			&& editorState != EditorState.Saving && editorState != EditorState.Opening)
 #endif
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
 				savePanel = Instantiate(savePanelPrefab);
-				savePanel.GetComponent<SavePanel>().init(hit.point);
+				savePanel.transform.SetParent(Canvass.main.transform, false);
+				Canvass.modalBackground.SetActive(true);
 				editorState = EditorState.Saving;
 			}
 		}
 	}
 	
-	void SetActive(bool active)
+	void SetEditorActive(bool active)
 	{
 		ResetInteractionPointTemp();
 		
@@ -979,7 +986,7 @@ public class Editor : MonoBehaviour
 
 			foreach (var point in points)
 			{
-				
+				//TODO MAKE THIS
 			}
 		}
 		return true;

@@ -17,7 +17,7 @@ public class OpenPanel : MonoBehaviour
 	private List<GameObject> filenameItems = new List<GameObject>();
 	private int selectedIndex = -1;
 
-	public void init()
+	public void Init()
 	{
 		var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.*");
 		foreach (var file in files)

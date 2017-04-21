@@ -16,31 +16,13 @@ public class SavePanel : MonoBehaviour
 	private string prevName;
 	private bool fileExists;
 	
-	public void init(Vector3 position)
-	{
-		Vector3 newPos;
-
-		if (!Camera.main.orthographic)
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.5f);
-			newPos.y += 0.01f;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.002f);
-			newPos.y += 0.015f;
-		}
-
-		canvas.GetComponent<RectTransform>().position = newPos;
-	}
-
 	void Update () 
 	{
-		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
+		/*resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
 			filename.GetComponent<RectTransform>().sizeDelta.y
-			//Padding, spacing, button, fudge factor
-			+ 20 + 30 + 30 + 30);
-
+			//Padding, spacing,, title, button, fudge factor
+			+ 20 + 30 + 30 + 30 + 30);
+		*/
 		canvas.transform.rotation = Camera.main.transform.rotation;
 
 		if (filename.text != prevName && !string.IsNullOrEmpty(filename.text))
