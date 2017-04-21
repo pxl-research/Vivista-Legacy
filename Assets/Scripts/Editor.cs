@@ -944,12 +944,24 @@ public class Editor : MonoBehaviour
 	{
 		using (var fileContents = File.OpenText(Path.Combine(Application.persistentDataPath, filename)))
 		{
-			string str = fileContents.ReadToEnd();
+			string str;
+			try
+			{
+				str = fileContents.ReadToEnd();
+			}
+			catch (Exception e)
+			{
+				Debug.Log("Something went wrong while loading the file.");
+				Debug.Log(e.ToString());
+				return false;
+			}
+
 			List<string> stringObjects = new List<string>();
 			
 			var level = 0;
 			var start = 0;
 			var count = 0;
+			var rising = true;
 
 			for(int i = 0; i < str.Length; i++)
 			{
@@ -959,24 +971,28 @@ public class Editor : MonoBehaviour
 					{
 						start = i;
 					}
+					rising = true;
 					level++;
 				}
 				if (str[i] == '}')
 				{
 					level--;
+					rising = false;
 				}
-				if (level == 0 && (str[i] == ',' || str[i] == ']'))
+
+				count++;
+
+				if (level == 0 && !rising)
 				{
 					stringObjects.Add(str.Substring(start, count - 1));
 					count = 0;
+					rising = true;
 				}
 				if (level < 0)
 				{
 					Debug.Log("Corrupted save file. Aborting");
 					return false;
 				}
-
-				count++;
 			}
 
 			var points = new List<InteractionpointSerialize>();
