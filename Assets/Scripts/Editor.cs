@@ -99,6 +99,7 @@ public class Editor : MonoBehaviour
 	private bool isResizingStart;
 	private InteractionPoint timelineItemBeingResized;
 
+	private string openFileName = "";
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
@@ -759,6 +760,7 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Resizing and moving of timeline items
 		{
+			Texture2D desiredCursor = null;
 			foreach(var point in interactionPoints)
 			{
 				var row = point.timelineRow;
@@ -773,24 +775,20 @@ public class Editor : MonoBehaviour
 				{
 					if (isDraggingTimelineItem)
 					{
-						Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+						desiredCursor = cursors.CursorDrag;
 					}
 					else if (isResizingTimelineItem)
 					{
-						Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
+						desiredCursor = cursors.CursorResize;
 					}
 					else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
 					{
-						Cursor.SetCursor(cursors.CursorResize, new Vector2(15, 15), CursorMode.Auto);
+						desiredCursor = cursors.CursorResize;
 					}
 					else
 					{
-						Cursor.SetCursor(cursors.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+						desiredCursor = cursors.CursorDrag;
 					}
-				}
-				else 
-				{
-					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
 				}
 
 				if (!isDraggingTimelineItem && !isResizingTimelineItem
@@ -817,6 +815,8 @@ public class Editor : MonoBehaviour
 				}
 			}
 
+			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.Auto);
+
 			if (isDraggingTimelineItem)
 			{
 				if (!Input.GetMouseButton(0))
@@ -836,32 +836,32 @@ public class Editor : MonoBehaviour
 				}
 			}
 			else if (isResizingTimelineItem)
-		{
-			if (!Input.GetMouseButton(0))
 			{
-				isResizingTimelineItem = false;
-				timelineItemBeingResized = null;
-			}
-			else
-			{
-				if(isResizingStart)
+				if (!Input.GetMouseButton(0))
 				{
-					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
-					if (newStart < timelineItemBeingResized.endTime - 0.2f)
-					{
-						timelineItemBeingResized.startTime = newStart;
-					}
+					isResizingTimelineItem = false;
+					timelineItemBeingResized = null;
 				}
 				else
 				{
-					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
-					if (newEnd > timelineItemBeingResized.startTime + 0.2f)
+					if(isResizingStart)
 					{
-						timelineItemBeingResized.endTime = newEnd;
+						var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
+						if (newStart < timelineItemBeingResized.endTime - 0.2f)
+						{
+							timelineItemBeingResized.startTime = newStart;
+						}
+					}
+					else
+					{
+						var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
+						if (newEnd > timelineItemBeingResized.startTime + 0.2f)
+						{
+							timelineItemBeingResized.endTime = newEnd;
+						}
 					}
 				}
 			}
-		}
 		}
 	}
 	
