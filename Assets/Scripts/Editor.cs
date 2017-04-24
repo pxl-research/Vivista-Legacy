@@ -580,9 +580,10 @@ public class Editor : MonoBehaviour
 		{
 			zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
 
-			timelineWindowStartTime = timelineOffset;
-			timelineWindowEndTime = timelineWindowStartTime + zoomedLength;
-		
+			var windowMiddle = (timelineEndTime - timelineOffset) / 2; 
+			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom); 
+			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom); 
+
 			timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
 			timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
 		}
@@ -894,7 +895,7 @@ public class Editor : MonoBehaviour
 		if (Input.GetMouseButton(1))
 		{
 			var pointerEvent = (PointerEventData)e;
-			timelineOffset -= PxToRelativeTime(pointerEvent.delta.x);
+			timelineOffset += PxToRelativeTime(pointerEvent.delta.x * 5);
 		}
 	}
 
