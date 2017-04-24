@@ -13,6 +13,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 	public float curSeekbarHeight;
 	public float maxSeekbarHeight = 0.25f;
 	public float seekbarAnimationDuration = 0.2f;
+	public float startRotation;
 
 	public void Start()
 	{
@@ -37,7 +38,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
 		seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
 
-		var rotation = Camera.main.transform.rotation.eulerAngles.y;
+		var rotation = Camera.main.transform.rotation.eulerAngles.y - startRotation;
 		compassForeground.transform.rotation = Quaternion.Euler(0, 0, -rotation);
 	}
 
