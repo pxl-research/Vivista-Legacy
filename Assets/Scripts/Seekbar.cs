@@ -5,6 +5,8 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 {
 	public VideoController controller;
 	public RectTransform seekbar;
+	public GameObject compassBackground;
+	public GameObject compassForeground;
 
 	public bool hovering = false;
 	public float minSeekbarHeight = 0.1f;
@@ -14,10 +16,11 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 	public void Start()
 	{
-		if (!controller){ Debug.LogError(string.Format("Hey you forgot to connect up a VideoController to the Seekbar Script on {0}", this.name)); }
-
 		seekbar = GetComponent<RectTransform>();
 		curSeekbarHeight = maxSeekbarHeight;
+
+		compassBackground = GameObject.Find("CompassBackground");
+		compassForeground = GameObject.Find("CompassForeground");
 	}
 
 	public void Update()
@@ -33,6 +36,9 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
 		seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
+
+		var rotation = Camera.main.transform.rotation.eulerAngles.y;
+		compassForeground.transform.rotation = Quaternion.Euler(0, 0, -rotation);
 	}
 
 	public void OnPointerUp(PointerEventData e)
