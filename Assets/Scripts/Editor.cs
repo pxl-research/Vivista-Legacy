@@ -91,6 +91,7 @@ public class Editor : MonoBehaviour
 	private float timelineOffset;
 	private float timelineWidth;
 	private float timelineXOffset;
+
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
 	private bool isDraggingTimelineItem;

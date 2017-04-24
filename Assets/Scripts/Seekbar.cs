@@ -22,6 +22,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 		compassBackground = GameObject.Find("CompassBackground");
 		compassForeground = GameObject.Find("CompassForeground");
+		startRotation = 0;
 	}
 
 	public void Update()
