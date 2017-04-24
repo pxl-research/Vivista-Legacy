@@ -578,9 +578,9 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Correct the timeline offset after zooming
 		{
 			zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
-			var windowMiddle = (timelineEndTime - (timelineStartTime + timelineOffset * timelineZoom)) / 2;
-			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
-			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
+
+			timelineWindowStartTime = timelineOffset;
+			timelineWindowEndTime = timelineWindowStartTime + zoomedLength;
 		
 			timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
 			timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
@@ -826,8 +826,8 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
-					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
+					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x));
+					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x));
 					if (newStart > 0.0f && newEnd < timelineEndTime)
 					{
 						timelineItemBeingDragged.startTime = newStart;
@@ -846,7 +846,7 @@ public class Editor : MonoBehaviour
 				{
 					if(isResizingStart)
 					{
-						var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + (mouseDelta.x / 8.0f) * timelineZoom);
+						var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + PxToRelativeTime(mouseDelta.x));
 						if (newStart < timelineItemBeingResized.endTime - 0.2f)
 						{
 							timelineItemBeingResized.startTime = newStart;
@@ -854,7 +854,7 @@ public class Editor : MonoBehaviour
 					}
 					else
 					{
-						var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + (mouseDelta.x / 8.0f) * timelineZoom);
+						var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + PxToRelativeTime(mouseDelta.x));
 						if (newEnd > timelineItemBeingResized.startTime + 0.2f)
 						{
 							timelineItemBeingResized.endTime = newEnd;
@@ -874,19 +874,33 @@ public class Editor : MonoBehaviour
 		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
 		return (float)(timelineXOffset + (fraction * timelineWidth));
 	}
+
+	public float PxToAbsTime(double px)
+	{
+		var realPx = px - timelineXOffset;
+		var fraction = realPx / timelineWidth;
+		var time = fraction * (timelineWindowEndTime - timelineWindowStartTime) + timelineWindowStartTime;
+		return (float) time;
+	}
+
+	public float PxToRelativeTime(float px)
+	{
+		return px * ((timelineWindowEndTime - timelineWindowStartTime) / timelineWidth);
+	}
 	
 	public void OnDrag(BaseEventData e)
 	{
 		if (Input.GetMouseButton(1))
 		{
 			var pointerEvent = (PointerEventData)e;
-			timelineOffset = timelineOffset + pointerEvent.delta.x;
+			timelineOffset -= PxToRelativeTime(pointerEvent.delta.x);
 		}
 	}
 
 	private bool SaveToFile(string filename)
 	{
 		var sb = new StringBuilder();
+
 		sb.Append("[");
 		if (interactionPoints.Count > 0)
 		{
