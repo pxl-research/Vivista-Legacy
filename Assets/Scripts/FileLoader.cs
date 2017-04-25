@@ -95,8 +95,10 @@ public class FileLoader : MonoBehaviour
 			var player = videoController.GetComponent<VideoPlayer>();
 			player.url = fileName;
 
-			player.waitForFirstFrame = true;
-			player.Play();
+			player.time = 10;
+			player.time = 0;
+			player.Pause();
+			player.errorReceived += Handler;
 
 			var playerInfo = Instantiate(playerInfoGUI);
 			var newParent = Canvass.main.transform.FindChild("LayoutSplitter");
@@ -109,5 +111,10 @@ public class FileLoader : MonoBehaviour
 			controller.seekbar = seekbar.transform.GetChild(0).GetComponent<RectTransform>();
 			controller.timeText = seekbar.transform.parent.GetComponentInChildren<Text>();
 		}
+	}
+
+	static void Handler(VideoPlayer player, string message)
+	{
+		Debug.Log(message);
 	}
 }
