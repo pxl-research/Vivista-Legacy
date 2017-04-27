@@ -144,6 +144,12 @@ public class Editor : MonoBehaviour
 				//Note(Simon): Early return so we don't interfere with the rest of the state machine
 				return;
 			}
+
+			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& Input.GetKeyDown(KeyCode.Space))
+			{
+				videoController.TogglePlay();
+			}
 		}
 
 		if (editorState == EditorState.Active)
@@ -161,6 +167,12 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetEditorActive(false);
+			}
+
+			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& Input.GetKeyDown(KeyCode.Space))
+			{
+				videoController.TogglePlay();
 			}
 		}
 
@@ -207,6 +219,12 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetEditorActive(false);
+			}
+
+			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& Input.GetKeyDown(KeyCode.Space))
+			{
+				videoController.TogglePlay();
 			}
 		}
 
@@ -265,6 +283,12 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetEditorActive(false);
+			}
+
+			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& Input.GetKeyDown(KeyCode.Space))
+			{
+				videoController.TogglePlay();
 			}
 		}
 
@@ -362,6 +386,12 @@ public class Editor : MonoBehaviour
 			{
 				SetEditorActive(false);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
+			}
+
+			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& Input.GetKeyDown(KeyCode.Space))
+			{
+				videoController.TogglePlay();
 			}
 		}
 
@@ -618,7 +648,7 @@ public class Editor : MonoBehaviour
 			for (int i = 0; i < realNumLabels; i++)
 			{
 				var time = (i + numTicksOffScreen) * timelineTickSize;
-				headerLabels[i].text = FormatTime(time);
+				headerLabels[i].text = MathHelper.FormatSeconds(time);
 				headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
 			}
 		}
@@ -1067,27 +1097,6 @@ public class Editor : MonoBehaviour
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
 
-	private static string FormatTime(double time)
-	{
-		var hours = (int)(time / (60 * 60));
-		time -= hours * 60;
-		var minutes = (int)(time / 60);
-		time -= minutes * 60;
-		var seconds = (int) time;
-
-		var formatted = "";
-		if (hours > 0)
-		{
-			formatted += hours + ":";
-		}
-
-		formatted += minutes.ToString("D2");
-		formatted += ":";
-		formatted += seconds.ToString("D2");
-
-		return formatted;
-	}
-	
 	private static int FloorTime(double time)
 	{
 		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};

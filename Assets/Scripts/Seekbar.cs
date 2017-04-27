@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Seekbar : MonoBehaviour, IPointerUpHandler
+public class Seekbar : MonoBehaviour, IPointerDownHandler
 {
 	public VideoController controller;
 	public RectTransform seekbar;
@@ -43,7 +43,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		compassForeground.transform.rotation = Quaternion.Euler(0, 0, -rotation);
 	}
 
-	public void OnPointerUp(PointerEventData e)
+	public void OnPointerDown(PointerEventData e)
 	{
 			var pos = e.pressPosition.x;
 			var max = GetComponent<RectTransform>().rect.width;
