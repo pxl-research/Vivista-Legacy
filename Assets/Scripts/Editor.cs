@@ -525,7 +525,7 @@ public class Editor : MonoBehaviour
 					Debug.LogError("Something went wrong while saving the file");
 				}
 			}
-			else if (Physics.Raycast(ray, out hit, 100))
+			else
 			{
 				savePanel = Instantiate(savePanelPrefab);
 				savePanel.transform.SetParent(Canvass.main.transform, false);
