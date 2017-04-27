@@ -27,10 +27,10 @@ public class OpenPanel : MonoBehaviour
 
 		foreach (var filename in filenames)
 		{
-			var filenameItem = Instantiate(filenameItemPrefab);
-			filenameItem.transform.SetParent(fileList, false);
-			filenameItem.GetComponentInChildren<Text>().text = filename;
-			filenameItems.Add(filenameItem);
+			var filenameListItem = Instantiate(filenameItemPrefab);
+			filenameListItem.transform.SetParent(fileList, false);
+			filenameListItem.GetComponentInChildren<Text>().text = filename;
+			filenameItems.Add(filenameListItem);
 		}
 	}
 

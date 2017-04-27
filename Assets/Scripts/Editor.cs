@@ -16,7 +16,8 @@ public enum EditorState {
 	MovingInteractionPoint,
 	Saving,
 	EditingInteractionPoint,
-	Opening
+	Opening,
+	NewOpen
 }
 
 public enum InteractionType {
@@ -436,6 +437,11 @@ public class Editor : MonoBehaviour
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		if (editorState == EditorState.NewOpen)
+		{
+			
 		}
 
 		if (editorState == EditorState.Saving)
