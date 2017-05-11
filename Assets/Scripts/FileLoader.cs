@@ -5,7 +5,7 @@ using UnityEngine.Video;
 
 public class FileLoader : MonoBehaviour 
 {
-	public static GameObject videoController;
+	public GameObject videoController;
 
 	public GameObject video360;
 	public GameObject video180;
@@ -31,18 +31,8 @@ public class FileLoader : MonoBehaviour
 		Image
 	}
 
-	void Start () 
+	public void LoadFile(string filename, FileType filetype)
 	{
-		if (!video360)	{ Debug.LogError(string.Format("Hey you forgot to hook up Video360 to the FileLoader script at {0}",	name)); }
-		if (!video180)	{ Debug.LogError(string.Format("Hey you forgot to hook up Video180 to the FileLoader script at {0}",	name)); }
-		if (!video)		{ Debug.LogError(string.Format("Hey you forgot to hook up Video to the FileLoader script at {0}",		name)); }
-		if (!image360)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image360 to the FileLoader script at {0}",	name)); }
-		if (!image180)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image180 to the FileLoader script at {0}",	name)); }
-		if (!imageFlat)	{ Debug.LogError(string.Format("Hey you forgot to hook up Image to the FileLoader script at {0}",		name)); }
-		if (!cameraFlat){ Debug.LogError(string.Format("Hey you forgot to hook up a Camera to the FileLoader script at {0}",	name)); }
-
-		var fileName = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
-
 		videoController = null;
 
 		switch (fileType)
@@ -93,12 +83,12 @@ public class FileLoader : MonoBehaviour
 		if (fileType == FileType.Video || fileType == FileType.Video180 || fileType == FileType.Video360)
 		{
 			var player = videoController.GetComponent<VideoPlayer>();
-			player.url = fileName;
+			player.url = filename;
 
 			player.time = 10;
 			player.time = 0;
 			player.Pause();
-			player.errorReceived += Handler;
+			player.errorReceived += VideoErrorHandler;
 
 			var playerInfo = Instantiate(playerInfoGUI);
 			var newParent = Canvass.main.transform.FindChild("LayoutSplitter");
@@ -113,7 +103,7 @@ public class FileLoader : MonoBehaviour
 		}
 	}
 
-	static void Handler(VideoPlayer player, string message)
+	static void VideoErrorHandler(VideoPlayer player, string message)
 	{
 		Debug.Log(message);
 	}

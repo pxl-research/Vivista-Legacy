@@ -64,6 +64,7 @@ public class Editor : MonoBehaviour
 	public GameObject interactionTypePrefab;
 
 	public GameObject openPanelPrefab;
+	public GameObject newPanelPrefab;
 	public GameObject savePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject textPanelEditorPrefab;
@@ -73,6 +74,7 @@ public class Editor : MonoBehaviour
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
 	private GameObject savePanel;
+	private GameObject newPanel;
 	private GameObject openPanel;
 
 	public GameObject timelineContainer;
@@ -109,14 +111,23 @@ public class Editor : MonoBehaviour
 
 	void Start () 
 	{
-		videoController = FileLoader.videoController.GetComponent<VideoController>();
-		timelineWindowEndTime = (float)videoController.videoLength;
-
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPoint>();
 
+		prevMousePosition = Input.mousePosition;	
+	
+		var filename = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
+		var fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
+		fileLoader.LoadFile(filename, FileLoader.FileType.Video360);
+
 		SetEditorActive(false);
-		prevMousePosition = Input.mousePosition;
+
+		newPanel = Instantiate(newPanelPrefab);
+		newPanel.transform.SetParent(Canvass.main.transform, false);
+		editorState = EditorState.NewOpen;
+
+		videoController = fileLoader.videoController.GetComponent<VideoController>();
+		timelineWindowEndTime = (float)videoController.videoLength;
 	}
 	
 	void Update () 
@@ -441,7 +452,21 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.NewOpen)
 		{
-			
+			var panel = newPanel.GetComponent<NewPanel>();
+			if (panel.answered)
+			{
+				if (panel.answerNew)
+				{
+					SetEditorActive(true);
+					Destroy(newPanel);
+				}
+
+				if (panel.answerOpen)
+				{
+					OpenFilePanel();
+					Destroy(newPanel);
+				}
+			}
 		}
 
 		if (editorState == EditorState.Saving)
@@ -508,11 +533,7 @@ public class Editor : MonoBehaviour
 			&& editorState != EditorState.Opening && editorState != EditorState.Saving)
 #endif
 		{
-			openPanel = Instantiate(openPanelPrefab);
-			openPanel.GetComponent<OpenPanel>().Init();
-			openPanel.transform.SetParent(Canvass.main.transform, false);
-			Canvass.modalBackground.SetActive(true);
-			editorState = EditorState.Opening;
+			OpenFilePanel();
 		}
 
 #if UNITY_EDITOR
@@ -541,6 +562,15 @@ public class Editor : MonoBehaviour
 		}
 	}
 	
+	void OpenFilePanel()
+	{
+		openPanel = Instantiate(openPanelPrefab);
+		openPanel.GetComponent<OpenPanel>().Init();
+		openPanel.transform.SetParent(Canvass.main.transform, false);
+		Canvass.modalBackground.SetActive(true);
+		editorState = EditorState.Opening;
+	}
+
 	void SetEditorActive(bool active)
 	{
 		ResetInteractionPointTemp();
@@ -796,7 +826,7 @@ public class Editor : MonoBehaviour
 			
 		}
 
-		//Note(Simon): Resizing and moving of timeline items
+		//Note(Simon): Resizing and moving of timeline items. Also Cursors
 		{
 			Texture2D desiredCursor = null;
 			foreach(var point in interactionPoints)
