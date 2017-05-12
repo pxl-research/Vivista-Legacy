@@ -45,11 +45,11 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 	public void OnPointerDown(PointerEventData e)
 	{
-			var pos = e.pressPosition.x;
-			var max = GetComponent<RectTransform>().rect.width;
-		
-			var time = pos / max;
+		var pos = e.pressPosition.x;
+		var max = GetComponent<RectTransform>().rect.width;
 
-			controller.Seek(time);
+		var time = pos / max;
+
+		controller.Seek(time);
 	}
 }

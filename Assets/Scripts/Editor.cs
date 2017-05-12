@@ -17,7 +17,8 @@ public enum EditorState {
 	Saving,
 	EditingInteractionPoint,
 	Opening,
-	NewOpen
+	NewOpen,
+	PickingPerspective
 }
 
 public enum InteractionType {
@@ -65,6 +66,7 @@ public class Editor : MonoBehaviour
 
 	public GameObject openPanelPrefab;
 	public GameObject newPanelPrefab;
+	public GameObject perspectivePanelPrefab;
 	public GameObject savePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject textPanelEditorPrefab;
@@ -75,6 +77,7 @@ public class Editor : MonoBehaviour
 	private GameObject interactionEditor;
 	private GameObject savePanel;
 	private GameObject newPanel;
+	private GameObject perspectivePanel;
 	private GameObject openPanel;
 
 	public GameObject timelineContainer;
@@ -104,6 +107,7 @@ public class Editor : MonoBehaviour
 	private InteractionPoint timelineItemBeingResized;
 
 	private string openFileName = "";
+	private string openVideo = "";
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
@@ -114,20 +118,13 @@ public class Editor : MonoBehaviour
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPoint>();
 
-		prevMousePosition = Input.mousePosition;	
-	
-		var filename = @"C:\Users\20003613\Documents\Git\360video\Assets\Resources\video2.mp4";
-		var fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
-		fileLoader.LoadFile(filename, FileLoader.FileType.Video360);
+		prevMousePosition = Input.mousePosition;
 
 		SetEditorActive(false);
 
 		newPanel = Instantiate(newPanelPrefab);
 		newPanel.transform.SetParent(Canvass.main.transform, false);
 		editorState = EditorState.NewOpen;
-
-		videoController = fileLoader.videoController.GetComponent<VideoController>();
-		timelineWindowEndTime = (float)videoController.videoLength;
 	}
 	
 	void Update () 
@@ -135,7 +132,10 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		UpdateTimeline();
+		if (openVideo != "")
+		{
+			UpdateTimeline();
+		}
 
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -457,8 +457,28 @@ public class Editor : MonoBehaviour
 			{
 				if (panel.answerNew)
 				{
+					var dialog = new System.Windows.Forms.OpenFileDialog
+					{
+						Title = "Choose a video or photo to enrich",
+						Filter = "Video (*.mp4)|*.mp4"
+					};
+
+					var result = dialog.ShowDialog();
+					if (result == System.Windows.Forms.DialogResult.OK)
+					{
+						var fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
+						fileLoader.LoadFile(dialog.FileName);
+						openVideo = dialog.FileName;
+
+						videoController = fileLoader.videoController.GetComponent<VideoController>();
+						timelineWindowEndTime = (float)videoController.videoLength;
+					}
 					SetEditorActive(true);
 					Destroy(newPanel);
+
+					editorState = EditorState.PickingPerspective;
+					perspectivePanel = Instantiate(perspectivePanelPrefab);
+					perspectivePanel.transform.SetParent(Canvass.main.transform, false);
 				}
 
 				if (panel.answerOpen)
@@ -466,6 +486,18 @@ public class Editor : MonoBehaviour
 					OpenFilePanel();
 					Destroy(newPanel);
 				}
+			}
+		}
+
+		if (editorState == EditorState.PickingPerspective)
+		{
+			var panel = perspectivePanel.GetComponent<PerspectivePanel>();
+			if (panel.answered)
+			{
+				var fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
+				fileLoader.SetPerspective(panel.answerPerspective);
+				Destroy(perspectivePanel);
+				SetEditorActive(true);
 			}
 		}
 
