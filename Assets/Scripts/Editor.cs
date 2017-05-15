@@ -88,6 +88,7 @@ public class Editor : MonoBehaviour
 
 	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
+	private FileLoader fileLoader;
 	private float timelineStartTime;
 	private float timelineWindowStartTime;
 	private float timelineWindowEndTime;
@@ -125,6 +126,8 @@ public class Editor : MonoBehaviour
 		newPanel = Instantiate(newPanelPrefab);
 		newPanel.transform.SetParent(Canvass.main.transform, false);
 		editorState = EditorState.NewOpen;
+		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
+		videoController = fileLoader.videoController.GetComponent<VideoController>();
 	}
 	
 	void Update () 
@@ -466,11 +469,9 @@ public class Editor : MonoBehaviour
 					var result = dialog.ShowDialog();
 					if (result == System.Windows.Forms.DialogResult.OK)
 					{
-						var fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 						fileLoader.LoadFile(dialog.FileName);
 						openVideo = dialog.FileName;
 
-						videoController = fileLoader.videoController.GetComponent<VideoController>();
 						timelineWindowEndTime = (float)videoController.videoLength;
 					}
 					SetEditorActive(true);
@@ -1001,6 +1002,15 @@ public class Editor : MonoBehaviour
 	{
 		var sb = new StringBuilder();
 
+		sb.Append("videoname:")
+			.Append(openVideo)
+			.Append(",\n");
+
+			
+		sb.Append("perspective:")
+			.Append(fileLoader.currentPerspective)
+			.Append(",\n");
+
 		sb.Append("[");
 		if (interactionPoints.Count > 0)
 		{
@@ -1064,15 +1074,23 @@ public class Editor : MonoBehaviour
 				Debug.Log(e.ToString());
 				return false;
 			}
-
-			List<string> stringObjects = new List<string>();
 			
 			var level = 0;
 			var start = 0;
 			var count = 0;
 			var rising = true;
 
-			for(int i = 0; i < str.Length; i++)
+			var startVideo = str.IndexOf(':') + 1;
+			var endVideo = str.IndexOf("\n") + 1;
+			openVideo = str.Substring(startVideo, (endVideo - startVideo) - 2);
+			
+			var startPersp = str.IndexOf(':', endVideo) + 1;
+			var endPersp = str.IndexOf('\n', endVideo) + 1;
+			var perspective = (Perspective)Enum.Parse(typeof(Perspective), str.Substring(startPersp, (endPersp - startPersp) - 2));
+			
+			var stringObjects = new List<string>();
+			
+			for(var i = endPersp; i < str.Length; i++)
 			{
 				if (str[i] == '{')
 				{
@@ -1103,6 +1121,9 @@ public class Editor : MonoBehaviour
 					return false;
 				}
 			}
+
+			fileLoader.LoadFile(openVideo);
+			fileLoader.SetPerspective(perspective);
 
 			var points = new List<InteractionpointSerialize>();
 

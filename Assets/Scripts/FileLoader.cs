@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -29,6 +28,7 @@ public class FileLoader : MonoBehaviour
 	public GameObject playerInfoGUI;
 
 	public FileType fileType = FileType.Video360;
+	public Perspective currentPerspective;
 
 	public enum FileType {
 		Video360,
@@ -59,6 +59,8 @@ public class FileLoader : MonoBehaviour
 	public void SetPerspective(Perspective perspective)
 	{
 		Destroy(currentCamera);
+
+		currentPerspective = perspective;
 
 		switch(perspective)
 		{
