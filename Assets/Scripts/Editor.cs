@@ -195,7 +195,7 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.4f : 0.01f);
+				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.3f : 0.01f);
 
 				interactionPointTemp.transform.position = drawLocation;
 				//NOTE(Simon): Rotate to match sphere's normal
@@ -474,6 +474,11 @@ public class Editor : MonoBehaviour
 
 						timelineWindowEndTime = (float)videoController.videoLength;
 					}
+					else
+					{
+						panel.answered = false;
+						return;
+					}
 					SetEditorActive(true);
 					Destroy(newPanel);
 
@@ -560,7 +565,7 @@ public class Editor : MonoBehaviour
 
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) 
-			&& editorState != EditorState.Opening && editorState != EditorState.Saving)
+			&& editorState != EditorState.Opening && editorState != EditorState.Saving && editorState != EditorState.NewOpen)
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O)
 			&& editorState != EditorState.Opening && editorState != EditorState.Saving)
@@ -571,7 +576,7 @@ public class Editor : MonoBehaviour
 
 #if UNITY_EDITOR
 		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S)
-			&& editorState != EditorState.Saving && editorState != EditorState.Opening)
+			&& editorState != EditorState.Saving && editorState != EditorState.Opening && editorState != EditorState.NewOpen)
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
 			&& editorState != EditorState.Saving && editorState != EditorState.Opening)
