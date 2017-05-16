@@ -18,10 +18,8 @@ public class TextPanel : MonoBehaviour
 		
 		var width = Mathf.Clamp(newBody.Length, 150, 450);
 		var height = Mathf.Max(100, newBody.Length / 3);
-		
 
 		canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
-
 	}
 
 	public void Move(Vector3 position)

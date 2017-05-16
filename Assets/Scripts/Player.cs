@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -25,7 +24,6 @@ public class InteractionPointPlayer
 
 public class Player : MonoBehaviour 
 {
-	private Vector3 prevMousePosition;
 	private PlayerState playerState;
 	
 	private List<InteractionPointPlayer> interactionPoints;
@@ -45,8 +43,6 @@ public class Player : MonoBehaviour
 	{
 		interactionPoints = new List<InteractionPointPlayer>();
 
-		prevMousePosition = Input.mousePosition;
-		
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 		OpenFilePanel();
@@ -55,11 +51,36 @@ public class Player : MonoBehaviour
 	
 	void Update () 
 	{
+		//Note(Simon): Create a reversed raycast to find positions on the sphere with
+		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+		ray.origin = ray.GetPoint(100);
+		ray.direction = -ray.direction;
+
 		if (playerState == PlayerState.Watching)
 		{
 			if (Input.GetKeyDown(KeyCode.Space))
 			{
 				videoController.TogglePlay();
+			}
+
+			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+
+			foreach (var point in interactionPoints)
+			{
+				var pointActive = point.startTime < videoController.currentTime && point.endTime > videoController.currentTime;
+				point.point.SetActive(pointActive);
+
+				if (hit.transform != null && hit.transform.gameObject == point.point)
+				{
+					point.panel.SetActive(true);
+					point.point.GetComponent<MeshRenderer>().material.color = Color.red;
+				}
+				else if (point.panel.activeSelf)
+				{
+					point.panel.SetActive(false);
+					point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+				}
 			}
 		}
 
