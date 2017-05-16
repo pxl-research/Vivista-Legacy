@@ -127,6 +127,7 @@ public class Editor : MonoBehaviour
 		newPanel = Instantiate(newPanelPrefab);
 		newPanel.transform.SetParent(Canvass.main.transform, false);
 		editorState = EditorState.NewOpen;
+		Canvass.modalBackground.SetActive(true);
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 
@@ -484,10 +485,12 @@ public class Editor : MonoBehaviour
 					}
 					SetEditorActive(true);
 					Destroy(newPanel);
+					Canvass.modalBackground.SetActive(false);
 
 					editorState = EditorState.PickingPerspective;
 					perspectivePanel = Instantiate(perspectivePanelPrefab);
 					perspectivePanel.transform.SetParent(Canvass.main.transform, false);
+					Canvass.modalBackground.SetActive(true);
 				}
 
 				if (panel.answerOpen)
@@ -503,10 +506,10 @@ public class Editor : MonoBehaviour
 			var panel = perspectivePanel.GetComponent<PerspectivePanel>();
 			if (panel.answered)
 			{
-				var fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 				fileLoader.SetPerspective(panel.answerPerspective);
 				Destroy(perspectivePanel);
 				SetEditorActive(true);
+				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
