@@ -32,7 +32,7 @@ public class MouseLook : MonoBehaviour
 
 		if (!VRSettings.enabled)
 		{
-			if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)))
+			if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
 			{
 				mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
 				mouseRotY = mouseRotY + (mouseDelta.y * sensivity);

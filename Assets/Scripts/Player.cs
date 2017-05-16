@@ -185,7 +185,6 @@ public class Player : MonoBehaviour
 
 			foreach (var point in points)
 			{
-				//TODO(Simon): Fix rotation
 				var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
 
 				var newInteractionPoint = new InteractionPointPlayer
@@ -224,7 +223,7 @@ public class Player : MonoBehaviour
 		return true;
 	}
 
-	void OpenFilePanel()
+	private void OpenFilePanel()
 	{
 		openPanel = Instantiate(openPanelPrefab);
 		openPanel.GetComponent<OpenPanel>().Init();
@@ -233,12 +232,12 @@ public class Player : MonoBehaviour
 		playerState = PlayerState.Opening;
 	}
 	
-	void AddInteractionPoint(InteractionPointPlayer point)
+	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
 		interactionPoints.Add(point);
 	}
 	
-	void RemoveInteractionPoint(InteractionPointPlayer point)
+	private void RemoveInteractionPoint(InteractionPointPlayer point)
 	{
 		interactionPoints.Remove(point);
 		Destroy(point.point);

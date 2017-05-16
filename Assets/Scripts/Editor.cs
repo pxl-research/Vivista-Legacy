@@ -107,6 +107,7 @@ public class Editor : MonoBehaviour
 	private bool isResizingTimelineItem;
 	private bool isResizingStart;
 	private InteractionPointEditor timelineItemBeingResized;
+	private bool isResizingTimeline;
 
 	private string openFileName = "";
 	private string openVideo = "";
@@ -891,11 +892,11 @@ public class Editor : MonoBehaviour
 					}
 					else if (isResizingTimelineItem)
 					{
-						desiredCursor = cursors.CursorResize;
+						desiredCursor = cursors.CursorResizeHorizontal;
 					}
 					else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
 					{
-						desiredCursor = cursors.CursorResize;
+						desiredCursor = cursors.CursorResizeHorizontal;
 					}
 					else
 					{
@@ -926,7 +927,7 @@ public class Editor : MonoBehaviour
 					break;
 				}
 			}
-
+	
 			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.Auto);
 
 			if (isDraggingTimelineItem)
@@ -971,6 +972,34 @@ public class Editor : MonoBehaviour
 						{
 							timelineItemBeingResized.endTime = newEnd;
 						}
+					}
+				}
+			}
+		}
+
+		//Note(Simon): Resizing of timeline
+		{
+			if (isResizingTimeline)
+			{
+				if (Input.GetMouseButtonUp(0))
+				{
+					isResizingTimeline = false;
+					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+				}
+				timelineContainer.GetComponent<RectTransform>().sizeDelta += mouseDelta;
+			}
+			else
+			{
+				var coords = new Vector3[4];
+				timelineContainer.GetComponent<RectTransform>().GetWorldCorners(coords);
+
+				if (Input.mousePosition.y > coords[1].y - 2
+					&& Input.mousePosition.y < coords[1].y + 2)
+				{
+					Cursor.SetCursor(cursors.CursorResizeVertical, new Vector2(15, 15), CursorMode.Auto);
+					if (Input.GetMouseButtonDown(0))
+					{
+						isResizingTimeline = true;
 					}
 				}
 			}
