@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.VR;
 
 public class Seekbar : MonoBehaviour, IPointerDownHandler
 {
@@ -39,8 +40,20 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
 		seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
 
-		var rotation = Camera.main.transform.rotation.eulerAngles.y - startRotation;
-		compassForeground.transform.rotation = Quaternion.Euler(0, 0, -rotation);
+		//TODO(Simon): Verify that this works.
+		if (!VRSettings.enabled)
+		{
+			compassForeground.SetActive(true);
+			compassBackground.SetActive(true);
+
+			var rotation = Camera.main.transform.rotation.eulerAngles.y - startRotation;
+			compassForeground.transform.rotation = Quaternion.Euler(0, 0, -rotation);
+		}
+		else
+		{
+			compassForeground.SetActive(false);
+			compassBackground.SetActive(false);
+		}
 	}
 
 	public void OnPointerDown(PointerEventData e)

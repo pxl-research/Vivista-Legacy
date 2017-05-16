@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.VR;
 
 public enum EditorState {
 	Inactive,
@@ -28,7 +29,7 @@ public enum InteractionType {
 }
 
 [Serializable]
-public class InteractionPoint
+public class InteractionPointEditor
 {
 	public GameObject point;
 	public GameObject timelineRow;
@@ -58,9 +59,9 @@ public class Editor : MonoBehaviour
 
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
-	private List<InteractionPoint> interactionPoints;
-	private InteractionPoint pointToMove;
-	private InteractionPoint pointToEdit;
+	private List<InteractionPointEditor> interactionPoints;
+	private InteractionPointEditor pointToMove;
+	private InteractionPointEditor pointToEdit;
 
 	public GameObject interactionTypePrefab;
 
@@ -102,10 +103,10 @@ public class Editor : MonoBehaviour
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
 	private bool isDraggingTimelineItem;
-	private InteractionPoint timelineItemBeingDragged;
+	private InteractionPointEditor timelineItemBeingDragged;
 	private bool isResizingTimelineItem;
 	private bool isResizingStart;
-	private InteractionPoint timelineItemBeingResized;
+	private InteractionPointEditor timelineItemBeingResized;
 
 	private string openFileName = "";
 	private string openVideo = "";
@@ -117,7 +118,7 @@ public class Editor : MonoBehaviour
 	void Start () 
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
-		interactionPoints = new List<InteractionPoint>();
+		interactionPoints = new List<InteractionPointEditor>();
 
 		prevMousePosition = Input.mousePosition;
 
@@ -128,6 +129,8 @@ public class Editor : MonoBehaviour
 		editorState = EditorState.NewOpen;
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
+
+		VRSettings.enabled = true;
 	}
 	
 	void Update () 
@@ -210,7 +213,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetMouseButtonUp(0))
 			{
 				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
-				var point = new InteractionPoint
+				var point = new InteractionPointEditor
 				{
 					point = newPoint,
 					type = InteractionType.None,
@@ -625,7 +628,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	void AddItemToTimeline(InteractionPoint point)
+	void AddItemToTimeline(InteractionPointEditor point)
 	{
 		var newRow = Instantiate(timelineRow);
 		point.timelineRow = newRow;
@@ -633,7 +636,7 @@ public class Editor : MonoBehaviour
 		interactionPoints.Add(point);
 	}
 	
-	void RemoveItemFromTimeline(InteractionPoint point)
+	void RemoveItemFromTimeline(InteractionPointEditor point)
 	{
 		Destroy(point.timelineRow);
 		interactionPoints.Remove(point);
@@ -1149,7 +1152,7 @@ public class Editor : MonoBehaviour
 				//TODO(Simon): Fix rotation
 				var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
 
-				var newInteractionPoint = new InteractionPoint
+				var newInteractionPoint = new InteractionPointEditor
 				{
 					startTime = point.startTime,
 					endTime = point.endTime,

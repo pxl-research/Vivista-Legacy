@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.VR;
 
 public class MouseLook : MonoBehaviour 
 {
@@ -29,23 +30,26 @@ public class MouseLook : MonoBehaviour
 		var mouseDelta = Input.mousePosition - mousePos;
 		mousePos = Input.mousePosition;
 
-		if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
+		if (!VRSettings.enabled)
 		{
-			mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
-			mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
-			mouseRotX = ClampAngle(mouseRotX, minX, maxX);
-			mouseRotY = ClampAngle(mouseRotY, minY, maxY);
+			if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)))
+			{
+				mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
+				mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
+				mouseRotX = ClampAngle(mouseRotX, minX, maxX);
+				mouseRotY = ClampAngle(mouseRotY, minY, maxY);
 
-			var newRotx = Quaternion.AngleAxis(mouseRotX, Vector3.up);
-			var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
+				var newRotx = Quaternion.AngleAxis(mouseRotX, Vector3.up);
+				var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
 
-			transform.localRotation = originalRotation * newRotx * newRoty;
-		}
+				transform.localRotation = originalRotation * newRotx * newRoty;
+			}
 
-		if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-			&& Input.GetKeyDown(KeyCode.Space))
-		{
-			LookEnabled = !LookEnabled;
+			if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& Input.GetKeyDown(KeyCode.Space))
+			{
+				LookEnabled = !LookEnabled;
+			}
 		}
 	}
 

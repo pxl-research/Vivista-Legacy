@@ -1,0 +1,7 @@
+Editor
+	Download embedded images and videos, to store with enriched video.
+	Embedding videos
+Server
+	Everything
+Player
+	Everything
