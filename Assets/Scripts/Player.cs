@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.VR;
 
 public enum PlayerState
 {
@@ -29,6 +31,8 @@ public class Player : MonoBehaviour
 	private List<InteractionPointPlayer> interactionPoints;
 	private FileLoader fileLoader;
 	private VideoController videoController;
+	private LineRenderer interactionLineRenderer;
+	private Image crosshair;
 
 	public GameObject interactionPointPrefab;
 	public GameObject openPanelPrefab;
@@ -47,12 +51,14 @@ public class Player : MonoBehaviour
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 		OpenFilePanel();
 		playerState = PlayerState.Opening;
+		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
 	}
-	
+
 	void Update () 
 	{
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
-		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		//var ray = Camera.main.ScreenPointToRay(Input.mousePosition;
+		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
@@ -65,6 +71,19 @@ public class Player : MonoBehaviour
 			}
 
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+			interactionLineRenderer = Camera.main.GetComponent<LineRenderer>();
+			if (VRSettings.enabled)
+			{
+				crosshair.enabled = false;
+				interactionLineRenderer.enabled = true;
+				interactionLineRenderer.SetPosition(0, Camera.main.ViewportToWorldPoint(new Vector3(0.4f, 0.4f, 0.01f)));
+				interactionLineRenderer.SetPosition(1, ray.GetPoint(99.5f));
+			}
+			else
+			{
+				crosshair.enabled = true;
+				interactionLineRenderer.enabled = false;
+			}
 
 			foreach (var point in interactionPoints)
 			{
