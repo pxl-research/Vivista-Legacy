@@ -66,7 +66,10 @@ public class OpenPanel : MonoBehaviour
 
 	public void Answer()
 	{
-		answered = true;
+		if (answerFilename != "")
+		{
+			answered = true;
+		}
 	}
 
 	public static string StripExtension(string filename)
