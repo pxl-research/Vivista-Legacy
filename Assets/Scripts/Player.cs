@@ -94,7 +94,7 @@ public class Player : MonoBehaviour
 				bool interacting = false;
 				foreach (var point in interactionPoints)
 				{
-					const float timeToInteract = 1.5f;
+					const float timeToInteract = 1f;
 
 					var pointActive = point.startTime < videoController.currentTime && point.endTime > videoController.currentTime;
 					point.point.SetActive(pointActive);
