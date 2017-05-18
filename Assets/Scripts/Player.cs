@@ -22,6 +22,7 @@ public class InteractionPointPlayer
 	public string body;
 	public double startTime;
 	public double endTime;
+	public float interactionTimer;
 }
 
 public class Player : MonoBehaviour 
@@ -33,6 +34,7 @@ public class Player : MonoBehaviour
 	private VideoController videoController;
 	private LineRenderer interactionLineRenderer;
 	private Image crosshair;
+	private Image crosshairTimer;
 
 	public GameObject interactionPointPrefab;
 	public GameObject openPanelPrefab;
@@ -52,6 +54,7 @@ public class Player : MonoBehaviour
 		OpenFilePanel();
 		playerState = PlayerState.Opening;
 		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
+		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 	}
 
 	void Update () 
@@ -76,6 +79,7 @@ public class Player : MonoBehaviour
 			{
 				crosshair.enabled = false;
 				interactionLineRenderer.enabled = true;
+				//TODO(Simon): Cast line from controller
 				interactionLineRenderer.SetPosition(0, Camera.main.ViewportToWorldPoint(new Vector3(0.4f, 0.4f, 0.01f)));
 				interactionLineRenderer.SetPosition(1, ray.GetPoint(99.5f));
 			}
@@ -85,20 +89,41 @@ public class Player : MonoBehaviour
 				interactionLineRenderer.enabled = false;
 			}
 
-			foreach (var point in interactionPoints)
+			//Note(Simon): Interaction with points
 			{
-				var pointActive = point.startTime < videoController.currentTime && point.endTime > videoController.currentTime;
-				point.point.SetActive(pointActive);
+				bool interacting = false;
+				foreach (var point in interactionPoints)
+				{
+					const float timeToInteract = 1.5f;
 
-				if (hit.transform != null && hit.transform.gameObject == point.point)
-				{
-					point.panel.SetActive(true);
-					point.point.GetComponent<MeshRenderer>().material.color = Color.red;
+					var pointActive = point.startTime < videoController.currentTime && point.endTime > videoController.currentTime;
+					point.point.SetActive(pointActive);
+
+					if (hit.transform != null && hit.transform.gameObject == point.point)
+					{
+						interacting = true;
+						point.interactionTimer += Time.deltaTime;
+						crosshairTimer.fillAmount = point.interactionTimer / timeToInteract;
+
+						if (point.interactionTimer > timeToInteract)
+						{
+							point.panel.SetActive(true);
+						}
+					}
+					else if (point.panel.activeSelf)
+					{
+						point.panel.SetActive(false);
+						point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+					}
+					else
+					{
+						point.interactionTimer = 0;
+					}
 				}
-				else if (point.panel.activeSelf)
+
+				if (!interacting)
 				{
-					point.panel.SetActive(false);
-					point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+					crosshairTimer.fillAmount = 0;
 				}
 			}
 		}
