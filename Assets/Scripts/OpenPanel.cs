@@ -43,6 +43,7 @@ public class OpenPanel : MonoBehaviour
 			if (RectTransformUtility.RectangleContainsScreenPoint(item.GetComponent<RectTransform>(), Input.mousePosition))
 			{
 				item.GetComponentInChildren<Text>().color = Color.red;
+				item.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
 			}
 			else if (i == selectedIndex)
 			{
@@ -51,6 +52,7 @@ public class OpenPanel : MonoBehaviour
 			else
 			{
 				item.GetComponentInChildren<Text>().color = Color.black;
+				item.GetComponent<Image>().color = new Color(239 / 255f, 239 / 255f, 239 / 255f);
 			}
 
 			if (RectTransformUtility.RectangleContainsScreenPoint(item.GetComponent<RectTransform>(), Input.mousePosition)
