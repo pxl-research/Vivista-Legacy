@@ -104,6 +104,7 @@ public class Player : MonoBehaviour
 						interacting = true;
 						point.interactionTimer += Time.deltaTime;
 						crosshairTimer.fillAmount = point.interactionTimer / timeToInteract;
+						crosshair.fillAmount = 1 - (point.interactionTimer / timeToInteract);
 
 						if (point.interactionTimer > timeToInteract)
 						{
@@ -124,6 +125,7 @@ public class Player : MonoBehaviour
 				if (!interacting)
 				{
 					crosshairTimer.fillAmount = 0;
+					crosshair.fillAmount = 1;
 				}
 			}
 		}
