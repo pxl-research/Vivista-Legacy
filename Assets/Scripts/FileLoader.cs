@@ -45,7 +45,7 @@ public class FileLoader : MonoBehaviour
 		currentCamera = Instantiate(cameraFlat);
 
 		playerInfo = Instantiate(playerInfoGUI);
-		var newParent = Canvass.main.transform.FindChild("LayoutSplitter");
+		var newParent = Canvass.main.transform.Find("LayoutSplitter");
 		playerInfo.transform.SetParent(newParent, false);
 		playerInfo.transform.SetAsFirstSibling();
 

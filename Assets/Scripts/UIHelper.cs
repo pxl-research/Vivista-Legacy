@@ -13,7 +13,7 @@ class UIHelper
 
 		var words = element.text.Split(' ');
 		var currentWidth = 0f;
-		var maxWidth = element.transform.FindChild("Text").GetComponent<RectTransform>().rect.width;
+		var maxWidth = element.transform.Find("Text").GetComponent<RectTransform>().rect.width;
 		var lineHeight = style.lineHeight;
 		var currentHeight = 2 * lineHeight;
 		

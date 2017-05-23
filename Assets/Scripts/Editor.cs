@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -112,6 +113,7 @@ public class Editor : MonoBehaviour
 
 	private string openFileName = "";
 	private string openVideo = "";
+	public Coroutine uploadFunction;
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
@@ -573,7 +575,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Uploading)
 		{
-			
+			var upload = UploadFile();
 		}
 
 #if UNITY_EDITOR
@@ -620,9 +622,11 @@ public class Editor : MonoBehaviour
 			&& FileOpsAllowed())
 #endif
 		{
-			UploadFile();
+			editorState = EditorState.Uploading;
+			StartCoroutine(UploadFile());
 		}
 	}
+
 
 	bool AreFileOpsAllowed()
 	{
@@ -800,10 +804,10 @@ public class Editor : MonoBehaviour
 		for (var i = interactionPoints.Count - 1; i >= 0; i--)
 		{
 			var point = interactionPoints[i];
-			var edit = point.timelineRow.transform.FindChild("Content/Edit").gameObject.GetComponent<Button2>();
-			var delete = point.timelineRow.transform.FindChild("Content/Delete").gameObject.GetComponent<Button2>();
-			var move = point.timelineRow.transform.FindChild("Content/Move").gameObject.GetComponent<Toggle2>();
-			var view = point.timelineRow.transform.FindChild("Content/View").gameObject.GetComponent<Toggle2>();
+			var edit = point.timelineRow.transform.Find("Content/Edit").gameObject.GetComponent<Button2>();
+			var delete = point.timelineRow.transform.Find("Content/Delete").gameObject.GetComponent<Button2>();
+			var move = point.timelineRow.transform.Find("Content/Move").gameObject.GetComponent<Toggle2>();
+			var view = point.timelineRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>();
 
 			if (!point.filled)
 			{
@@ -1275,9 +1279,9 @@ public class Editor : MonoBehaviour
 		return data;
 	}
 
-	private bool UploadFile()
+	private IEnumerator UploadFile()
 	{
-		var url = "url";
+		var url = "http://posttestserver.com/post.php";
 
 		var str = GetSaveFileContentsBinary(openFileName);
 
@@ -1286,53 +1290,47 @@ public class Editor : MonoBehaviour
 
 		var wwwJson = new WWW(url, formJson);
 
-		for (;;)
-		{
-			//TODO(Simon): To async, and show progress
-			if (wwwJson.isDone) break;
-		}
+		yield return wwwJson;
 
 		//NOTE(Simon): 25MB chunks
-		const int chunkSize = (1024 * 1024 * 25);
+		const int chunkSize = (1024 * 1024 * 5);
 		var size = new FileInfo(openVideo).Length;
 		var parts = size / chunkSize + 1;
 
 		using (var fileContents = File.OpenRead(openVideo))
 		{
-			try
+			for (int i = 0; i < parts; i++)
 			{
-				for (int i = 0; i < parts; i++)
+				Debug.Log("Uploading part " + 1);
+				int read = 0;
+				var data = new byte[chunkSize];
+
+				try
 				{
-					var data = new byte[chunkSize];
-					var read = fileContents.Read(data, 0, chunkSize);
-
-					if (read != chunkSize)
-					{
-						var newArray = new byte[read];
-						Array.Copy(data, newArray, read);
-						data = newArray;
-					}
-
-					var formVideo = new WWWForm();
-					formVideo.AddBinaryData(String.Format("video-part-{0}", i), data, "", "multipart/form-data");
-
-					var wwwVideo = new WWW(url, formVideo);
-
-					for (;;)
-					{
-						//TODO(Simon): To async, and show progress
-						if (wwwVideo.isDone) break;
-					}
+					read = fileContents.Read(data, 0, chunkSize);
 				}
-			}
-			catch (Exception e)
-			{
-				Debug.Log("Something went wrong while loading the file.");
-				Debug.Log(e.ToString());
-			}
-		}
+				catch (Exception e)
+				{
+					Debug.Log("Something went wrong while loading the file.");
+					Debug.Log(e.ToString());
+				}
 
-		return true;
+				if (read != chunkSize)
+				{
+					var newArray = new byte[read];
+					Array.Copy(data, newArray, read);
+					data = newArray;
+				}
+
+				var formVideo = new WWWForm();
+				formVideo.AddBinaryData(String.Format("video-part-{0}", i), data, "", "multipart/form-data");
+
+				var wwwVideo = new WWW(url, formVideo);
+
+				yield return wwwVideo;
+			}
+			
+		}
 	}
 
 	private void ResetInteractionPointTemp()
