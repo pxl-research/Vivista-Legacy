@@ -19,7 +19,8 @@ public enum EditorState {
 	EditingInteractionPoint,
 	Opening,
 	NewOpen,
-	PickingPerspective
+	PickingPerspective,
+	Uploading
 }
 
 public enum InteractionType {
@@ -570,12 +571,17 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		if (editorState == EditorState.Uploading)
+		{
+			
+		}
+
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) 
-			&& editorState != EditorState.Opening && editorState != EditorState.Saving && editorState != EditorState.NewOpen)
+			&& AreFileOpsAllowed())
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O)
-			&& editorState != EditorState.Opening && editorState != EditorState.Saving)
+			&& FileOpsAllowed())
 #endif
 		{
 			OpenFilePanel();
@@ -583,10 +589,10 @@ public class Editor : MonoBehaviour
 
 #if UNITY_EDITOR
 		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S)
-			&& editorState != EditorState.Saving && editorState != EditorState.Opening && editorState != EditorState.NewOpen)
+			&& AreFileOpsAllowed())
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
-			&& editorState != EditorState.Saving && editorState != EditorState.Opening)
+			&& FileOpsAllowed())
 #endif
 		{
 			if (openFileName != "")
@@ -605,6 +611,26 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.Saving;
 			}
 		}
+
+#if UNITY_EDITOR
+		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.U)
+			&& AreFileOpsAllowed())
+#else
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
+			&& FileOpsAllowed())
+#endif
+		{
+			UploadFile();
+		}
+	}
+
+	bool AreFileOpsAllowed()
+	{
+		return editorState != EditorState.Saving 
+			&& editorState != EditorState.Opening 
+			&& editorState != EditorState.NewOpen
+			&& editorState != EditorState.Uploading 
+			&& editorState != EditorState.PickingPerspective;
 	}
 	
 	void OpenFilePanel()
@@ -1101,9 +1127,118 @@ public class Editor : MonoBehaviour
 
 	private bool OpenFile(string filename)
 	{
+		var str = GetSaveFileContents(filename);
+
+		var level = 0;
+		var start = 0;
+		var count = 0;
+		var rising = true;
+		var startVideo = str.IndexOf(':') + 1;
+		var endVideo = str.IndexOf('\n') + 1;
+		openVideo = str.Substring(startVideo, (endVideo - startVideo) - 2);
+
+		var startPersp = str.IndexOf(':', endVideo) + 1;
+		var endPersp = str.IndexOf('\n', endVideo) + 1;
+		var perspective = (Perspective)Enum.Parse(typeof(Perspective), str.Substring(startPersp, (endPersp - startPersp) - 2));
+			
+		var stringObjects = new List<string>();
+			
+		for(var i = endPersp; i < str.Length; i++)
+		{
+			if (str[i] == '{')
+			{
+				if (level == 0)
+				{
+					start = i;
+				}
+				rising = true;
+				level++;
+			}
+			if (str[i] == '}')
+			{
+				level--;
+				rising = false;
+			}
+
+			count++;
+
+			if (level == 0 && !rising)
+			{
+				stringObjects.Add(str.Substring(start, count - 1));
+				count = 0;
+				rising = true;
+			}
+			if (level < 0)
+			{
+				Debug.Log("Corrupted save file. Aborting");
+				return false;
+			}
+		}
+
+		fileLoader.LoadFile(openVideo);
+		fileLoader.SetPerspective(perspective);
+
+		var points = new List<InteractionpointSerialize>();
+
+		foreach (var obj in stringObjects)
+		{
+			points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
+		}
+
+		for (var j = interactionPoints.Count - 1; j >= 0; j--)
+		{
+			RemoveItemFromTimeline(interactionPoints[j]);
+		}
+
+		interactionPoints.Clear();
+
+		foreach (var point in points)
+		{
+			//TODO(Simon): Fix rotation
+			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
+
+			var newInteractionPoint = new InteractionPointEditor
+			{
+				startTime = point.startTime,
+				endTime = point.endTime,
+				title = point.title,
+				body = point.body,
+				type = point.type,
+				filled = true,
+				point = newPoint,
+			};
+
+			switch (newInteractionPoint.type)
+			{
+				case InteractionType.Text:
+				{
+					var panel = Instantiate(textPanelPrefab);
+					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Image:
+				{
+					var panel = Instantiate(imagePanelPrefab);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			AddItemToTimeline(newInteractionPoint);
+		}
+
+		return true;
+	}
+
+	private static string GetSaveFileContents(string filename)
+	{
+		string str;
 		using (var fileContents = File.OpenText(Path.Combine(Application.persistentDataPath, filename)))
 		{
-			string str;
 			try
 			{
 				str = fileContents.ReadToEnd();
@@ -1112,112 +1247,91 @@ public class Editor : MonoBehaviour
 			{
 				Debug.Log("Something went wrong while loading the file.");
 				Debug.Log(e.ToString());
-				return false;
-			}
-			
-			var level = 0;
-			var start = 0;
-			var count = 0;
-			var rising = true;
-
-			var startVideo = str.IndexOf(':') + 1;
-			var endVideo = str.IndexOf("\n") + 1;
-			openVideo = str.Substring(startVideo, (endVideo - startVideo) - 2);
-			
-			var startPersp = str.IndexOf(':', endVideo) + 1;
-			var endPersp = str.IndexOf('\n', endVideo) + 1;
-			var perspective = (Perspective)Enum.Parse(typeof(Perspective), str.Substring(startPersp, (endPersp - startPersp) - 2));
-			
-			var stringObjects = new List<string>();
-			
-			for(var i = endPersp; i < str.Length; i++)
-			{
-				if (str[i] == '{')
-				{
-					if (level == 0)
-					{
-						start = i;
-					}
-					rising = true;
-					level++;
-				}
-				if (str[i] == '}')
-				{
-					level--;
-					rising = false;
-				}
-
-				count++;
-
-				if (level == 0 && !rising)
-				{
-					stringObjects.Add(str.Substring(start, count - 1));
-					count = 0;
-					rising = true;
-				}
-				if (level < 0)
-				{
-					Debug.Log("Corrupted save file. Aborting");
-					return false;
-				}
-			}
-
-			fileLoader.LoadFile(openVideo);
-			fileLoader.SetPerspective(perspective);
-
-			var points = new List<InteractionpointSerialize>();
-
-			foreach (var obj in stringObjects)
-			{
-				points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
-			}
-
-			for (var i = interactionPoints.Count - 1; i >= 0; i--)
-			{
-				RemoveItemFromTimeline(interactionPoints[i]);
-			}
-
-			interactionPoints.Clear();
-
-			foreach (var point in points)
-			{
-				//TODO(Simon): Fix rotation
-				var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
-
-				var newInteractionPoint = new InteractionPointEditor
-				{
-					startTime = point.startTime,
-					endTime = point.endTime,
-					title = point.title,
-					body = point.body,
-					type = point.type,
-					filled = true,
-					point = newPoint,
-				};
-
-				switch (newInteractionPoint.type)
-				{
-					case InteractionType.Text:
-					{
-						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
-						newInteractionPoint.panel = panel;
-						break;
-					}
-					case InteractionType.Image:
-					{
-						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
-						newInteractionPoint.panel = panel;
-						break;
-					}
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				AddItemToTimeline(newInteractionPoint);
+				return "";
 			}
 		}
+
+		return str;
+	}
+
+	private static byte[] GetSaveFileContentsBinary(string filename)
+	{
+		byte[] data;
+		using (var fileContents = File.OpenRead(Path.Combine(Application.persistentDataPath, filename)))
+		{
+			try
+			{
+				data = new byte[(int)fileContents.Length];
+				fileContents.Read(data, 0, (int)fileContents.Length);
+			}
+			catch (Exception e)
+			{
+				Debug.Log("Something went wrong while loading the file.");
+				Debug.Log(e.ToString());
+				return new byte[0];
+			}
+		}
+
+		return data;
+	}
+
+	private bool UploadFile()
+	{
+		var url = "url";
+
+		var str = GetSaveFileContentsBinary(openFileName);
+
+		var formJson = new WWWForm();
+		formJson.AddBinaryData("jsonFile", str);
+
+		var wwwJson = new WWW(url, formJson);
+
+		for (;;)
+		{
+			//TODO(Simon): To async, and show progress
+			if (wwwJson.isDone) break;
+		}
+
+		//NOTE(Simon): 25MB chunks
+		const int chunkSize = (1024 * 1024 * 25);
+		var size = new FileInfo(openVideo).Length;
+		var parts = size / chunkSize + 1;
+
+		using (var fileContents = File.OpenRead(openVideo))
+		{
+			try
+			{
+				for (int i = 0; i < parts; i++)
+				{
+					var data = new byte[chunkSize];
+					var read = fileContents.Read(data, 0, chunkSize);
+
+					if (read != chunkSize)
+					{
+						var newArray = new byte[read];
+						Array.Copy(data, newArray, read);
+						data = newArray;
+					}
+
+					var formVideo = new WWWForm();
+					formVideo.AddBinaryData(String.Format("video-part-{0}", i), data, "", "multipart/form-data");
+
+					var wwwVideo = new WWW(url, formVideo);
+
+					for (;;)
+					{
+						//TODO(Simon): To async, and show progress
+						if (wwwVideo.isDone) break;
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.Log("Something went wrong while loading the file.");
+				Debug.Log(e.ToString());
+			}
+		}
+
 		return true;
 	}
 
