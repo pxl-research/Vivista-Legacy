@@ -55,6 +55,24 @@ public class InteractionpointSerialize
 	public double endTime;
 }
 
+public class UploadStatus
+{
+	public Coroutine coroutine;
+	public WWW currentRequest;
+	public int partSize;
+	public int parts;
+	public int currentPart;
+	public int totalSize;
+	public bool done;
+	public Queue<Timing> timings = new Queue<Timing>();
+}
+
+public struct Timing
+{
+	public float time;
+	public float totalUploaded;
+}
+
 public class Editor : MonoBehaviour 
 {
 	private EditorState editorState;
@@ -75,6 +93,7 @@ public class Editor : MonoBehaviour
 	public GameObject textPanelEditorPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject imagePanelEditorPrefab;
+	public GameObject uploadPanelPrefab;
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
@@ -82,6 +101,7 @@ public class Editor : MonoBehaviour
 	private GameObject newPanel;
 	private GameObject perspectivePanel;
 	private GameObject openPanel;
+	private GameObject uploadPanel;
 
 	public GameObject timelineContainer;
 	public GameObject timeline;
@@ -113,11 +133,15 @@ public class Editor : MonoBehaviour
 
 	private string openFileName = "";
 	private string openVideo = "";
-	public Coroutine uploadFunction;
+	private UploadStatus uploadStatus;
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
 	private int colorIndex;
+
+	const int kilobyte = 1024;
+	const int megabyte = 1024 * 1024;
+	const int gigabyte = 1024 * 1024 * 1024;
 
 	void Start () 
 	{
@@ -575,7 +599,14 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Uploading)
 		{
-			var upload = UploadFile();
+			uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
+
+			if (uploadStatus.done)
+			{
+				editorState = EditorState.Active;
+				Destroy(uploadPanel);
+				Canvass.modalBackground.SetActive(false);
+			}
 		}
 
 #if UNITY_EDITOR
@@ -622,11 +653,15 @@ public class Editor : MonoBehaviour
 			&& FileOpsAllowed())
 #endif
 		{
+			uploadStatus = new UploadStatus();
 			editorState = EditorState.Uploading;
-			StartCoroutine(UploadFile());
+			uploadStatus.coroutine = StartCoroutine(UploadFile());
+			uploadPanel = Instantiate(uploadPanelPrefab);
+			uploadPanel.transform.SetParent(Canvass.main.transform, false);
+			videoController.Pause();
+			Canvass.modalBackground.SetActive(true);
 		}
 	}
-
 
 	bool AreFileOpsAllowed()
 	{
@@ -1292,22 +1327,21 @@ public class Editor : MonoBehaviour
 
 		yield return wwwJson;
 
-		//NOTE(Simon): 25MB chunks
-		const int chunkSize = (1024 * 1024 * 5);
-		var size = new FileInfo(openVideo).Length;
-		var parts = size / chunkSize + 1;
+		//NOTE(Simon): 10MB chunks
+		uploadStatus.partSize = 10 * megabyte;
+		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
+		uploadStatus.parts = uploadStatus.totalSize / uploadStatus.partSize + 1;
 
 		using (var fileContents = File.OpenRead(openVideo))
 		{
-			for (int i = 0; i < parts; i++)
+			for (uploadStatus.currentPart = 0; uploadStatus.currentPart < uploadStatus.parts; uploadStatus.currentPart++)
 			{
-				Debug.Log("Uploading part " + 1);
-				int read = 0;
-				var data = new byte[chunkSize];
+				var read = 0;
+				var data = new byte[uploadStatus.partSize];
 
 				try
 				{
-					read = fileContents.Read(data, 0, chunkSize);
+					read = fileContents.Read(data, 0, uploadStatus.partSize);
 				}
 				catch (Exception e)
 				{
@@ -1315,7 +1349,7 @@ public class Editor : MonoBehaviour
 					Debug.Log(e.ToString());
 				}
 
-				if (read != chunkSize)
+				if (read != uploadStatus.partSize)
 				{
 					var newArray = new byte[read];
 					Array.Copy(data, newArray, read);
@@ -1323,14 +1357,15 @@ public class Editor : MonoBehaviour
 				}
 
 				var formVideo = new WWWForm();
-				formVideo.AddBinaryData(String.Format("video-part-{0}", i), data, "", "multipart/form-data");
+				formVideo.AddBinaryData(String.Format("video-part-{0}", uploadStatus.currentPart), data, "", "multipart/form-data");
 
-				var wwwVideo = new WWW(url, formVideo);
+				uploadStatus.currentRequest = new WWW(url, formVideo);
 
-				yield return wwwVideo;
+				yield return uploadStatus.currentRequest;
 			}
-			
 		}
+
+		uploadStatus.done = true;
 	}
 
 	private void ResetInteractionPointTemp()

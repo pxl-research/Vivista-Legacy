@@ -50,4 +50,10 @@ public class VideoController : MonoBehaviour
 			playing = false;
 		}
 	}
+
+	public void Pause()
+	{
+		video.Pause();
+		playing = false;
+	}
 }
