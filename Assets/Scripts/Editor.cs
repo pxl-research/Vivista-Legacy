@@ -1316,21 +1316,23 @@ public class Editor : MonoBehaviour
 
 	private IEnumerator UploadFile()
 	{
-		var url = "http://posttestserver.com/post.php";
+		const string baseUrl = "localhost";
+		const string jsonUrl = baseUrl + "/json";
+		const string videoUrl = baseUrl + "/video";
 
 		var str = GetSaveFileContentsBinary(openFileName);
 
 		var formJson = new WWWForm();
 		formJson.AddBinaryData("jsonFile", str);
 
-		var wwwJson = new WWW(url, formJson);
+		var wwwJson = new WWW(jsonUrl, formJson);
 
 		yield return wwwJson;
+		Debug.Log(wwwJson.text);
 
-		//NOTE(Simon): 10MB chunks
-		uploadStatus.partSize = 10 * megabyte;
+		uploadStatus.partSize = 1 * gigabyte;
 		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
-		uploadStatus.parts = uploadStatus.totalSize / uploadStatus.partSize + 1;
+		uploadStatus.parts = (int) (uploadStatus.totalSize / uploadStatus.partSize + 1);
 
 		using (var fileContents = File.OpenRead(openVideo))
 		{
@@ -1357,11 +1359,12 @@ public class Editor : MonoBehaviour
 				}
 
 				var formVideo = new WWWForm();
-				formVideo.AddBinaryData(String.Format("video-part-{0}", uploadStatus.currentPart), data, "", "multipart/form-data");
+				formVideo.AddBinaryData(String.Format("video", uploadStatus.currentPart), data, "", "multipart/form-data");
 
-				uploadStatus.currentRequest = new WWW(url, formVideo);
+				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
 
 				yield return uploadStatus.currentRequest;
+				Debug.Log(uploadStatus.currentRequest.text);
 			}
 		}
 
