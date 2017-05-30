@@ -26,7 +26,7 @@ public class UploadPanel : MonoBehaviour
 	public void UpdatePanel(UploadStatus status)
 	{
 		var totalUploaded = (status.currentPart * status.partSize)
-							+ (status.currentRequest.uploadProgress * status.partSize);
+							+ (status.currentRequest != null ? status.currentRequest.uploadProgress : 0.0f * status.currentPartSize);
 		var totalPercentage = totalUploaded / status.totalSize;
 
 		var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};

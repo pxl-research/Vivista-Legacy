@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -60,6 +61,7 @@ public class UploadStatus
 	public Coroutine coroutine;
 	public WWW currentRequest;
 	public int partSize;
+	public int currentPartSize;
 	public int parts;
 	public int currentPart;
 	public int totalSize;
@@ -1319,11 +1321,12 @@ public class Editor : MonoBehaviour
 		const string baseUrl = "localhost";
 		const string jsonUrl = baseUrl + "/json";
 		const string videoUrl = baseUrl + "/video";
+		var guid = Guid.NewGuid();
 
 		var str = GetSaveFileContentsBinary(openFileName);
 
 		var formJson = new WWWForm();
-		formJson.AddBinaryData("jsonFile", str);
+		formJson.AddBinaryData("jsonFile", str, "json" + guid);
 
 		var wwwJson = new WWW(jsonUrl, formJson);
 
@@ -1332,14 +1335,14 @@ public class Editor : MonoBehaviour
 
 		uploadStatus.partSize = 1 * gigabyte;
 		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
-		uploadStatus.parts = (int) (uploadStatus.totalSize / uploadStatus.partSize + 1);
-
+		uploadStatus.parts = uploadStatus.totalSize / uploadStatus.partSize + 1;
 		using (var fileContents = File.OpenRead(openVideo))
 		{
 			for (uploadStatus.currentPart = 0; uploadStatus.currentPart < uploadStatus.parts; uploadStatus.currentPart++)
 			{
 				var read = 0;
 				var data = new byte[uploadStatus.partSize];
+				uploadStatus.currentPartSize = uploadStatus.partSize;
 
 				try
 				{
@@ -1356,10 +1359,11 @@ public class Editor : MonoBehaviour
 					var newArray = new byte[read];
 					Array.Copy(data, newArray, read);
 					data = newArray;
+					uploadStatus.currentPartSize = read;
 				}
 
 				var formVideo = new WWWForm();
-				formVideo.AddBinaryData(String.Format("video", uploadStatus.currentPart), data, "", "multipart/form-data");
+				formVideo.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
 
 				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
 
