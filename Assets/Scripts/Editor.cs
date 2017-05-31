@@ -1333,6 +1333,16 @@ public class Editor : MonoBehaviour
 		var wwwJson = new WWW(jsonUrl, formJson);
 
 		yield return wwwJson;
+		var status = wwwJson.StatusCode();
+		if (status != 200)
+		{
+			if (status == 401)
+			{
+				Debug.Log("Bad login");
+			}
+			yield break;
+		}
+
 		Debug.Log(wwwJson.text);
 
 		uploadStatus.partSize = 1 * gigabyte;
@@ -1372,6 +1382,17 @@ public class Editor : MonoBehaviour
 				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
 
 				yield return uploadStatus.currentRequest;
+				status = uploadStatus.currentRequest.StatusCode();
+				if (status != 200)
+				{
+					if (status == 401)
+					{
+						Debug.Log("Bad login");
+					}
+
+					yield break;
+				}
+
 				Debug.Log(uploadStatus.currentRequest.text);
 			}
 		}
