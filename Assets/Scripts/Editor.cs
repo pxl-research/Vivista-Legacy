@@ -1326,6 +1326,8 @@ public class Editor : MonoBehaviour
 		var str = GetSaveFileContentsBinary(openFileName);
 
 		var formJson = new WWWForm();
+		formJson.AddField("username", "simon", Encoding.ASCII);
+		formJson.AddField("password", "admin123", Encoding.ASCII);
 		formJson.AddBinaryData("jsonFile", str, "json" + guid);
 
 		var wwwJson = new WWW(jsonUrl, formJson);
@@ -1363,6 +1365,8 @@ public class Editor : MonoBehaviour
 				}
 
 				var formVideo = new WWWForm();
+				formVideo.AddField("username", "simon", Encoding.ASCII);
+				formVideo.AddField("password", "admin123", Encoding.ASCII);
 				formVideo.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
 
 				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
