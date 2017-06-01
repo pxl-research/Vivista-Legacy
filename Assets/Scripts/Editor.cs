@@ -22,7 +22,8 @@ public enum EditorState {
 	Opening,
 	NewOpen,
 	PickingPerspective,
-	Uploading
+	Uploading,
+	SavingThenUploading
 }
 
 public enum InteractionType {
@@ -133,6 +134,7 @@ public class Editor : MonoBehaviour
 	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimeline;
 
+	private Guid guid;
 	private string openFileName = "";
 	private string openVideo = "";
 	private UploadStatus uploadStatus;
@@ -180,6 +182,7 @@ public class Editor : MonoBehaviour
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
+		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best to do this.
 		foreach (var point in interactionPoints)
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
@@ -603,9 +606,63 @@ public class Editor : MonoBehaviour
 		{
 			uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
 
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				SetEditorActive(true);
+				StopCoroutine(uploadStatus.coroutine);
+				Destroy(uploadPanel);
+				Canvass.modalBackground.SetActive(false);
+			}
+
 			if (uploadStatus.done)
 			{
 				editorState = EditorState.Active;
+				Destroy(uploadPanel);
+				Canvass.modalBackground.SetActive(false);
+			}
+		}
+
+		//NOTE(Simon): This happens if the file was never saved before trying to upload.
+		if (editorState == EditorState.SavingThenUploading)
+		{
+			if (savePanel.GetComponent<SavePanel>().answered)
+			{
+				var filename = savePanel.GetComponent<SavePanel>().answerFilename;
+				if (SaveToFile(filename))
+				{
+					openFileName = filename;
+				}
+				else
+				{
+					openFileName = "";
+					Debug.LogError("Something went wrong while saving the file");
+				}
+				Destroy(savePanel);
+
+				uploadStatus = new UploadStatus();
+				editorState = EditorState.Uploading;
+				uploadStatus.coroutine = StartCoroutine(UploadFile());
+				uploadPanel = Instantiate(uploadPanelPrefab);
+				uploadPanel.transform.SetParent(Canvass.main.transform, false);
+				videoController.Pause();
+				Canvass.modalBackground.SetActive(true);
+			}
+			else if (uploadStatus.done)
+			{
+				editorState = EditorState.Active;
+				Destroy(uploadPanel);
+				Canvass.modalBackground.SetActive(false);
+			}
+			else
+			{
+				uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
+			}
+			
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				SetEditorActive(true);
+				Destroy(savePanel);
+				StopCoroutine(uploadStatus.coroutine);
 				Destroy(uploadPanel);
 				Canvass.modalBackground.SetActive(false);
 			}
@@ -655,6 +712,23 @@ public class Editor : MonoBehaviour
 			&& FileOpsAllowed())
 #endif
 		{
+			if (openFileName != "")
+			{
+				if (!SaveToFile(openFileName))
+				{
+					openFileName = "";
+					Debug.LogError("Something went wrong while saving the file");
+				}
+			}
+			else
+			{
+				savePanel = Instantiate(savePanelPrefab);
+				savePanel.transform.SetParent(Canvass.main.transform, false);
+				Canvass.modalBackground.SetActive(true);
+				editorState = EditorState.SavingThenUploading;
+				return;
+			}
+
 			uploadStatus = new UploadStatus();
 			editorState = EditorState.Uploading;
 			uploadStatus.coroutine = StartCoroutine(UploadFile());
@@ -933,7 +1007,7 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		//Note(Simon): Render various stuff
+		//Note(Simon): Render various stuff, such as indicator lines for begin and end of video, and lines for the timestamps.
 		{
 			
 		}
@@ -1109,6 +1183,15 @@ public class Editor : MonoBehaviour
 	{
 		var sb = new StringBuilder();
 
+		if (guid == Guid.Empty)
+		{
+			guid = Guid.NewGuid();
+		}
+
+		sb.Append("uuid:")
+			.Append(guid)
+			.Append(",\n");
+
 		sb.Append("videoname:")
 			.Append(openVideo)
 			.Append(",\n");
@@ -1118,6 +1201,8 @@ public class Editor : MonoBehaviour
 			.Append(fileLoader.currentPerspective)
 			.Append(",\n");
 
+			
+		
 		sb.Append("[");
 		if (interactionPoints.Count > 0)
 		{
@@ -1142,12 +1227,10 @@ public class Editor : MonoBehaviour
 		}
 		else
 		{
-			Debug.Log("[]");
+			sb.Append("[]");
 		}
 
 		sb.Append("]");
-
-		Debug.Log(sb.ToString());
 
 		try
 		{
@@ -1174,17 +1257,21 @@ public class Editor : MonoBehaviour
 		var start = 0;
 		var count = 0;
 		var rising = true;
-		var startVideo = str.IndexOf(':') + 1;
-		var endVideo = str.IndexOf('\n') + 1;
-		openVideo = str.Substring(startVideo, (endVideo - startVideo) - 2);
 
-		var startPersp = str.IndexOf(':', endVideo) + 1;
-		var endPersp = str.IndexOf('\n', endVideo) + 1;
-		var perspective = (Perspective)Enum.Parse(typeof(Perspective), str.Substring(startPersp, (endPersp - startPersp) - 2));
-			
+		var result = new ParsedJsonLine();
+
+		result = JsonGetValueFromLine(str, result.endindex);
+		guid = new Guid(result.value);
+
+		result = JsonGetValueFromLine(str, result.endindex);
+		openVideo = result.value;
+
+		result = JsonGetValueFromLine(str, result.endindex);
+		var perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
+
 		var stringObjects = new List<string>();
 			
-		for(var i = endPersp; i < str.Length; i++)
+		for(var i = result.endindex; i < str.Length; i++)
 		{
 			if (str[i] == '{')
 			{
@@ -1235,7 +1322,6 @@ public class Editor : MonoBehaviour
 
 		foreach (var point in points)
 		{
-			//TODO(Simon): Fix rotation
 			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
 
 			var newInteractionPoint = new InteractionPointEditor
@@ -1321,7 +1407,6 @@ public class Editor : MonoBehaviour
 		const string baseUrl = "localhost";
 		const string jsonUrl = baseUrl + "/json";
 		const string videoUrl = baseUrl + "/video";
-		var guid = Guid.NewGuid();
 
 		var str = GetSaveFileContentsBinary(openFileName);
 
@@ -1438,4 +1523,19 @@ public class Editor : MonoBehaviour
 		return niceTimes[0];
 	}
 
+	private class ParsedJsonLine{
+		public string value;
+		public int endindex;
+	}
+
+	private static ParsedJsonLine JsonGetValueFromLine(string json, int startIndex)
+	{
+		var startValue = json.IndexOf(':', startIndex) + 1;
+		var endValue = json.IndexOf('\n', startIndex) + 1;
+		return new ParsedJsonLine
+		{
+			value = json.Substring(startValue, (endValue- startValue) - 2),
+			endindex = endValue
+		};
+	}
 }
