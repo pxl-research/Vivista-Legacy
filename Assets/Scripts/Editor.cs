@@ -182,7 +182,7 @@ public class Editor : MonoBehaviour
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
-		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best to do this.
+		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best point to do this.
 		foreach (var point in interactionPoints)
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
@@ -1411,6 +1411,7 @@ public class Editor : MonoBehaviour
 		var str = GetSaveFileContentsBinary(openFileName);
 
 		var formJson = new WWWForm();
+		//TODO(Simon): Add a login form
 		formJson.AddField("username", "simon");
 		formJson.AddField("password", "admin123");
 		formJson.AddField("uuid", guid.ToString());
@@ -1461,6 +1462,7 @@ public class Editor : MonoBehaviour
 				}
 
 				var formVideo = new WWWForm();
+				//TODO(Simon): Add a login form
 				formVideo.AddField("username", "simon");
 				formVideo.AddField("password", "admin123");
 				formVideo.AddField("uuid", guid.ToString());
