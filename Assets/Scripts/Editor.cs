@@ -618,6 +618,7 @@ public class Editor : MonoBehaviour
 			{
 				editorState = EditorState.Active;
 				Destroy(uploadPanel);
+				uploadStatus.currentRequest.Dispose();
 				Canvass.modalBackground.SetActive(false);
 			}
 		}
@@ -651,6 +652,7 @@ public class Editor : MonoBehaviour
 			{
 				editorState = EditorState.Active;
 				Destroy(uploadPanel);
+				uploadStatus.currentRequest.Dispose();
 				Canvass.modalBackground.SetActive(false);
 			}
 			else
@@ -1427,10 +1429,10 @@ public class Editor : MonoBehaviour
 			{
 				Debug.Log("Bad login");
 			}
+			wwwJson.Dispose();
 			yield break;
 		}
-
-		Debug.Log(wwwJson.text);
+		wwwJson.Dispose();
 
 		uploadStatus.partSize = 1 * gigabyte;
 		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
@@ -1468,6 +1470,7 @@ public class Editor : MonoBehaviour
 				formVideo.AddField("uuid", guid.ToString());
 				formVideo.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
 
+				if (uploadStatus.currentRequest != null) { uploadStatus.currentRequest.Dispose(); }
 				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
 
 				yield return uploadStatus.currentRequest;
@@ -1479,6 +1482,7 @@ public class Editor : MonoBehaviour
 						Debug.Log("Bad login");
 					}
 
+					uploadStatus.currentRequest.Dispose();
 					yield break;
 				}
 
