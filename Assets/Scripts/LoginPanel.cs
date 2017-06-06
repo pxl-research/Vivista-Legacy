@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Collections;
-using System.Net;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class LoginPanel : MonoBehaviour 
 {
+	public bool answered;
+	public string answerToken;
+
 	public InputField loginUsername;
 	public InputField loginPassword;
+	public Toggle loginRemember;
 	public Text loginError;
 
 	public InputField registerUsername;
@@ -15,25 +18,88 @@ public class LoginPanel : MonoBehaviour
 	public InputField registerRepeatPassword;
 	public Text registerError;
 
-	private enum State
-	{
-		Login,
-		Register
-	}
-	private State state;
+	private string loginDataPath;
+
+	public Color GoodColor;
+	public Color BadColor;
 
 	void Start () 
 	{
-		
-	}
+		loginDataPath = Path.Combine(Application.persistentDataPath, "save.dat");
 
-	void Update () 
-	{
+		if (File.Exists(loginDataPath))
+		{
+			using (var file = File.OpenText(loginDataPath))
+			{
+				loginUsername.text = file.ReadLine();
+				loginPassword.text = file.ReadLine();
+				loginRemember.isOn = true;
+			}
+		}
 	}
 
 	public void Login() 
 	{
+		var username = loginUsername.text;
+		var password = loginPassword.text;
+
+		loginError.color = BadColor;
+		if (String.IsNullOrEmpty(username))
+		{
+			loginError.text = "Please fill in a username";
+			return;
+		}
+		if (String.IsNullOrEmpty(password))
+		{
+			loginError.text = "Please fill in a password";
+			return;
+		}
+
+		if (loginRemember.isOn)
+		{
+			using (var file = File.CreateText(loginDataPath))
+			{
+				file.WriteLine(username);
+				file.WriteLine(password);
+			}
+		}
+		else
+		{
+			File.Delete(loginDataPath);
+		}
+
+		var form = new WWWForm();
+		form.AddField("username", username);
+		form.AddField("password", password);
+		//form.headers.Add("Content-Type", "application/x-www-form-urlencoded");
+
+		var www = new WWW("http://localhost/login", form);
+
+		while (!www.isDone) {}
 		
+		var status = www.StatusCode();
+		if (status == 401)
+		{
+			loginError.text = "Username does not exist, or password is wrong";
+			return;
+		}
+		if (status != 200)
+		{
+			loginError.text = "An error happened in the server. Please try again later";
+			return;
+		}
+		if (!String.IsNullOrEmpty(www.error))
+		{
+			loginError.text = www.error;
+			return;
+		}
+
+		answered = true;
+		answerToken = www.text;
+
+		loginError.text = "Logged in!";
+		loginError.color = GoodColor;
+		www.Dispose();
 	}
 
 	public void Register() 
@@ -42,6 +108,7 @@ public class LoginPanel : MonoBehaviour
 		var password = registerPassword.text;
 		var repeatPassword = registerRepeatPassword.text;
 
+		registerError.color = BadColor;
 		if (String.IsNullOrEmpty(username))
 		{
 			registerError.text = "Please fill in a username";
@@ -66,18 +133,11 @@ public class LoginPanel : MonoBehaviour
 		var form = new WWWForm();
 		form.AddField("username", username);
 		form.AddField("password", password);
-		//form.headers.Add("Content-Type", "application/x-www-form-urlencoded");
 
-		var www = new WWW("https://localhost/register", form);
+		var www = new WWW("http://localhost/register", form);
 
 		while (!www.isDone) {}
 		
-		if (www.size == 0)
-		{
-			registerError.text = "Couldn't connect to the server";
-			return;
-		}
-
 		var status = www.StatusCode();
 		if (status == 409)
 		{
@@ -89,7 +149,17 @@ public class LoginPanel : MonoBehaviour
 			registerError.text = "An error happened in the server. Please try again later";
 			return;
 		}
+		if (!String.IsNullOrEmpty(www.error))
+		{
+			registerError.text = www.error;
+			return;
+		}
 
-		registerError.text = "";
+		answered = true;
+		answerToken = www.text;
+
+		registerError.text = "Registered succesfully!";
+		registerError.color = GoodColor;
+		www.Dispose();
 	}
 }

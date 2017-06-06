@@ -1413,7 +1413,7 @@ public class Editor : MonoBehaviour
 		var str = GetSaveFileContentsBinary(openFileName);
 
 		var formJson = new WWWForm();
-		//TODO(Simon): Add a login form
+		//TODO(Simon): Switch to token based authentication
 		formJson.AddField("username", "simon");
 		formJson.AddField("password", "admin123");
 		formJson.AddField("uuid", guid.ToString());
@@ -1464,7 +1464,7 @@ public class Editor : MonoBehaviour
 				}
 
 				var formVideo = new WWWForm();
-				//TODO(Simon): Add a login form
+				//TODO(Simon): Switch to token based authentication
 				formVideo.AddField("username", "simon");
 				formVideo.AddField("password", "admin123");
 				formVideo.AddField("uuid", guid.ToString());
