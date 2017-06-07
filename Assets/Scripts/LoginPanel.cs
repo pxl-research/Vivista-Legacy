@@ -20,8 +20,7 @@ public class LoginPanel : MonoBehaviour
 
 	private string loginDataPath;
 
-	public Color GoodColor;
-	public Color BadColor;
+	public Color errorColor;
 
 	void Start () 
 	{
@@ -43,7 +42,7 @@ public class LoginPanel : MonoBehaviour
 		var username = loginUsername.text;
 		var password = loginPassword.text;
 
-		loginError.color = BadColor;
+		loginError.color = errorColor;
 		if (String.IsNullOrEmpty(username))
 		{
 			loginError.text = "Please fill in a username";
@@ -73,33 +72,33 @@ public class LoginPanel : MonoBehaviour
 		form.AddField("password", password);
 		//form.headers.Add("Content-Type", "application/x-www-form-urlencoded");
 
-		var www = new WWW("http://localhost/login", form);
-
-		while (!www.isDone) {}
-		
-		var status = www.StatusCode();
-		if (status == 401)
+		using (var www = new WWW("http://localhost/login", form))
 		{
-			loginError.text = "Username does not exist, or password is wrong";
-			return;
-		}
-		if (status != 200)
-		{
-			loginError.text = "An error happened in the server. Please try again later";
-			return;
-		}
-		if (!String.IsNullOrEmpty(www.error))
-		{
-			loginError.text = www.error;
-			return;
-		}
 
-		answered = true;
-		answerToken = www.text;
+			while (!www.isDone) { }
 
-		loginError.text = "Logged in!";
-		loginError.color = GoodColor;
-		www.Dispose();
+			var status = www.StatusCode();
+			if (status == 401)
+			{
+				loginError.text = "Username does not exist, or password is wrong";
+				return;
+			}
+			if (status != 200)
+			{
+				loginError.text = "An error happened in the server. Please try again later";
+				return;
+			}
+			if (!String.IsNullOrEmpty(www.error))
+			{
+				loginError.text = www.error;
+				return;
+			}
+
+			answered = true;
+			answerToken = www.text;
+
+			Toasts.AddToast(5, "Logged in");
+		}
 	}
 
 	public void Register() 
@@ -108,7 +107,7 @@ public class LoginPanel : MonoBehaviour
 		var password = registerPassword.text;
 		var repeatPassword = registerRepeatPassword.text;
 
-		registerError.color = BadColor;
+		registerError.color = errorColor;
 		if (String.IsNullOrEmpty(username))
 		{
 			registerError.text = "Please fill in a username";
@@ -134,32 +133,32 @@ public class LoginPanel : MonoBehaviour
 		form.AddField("username", username);
 		form.AddField("password", password);
 
-		var www = new WWW("http://localhost/register", form);
-
-		while (!www.isDone) {}
-		
-		var status = www.StatusCode();
-		if (status == 409)
+		using (var www = new WWW("http://localhost/register", form))
 		{
-			registerError.text = "This username is already taken.";
-			return;
-		}
-		if (status != 200)
-		{
-			registerError.text = "An error happened in the server. Please try again later";
-			return;
-		}
-		if (!String.IsNullOrEmpty(www.error))
-		{
-			registerError.text = www.error;
-			return;
-		}
+			while (!www.isDone) { }
 
-		answered = true;
-		answerToken = www.text;
+			var status = www.StatusCode();
+			if (status == 409)
+			{
+				registerError.text = "This username is already taken.";
+				return;
+			}
+			if (status != 200)
+			{
+				registerError.text = "An error happened in the server. Please try again later";
+				return;
+			}
+			if (!String.IsNullOrEmpty(www.error))
+			{
+				registerError.text = www.error;
+				return;
+			}
 
-		registerError.text = "Registered succesfully!";
-		registerError.color = GoodColor;
-		www.Dispose();
+			answered = true;
+			answerToken = www.text;
+
+			Toasts.AddToast(5, "Registered succesfully");
+			Toasts.AddToast(5, "Logged in");
+		}
 	}
 }

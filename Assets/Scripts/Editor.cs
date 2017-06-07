@@ -23,7 +23,8 @@ public enum EditorState {
 	NewOpen,
 	PickingPerspective,
 	Uploading,
-	SavingThenUploading
+	SavingThenUploading,
+	LoggingIn
 }
 
 public enum InteractionType {
@@ -98,6 +99,7 @@ public class Editor : MonoBehaviour
 	public GameObject imagePanelPrefab;
 	public GameObject imagePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
+	public GameObject loginPanelPrefab;
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
@@ -106,6 +108,7 @@ public class Editor : MonoBehaviour
 	private GameObject perspectivePanel;
 	private GameObject openPanel;
 	private GameObject uploadPanel;
+	private GameObject loginPanel;
 
 	public GameObject timelineContainer;
 	public GameObject timeline;
@@ -718,6 +721,14 @@ public class Editor : MonoBehaviour
 		}
 
 #if UNITY_EDITOR
+		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.L)
+			&& AreFileOpsAllowed())
+#else
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.L) 
+			&& FileOpsAllowed())
+#endif
+		{
+			editorState = EditorState.LoggingIn;
 		}
 	}
 
