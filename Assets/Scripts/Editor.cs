@@ -624,7 +624,7 @@ public class Editor : MonoBehaviour
 			if (loginPanel.GetComponent<LoginPanel>().answered)
 			{
 				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
-
+				Debug.Log("usertoken: " + userToken);
 				Destroy(loginPanel);
 				Canvass.modalBackground.SetActive(false);
 				editorState = EditorState.Active;
@@ -661,7 +661,7 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O)
-			&& FileOpsAllowed())
+			&& AreFileOpsAllowed())
 #endif
 		{
 			OpenFilePanel();
@@ -672,7 +672,7 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
-			&& FileOpsAllowed())
+			&& AreFileOpsAllowed())
 #endif
 		{
 			if (openFileName != "")
@@ -697,7 +697,7 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.U) 
-			&& FileOpsAllowed())
+			&& AreFileOpsAllowed())
 #endif
 		{
 			if (openFileName != "")
@@ -725,7 +725,7 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #else
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.L) 
-			&& FileOpsAllowed())
+			&& AreFileOpsAllowed())
 #endif
 		{
 			editorState = EditorState.LoggingIn;
@@ -1404,9 +1404,7 @@ public class Editor : MonoBehaviour
 		var str = GetSaveFileContentsBinary(openFileName);
 
 		var formJson = new WWWForm();
-		//TODO(Simon): Switch to token based authentication
-		formJson.AddField("username", "simon");
-		formJson.AddField("password", "admin123");
+		formJson.AddField("token", userToken);
 		formJson.AddField("uuid", guid.ToString());
 		formJson.AddBinaryData("jsonFile", str, "json" + guid);
 
@@ -1454,9 +1452,7 @@ public class Editor : MonoBehaviour
 				}
 
 				var formVideo = new WWWForm();
-				//TODO(Simon): Switch to token based authentication
-				formVideo.AddField("username", "simon");
-				formVideo.AddField("password", "admin123");
+				formVideo.AddField("token", userToken);
 				formVideo.AddField("uuid", guid.ToString());
 				formVideo.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
 
@@ -1476,7 +1472,6 @@ public class Editor : MonoBehaviour
 					yield break;
 				}
 
-				Debug.Log(uploadStatus.currentRequest.text);
 			}
 		}
 
@@ -1493,6 +1488,7 @@ public class Editor : MonoBehaviour
 			Destroy(uploadPanel);
 			uploadStatus.currentRequest.Dispose();
 			Canvass.modalBackground.SetActive(false);
+			Toasts.AddToast(5, "Upload succesful");
 		}
 		else if (uploadStatus.failed)
 		{
@@ -1508,7 +1504,9 @@ public class Editor : MonoBehaviour
 			SetEditorActive(true);
 			StopCoroutine(uploadStatus.coroutine);
 			Destroy(uploadPanel);
+			uploadStatus.currentRequest.Dispose();
 			Canvass.modalBackground.SetActive(false);
+			Toasts.AddToast(5, "Upload cancelled");
 		}
 	}
 

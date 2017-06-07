@@ -24,7 +24,6 @@ public class Toasts : MonoBehaviour
 		holder = toastHolder;
 	}
 
-	// Update is called once per frame
 	void Update () 
 	{
 		if (toasts.Count > 0)
