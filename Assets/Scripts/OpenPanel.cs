@@ -19,7 +19,7 @@ public class OpenPanel : MonoBehaviour
 
 	public void Init()
 	{
-		var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.*");
+		var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.json");
 		foreach (var file in files)
 		{
 			filenames.Add(StripExtension(file.Name));

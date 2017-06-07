@@ -67,6 +67,7 @@ public class UploadStatus
 	public int currentPart;
 	public int totalSize;
 	public bool done;
+	public bool failed;
 	public Queue<Timing> timings = new Queue<Timing>();
 }
 
@@ -137,6 +138,7 @@ public class Editor : MonoBehaviour
 	private Guid guid;
 	private string openFileName = "";
 	private string openVideo = "";
+	private string userToken = "";
 	private UploadStatus uploadStatus;
 
 	public Cursors cursors;
@@ -604,22 +606,25 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Uploading)
 		{
-			uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
+			UpdateUploadPanel();
+		}
 
-			if (Input.GetKeyDown(KeyCode.Escape))
+		if (editorState == EditorState.LoggingIn)
+		{
+			if (loginPanel == null)
 			{
-				SetEditorActive(true);
-				StopCoroutine(uploadStatus.coroutine);
-				Destroy(uploadPanel);
-				Canvass.modalBackground.SetActive(false);
+				Canvass.modalBackground.SetActive(true);
+				loginPanel = Instantiate(loginPanelPrefab);
+				loginPanel.transform.SetParent(Canvass.main.transform, false);
 			}
 
-			if (uploadStatus.done)
+			if (loginPanel.GetComponent<LoginPanel>().answered)
 			{
-				editorState = EditorState.Active;
-				Destroy(uploadPanel);
-				uploadStatus.currentRequest.Dispose();
+				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
+
+				Destroy(loginPanel);
 				Canvass.modalBackground.SetActive(false);
+				editorState = EditorState.Active;
 			}
 		}
 
@@ -639,34 +644,12 @@ public class Editor : MonoBehaviour
 					Debug.LogError("Something went wrong while saving the file");
 				}
 				Destroy(savePanel);
-
-				uploadStatus = new UploadStatus();
-				editorState = EditorState.Uploading;
-				uploadStatus.coroutine = StartCoroutine(UploadFile());
-				uploadPanel = Instantiate(uploadPanelPrefab);
-				uploadPanel.transform.SetParent(Canvass.main.transform, false);
-				videoController.Pause();
-				Canvass.modalBackground.SetActive(true);
-			}
-			else if (uploadStatus.done)
-			{
-				editorState = EditorState.Active;
-				Destroy(uploadPanel);
-				uploadStatus.currentRequest.Dispose();
-				Canvass.modalBackground.SetActive(false);
+				
+				InitUploadPanel();
 			}
 			else
 			{
-				uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
-			}
-			
-			if (Input.GetKeyDown(KeyCode.Escape))
-			{
-				SetEditorActive(true);
-				Destroy(savePanel);
-				StopCoroutine(uploadStatus.coroutine);
-				Destroy(uploadPanel);
-				Canvass.modalBackground.SetActive(false);
+				UpdateUploadPanel();
 			}
 		}
 
@@ -710,7 +693,7 @@ public class Editor : MonoBehaviour
 		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.U)
 			&& AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.U) 
 			&& FileOpsAllowed())
 #endif
 		{
@@ -731,13 +714,10 @@ public class Editor : MonoBehaviour
 				return;
 			}
 
-			uploadStatus = new UploadStatus();
-			editorState = EditorState.Uploading;
-			uploadStatus.coroutine = StartCoroutine(UploadFile());
-			uploadPanel = Instantiate(uploadPanelPrefab);
-			uploadPanel.transform.SetParent(Canvass.main.transform, false);
-			videoController.Pause();
-			Canvass.modalBackground.SetActive(true);
+			InitUploadPanel();
+		}
+
+#if UNITY_EDITOR
 		}
 	}
 
@@ -1419,20 +1399,19 @@ public class Editor : MonoBehaviour
 		formJson.AddField("uuid", guid.ToString());
 		formJson.AddBinaryData("jsonFile", str, "json" + guid);
 
-		var wwwJson = new WWW(jsonUrl, formJson);
-
-		yield return wwwJson;
-		var status = wwwJson.StatusCode();
-		if (status != 200)
+		using (var www = new WWW(jsonUrl, formJson))
 		{
-			if (status == 401)
+			yield return www;
+			var status = www.StatusCode();
+			if (status != 200)
 			{
-				Debug.Log("Bad login");
+				if (status == 401)
+				{
+					Debug.Log("Bad login");
+				}
+				yield break;
 			}
-			wwwJson.Dispose();
-			yield break;
 		}
-		wwwJson.Dispose();
 
 		uploadStatus.partSize = 1 * gigabyte;
 		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
@@ -1474,7 +1453,7 @@ public class Editor : MonoBehaviour
 				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
 
 				yield return uploadStatus.currentRequest;
-				status = uploadStatus.currentRequest.StatusCode();
+				var status = uploadStatus.currentRequest.StatusCode();
 				if (status != 200)
 				{
 					if (status == 401)
@@ -1491,6 +1470,46 @@ public class Editor : MonoBehaviour
 		}
 
 		uploadStatus.done = true;
+	}
+
+	private void UpdateUploadPanel()
+	{
+		uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
+
+		if (uploadStatus.done)
+		{
+			editorState = EditorState.Active;
+			Destroy(uploadPanel);
+			uploadStatus.currentRequest.Dispose();
+			Canvass.modalBackground.SetActive(false);
+		}
+		else if (uploadStatus.failed)
+		{
+			editorState = EditorState.Active;
+			Destroy(uploadPanel);
+			uploadStatus.currentRequest.Dispose();
+			Canvass.modalBackground.SetActive(false);
+			Toasts.AddToast(5, "Upload failed. Please try again");
+		}
+		
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			SetEditorActive(true);
+			StopCoroutine(uploadStatus.coroutine);
+			Destroy(uploadPanel);
+			Canvass.modalBackground.SetActive(false);
+		}
+	}
+
+	private void InitUploadPanel()
+	{
+		uploadStatus = new UploadStatus();
+		editorState = EditorState.Uploading;
+		uploadStatus.coroutine = StartCoroutine(UploadFile());
+		uploadPanel = Instantiate(uploadPanelPrefab);
+		uploadPanel.transform.SetParent(Canvass.main.transform, false);
+		videoController.Pause();
+		Canvass.modalBackground.SetActive(true);
 	}
 
 	private void ResetInteractionPointTemp()
