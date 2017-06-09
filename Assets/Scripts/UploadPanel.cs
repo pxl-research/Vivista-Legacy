@@ -30,11 +30,9 @@ public class UploadPanel : MonoBehaviour
 		var timeRemaining = float.PositiveInfinity;
 		var speed = 0.0f;
 
-		if (status.currentRequest != null)
+		if (status.request != null)
 		{
-			var totalUploaded = (status.currentPart * status.partSize)
-								+ (status.currentRequest.uploadProgress * status.currentPartSize);
-			var totalPercentage = totalUploaded / status.totalSize;
+			var totalUploaded = status.request.uploadProgress * status.totalSize;
 
 			var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
 			status.timings.Enqueue(newestTiming);
@@ -46,9 +44,9 @@ public class UploadPanel : MonoBehaviour
 
 			speed = status.timings.Count >= 2 ? (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time) : float.NaN;
 			timeRemaining = (status.totalSize - totalUploaded) / speed;
-		
-			progressbar.offsetMax = new Vector2(-(progressbarWidth - (progressbarWidth * totalPercentage)), progressbar.offsetMax.y);
-			progressPercent.text = String.Format("{0:F1}%", totalPercentage * 100);
+
+			progressbar.offsetMax = new Vector2(-(progressbarWidth - (progressbarWidth * status.request.progress)), progressbar.offsetMax.y);
+			progressPercent.text = string.Format("{0:F1}%", status.request.progress * 100);
 			progressMB.text = String.Format("{0:F2}/{1:F2}MB", totalUploaded / megabyte, status.totalSize / megabyte);
 
 			time += Time.deltaTime;

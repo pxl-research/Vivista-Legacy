@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -61,14 +60,11 @@ public class InteractionpointSerialize
 public class UploadStatus
 {
 	public Coroutine coroutine;
-	public WWW currentRequest;
-	public int partSize;
-	public int currentPartSize;
-	public int parts;
-	public int currentPart;
+	public WWW request;
 	public int totalSize;
 	public bool done;
 	public bool failed;
+	public string error;
 	public Queue<Timing> timings = new Queue<Timing>();
 }
 
@@ -148,10 +144,6 @@ public class Editor : MonoBehaviour
 	public List<Color> timelineColors;
 	private int colorIndex;
 
-	const int kilobyte = 1024;
-	const int megabyte = 1024 * 1024;
-	const int gigabyte = 1024 * 1024 * 1024;
-
 	void Start () 
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
@@ -187,7 +179,7 @@ public class Editor : MonoBehaviour
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
-		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best point to do this.
+		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
 		foreach (var point in interactionPoints)
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
@@ -908,6 +900,7 @@ public class Editor : MonoBehaviour
 		for (var i = interactionPoints.Count - 1; i >= 0; i--)
 		{
 			var point = interactionPoints[i];
+			//TODO(Simon): See if we can get rid of these name based lookups
 			var edit = point.timelineRow.transform.Find("Content/Edit").gameObject.GetComponent<Button2>();
 			var delete = point.timelineRow.transform.Find("Content/Delete").gameObject.GetComponent<Button2>();
 			var move = point.timelineRow.transform.Find("Content/Move").gameObject.GetComponent<Toggle2>();
@@ -1189,9 +1182,12 @@ public class Editor : MonoBehaviour
 			.Append(openVideo)
 			.Append(",\n");
 
-			
 		sb.Append("perspective:")
 			.Append(fileLoader.currentPerspective)
+			.Append(",\n");
+
+		sb.Append("length:")
+			.Append(videoController.videoLength)
 			.Append(",\n");
 
 			
@@ -1261,6 +1257,9 @@ public class Editor : MonoBehaviour
 
 		result = JsonGetValueFromLine(str, result.endindex);
 		var perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
+
+		//Note(Simon): Value is only used server side, but we still need to skip over the text in the file.
+		result = JsonGetValueFromLine(str, result.endindex);
 
 		var stringObjects = new List<string>();
 			
@@ -1398,80 +1397,50 @@ public class Editor : MonoBehaviour
 	private IEnumerator UploadFile()
 	{
 		const string baseUrl = "localhost";
-		const string jsonUrl = baseUrl + "/json";
 		const string videoUrl = baseUrl + "/video";
 
 		var str = GetSaveFileContentsBinary(openFileName);
 
-		var formJson = new WWWForm();
-		formJson.AddField("token", userToken);
-		formJson.AddField("uuid", guid.ToString());
-		formJson.AddBinaryData("jsonFile", str, "json" + guid);
+		var form = new WWWForm();
+		form.AddField("token", userToken);
+		form.AddField("uuid", guid.ToString());
+		form.AddBinaryData("jsonFile", str, "json" + guid);
 
-		using (var www = new WWW(jsonUrl, formJson))
-		{
-			yield return www;
-			var status = www.StatusCode();
-			if (status != 200)
-			{
-				if (status == 401)
-				{
-					Debug.Log("Bad login");
-				}
-				yield break;
-			}
-		}
-
-		uploadStatus.partSize = 1 * gigabyte;
 		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
-		uploadStatus.parts = uploadStatus.totalSize / uploadStatus.partSize + 1;
 		using (var fileContents = File.OpenRead(openVideo))
 		{
-			for (uploadStatus.currentPart = 0; uploadStatus.currentPart < uploadStatus.parts; uploadStatus.currentPart++)
+			var data = new byte[uploadStatus.totalSize];
+
+			try
 			{
-				var read = 0;
-				var data = new byte[uploadStatus.partSize];
-				uploadStatus.currentPartSize = uploadStatus.partSize;
+				fileContents.Read(data, 0, uploadStatus.totalSize);
+			}
+			catch (Exception e)
+			{
+				uploadStatus.failed = true;
+				uploadStatus.error = "Something went wrong while loading the file form disk: " + e.Message;
+				yield break;
+			}
 
-				try
+			form.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
+
+			uploadStatus.request = new WWW(videoUrl, form);
+
+			yield return uploadStatus.request;
+			var status = uploadStatus.request.StatusCode();
+			if (status != 200)
+			{
+				uploadStatus.failed = true;
+				if (status == 401)
 				{
-					read = fileContents.Read(data, 0, uploadStatus.partSize);
+					uploadStatus.error = "Not logged in ";
 				}
-				catch (Exception e)
+				else
 				{
-					Debug.Log("Something went wrong while loading the file.");
-					Debug.Log(e.ToString());
+					uploadStatus.error = "Something went wrong while uploading the file: ";
 				}
-
-				if (read != uploadStatus.partSize)
-				{
-					var newArray = new byte[read];
-					Array.Copy(data, newArray, read);
-					data = newArray;
-					uploadStatus.currentPartSize = read;
-				}
-
-				var formVideo = new WWWForm();
-				formVideo.AddField("token", userToken);
-				formVideo.AddField("uuid", guid.ToString());
-				formVideo.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
-
-				if (uploadStatus.currentRequest != null) { uploadStatus.currentRequest.Dispose(); }
-				uploadStatus.currentRequest = new WWW(videoUrl, formVideo);
-
-				yield return uploadStatus.currentRequest;
-				var status = uploadStatus.currentRequest.StatusCode();
-				if (status != 200)
-				{
-					if (status == 401)
-					{
-						Debug.Log("Bad login");
-					}
-
-					uploadStatus.currentRequest.Dispose();
-					yield break;
-				}
-
+				uploadStatus.request.Dispose();
+				yield break;
 			}
 		}
 
@@ -1480,13 +1449,12 @@ public class Editor : MonoBehaviour
 
 	private void UpdateUploadPanel()
 	{
-		uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
 
 		if (uploadStatus.done)
 		{
 			editorState = EditorState.Active;
 			Destroy(uploadPanel);
-			uploadStatus.currentRequest.Dispose();
+			uploadStatus.request.Dispose();
 			Canvass.modalBackground.SetActive(false);
 			Toasts.AddToast(5, "Upload succesful");
 		}
@@ -1494,9 +1462,13 @@ public class Editor : MonoBehaviour
 		{
 			editorState = EditorState.Active;
 			Destroy(uploadPanel);
-			uploadStatus.currentRequest.Dispose();
+			uploadStatus.request.Dispose();
 			Canvass.modalBackground.SetActive(false);
-			Toasts.AddToast(5, "Upload failed. Please try again");
+			Toasts.AddToast(5, uploadStatus.error);
+		}
+		else
+		{
+			uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
 		}
 		
 		if (Input.GetKeyDown(KeyCode.Escape))
@@ -1504,7 +1476,7 @@ public class Editor : MonoBehaviour
 			SetEditorActive(true);
 			StopCoroutine(uploadStatus.coroutine);
 			Destroy(uploadPanel);
-			uploadStatus.currentRequest.Dispose();
+			uploadStatus.request.Dispose();
 			Canvass.modalBackground.SetActive(false);
 			Toasts.AddToast(5, "Upload cancelled");
 		}
