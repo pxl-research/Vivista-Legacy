@@ -151,123 +151,59 @@ public class Player : MonoBehaviour
 
 	private bool OpenFile(string filename)
 	{
-		using (var fileContents = File.OpenText(Path.Combine(Application.persistentDataPath, filename)))
+		var data = SaveFile.OpenFile(filename);
+	
+		openVideo = data.openVideo;
+		fileLoader.LoadFile(openVideo);
+		fileLoader.SetPerspective(data.perspective);
+
+		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
-			string str;
-			try
-			{
-				str = fileContents.ReadToEnd();
-			}
-			catch (Exception e)
-			{
-				Debug.Log("Something went wrong while loading the file.");
-				Debug.Log(e.ToString());
-				return false;
-			}
-			
-			var level = 0;
-			var start = 0;
-			var count = 0;
-			var rising = true;
-
-			var startVideo = str.IndexOf(':') + 1;
-			var endVideo = str.IndexOf('\n') + 1;
-			openVideo = str.Substring(startVideo, (endVideo - startVideo) - 2);
-			
-			var startPersp = str.IndexOf(':', endVideo) + 1;
-			var endPersp = str.IndexOf('\n', endVideo) + 1;
-			var perspective = (Perspective)Enum.Parse(typeof(Perspective), str.Substring(startPersp, (endPersp - startPersp) - 2));
-			
-			var stringObjects = new List<string>();
-			
-			for(var i = endPersp; i < str.Length; i++)
-			{
-				if (str[i] == '{')
-				{
-					if (level == 0)
-					{
-						start = i;
-					}
-					rising = true;
-					level++;
-				}
-				if (str[i] == '}')
-				{
-					level--;
-					rising = false;
-				}
-
-				count++;
-
-				if (level == 0 && !rising)
-				{
-					stringObjects.Add(str.Substring(start, count - 1));
-					count = 0;
-					rising = true;
-				}
-				if (level < 0)
-				{
-					Debug.Log("Corrupted save file. Aborting");
-					return false;
-				}
-			}
-
-			fileLoader.LoadFile(openVideo);
-			fileLoader.SetPerspective(perspective);
-
-			var points = new List<InteractionpointSerialize>();
-
-			foreach (var obj in stringObjects)
-			{
-				points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
-			}
-
-			for (var i = interactionPoints.Count - 1; i >= 0; i--)
-			{
-				RemoveInteractionPoint(interactionPoints[i]);
-			}
-
-			interactionPoints.Clear();
-
-			foreach (var point in points)
-			{
-				var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
-
-				var newInteractionPoint = new InteractionPointPlayer
-				{
-					startTime = point.startTime,
-					endTime = point.endTime,
-					title = point.title,
-					body = point.body,
-					type = point.type,
-					point = newPoint,
-				};
-
-				switch (newInteractionPoint.type)
-				{
-					case InteractionType.Text:
-					{
-						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
-						newInteractionPoint.panel = panel;
-						break;
-					}
-					case InteractionType.Image:
-					{
-						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
-						newInteractionPoint.panel = panel;
-						break;
-					}
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-
-				AddInteractionPoint(newInteractionPoint);
-			}
+			RemoveInteractionPoint(interactionPoints[j]);
 		}
+
+		interactionPoints.Clear();
+
+		foreach (var point in data.points)
+		{
+			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
+
+			var newInteractionPoint = new InteractionPointPlayer
+			{
+				startTime = point.startTime,
+				endTime = point.endTime,
+				title = point.title,
+				body = point.body,
+				type = point.type,
+				point = newPoint,
+			};
+
+			switch (newInteractionPoint.type)
+			{
+				case InteractionType.Text:
+				{
+					var panel = Instantiate(textPanelPrefab);
+					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Image:
+				{
+					var panel = Instantiate(imagePanelPrefab);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			AddInteractionPoint(newInteractionPoint);
+		}
+
 		return true;
 	}
+	
 
 	private void OpenFilePanel()
 	{

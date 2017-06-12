@@ -1240,70 +1240,12 @@ public class Editor : MonoBehaviour
 
 	private bool OpenFile(string filename)
 	{
-		var str = GetSaveFileContents(filename);
-
-		var level = 0;
-		var start = 0;
-		var count = 0;
-		var rising = true;
-
-		var result = new ParsedJsonLine();
-
-		result = JsonGetValueFromLine(str, result.endindex);
-		guid = new Guid(result.value);
-
-		result = JsonGetValueFromLine(str, result.endindex);
-		openVideo = result.value;
-
-		result = JsonGetValueFromLine(str, result.endindex);
-		var perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
-
-		//Note(Simon): Value is only used server side, but we still need to skip over the text in the file.
-		result = JsonGetValueFromLine(str, result.endindex);
-
-		var stringObjects = new List<string>();
-			
-		for(var i = result.endindex; i < str.Length; i++)
-		{
-			if (str[i] == '{')
-			{
-				if (level == 0)
-				{
-					start = i;
-				}
-				rising = true;
-				level++;
-			}
-			if (str[i] == '}')
-			{
-				level--;
-				rising = false;
-			}
-
-			count++;
-
-			if (level == 0 && !rising)
-			{
-				stringObjects.Add(str.Substring(start, count - 1));
-				count = 0;
-				rising = true;
-			}
-			if (level < 0)
-			{
-				Debug.Log("Corrupted save file. Aborting");
-				return false;
-			}
-		}
-
+		var data = SaveFile.OpenFile(filename);
+	
+		guid = data.guid;
+		openVideo = data.openVideo;
 		fileLoader.LoadFile(openVideo);
-		fileLoader.SetPerspective(perspective);
-
-		var points = new List<InteractionpointSerialize>();
-
-		foreach (var obj in stringObjects)
-		{
-			points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
-		}
+		fileLoader.SetPerspective(data.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
@@ -1312,7 +1254,7 @@ public class Editor : MonoBehaviour
 
 		interactionPoints.Clear();
 
-		foreach (var point in points)
+		foreach (var point in data.points)
 		{
 			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
 
@@ -1352,54 +1294,13 @@ public class Editor : MonoBehaviour
 
 		return true;
 	}
-
-	private static string GetSaveFileContents(string filename)
-	{
-		string str;
-		using (var fileContents = File.OpenText(Path.Combine(Application.persistentDataPath, filename)))
-		{
-			try
-			{
-				str = fileContents.ReadToEnd();
-			}
-			catch (Exception e)
-			{
-				Debug.Log("Something went wrong while loading the file.");
-				Debug.Log(e.ToString());
-				return "";
-			}
-		}
-
-		return str;
-	}
-
-	private static byte[] GetSaveFileContentsBinary(string filename)
-	{
-		byte[] data;
-		using (var fileContents = File.OpenRead(Path.Combine(Application.persistentDataPath, filename)))
-		{
-			try
-			{
-				data = new byte[(int)fileContents.Length];
-				fileContents.Read(data, 0, (int)fileContents.Length);
-			}
-			catch (Exception e)
-			{
-				Debug.Log("Something went wrong while loading the file.");
-				Debug.Log(e.ToString());
-				return new byte[0];
-			}
-		}
-
-		return data;
-	}
-
+	
 	private IEnumerator UploadFile()
 	{
 		const string baseUrl = "localhost";
 		const string videoUrl = baseUrl + "/video";
 
-		var str = GetSaveFileContentsBinary(openFileName);
+		var str = SaveFile.GetSaveFileContentsBinary(openFileName);
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);
@@ -1529,19 +1430,4 @@ public class Editor : MonoBehaviour
 		return niceTimes[0];
 	}
 
-	private class ParsedJsonLine{
-		public string value;
-		public int endindex;
-	}
-
-	private static ParsedJsonLine JsonGetValueFromLine(string json, int startIndex)
-	{
-		var startValue = json.IndexOf(':', startIndex) + 1;
-		var endValue = json.IndexOf('\n', startIndex) + 1;
-		return new ParsedJsonLine
-		{
-			value = json.Substring(startValue, (endValue- startValue) - 2),
-			endindex = endValue
-		};
-	}
 }
