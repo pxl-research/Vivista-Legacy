@@ -8,7 +8,8 @@ using UnityEngine.VR;
 public enum PlayerState
 {
 	Opening,
-	Watching
+	Watching,
+	Index,
 }
 
 public class InteractionPointPlayer
@@ -147,8 +148,13 @@ public class Player : MonoBehaviour
 				}
 			}
 		}
-	}
 
+		if (playerState == PlayerState.Index)
+		{
+			
+		}
+	}
+	
 	private bool OpenFile(string filename)
 	{
 		var data = SaveFile.OpenFile(filename);
@@ -203,7 +209,6 @@ public class Player : MonoBehaviour
 
 		return true;
 	}
-	
 
 	private void OpenFilePanel()
 	{

@@ -1297,9 +1297,6 @@ public class Editor : MonoBehaviour
 	
 	private IEnumerator UploadFile()
 	{
-		const string baseUrl = "localhost";
-		const string videoUrl = baseUrl + "/video";
-
 		var str = SaveFile.GetSaveFileContentsBinary(openFileName);
 
 		var form = new WWWForm();
@@ -1325,7 +1322,7 @@ public class Editor : MonoBehaviour
 
 			form.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
 
-			uploadStatus.request = new WWW(videoUrl, form);
+			uploadStatus.request = new WWW(Web.videoUrl, form);
 
 			yield return uploadStatus.request;
 			var status = uploadStatus.request.StatusCode();
