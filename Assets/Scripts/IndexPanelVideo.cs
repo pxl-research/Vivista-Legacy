@@ -11,18 +11,18 @@ public class IndexPanelVideo : MonoBehaviour
 
 	private WWW imageDownload;
 
-	public void SetData(string title = null, string author = null, string thumbnailURL = null, int sizeBytes = 0, int lengthSeconds = 0)
+	public void SetData(string title = "", string author = "", string thumbnailURL = "", int sizeBytes = 0, int lengthSeconds = 0)
 	{
 
-		if (title != null)
+		if (title != "")
 		{
 			titleText.text = title;
 		}
-		if (author != null)
+		if (author != "")
 		{
 			authorText.text = author;
 		}
-		if (thumbnailURL != null)
+		if (thumbnailURL != "")
 		{
 			imageDownload = new WWW(Web.thumbnailUrl);
 		}
