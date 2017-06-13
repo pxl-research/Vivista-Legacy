@@ -47,6 +47,7 @@ public class IndexPanel : MonoBehaviour
 			pageLabels.Add(child.gameObject);
 		}
 		LoadPage();
+		page = 1;
 	}
 
 	public void Previous()
@@ -55,6 +56,8 @@ public class IndexPanel : MonoBehaviour
 		{
 			page--;
 		}
+
+		LoadPage();
 	}
 
 	public void Next()
@@ -63,6 +66,7 @@ public class IndexPanel : MonoBehaviour
 		{
 			page++;
 		}
+		LoadPage();
 	}
 
 	public void LoadPage()
@@ -75,23 +79,30 @@ public class IndexPanel : MonoBehaviour
 		while(!www.isDone) {}
 
 		var response = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
-
+		/*
 		totalItems = response.totalcount;
 		numPages = Mathf.CeilToInt(totalItems / (float)response.count);
 		page = response.page;
+		*/
 
-		if (pageLabels.Count < Mathf.Min(numPages, 11))
+		totalItems = 9;
+		numPages = 1;
+		const int numLabels = 11;
+
+		var labelsNeeded = Mathf.Min(numPages, numLabels);
+
+		if (pageLabels.Count < labelsNeeded)
 		{
-			for(int i = pageLabels.Count; i < numPages; i++)
+			for(int i = pageLabels.Count; i < labelsNeeded; i++)
 			{
 				var newLabel = Instantiate(pageLabelPrefab);
 				pageLabels.Add(newLabel);
 				newLabel.transform.SetParent(pageLabelContainer.transform, false);
 			}
 		}
-		if (pageLabels.Count > Mathf.Min(numPages, 11))
+		if (pageLabels.Count > labelsNeeded)
 		{
-			for(int i = pageLabels.Count; i > numPages; i--)
+			for(int i = pageLabels.Count; i > labelsNeeded; i--)
 			{
 				var pageLabel = pageLabels[pageLabels.Count];
 				pageLabels.RemoveAt(pageLabels.Count - 1);
@@ -99,24 +110,40 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		if (numPages <= 10)
+
+		//Note(Simon): This algorithm draws the page labels. We have a max of <numLabels> labels (11 currently). So if numPages > numLabels we want to draw the labels like:
+		//Note(Simon): 1 ... 4 5 6 7 8 9 10 ... 20
 		{
-			for (int i = 0; i < pageLabels.Count; i++)
+			if (numPages <= numLabels)
 			{
-				pageLabels[i].GetComponent<Text>().text = (i + 1).ToString();
+				for (int i = 0; i < pageLabels.Count; i++)
+				{
+					pageLabels[i].GetComponent<Text>().text = (i + 1).ToString();
+					pageLabels[i].GetComponent<Text>().fontStyle = (i + 1 == page) ? FontStyle.Bold : FontStyle.Normal;
+				}
 			}
-		}
-		else
-		{
-			pageLabels[0].GetComponent<Text>().text = "1";
-			pageLabels[1].GetComponent<Text>().text = "...";
-			var index = 2;
-			for (int i = page - 3; i < page + 3; i++)
+			else
 			{
-				pageLabels[index++].GetComponent<Text>().text = (i + 1).ToString();
+				var index = 0;
+				var start = Mathf.Clamp(page - 5, 1, numPages - 10);
+				var end = Mathf.Clamp(page + 5, numPages - 10, numPages);
+
+				for (int i = start; i <= end; i++)
+				{
+					pageLabels[index].GetComponent<Text>().fontStyle = (i == page) ? FontStyle.Bold : FontStyle.Normal;
+					pageLabels[index++].GetComponent<Text>().text = i.ToString();
+				}
+				if (page > 6)
+				{
+					pageLabels[0].GetComponent<Text>().text = "1";
+					pageLabels[1].GetComponent<Text>().text = "...";
+				}
+				if (page < numPages - 5)
+				{
+					pageLabels[pageLabels.Count - 2].GetComponent<Text>().text = "...";
+					pageLabels[pageLabels.Count - 1].GetComponent<Text>().text = numPages.ToString();
+				}
 			}
-			pageLabels[pageLabels.Count - 2].GetComponent<Text>().text = "...";
-			pageLabels[pageLabels.Count - 1].GetComponent<Text>().text = numPages.ToString();
 		}
 		
 		previousPage.interactable = true;
@@ -126,7 +153,7 @@ public class IndexPanel : MonoBehaviour
 		{
 			previousPage.interactable = false;
 		}
-		if (numPages == 1 || page == numPages)
+		if (numPages == 1 || page == (numPages))
 		{
 			nextPage.interactable = false;
 		}
