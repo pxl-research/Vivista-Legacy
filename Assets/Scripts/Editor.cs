@@ -712,6 +712,16 @@ public class Editor : MonoBehaviour
 		{
 			editorState = EditorState.LoggingIn;
 		}
+
+		
+#if UNITY_EDITOR
+		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.P))
+#else
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.P))
+#endif
+		{
+			videoController.SaveScreenshotToDisk("C:\\test\\test.jpg");
+		}
 	}
 
 	bool AreFileOpsAllowed()

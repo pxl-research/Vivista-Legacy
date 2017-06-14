@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Video;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public class VideoController : MonoBehaviour 
 {
@@ -31,6 +34,25 @@ public class VideoController : MonoBehaviour
 		timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(currentTime), MathHelper.FormatSeconds(videoLength));
 	}
 
+	//NOTE(Simon): Takes about 50 ms so dont go crazy!
+	public void SaveScreenshotToDisk(string filename)
+	{
+		if (video.isPrepared)
+		{
+			var currentActiveRT = RenderTexture.active;
+
+			RenderTexture.active = video.texture as RenderTexture;
+
+			var tex = new Texture2D(video.texture.width, video.texture.height);
+			tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+
+			var jpg = tex.EncodeToJPG();
+			File.WriteAllBytes(filename, jpg);
+			Debug.Log("Writing screenshot");
+			
+			RenderTexture.active = currentActiveRT;
+		}
+	}
 	
 	public void Seek(float fractionalTime)
 	{
