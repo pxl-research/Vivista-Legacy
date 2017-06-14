@@ -34,12 +34,12 @@ public class IndexPanel : MonoBehaviour
 {
 	private enum AgeOptions
 	{
+		Forever,
 		Today,
 		ThisWeek,
 		ThisMonth,
 		ThisYear,
-		Forever
-	};
+	}
 
 	public bool answered;
 	public string answerVideoId;

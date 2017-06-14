@@ -48,9 +48,7 @@ public static class SaveFile
 
 	public class SaveFileData
 	{
-		public Guid guid;
-		public string openVideo;
-		public Perspective perspective;
+		public Metadata meta;
 		public List<InteractionpointSerialize> points = new List<InteractionpointSerialize>();
 	}
 
@@ -68,13 +66,22 @@ public static class SaveFile
 		var result = new ParsedJsonLine();
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.guid = new Guid(result.value);
+		saveFileData.meta.guid = new Guid(result.value);
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.openVideo = result.value;
+		saveFileData.meta.videoFilename = result.value;
+
+		
+		result = JsonGetValueFromLine(str, result.endindex);
+		saveFileData.meta.title = result.value;
+
+		
+		result = JsonGetValueFromLine(str, result.endindex);
+		saveFileData.meta.description = result.value;
+
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
+		saveFileData.meta.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
 
 		//Note(Simon): Value is only used server side, but we still need to skip over the text in the file.
 		result = JsonGetValueFromLine(str, result.endindex);

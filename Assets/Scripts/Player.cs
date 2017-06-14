@@ -159,9 +159,9 @@ public class Player : MonoBehaviour
 	{
 		var data = SaveFile.OpenFile(filename);
 	
-		openVideo = data.openVideo;
+		openVideo = data.meta.videoFilename;
 		fileLoader.LoadFile(openVideo);
-		fileLoader.SetPerspective(data.perspective);
+		fileLoader.SetPerspective(data.meta.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{

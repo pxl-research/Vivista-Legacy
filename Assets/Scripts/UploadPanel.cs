@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,7 +38,7 @@ public class UploadPanel : MonoBehaviour
 			var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
 			status.timings.Enqueue(newestTiming);
 		
-			while (status.timings.Peek().time < Time.realtimeSinceStartup - 1)
+			while (status.timings.Count > 1 && status.timings.Peek().time < Time.realtimeSinceStartup - 1)
 			{
 				status.timings.Dequeue();
 			}

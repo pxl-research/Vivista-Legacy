@@ -21,7 +21,6 @@ public enum EditorState {
 	Opening,
 	NewOpen,
 	PickingPerspective,
-	Uploading,
 	SavingThenUploading,
 	LoggingIn
 }
@@ -72,6 +71,16 @@ public struct Timing
 {
 	public float time;
 	public float totalUploaded;
+}
+
+public struct Metadata
+{
+	public string filename;
+	public string videoFilename;
+	public string title;
+	public string description;
+	public Guid guid;
+	public Perspective perspective;
 }
 
 public class Editor : MonoBehaviour 
@@ -134,9 +143,7 @@ public class Editor : MonoBehaviour
 	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimeline;
 
-	private Guid guid;
-	private string openFileName = "";
-	private string openVideo = "";
+	private Metadata meta;
 	private string userToken = "";
 	private UploadStatus uploadStatus;
 
@@ -152,6 +159,7 @@ public class Editor : MonoBehaviour
 		prevMousePosition = Input.mousePosition;
 
 		SetEditorActive(false);
+		meta = new Metadata();
 
 		newPanel = Instantiate(newPanelPrefab);
 		newPanel.transform.SetParent(Canvass.main.transform, false);
@@ -168,7 +176,7 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		if (openVideo != "")
+		if (!String.IsNullOrEmpty(meta.videoFilename))
 		{
 			UpdateTimeline();
 		}
@@ -504,7 +512,7 @@ public class Editor : MonoBehaviour
 					if (result == System.Windows.Forms.DialogResult.OK)
 					{
 						fileLoader.LoadFile(dialog.FileName);
-						openVideo = dialog.FileName;
+						meta.videoFilename = dialog.FileName;
 
 						timelineWindowEndTime = (float)videoController.videoLength;
 					}
@@ -537,6 +545,7 @@ public class Editor : MonoBehaviour
 			if (panel.answered)
 			{
 				fileLoader.SetPerspective(panel.answerPerspective);
+				meta.perspective = panel.answerPerspective;
 				Destroy(perspectivePanel);
 				SetEditorActive(true);
 				Canvass.modalBackground.SetActive(false);
@@ -547,14 +556,14 @@ public class Editor : MonoBehaviour
 		{
 			if (savePanel.GetComponent<SavePanel>().answered)
 			{
-				var filename = savePanel.GetComponent<SavePanel>().answerFilename;
-				if (SaveToFile(filename))
+				var panel = savePanel.GetComponent<SavePanel>();
+				meta.filename = panel.answerFilename;
+				meta.title = panel.answerTitle;
+				meta.description = panel.answerDescription;
+
+				if (!SaveToFile(meta.filename))
 				{
-					openFileName = filename;
-				}
-				else
-				{
-					openFileName = "";
+					meta.filename = "";
 					Debug.LogError("Something went wrong while saving the file");
 				}
 				SetEditorActive(true);
@@ -578,11 +587,11 @@ public class Editor : MonoBehaviour
 
 				if (OpenFile(filename))
 				{
-					openFileName = filename;
+					meta.filename = filename;
 				}
 				else
 				{
-					openFileName = "";
+					meta.filename = "";
 					Debug.LogError("Something went wrong while loading the file");
 				}
 
@@ -597,11 +606,6 @@ public class Editor : MonoBehaviour
 				Destroy(openPanel);
 				Canvass.modalBackground.SetActive(false);
 			}
-		}
-
-		if (editorState == EditorState.Uploading)
-		{
-			UpdateUploadPanel();
 		}
 
 		if (editorState == EditorState.LoggingIn)
@@ -626,23 +630,23 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): This happens if the file was never saved before trying to upload.
 		if (editorState == EditorState.SavingThenUploading)
 		{
-			if (savePanel.GetComponent<SavePanel>().answered)
+			if (savePanel != null && savePanel.GetComponent<SavePanel>().answered)
 			{
-				var filename = savePanel.GetComponent<SavePanel>().answerFilename;
-				if (SaveToFile(filename))
+				var panel = savePanel.GetComponent<SavePanel>();
+				panel.Init(meta.filename, meta.title, meta.description);
+				meta.filename = panel.answerFilename;
+				meta.title = panel.answerTitle;
+				meta.description = panel.answerDescription;
+
+				if (!SaveToFile(meta.filename))
 				{
-					openFileName = filename;
-				}
-				else
-				{
-					openFileName = "";
+					meta.filename = "";
 					Debug.LogError("Something went wrong while saving the file");
 				}
 				Destroy(savePanel);
-				
 				InitUploadPanel();
 			}
-			else
+			if (uploadPanel != null)
 			{
 				UpdateUploadPanel();
 			}
@@ -667,21 +671,11 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #endif
 		{
-			if (openFileName != "")
-			{
-				if (!SaveToFile(openFileName))
-				{
-					openFileName = "";
-					Debug.LogError("Something went wrong while saving the file");
-				}
-			}
-			else
-			{
-				savePanel = Instantiate(savePanelPrefab);
-				savePanel.transform.SetParent(Canvass.main.transform, false);
-				Canvass.modalBackground.SetActive(true);
-				editorState = EditorState.Saving;
-			}
+			savePanel = Instantiate(savePanelPrefab);
+			savePanel.transform.SetParent(Canvass.main.transform, false);
+			savePanel.GetComponent<SavePanel>().Init(meta.filename, meta.title, meta.description);
+			Canvass.modalBackground.SetActive(true);
+			editorState = EditorState.Saving;
 		}
 
 #if UNITY_EDITOR
@@ -692,24 +686,11 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #endif
 		{
-			if (openFileName != "")
-			{
-				if (!SaveToFile(openFileName))
-				{
-					openFileName = "";
-					Debug.LogError("Something went wrong while saving the file");
-				}
-			}
-			else
-			{
-				savePanel = Instantiate(savePanelPrefab);
-				savePanel.transform.SetParent(Canvass.main.transform, false);
-				Canvass.modalBackground.SetActive(true);
-				editorState = EditorState.SavingThenUploading;
-				return;
-			}
-
-			InitUploadPanel();
+			savePanel = Instantiate(savePanelPrefab);
+			savePanel.transform.SetParent(Canvass.main.transform, false);
+			savePanel.GetComponent<SavePanel>().Init(meta.filename, meta.title, meta.description);
+			Canvass.modalBackground.SetActive(true);
+			editorState = EditorState.SavingThenUploading;
 		}
 
 #if UNITY_EDITOR
@@ -729,7 +710,6 @@ public class Editor : MonoBehaviour
 		return editorState != EditorState.Saving 
 			&& editorState != EditorState.Opening 
 			&& editorState != EditorState.NewOpen
-			&& editorState != EditorState.Uploading 
 			&& editorState != EditorState.PickingPerspective;
 	}
 	
@@ -1169,29 +1149,38 @@ public class Editor : MonoBehaviour
 	{
 		var sb = new StringBuilder();
 
-		if (guid == Guid.Empty)
+		if (meta.guid == Guid.Empty)
 		{
-			guid = Guid.NewGuid();
+			meta.guid = Guid.NewGuid();
 		}
 
+		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
+		data.meta = meta;
+
 		sb.Append("uuid:")
-			.Append(guid)
+			.Append(meta.guid)
 			.Append(",\n");
 
 		sb.Append("videoname:")
-			.Append(openVideo)
+			.Append(meta.videoFilename)
+			.Append(",\n");
+
+		sb.Append("title:")
+			.Append(meta.title)
+			.Append(",\n");
+
+		sb.Append("description:")
+			.Append(meta.description)
 			.Append(",\n");
 
 		sb.Append("perspective:")
-			.Append(fileLoader.currentPerspective)
+			.Append(meta.perspective)
 			.Append(",\n");
 
 		sb.Append("length:")
 			.Append(videoController.videoLength)
 			.Append(",\n");
 
-			
-		
 		sb.Append("[");
 		if (interactionPoints.Count > 0)
 		{
@@ -1242,10 +1231,9 @@ public class Editor : MonoBehaviour
 	{
 		var data = SaveFile.OpenFile(filename);
 	
-		guid = data.guid;
-		openVideo = data.openVideo;
-		fileLoader.LoadFile(openVideo);
-		fileLoader.SetPerspective(data.perspective);
+		meta = data.meta;
+		fileLoader.LoadFile(meta.videoFilename); 
+		fileLoader.SetPerspective(meta.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
@@ -1297,15 +1285,15 @@ public class Editor : MonoBehaviour
 	
 	private IEnumerator UploadFile()
 	{
-		var str = SaveFile.GetSaveFileContentsBinary(openFileName);
+		var str = SaveFile.GetSaveFileContentsBinary(meta.filename);
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);
-		form.AddField("uuid", guid.ToString());
-		form.AddBinaryData("jsonFile", str, "json" + guid);
+		form.AddField("uuid", meta.guid.ToString());
+		form.AddBinaryData("jsonFile", str, "json" + meta.guid);
 
-		uploadStatus.totalSize = (int)new FileInfo(openVideo).Length;
-		using (var fileContents = File.OpenRead(openVideo))
+		uploadStatus.totalSize = (int)new FileInfo(meta.videoFilename).Length;
+		using (var fileContents = File.OpenRead(meta.videoFilename))
 		{
 			var data = new byte[uploadStatus.totalSize];
 
@@ -1320,7 +1308,7 @@ public class Editor : MonoBehaviour
 				yield break;
 			}
 
-			form.AddBinaryData("video", data, "video" + guid, "multipart/form-data");
+			form.AddBinaryData("video", data, "video" + meta.guid, "multipart/form-data");
 
 			uploadStatus.request = new WWW(Web.videoUrl, form);
 
@@ -1347,7 +1335,6 @@ public class Editor : MonoBehaviour
 
 	private void UpdateUploadPanel()
 	{
-
 		if (uploadStatus.done)
 		{
 			editorState = EditorState.Active;
@@ -1383,7 +1370,6 @@ public class Editor : MonoBehaviour
 	private void InitUploadPanel()
 	{
 		uploadStatus = new UploadStatus();
-		editorState = EditorState.Uploading;
 		uploadStatus.coroutine = StartCoroutine(UploadFile());
 		uploadPanel = Instantiate(uploadPanelPrefab);
 		uploadPanel.transform.SetParent(Canvass.main.transform, false);
