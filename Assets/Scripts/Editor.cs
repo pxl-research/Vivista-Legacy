@@ -533,7 +533,7 @@ public class Editor : MonoBehaviour
 
 				if (panel.answerOpen)
 				{
-					OpenFilePanel();
+					InitOpenFilePanel();
 					Destroy(newPanel);
 				}
 			}
@@ -612,9 +612,7 @@ public class Editor : MonoBehaviour
 		{
 			if (loginPanel == null)
 			{
-				Canvass.modalBackground.SetActive(true);
-				loginPanel = Instantiate(loginPanelPrefab);
-				loginPanel.transform.SetParent(Canvass.main.transform, false);
+				InitLoginPanel();
 			}
 
 			if (loginPanel.GetComponent<LoginPanel>().answered)
@@ -627,9 +625,15 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		//NOTE(Simon): This happens if the file was never saved before trying to upload.
 		if (editorState == EditorState.SavingThenUploading)
 		{
+			if (loginPanel != null && loginPanel.GetComponent<LoginPanel>().answered)
+			{
+				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
+				Debug.Log("usertoken: " + userToken);
+				Destroy(loginPanel);
+				InitSavePanel();
+			}
 			if (savePanel != null && savePanel.GetComponent<SavePanel>().answered)
 			{
 				var panel = savePanel.GetComponent<SavePanel>();
@@ -660,7 +664,7 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #endif
 		{
-			OpenFilePanel();
+			InitOpenFilePanel();
 		}
 
 #if UNITY_EDITOR
@@ -686,11 +690,16 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #endif
 		{
-			savePanel = Instantiate(savePanelPrefab);
-			savePanel.transform.SetParent(Canvass.main.transform, false);
-			savePanel.GetComponent<SavePanel>().Init(meta.filename, meta.title, meta.description);
-			Canvass.modalBackground.SetActive(true);
-			editorState = EditorState.SavingThenUploading;
+			if (String.IsNullOrEmpty(userToken))
+			{
+				InitLoginPanel();
+				editorState = EditorState.SavingThenUploading;
+			}
+			else
+			{
+				InitSavePanel();
+				editorState = EditorState.SavingThenUploading;
+			}
 		}
 
 #if UNITY_EDITOR
@@ -713,15 +722,6 @@ public class Editor : MonoBehaviour
 			&& editorState != EditorState.PickingPerspective;
 	}
 	
-	void OpenFilePanel()
-	{
-		openPanel = Instantiate(openPanelPrefab);
-		openPanel.GetComponent<OpenPanel>().Init();
-		openPanel.transform.SetParent(Canvass.main.transform, false);
-		Canvass.modalBackground.SetActive(true);
-		editorState = EditorState.Opening;
-	}
-
 	void SetEditorActive(bool active)
 	{
 		ResetInteractionPointTemp();
@@ -1374,6 +1374,30 @@ public class Editor : MonoBehaviour
 		uploadPanel = Instantiate(uploadPanelPrefab);
 		uploadPanel.transform.SetParent(Canvass.main.transform, false);
 		videoController.Pause();
+		Canvass.modalBackground.SetActive(true);
+	}
+	
+	private void InitOpenFilePanel()
+	{
+		openPanel = Instantiate(openPanelPrefab);
+		openPanel.GetComponent<OpenPanel>().Init();
+		openPanel.transform.SetParent(Canvass.main.transform, false);
+		Canvass.modalBackground.SetActive(true);
+		editorState = EditorState.Opening;
+	}
+
+	private void InitLoginPanel()
+	{
+		Canvass.modalBackground.SetActive(true);
+		loginPanel = Instantiate(loginPanelPrefab);
+		loginPanel.transform.SetParent(Canvass.main.transform, false);
+	}
+
+	private void InitSavePanel()
+	{
+		savePanel = Instantiate(savePanelPrefab);
+		savePanel.transform.SetParent(Canvass.main.transform, false);
+		savePanel.GetComponent<SavePanel>().Init(meta.filename, meta.title, meta.description);
 		Canvass.modalBackground.SetActive(true);
 	}
 
