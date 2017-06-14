@@ -6,15 +6,17 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [Serializable]
-public struct VideoResponseSerialize
+public class VideoResponseSerialize
 {
 	[Serializable]
-	public struct VideoSerialize
+	public class VideoSerialize
 	{
 		public string uuid;
 		public int userid;
 		public string username;
-		public DateTime timestamp;
+		public string timestamp;
+		[NonSerialized]
+		public DateTime realTimestamp;
 		public int downloadSize;
 
 		public string title;
@@ -194,6 +196,10 @@ public class IndexPanel : MonoBehaviour
 		yield return www;
 
 		var response = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
+		for(int i = offset; i < response.videos.Count; i++)
+		{
+			response.videos[i].realTimestamp = DateTime.Parse(response.videos[i].timestamp);
+		}
 		
 		totalVideos = response.totalcount;
 		numPages = Mathf.CeilToInt(totalVideos / (float)response.count);
@@ -220,7 +226,7 @@ public class IndexPanel : MonoBehaviour
 			for (int i = 0; i < videosThisPage.Count; i++)
 			{
 				var v = videosThisPage[i];
-				videos[i].GetComponent<IndexPanelVideo>().SetData(v.title, v.username, v.thumbnail, v.downloadSize, v.length);
+				videos[i].GetComponent<IndexPanelVideo>().SetData(v.title, v.username, v.thumbnail, v.downloadSize, v.length, v.realTimestamp);
 			}
 		}
 
