@@ -82,11 +82,11 @@ public class VideoController : MonoBehaviour
 			var heightFactor = screenshotParams.height / screenshots.texture.height;
 			if (widthFactor > heightFactor)
 			{
-				screenshotParams.width = screenshotParams.width * heightFactor;
+				screenshotParams.width = screenshots.texture.width * heightFactor;
 			}
 			else
 			{
-				screenshotParams.height = screenshotParams.height * widthFactor;
+				screenshotParams.height = screenshots.texture.height * widthFactor;
 			}
 		}
 
