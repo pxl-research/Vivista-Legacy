@@ -102,6 +102,7 @@ public class VideoController : MonoBehaviour
 		using (var thumb = File.Create(screenshotParams.filename))
 		{
 			thumb.Write(data, 0, data.Length);
+			thumb.Close();
 		}
 	}
 	

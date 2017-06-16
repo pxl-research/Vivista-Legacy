@@ -81,6 +81,7 @@ public struct Metadata
 	public string description;
 	public Guid guid;
 	public Perspective perspective;
+	public string thumbFilename;
 }
 
 public class Editor : MonoBehaviour 
@@ -1217,6 +1218,7 @@ public class Editor : MonoBehaviour
 			using (var file = File.CreateText(jsonname))
 			{
 				videoController.Screenshot(thumbname, 10, 1000, 1000);
+				meta.thumbFilename = thumbname;
 				file.Write(sb.ToString());
 			}
 		}
@@ -1294,14 +1296,20 @@ public class Editor : MonoBehaviour
 		form.AddField("uuid", meta.guid.ToString());
 		form.AddBinaryData("jsonFile", str, "json" + meta.guid);
 
-		uploadStatus.totalSize = (int)new FileInfo(meta.videoFilename).Length;
-		using (var fileContents = File.OpenRead(meta.videoFilename))
+		var vidSize = (int)new FileInfo(meta.videoFilename).Length;
+		var thumbSize = (int)new FileInfo(meta.thumbFilename).Length;
+
+		uploadStatus.totalSize = vidSize + thumbSize;
+		using (var videoStream = File.OpenRead(meta.videoFilename))
+		using (var thumbStream = File.OpenRead(meta.thumbFilename))
 		{
-			var data = new byte[uploadStatus.totalSize];
+			var videoData = new byte[uploadStatus.totalSize];
+			var thumbData = new byte[uploadStatus.totalSize];
 
 			try
 			{
-				fileContents.Read(data, 0, uploadStatus.totalSize);
+				videoStream.Read(videoData, 0, vidSize);
+				thumbStream.Read(thumbData, 0, thumbSize);
 			}
 			catch (Exception e)
 			{
@@ -1310,7 +1318,8 @@ public class Editor : MonoBehaviour
 				yield break;
 			}
 
-			form.AddBinaryData("video", data, "video" + meta.guid, "multipart/form-data");
+			form.AddBinaryData("video", videoData, "video" + meta.guid, "multipart/form-data");
+			form.AddBinaryData("thumb", thumbData, "thumb" + meta.guid, "multipart/form-data");
 
 			uploadStatus.request = new WWW(Web.videoUrl, form);
 
