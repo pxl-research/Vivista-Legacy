@@ -66,6 +66,8 @@ public class IndexPanel : MonoBehaviour
 	private string searchParamText;
 	private string searchParamAuthor;
 
+	private VideoResponseSerialize loadedVideos;
+
 	private Coroutine LoadFunction;
 
 	public void Start()
@@ -104,6 +106,25 @@ public class IndexPanel : MonoBehaviour
 				spinner.rectTransform.Rotate(0, 0, -0.5f);
 			}
 		}
+
+		//Note(Simon): Video Hovering
+		{
+			for (int i = 0; i < videos.Count; i++)
+			{
+				var rect = new Vector3[4];
+				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
+				if(Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x
+					&& Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y)
+				{
+					videos[i].GetComponent<Image>().color = new Color(0, 0, 0, 0.1f);
+				}
+				else
+				{
+					videos[i].GetComponent<Image>().color = new Color(0, 0, 0, 0f);
+				}
+			}
+		}
+
 		//Note(Simon): Pages & labels
 		{
 			const int numLabels = 11;
@@ -210,19 +231,19 @@ public class IndexPanel : MonoBehaviour
 		spinner.enabled = false;
 
 
-		var response = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
-		for(int i = offset; i < response.videos.Count; i++)
+		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
+		for(int i = offset; i < loadedVideos.videos.Count; i++)
 		{
-			response.videos[i].realTimestamp = DateTime.Parse(response.videos[i].timestamp);
+			loadedVideos.videos[i].realTimestamp = DateTime.Parse(loadedVideos.videos[i].timestamp);
 		}
 		
-		totalVideos = response.totalcount;
-		numPages = Mathf.CeilToInt(totalVideos / (float)response.count);
-		page = response.page;
+		totalVideos = loadedVideos.totalcount;
+		numPages = Mathf.CeilToInt(totalVideos / (float)loadedVideos.count);
+		page = loadedVideos.page;
 
 		//Note(Simon): Videos
 		{
-			var videosThisPage = response.videos ?? new List<VideoResponseSerialize.VideoSerialize>();
+			var videosThisPage = loadedVideos.videos ?? new List<VideoResponseSerialize.VideoSerialize>();
 			while (videos.Count < Math.Min(videosPerPage, videosThisPage.Count))
 			{
 				var video = Instantiate(videoPrefab);
