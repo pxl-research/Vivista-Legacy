@@ -116,18 +116,8 @@ public class FileLoader : MonoBehaviour
 
 		if (fileType == FileType.Video || fileType == FileType.Video180 || fileType == FileType.Video360)
 		{
-			var player = videoController.GetComponent<VideoPlayer>();
-			player.url = filename;
-
-			player.time = 10;
-			player.time = 0;
-			player.Pause();
-			player.errorReceived += VideoErrorHandler;
+			videoController.GetComponent<VideoController>().PlayFile(filename);
 		}
 	}
-
-	static void VideoErrorHandler(VideoPlayer player, string message)
-	{
-		Debug.Log(message);
-	}
+	
 }

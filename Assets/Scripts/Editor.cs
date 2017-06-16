@@ -563,8 +563,8 @@ public class Editor : MonoBehaviour
 
 				if (!SaveToFile(meta.filename))
 				{
-					meta.filename = "";
 					Debug.LogError("Something went wrong while saving the file");
+					return;
 				}
 				SetEditorActive(true);
 				Destroy(savePanel);
@@ -644,8 +644,8 @@ public class Editor : MonoBehaviour
 
 				if (!SaveToFile(meta.filename))
 				{
-					meta.filename = "";
 					Debug.LogError("Something went wrong while saving the file");
+					return;
 				}
 				Destroy(savePanel);
 				InitUploadPanel();
@@ -711,16 +711,6 @@ public class Editor : MonoBehaviour
 #endif
 		{
 			editorState = EditorState.LoggingIn;
-		}
-
-		
-#if UNITY_EDITOR
-		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.P))
-#else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.P))
-#endif
-		{
-			videoController.SaveScreenshotToDisk("C:\\test\\test.jpg");
 		}
 	}
 
@@ -1222,10 +1212,12 @@ public class Editor : MonoBehaviour
 
 		try
 		{
-			using (var file = File.CreateText(Path.Combine(Application.persistentDataPath, filename)))
+			var jsonname = Path.Combine(Application.persistentDataPath, filename + ".json");
+			var thumbname = Path.Combine(Application.persistentDataPath, filename + ".jpg");
+			using (var file = File.CreateText(jsonname))
 			{
+				videoController.Screenshot(thumbname, 10, 1000, 1000);
 				file.Write(sb.ToString());
-				file.Close();
 			}
 		}
 		catch(Exception e)
@@ -1239,7 +1231,7 @@ public class Editor : MonoBehaviour
 
 	private bool OpenFile(string filename)
 	{
-		var data = SaveFile.OpenFile(filename);
+		var data = SaveFile.OpenFile(filename + ".json");
 	
 		meta = data.meta;
 		fileLoader.LoadFile(meta.videoFilename); 
@@ -1295,7 +1287,7 @@ public class Editor : MonoBehaviour
 	
 	private IEnumerator UploadFile()
 	{
-		var str = SaveFile.GetSaveFileContentsBinary(meta.filename);
+		var str = SaveFile.GetSaveFileContentsBinary(meta.filename + ".json");
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);

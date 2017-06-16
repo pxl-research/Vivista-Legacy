@@ -18,14 +18,13 @@ public class SavePanel : MonoBehaviour
 	public string answerTitle;
 	public string answerDescription;
 
-	private string prevName;
 	private bool fileExists;
 	
 	public void Init(string filename, string title, string description)
 	{
 		if (filename != null)
 		{
-			filenameInput.text = filename.Substring(0, filename.LastIndexOf('.'));
+			filenameInput.text = filename;
 		}
 		if (title != null)
 		{
@@ -39,15 +38,15 @@ public class SavePanel : MonoBehaviour
 
 	void Update () 
 	{
-		if (filenameInput.text != prevName && !string.IsNullOrEmpty(filenameInput.text))
+		if (filenameInput.text != answerFilename && !string.IsNullOrEmpty(filenameInput.text))
 		{
-			prevName = filenameInput.text;
-			answerFilename = filenameInput.text + ".json";
-			var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.*");
+			answerFilename = filenameInput.text;
+			var jsonFilename = filenameInput.text + ".json";
+			var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.json");
 
 			foreach(var file in files)
 			{
-				if (String.Compare(file.Name, answerFilename, true) == 0)
+				if (String.Compare(file.Name, jsonFilename, true) == 0)
 				{
 					fileExists = true;
 					break;

@@ -60,7 +60,7 @@ public class OpenPanel : MonoBehaviour
 			{
 				var filename = item.GetComponentInChildren<Text>().text;
 				chosenFile.text = "Chosen file: " + filename;
-				answerFilename = filename + ".json";
+				answerFilename = filename;
 				selectedIndex = i;
 			}
 		}
