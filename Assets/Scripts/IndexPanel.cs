@@ -53,6 +53,7 @@ public class IndexPanel : MonoBehaviour
 	public List<GameObject> videos;
 	public Button previousPage;
 	public Button nextPage;
+	public Image spinner;
 
 	public Dropdown searchAge;
 
@@ -96,6 +97,13 @@ public class IndexPanel : MonoBehaviour
 
 	public void Update()
 	{
+		//Note(Simon): Spinner
+		{
+			if (spinner.enabled)
+			{
+				spinner.rectTransform.Rotate(0, 0, -0.5f);
+			}
+		}
 		//Note(Simon): Pages & labels
 		{
 			const int numLabels = 11;
@@ -175,6 +183,10 @@ public class IndexPanel : MonoBehaviour
 
 	public IEnumerator LoadPage()
 	{
+		videoContainer.SetActive(false);
+		spinner.enabled = true;
+		spinner.rectTransform.rotation = Quaternion.identity;
+
 		var offset = (page - 1) * videosPerPage;
 
 		var url = string.Format("{0}?count={1}&offset={2}", Web.indexUrl, videosPerPage, offset);
@@ -194,6 +206,9 @@ public class IndexPanel : MonoBehaviour
 		var www = new WWW(url);
 		
 		yield return www;
+		videoContainer.SetActive(true);
+		spinner.enabled = false;
+
 
 		var response = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
 		for(int i = offset; i < response.videos.Count; i++)
@@ -204,8 +219,6 @@ public class IndexPanel : MonoBehaviour
 		totalVideos = response.totalcount;
 		numPages = Mathf.CeilToInt(totalVideos / (float)response.count);
 		page = response.page;
-
-		numPages = 20;
 
 		//Note(Simon): Videos
 		{
