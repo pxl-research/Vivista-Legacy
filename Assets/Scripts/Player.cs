@@ -38,11 +38,11 @@ public class Player : MonoBehaviour
 	private Image crosshairTimer;
 
 	public GameObject interactionPointPrefab;
-	public GameObject openPanelPrefab;
+	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
 
-	private GameObject openPanel;
+	private GameObject indexPanel;
 
 	private string openVideo;
 
@@ -133,12 +133,12 @@ public class Player : MonoBehaviour
 
 		if (playerState == PlayerState.Opening)
 		{
-			var panel = openPanel.GetComponent<OpenPanel>();
+			var panel = indexPanel.GetComponent<IndexPanel>();
 			if (panel.answered)
 			{
-				if(OpenFile(panel.answerFilename))
+				if(OpenFile(panel.answerVideoId))
 				{
-					Destroy(openPanel);
+					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
 				}
@@ -212,9 +212,9 @@ public class Player : MonoBehaviour
 
 	private void OpenFilePanel()
 	{
-		openPanel = Instantiate(openPanelPrefab);
-		openPanel.GetComponent<OpenPanel>().Init();
-		openPanel.transform.SetParent(Canvass.main.transform, false);
+		indexPanel = Instantiate(indexPanelPrefab);
+		indexPanel.GetComponent<IndexPanel>();
+		indexPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		playerState = PlayerState.Opening;
 	}

@@ -8,27 +8,29 @@ using UnityEngine.UI;
 [Serializable]
 public class VideoResponseSerialize
 {
-	[Serializable]
-	public class VideoSerialize
-	{
-		public string uuid;
-		public int userid;
-		public string username;
-		public string timestamp;
-		[NonSerialized]
-		public DateTime realTimestamp;
-		public int downloadSize;
-
-		public string title;
-		public string thumbnail;
-		public int length;
-	}
-
+	
 	public int totalcount;
 	public int page;
 	public int count;
 	public List<VideoSerialize> videos;
 }
+
+[Serializable]
+public class VideoSerialize
+{
+	public string uuid;
+	public int userid;
+	public string username;
+	public string timestamp;
+	[NonSerialized]
+	public DateTime realTimestamp;
+	public int downloadsize;
+
+	public string title;
+	public int length;
+	public string description;
+}
+
 
 public class IndexPanel : MonoBehaviour 
 {
@@ -46,7 +48,9 @@ public class IndexPanel : MonoBehaviour
 
 	public GameObject pageLabelPrefab;
 	public GameObject videoPrefab;
+	public GameObject detailPanelPrefab;
 
+	public GameObject detailPanel;
 	public GameObject pageLabelContainer;
 	public GameObject videoContainer;
 	public List<GameObject> pageLabels;
@@ -67,6 +71,7 @@ public class IndexPanel : MonoBehaviour
 	private string searchParamAuthor;
 
 	private VideoResponseSerialize loadedVideos;
+	private VideoSerialize detailVideo;
 
 	private Coroutine LoadFunction;
 
@@ -99,6 +104,15 @@ public class IndexPanel : MonoBehaviour
 
 	public void Update()
 	{
+		if (detailPanel != null)
+		{
+			if (detailPanel.GetComponent<DetailPanel>().shouldClose)
+			{
+				Destroy(detailPanel);
+				detailPanel = null;
+			}
+		}
+
 		//Note(Simon): Spinner
 		{
 			if (spinner.enabled)
@@ -107,20 +121,24 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		//Note(Simon): Video Hovering
+		//Note(Simon): Video Hovering & clicking
 		{
 			for (int i = 0; i < videos.Count; i++)
 			{
 				var rect = new Vector3[4];
 				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
-				if(Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x
-					&& Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y)
+
+				var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y;
+
+				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
+				
+				if (hovering && Input.GetMouseButtonDown(0))
 				{
-					videos[i].GetComponent<Image>().color = new Color(0, 0, 0, 0.1f);
-				}
-				else
-				{
-					videos[i].GetComponent<Image>().color = new Color(0, 0, 0, 0f);
+					detailVideo = loadedVideos.videos[i];
+					detailPanel = Instantiate(detailPanelPrefab);
+					detailPanel.transform.SetParent(Canvass.main.transform, false);
+
+					detailPanel.GetComponent<DetailPanel>().Init(detailVideo);
 				}
 			}
 		}
@@ -230,6 +248,10 @@ public class IndexPanel : MonoBehaviour
 		videoContainer.SetActive(true);
 		spinner.enabled = false;
 
+		if (www.error != null)
+		{
+			Debug.Log("Couldn't connect to the server");
+		}
 
 		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
 		for(int i = offset; i < loadedVideos.videos.Count; i++)
@@ -243,7 +265,7 @@ public class IndexPanel : MonoBehaviour
 
 		//Note(Simon): Videos
 		{
-			var videosThisPage = loadedVideos.videos ?? new List<VideoResponseSerialize.VideoSerialize>();
+			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
 			while (videos.Count < Math.Min(videosPerPage, videosThisPage.Count))
 			{
 				var video = Instantiate(videoPrefab);
@@ -260,7 +282,7 @@ public class IndexPanel : MonoBehaviour
 			for (int i = 0; i < videosThisPage.Count; i++)
 			{
 				var v = videosThisPage[i];
-				videos[i].GetComponent<IndexPanelVideo>().SetData(v.title, v.username, v.thumbnail, v.downloadSize, v.length, v.realTimestamp);
+				videos[i].GetComponent<IndexPanelVideo>().SetData(v);
 			}
 		}
 

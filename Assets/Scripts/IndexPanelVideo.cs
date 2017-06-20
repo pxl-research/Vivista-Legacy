@@ -13,32 +13,15 @@ public class IndexPanelVideo : MonoBehaviour
 
 	private WWW imageDownload;
 
-	public void SetData(string title = "", string author = "", string thumbnailURL = "", int sizeBytes = 0, int lengthSeconds = 0, DateTime timestamp = default(DateTime))
+	public void SetData(VideoSerialize video)
 	{
-		if (title != "")
-		{
-			titleText.text = title;
-		}
-		if (author != "")
-		{
-			authorText.text = author;
-		}
-		if (thumbnailURL != "")
-		{
-			imageDownload = new WWW(Web.thumbnailUrl);
-		}
-		if (sizeBytes > 0)
-		{
-			titleText.text = title;
-		}
-		if (lengthSeconds > 0)
-		{
-			titleText.text = title;
-		}
-		if (timestamp != default(DateTime))
-		{
-			timestampText.text = FormatTimestampToTimeAgo(timestamp);
-		}
+		titleText.text = video.title;
+		authorText.text = video.username;
+		sizeText.text = MathHelper.FormatBytes(video.downloadsize);
+		lengthText.text = MathHelper.FormatSeconds(video.length);
+		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
+
+		imageDownload = new WWW(Web.thumbnailUrl + "/" + video.uuid);
 	}
 
 	public void Update()
@@ -54,35 +37,4 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 	}
 
-	public string FormatTimestampToTimeAgo(DateTime timestamp)
-	{
-		var elapsed = DateTime.Now - timestamp;
-		if (elapsed.Days > 365)
-		{
-			return String.Format("{0} years ago", elapsed.Days / 365);
-		}
-		if (elapsed.Days > 31)
-		{
-			return String.Format("{0} months ago", elapsed.Days / 31);
-		}
-		if (elapsed.Days > 7)
-		{
-			return String.Format("{0} weeks ago", elapsed.Days / 7);
-		}
-		if (elapsed.Days > 1)
-		{
-			return String.Format("{0} days ago", elapsed.Days);
-		}
-		if (elapsed.Hours > 1)
-		{
-			return String.Format("{0} hours ago", elapsed.Hours);
-		}
-		if (elapsed.Minutes > 1)
-		{
-			return String.Format("{0} minutes ago", elapsed.Minutes);
-		}
-	
-		return "Just now";
-		
-	}
 }
