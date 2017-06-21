@@ -99,6 +99,7 @@ public class VideoController : MonoBehaviour
 		screenshots.frameReady -= OnScreenshotRendered;
 		screenshots.sendFrameReadyEvents = false;
 
+
 		using (var thumb = File.Create(screenshotParams.filename))
 		{
 			thumb.Write(data, 0, data.Length);

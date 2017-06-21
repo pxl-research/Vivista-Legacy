@@ -1300,12 +1300,15 @@ public class Editor : MonoBehaviour
 		var thumbSize = (int)new FileInfo(meta.thumbFilename).Length;
 
 		uploadStatus.totalSize = vidSize + thumbSize;
+
+		while (!File.Exists(meta.thumbFilename)) { }
+
+		var videoData = new byte[uploadStatus.totalSize];
+		var thumbData = new byte[uploadStatus.totalSize];
+
 		using (var videoStream = File.OpenRead(meta.videoFilename))
 		using (var thumbStream = File.OpenRead(meta.thumbFilename))
 		{
-			var videoData = new byte[uploadStatus.totalSize];
-			var thumbData = new byte[uploadStatus.totalSize];
-
 			try
 			{
 				videoStream.Read(videoData, 0, vidSize);
@@ -1317,28 +1320,28 @@ public class Editor : MonoBehaviour
 				uploadStatus.error = "Something went wrong while loading the file form disk: " + e.Message;
 				yield break;
 			}
+		}
 
-			form.AddBinaryData("video", videoData, "video" + meta.guid, "multipart/form-data");
-			form.AddBinaryData("thumb", thumbData, "thumb" + meta.guid, "multipart/form-data");
+		form.AddBinaryData("video", videoData, "video" + meta.guid, "multipart/form-data");
+		form.AddBinaryData("thumb", thumbData, "thumb" + meta.guid, "multipart/form-data");
 
-			uploadStatus.request = new WWW(Web.videoUrl, form);
+		uploadStatus.request = new WWW(Web.videoUrl, form);
 
-			yield return uploadStatus.request;
-			var status = uploadStatus.request.StatusCode();
-			if (status != 200)
+		yield return uploadStatus.request;
+		var status = uploadStatus.request.StatusCode();
+		if (status != 200)
+		{
+			uploadStatus.failed = true;
+			if (status == 401)
 			{
-				uploadStatus.failed = true;
-				if (status == 401)
-				{
-					uploadStatus.error = "Not logged in ";
-				}
-				else
-				{
-					uploadStatus.error = "Something went wrong while uploading the file: ";
-				}
-				uploadStatus.request.Dispose();
-				yield break;
+				uploadStatus.error = "Not logged in ";
 			}
+			else
+			{
+				uploadStatus.error = "Something went wrong while uploading the file: ";
+			}
+			uploadStatus.request.Dispose();
+			yield break;
 		}
 
 		uploadStatus.done = true;
