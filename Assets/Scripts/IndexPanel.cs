@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [Serializable]
@@ -31,7 +32,6 @@ public class VideoSerialize
 	public string description;
 }
 
-
 public class IndexPanel : MonoBehaviour 
 {
 	private enum AgeOptions
@@ -59,7 +59,7 @@ public class IndexPanel : MonoBehaviour
 	public Button nextPage;
 	public Image spinner;
 
-	public Dropdown searchAge;
+	public Dropdown2 searchAge;
 
 	private int page = 1;
 	private int numPages = 1;
@@ -128,10 +128,11 @@ public class IndexPanel : MonoBehaviour
 				var rect = new Vector3[4];
 				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
 
-				var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y;
+				var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y
+								&& !searchAge.isOpen();
 
 				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
-				
+
 				if (hovering && Input.GetMouseButtonDown(0))
 				{
 					detailVideo = loadedVideos.videos[i];
@@ -145,8 +146,8 @@ public class IndexPanel : MonoBehaviour
 
 		//Note(Simon): Pages & labels
 		{
-			const int numLabels = 11;
-			var labelsNeeded = Mathf.Min(numPages, numLabels);
+			const int maxLabels = 11;
+			var labelsNeeded = Mathf.Min(numPages, maxLabels);
 
 			while (pageLabels.Count < labelsNeeded)
 			{
@@ -164,7 +165,7 @@ public class IndexPanel : MonoBehaviour
 			//Note(Simon): This algorithm draws the page labels. We have a max of <numLabels> labels (11 currently). So if numPages > numLabels we want to draw the labels like:
 			//Note(Simon): 1 ... 4 5 6 7 8 9 10 ... 20
 			{
-				if (numPages <= numLabels)
+				if (numPages <= maxLabels)
 				{
 					for (int i = 0; i < pageLabels.Count; i++)
 					{
@@ -176,7 +177,7 @@ public class IndexPanel : MonoBehaviour
 				{
 					var index = 0;
 					var start = Mathf.Clamp(page - 5, 1, numPages - 10);
-					var end = Mathf.Clamp(page + 5, numLabels, numPages);
+					var end = Mathf.Clamp(page + 5, maxLabels, numPages);
 
 					for (int i = start; i <= end; i++)
 					{
@@ -196,16 +197,16 @@ public class IndexPanel : MonoBehaviour
 				}
 			}
 		
-			previousPage.interactable = true;
-			nextPage.interactable = true;
+			previousPage.gameObject.SetActive(true);
+			nextPage.gameObject.SetActive(true);
 
 			if (page == 1)
 			{
-				previousPage.interactable = false;
+				previousPage.gameObject.SetActive(false);
 			}
-			if (numPages == 1 || page == (numPages))
+			if (numPages == 1 || page == numPages)
 			{
-				nextPage.interactable = false;
+				nextPage.gameObject.SetActive(false);
 			}
 		}
 	}
@@ -260,7 +261,7 @@ public class IndexPanel : MonoBehaviour
 		}
 		
 		totalVideos = loadedVideos.totalcount;
-		numPages = Mathf.CeilToInt(totalVideos / (float)loadedVideos.count);
+		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)loadedVideos.count));
 		page = loadedVideos.page;
 
 		//Note(Simon): Videos
