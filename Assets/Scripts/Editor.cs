@@ -1303,8 +1303,8 @@ public class Editor : MonoBehaviour
 
 		while (!File.Exists(meta.thumbFilename)) { }
 
-		var videoData = new byte[uploadStatus.totalSize];
-		var thumbData = new byte[uploadStatus.totalSize];
+		var videoData = new byte[vidSize];
+		var thumbData = new byte[thumbSize];
 
 		using (var videoStream = File.OpenRead(meta.videoFilename))
 		using (var thumbStream = File.OpenRead(meta.thumbFilename))

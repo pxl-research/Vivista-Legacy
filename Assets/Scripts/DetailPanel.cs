@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Text;
+using System;
 
 public class DetailPanel : MonoBehaviour
 {
@@ -19,11 +21,18 @@ public class DetailPanel : MonoBehaviour
 	{
 		if (imageDownload != null)
 		{
-			if (imageDownload.isDone)
+			if (imageDownload.error != null)
+			{
+				Debug.Log("Failed to download thumbnail: " + imageDownload.error);
+				imageDownload.Dispose();
+				imageDownload = null;
+			}
+			else if (imageDownload.isDone)
 			{
 				thumb.sprite = Sprite.Create(imageDownload.texture, new Rect(0, 0, imageDownload.texture.width, imageDownload.texture.height), new Vector2(0.5f, 0.5f));
 				imageDownload.Dispose();
 				imageDownload = null;
+				thumb.color = Color.white;
 			}
 		}
 	}
@@ -37,7 +46,7 @@ public class DetailPanel : MonoBehaviour
 		timestamp.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
 
-		imageDownload = new WWW(Web.thumbnailUrl);
+		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)) + ".jpg");
 	}
 
 	public void Back()

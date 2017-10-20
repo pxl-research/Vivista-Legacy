@@ -59,7 +59,7 @@ public static class MathHelper
 	public static string FormatBytes(int bytes)
 	{
  		var names = new[] {"B", "kB", "MB", "GB"};
-		var magnitude = (int)Mathf.Floor(Mathf.Log(bytes, 1024));
+		var magnitude = (int)Mathf.Max(0, Mathf.Floor(Mathf.Log(bytes, 1024)));
 		var calculated = bytes / Mathf.Pow(1024f, magnitude);
 		var result = String.Format("{0:0.##} {1}", calculated, names[magnitude]);
 		return result;

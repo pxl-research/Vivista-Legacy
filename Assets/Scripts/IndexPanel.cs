@@ -58,6 +58,7 @@ public class IndexPanel : MonoBehaviour
 	public Button previousPage;
 	public Button nextPage;
 	public Image spinner;
+	public Text noVideos;
 
 	public Dropdown2 searchAge;
 
@@ -234,7 +235,7 @@ public class IndexPanel : MonoBehaviour
 		{
 			url += String.Format("&agedays={0}", searchParamAgeDays);
 		}
-		if (!String.IsNullOrEmpty(searchParamAuthor))
+		if (!String.IsNullOrEmpty(searchParamText))
 		{
 			url += String.Format("&search={0}", searchParamText);
 		}
@@ -255,6 +256,9 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
+
+		noVideos.enabled = loadedVideos.videos.Count == 0;
+
 		for(int i = offset; i < loadedVideos.videos.Count; i++)
 		{
 			loadedVideos.videos[i].realTimestamp = DateTime.Parse(loadedVideos.videos[i].timestamp);
@@ -343,7 +347,7 @@ public class IndexPanel : MonoBehaviour
 
 	public void SetAuthorText(string author)
 	{
-		searchParamText = author;
+		searchParamAuthor = author;
 		LoadPageWrapper();
 		page = 1;
 	}

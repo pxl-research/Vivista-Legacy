@@ -90,11 +90,11 @@ public class VideoController : MonoBehaviour
 			}
 		}
 
-		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height);
+		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24,false);
 		tex.ReadPixels(new Rect(0, 0, screenshots.texture.width, screenshots.texture.height), 0, 0);
 		TextureScale.Bilinear(tex, (int)screenshotParams.width, (int)screenshotParams.height);
 
-		var data = tex.EncodeToJPG();
+		var data = tex.EncodeToJPG(50);
 
 		screenshots.frameReady -= OnScreenshotRendered;
 		screenshots.sendFrameReadyEvents = false;
