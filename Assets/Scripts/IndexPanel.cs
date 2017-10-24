@@ -250,12 +250,13 @@ public class IndexPanel : MonoBehaviour
 		videoContainer.SetActive(true);
 		spinner.enabled = false;
 
-		if (www.error != null)
+		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
+
+		if (www.error != null || www.text == "")
 		{
 			Debug.Log("Couldn't connect to the server");
+			//TODO(Simon): Error handling
 		}
-
-		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
 
 		noVideos.enabled = loadedVideos.videos.Count == 0;
 

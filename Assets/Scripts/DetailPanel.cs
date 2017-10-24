@@ -14,6 +14,7 @@ public class DetailPanel : MonoBehaviour
 	public Text author;
 	public Text timestamp;
 	public Text downloadSize;
+	public VideoSerialize video;
 	
 	private WWW imageDownload;
 
@@ -37,8 +38,10 @@ public class DetailPanel : MonoBehaviour
 		}
 	}
 
-	public void Init(VideoSerialize video)
+	public void Init(VideoSerialize videoToDownload)
 	{
+		video = videoToDownload;
+
 		videoLength.text = MathHelper.FormatSeconds(video.length);
 		title.text = video.title;
 		description.text = video.description;
@@ -57,6 +60,7 @@ public class DetailPanel : MonoBehaviour
 
 	public void Download()
 	{
-		
+		VideoDownloadManager.AddDownload(video);
+		Back();
 	}
 }

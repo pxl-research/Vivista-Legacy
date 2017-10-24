@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UploadPanel : MonoBehaviour 
 {
-	public RectTransform progressbarContainer;
-	public RectTransform progressbar;
-	public Text progressPercent;
 	public Text progressMB;
 	public Text progressTime;
 	public Text progressSpeed;
-	public float progressbarWidth;
+	public ProgressBar progressBar;
 
 	public float time;
 
@@ -19,11 +15,6 @@ public class UploadPanel : MonoBehaviour
 	const int megabyte = 1024 * 1024;
 	const int gigabyte = 1024 * 1024 * 1024;
 	private const float timeBetweenUpdates = 1/10f;
-
-	public void Start()
-	{
-		progressbarWidth = progressbarContainer.rect.width;
-	}
 
 	public void UpdatePanel(UploadStatus status)
 	{
@@ -45,9 +36,9 @@ public class UploadPanel : MonoBehaviour
 
 			speed = status.timings.Count >= 2 ? (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time) : float.NaN;
 			timeRemaining = (status.totalSize - totalUploaded) / speed;
+			progressBar.SetProgress(status.request.progress);
 
-			progressbar.offsetMax = new Vector2(-(progressbarWidth - (progressbarWidth * status.request.progress)), progressbar.offsetMax.y);
-			progressPercent.text = string.Format("{0:F1}%", status.request.progress * 100);
+			//TODO(Simon): Show kB and GB when appropriate
 			progressMB.text = String.Format("{0:F2}/{1:F2}MB", totalUploaded / megabyte, status.totalSize / megabyte);
 
 			time += Time.deltaTime;
