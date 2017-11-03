@@ -59,6 +59,7 @@ public class IndexPanel : MonoBehaviour
 	public Button nextPage;
 	public Image spinner;
 	public Text noVideos;
+	public GameObject ServerConnectionError;
 
 	public Dropdown2 searchAge;
 
@@ -80,7 +81,7 @@ public class IndexPanel : MonoBehaviour
 	{
 		pageLabels = new List<GameObject>();
 		
-		LoadPageWrapper();
+		LoadPage();
 
 		searchAge.options.Clear();
 		foreach (var option in Enum.GetNames(typeof(AgeOptions)))
@@ -212,18 +213,19 @@ public class IndexPanel : MonoBehaviour
 		}
 	}
 
-	public void LoadPageWrapper()
+	public void LoadPage()
 	{
 		if (LoadFunction != null)
 		{
 			StopCoroutine(LoadFunction);
 		}
 
-		LoadFunction = StartCoroutine(LoadPage());
+		LoadFunction = StartCoroutine(LoadPageInternal());
 	}
 
-	public IEnumerator LoadPage()
+	public IEnumerator LoadPageInternal()
 	{
+		ServerConnectionError.SetActive(false);
 		videoContainer.SetActive(false);
 		spinner.enabled = true;
 		spinner.rectTransform.rotation = Quaternion.identity;
@@ -254,8 +256,8 @@ public class IndexPanel : MonoBehaviour
 
 		if (www.error != null || www.text == "")
 		{
-			Debug.Log("Couldn't connect to the server");
-			//TODO(Simon): Error handling
+			ServerConnectionError.SetActive(true);
+			yield break;
 		}
 
 		noVideos.enabled = loadedVideos.videos.Count == 0;
@@ -301,7 +303,7 @@ public class IndexPanel : MonoBehaviour
 			page--;
 		}
 
-		LoadPageWrapper();
+		LoadPage();
 	}
 
 	public void Next()
@@ -311,7 +313,7 @@ public class IndexPanel : MonoBehaviour
 			page++;
 		}
 
-		LoadPageWrapper();
+		LoadPage();
 	}
 
 	public void SetSearchAge(int index)
@@ -335,21 +337,21 @@ public class IndexPanel : MonoBehaviour
 				break;
 		}
 
-		LoadPageWrapper();
+		LoadPage();
 		page = 1;
 	}
 
 	public void SetSearchText(string text)
 	{
 		searchParamText = text;
-		LoadPageWrapper();
+		LoadPage();
 		page = 1;
 	}
 
 	public void SetAuthorText(string author)
 	{
 		searchParamAuthor = author;
-		LoadPageWrapper();
+		LoadPage();
 		page = 1;
 	}
 }

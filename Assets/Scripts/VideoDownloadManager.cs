@@ -13,29 +13,54 @@ public class Download
 	public float progress;
 	public long totalBytes;
 	public long bytesDownloaded;
+	public bool failed;
+	public DownloadPanel panel;
 }
 
 public class VideoDownloadManager : MonoBehaviour
 {
-	private static Dictionary<string, Download> queued;
+	public Transform DownloadList;
+	public GameObject DownloadPanelPrefab;
+	public static VideoDownloadManager Main
+	{
+		get { return _main ?? (_main = GameObject.Find("VideoDownloadManager").GetComponent<VideoDownloadManager>()); }
+	}
+
+	private static VideoDownloadManager _main;
+	private Dictionary<string, Download> queued;
 
 	void Start()
 	{
-		queued = new Dictionary<string, Download>();
+		Main.queued = new Dictionary<string, Download>();
 	}
 
 	void Update()
 	{
-		foreach (var download in queued)
+		foreach (var kvp in Main.queued)
 		{
-			if (download.Value.progress == 1f)
+			var download = kvp.Value;
+			download.panel.UpdatePanel(kvp.Value.progress);
+
+			if (download.failed)
 			{
-				
+				download.panel.Fail();
+			}
+
+			if (download.panel.ShouldRetry)
+			{
+				download.client.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, kvp.Value.video.uuid + ".mp4"), kvp.Key);
+				download.failed = false;
+				download.panel.Reset();
+			}
+
+			if (download.panel.ShouldCancel)
+			{
+				download.client.CancelAsync();
 			}
 		}
 	}
 
-	public static void AddDownload(VideoSerialize video)
+	public void AddDownload(VideoSerialize video)
 	{
 		var url = Web.videoUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)) + ".mp4";
 		if (!queued.ContainsKey(url))
@@ -45,16 +70,21 @@ public class VideoDownloadManager : MonoBehaviour
 			client.DownloadProgressChanged += OnProgress;
 
 			client.DownloadFileAsync(new Uri(url), Path.Combine(Application.persistentDataPath, video.uuid + ".mp4"), url);
-
-			queued.Add(url, new Download
+			var panel = Instantiate(DownloadPanelPrefab, DownloadList, false);
+			var download = new Download
 			{
 				client = client,
-				video = video
-			});
+				video = video,
+				panel = panel.GetComponent<DownloadPanel>()
+			};
+
+			download.panel.SetTitle(video.title);
+
+			queued.Add(url, download);
 		}
 	}
 
-	private static void OnComplete(object sender, AsyncCompletedEventArgs e)
+	private void OnComplete(object sender, AsyncCompletedEventArgs e)
 	{
 		var url = (string)e.UserState;
 		if (e.Error != null)
@@ -62,17 +92,15 @@ public class VideoDownloadManager : MonoBehaviour
 			Debug.Log(e.Error);
 			//TODO(Simon): Error handling
 			//TODO(Simon): Do not remove if error, but keep in queue to retry
-			queued.Remove(url);
+			queued[url].failed = true;
 		}
 		else
 		{
 			queued[url].progress = 1f;
-			queued.Remove(url);
 		}
-
 	}
 
-	private static void OnProgress(object sender, DownloadProgressChangedEventArgs e)
+	private void OnProgress(object sender, DownloadProgressChangedEventArgs e)
 	{
 		var url = (string)e.UserState;
 

@@ -60,7 +60,7 @@ public class DetailPanel : MonoBehaviour
 
 	public void Download()
 	{
-		VideoDownloadManager.AddDownload(video);
+		VideoDownloadManager.Main.AddDownload(video);
 		Back();
 	}
 }
