@@ -48,7 +48,7 @@ public class VideoDownloadManager : MonoBehaviour
 
 			if (download.panel.ShouldRetry)
 			{
-				download.client.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, kvp.Value.video.uuid + ".mp4"), kvp.Key);
+				download.client.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, Path.Combine(kvp.Value.video.uuid, "main.mp4")), kvp.Key);
 				download.failed = false;
 				download.panel.Reset();
 			}
@@ -69,7 +69,15 @@ public class VideoDownloadManager : MonoBehaviour
 			client.DownloadFileCompleted += OnComplete;
 			client.DownloadProgressChanged += OnProgress;
 
-			client.DownloadFileAsync(new Uri(url), Path.Combine(Application.persistentDataPath, video.uuid + ".mp4"), url);
+			string directory = Path.Combine(Application.persistentDataPath, video.uuid);
+			string path = Path.Combine(directory, "main.mp4");
+
+			if (!Directory.Exists(directory))
+			{
+				Directory.CreateDirectory(directory);
+			}
+
+			client.DownloadFileAsync(new Uri(url), path, url);
 			var panel = Instantiate(DownloadPanelPrefab, DownloadList, false);
 			var download = new Download
 			{

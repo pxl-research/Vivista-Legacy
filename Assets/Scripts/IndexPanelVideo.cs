@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,9 +11,11 @@ public class IndexPanelVideo : MonoBehaviour
 	public Text sizeText;
 	public Text lengthText;
 	public Text timestampText;
+	public Text DownloadedText;
 	public Image thumbnailImage;
 
 	private WWW imageDownload;
+	private string uuid;
 
 	public void SetData(VideoSerialize video)
 	{
@@ -21,8 +24,15 @@ public class IndexPanelVideo : MonoBehaviour
 		sizeText.text = MathHelper.FormatBytes(video.downloadsize);
 		lengthText.text = MathHelper.FormatSeconds(video.length);
 		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
+		uuid = video.uuid;
 
-		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)) + ".jpg");
+		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(uuid)) + ".jpg");
+		Refresh();
+	}
+
+	public void Refresh()
+	{
+		DownloadedText.enabled = Directory.Exists(Path.Combine(Application.persistentDataPath, uuid));
 	}
 
 	public void Update()
@@ -43,6 +53,6 @@ public class IndexPanelVideo : MonoBehaviour
 				thumbnailImage.color = Color.white;
 			}
 		}
-	}
 
+	}
 }

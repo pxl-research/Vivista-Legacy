@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -59,9 +60,12 @@ public class IndexPanel : MonoBehaviour
 	public Button nextPage;
 	public Image spinner;
 	public Text noVideos;
-	public GameObject ServerConnectionError;
+	public GameObject serverConnectionError;
 
 	public Dropdown2 searchAge;
+
+	private float time;
+	private const float refreshTime = 1.0f;
 
 	private int page = 1;
 	private int numPages = 1;
@@ -75,7 +79,7 @@ public class IndexPanel : MonoBehaviour
 	private VideoResponseSerialize loadedVideos;
 	private VideoSerialize detailVideo;
 
-	private Coroutine LoadFunction;
+	private Coroutine loadFunction;
 
 	public void Start()
 	{
@@ -211,21 +215,34 @@ public class IndexPanel : MonoBehaviour
 				nextPage.gameObject.SetActive(false);
 			}
 		}
+
+		//NOTE(Simon): "Downloaded" message display
+		{
+			foreach (var video in videos)
+			{
+				time += Time.deltaTime;
+				if (time > refreshTime)
+				{
+					video.GetComponent<IndexPanelVideo>().Refresh();
+					time = 0;
+				}
+			}
+		}
 	}
 
 	public void LoadPage()
 	{
-		if (LoadFunction != null)
+		if (loadFunction != null)
 		{
-			StopCoroutine(LoadFunction);
+			StopCoroutine(loadFunction);
 		}
 
-		LoadFunction = StartCoroutine(LoadPageInternal());
+		loadFunction = StartCoroutine(LoadPageInternal());
 	}
 
 	public IEnumerator LoadPageInternal()
 	{
-		ServerConnectionError.SetActive(false);
+		serverConnectionError.SetActive(false);
 		videoContainer.SetActive(false);
 		spinner.enabled = true;
 		spinner.rectTransform.rotation = Quaternion.identity;
@@ -256,7 +273,7 @@ public class IndexPanel : MonoBehaviour
 
 		if (www.error != null || www.text == "")
 		{
-			ServerConnectionError.SetActive(true);
+			serverConnectionError.SetActive(true);
 			yield break;
 		}
 

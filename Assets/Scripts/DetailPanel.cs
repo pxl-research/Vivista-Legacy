@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using System.Text;
 using System;
+using System.IO;
 
 public class DetailPanel : MonoBehaviour
 {
@@ -15,8 +16,13 @@ public class DetailPanel : MonoBehaviour
 	public Text timestamp;
 	public Text downloadSize;
 	public VideoSerialize video;
+	public Button playButton;
+	public Button downloadButton;
+	public Button deleteButton;
 	
 	private WWW imageDownload;
+	private float time;
+	private const float refreshTime = 1.0f;
 
 	void Update()
 	{
@@ -36,6 +42,13 @@ public class DetailPanel : MonoBehaviour
 				thumb.color = Color.white;
 			}
 		}
+
+		time += Time.deltaTime;
+		if (time > refreshTime)
+		{
+			Refresh();
+			time = 0;
+		}
 	}
 
 	public void Init(VideoSerialize videoToDownload)
@@ -50,6 +63,15 @@ public class DetailPanel : MonoBehaviour
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
 
 		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)) + ".jpg");
+		Refresh();
+	}
+	
+	public void Refresh()
+	{
+		bool downloaded = Directory.Exists(Path.Combine(Application.persistentDataPath, video.uuid));
+		downloadButton.gameObject.SetActive(!downloaded);
+		playButton.gameObject.SetActive(downloaded);
+		deleteButton.gameObject.SetActive(downloaded);
 	}
 
 	public void Back()
@@ -57,10 +79,23 @@ public class DetailPanel : MonoBehaviour
 		shouldClose = true;
 	}
 
+	public void Play()
+	{
+	}
+
+	public void Delete()
+	{
+		string path = Path.Combine(Application.persistentDataPath, video.uuid);
+		bool downloaded = Directory.Exists(path);
+		if (downloaded)
+		{
+			Directory.Delete(path, true);
+		}
+		Refresh();
+	}
 
 	public void Download()
 	{
 		VideoDownloadManager.Main.AddDownload(video);
-		Back();
 	}
 }
