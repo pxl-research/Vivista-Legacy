@@ -9,12 +9,14 @@ using UnityEngine;
 public class Download
 {
 	public VideoSerialize video;
-	public WebClient client;
+	public WebClient metaDownloadClient;
+	public WebClient filesDownloadClient;
 	public float progress;
 	public long totalBytes;
 	public long bytesDownloaded;
 	public bool failed;
 	public DownloadPanel panel;
+	public Queue<string> filesToDownload;
 }
 
 public class VideoDownloadManager : MonoBehaviour
@@ -48,72 +50,72 @@ public class VideoDownloadManager : MonoBehaviour
 
 			if (download.panel.ShouldRetry)
 			{
-				download.client.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, Path.Combine(kvp.Value.video.uuid, "main.mp4")), kvp.Key);
+				download.metaDownloadClient.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, kvp.Value.video.uuid), kvp.Key);
 				download.failed = false;
 				download.panel.Reset();
 			}
 
 			if (download.panel.ShouldCancel)
 			{
-				download.client.CancelAsync();
+				download.metaDownloadClient.CancelAsync();
 			}
 		}
 	}
 
 	public void AddDownload(VideoSerialize video)
 	{
-		var url = Web.videoUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)) + ".mp4";
-		if (!queued.ContainsKey(url))
+		if (!queued.ContainsKey(video.uuid))
 		{
 			var client = new WebClient();
-			client.DownloadFileCompleted += OnComplete;
+			client.DownloadFileCompleted += OnMetaComplete;
 			client.DownloadProgressChanged += OnProgress;
 
 			string directory = Path.Combine(Application.persistentDataPath, video.uuid);
-			string path = Path.Combine(directory, "main.mp4");
+			string path = Path.Combine(directory, "meta.json");
 
 			if (!Directory.Exists(directory))
 			{
 				Directory.CreateDirectory(directory);
 			}
 
-			client.DownloadFileAsync(new Uri(url), path, url);
+			var metaUrl = Web.metaUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid));
+			client.DownloadFileAsync(new Uri(metaUrl), path, video.uuid);
 			var panel = Instantiate(DownloadPanelPrefab, DownloadList, false);
 			var download = new Download
 			{
-				client = client,
+				metaDownloadClient = client,
 				video = video,
 				panel = panel.GetComponent<DownloadPanel>()
 			};
 
 			download.panel.SetTitle(video.title);
 
-			queued.Add(url, download);
+			queued.Add(video.uuid, download);
 		}
 	}
 
-	private void OnComplete(object sender, AsyncCompletedEventArgs e)
+	private void OnMetaComplete(object sender, AsyncCompletedEventArgs e)
 	{
-		var url = (string)e.UserState;
+		var uuid = (string)e.UserState;
 		if (e.Error != null)
 		{
 			Debug.Log(e.Error);
 			//TODO(Simon): Error handling
 			//TODO(Simon): Do not remove if error, but keep in queue to retry
-			queued[url].failed = true;
+			queued[uuid].failed = true;
 		}
 		else
 		{
-			queued[url].progress = 1f;
+			queued[uuid].progress = 1f;
 		}
 	}
 
 	private void OnProgress(object sender, DownloadProgressChangedEventArgs e)
 	{
-		var url = (string)e.UserState;
+		var uuid = (string)e.UserState;
 
-		queued[url].totalBytes = e.TotalBytesToReceive;
-		queued[url].bytesDownloaded = e.BytesReceived;
-		queued[url].progress = e.ProgressPercentage / 100f;
+		queued[uuid].totalBytes = e.TotalBytesToReceive;
+		queued[uuid].bytesDownloaded = e.BytesReceived;
+		queued[uuid].progress = e.ProgressPercentage / 100f;
 	}
 }

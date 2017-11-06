@@ -76,12 +76,10 @@ public struct Timing
 public struct Metadata
 {
 	public string filename;
-	public string videoFilename;
 	public string title;
 	public string description;
 	public Guid guid;
 	public Perspective perspective;
-	public string thumbFilename;
 }
 
 public class Editor : MonoBehaviour 
@@ -512,7 +510,16 @@ public class Editor : MonoBehaviour
 					var result = dialog.ShowDialog();
 					if (result == System.Windows.Forms.DialogResult.OK)
 					{
+						//TODO(Simon): Generate folder and copy video, then open.
 						fileLoader.LoadFile(dialog.FileName);
+						var guid = new Guid();
+
+						while (Directory.Exists(Path.Combine(Application.persistentDataPath, guid.ToString())))
+						{
+							//Note(Simon): Should in theory never happen, but who knows.
+							guid = new Guid();
+						}
+
 						meta.videoFilename = dialog.FileName;
 
 						timelineWindowEndTime = (float)videoController.videoLength;
@@ -1150,6 +1157,7 @@ public class Editor : MonoBehaviour
 	{
 		var sb = new StringBuilder();
 
+		//TODO(Simon): Potentially unsafe. Look to generate on server side
 		if (meta.guid == Guid.Empty)
 		{
 			meta.guid = Guid.NewGuid();
@@ -1160,10 +1168,6 @@ public class Editor : MonoBehaviour
 
 		sb.Append("uuid:")
 			.Append(meta.guid)
-			.Append(",\n");
-
-		sb.Append("videoname:")
-			.Append(meta.videoFilename)
 			.Append(",\n");
 
 		sb.Append("title:")
@@ -1213,12 +1217,12 @@ public class Editor : MonoBehaviour
 
 		try
 		{
-			var jsonname = Path.Combine(Application.persistentDataPath, filename + ".json");
-			var thumbname = Path.Combine(Application.persistentDataPath, filename + ".jpg");
+			string path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+			string jsonname = Path.Combine(path, "meta.json");
+			string thumbname = Path.Combine(path, "thumb.jpg");;
 			using (var file = File.CreateText(jsonname))
 			{
 				videoController.Screenshot(thumbname, 10, 1000, 1000);
-				meta.thumbFilename = thumbname;
 				file.Write(sb.ToString());
 			}
 		}
@@ -1303,6 +1307,7 @@ public class Editor : MonoBehaviour
 
 		while (!File.Exists(meta.thumbFilename)) { }
 
+		//TODO(Simon): Guard against big files
 		var videoData = new byte[vidSize];
 		var thumbData = new byte[thumbSize];
 

@@ -112,8 +112,17 @@ public class IndexPanel : MonoBehaviour
 	{
 		if (detailPanel != null)
 		{
-			if (detailPanel.GetComponent<DetailPanel>().shouldClose)
+			var panel = detailPanel.GetComponent<DetailPanel>();
+			if (panel.shouldClose)
 			{
+				Destroy(detailPanel);
+				detailPanel = null;
+			}
+			if (panel.answered)
+			{
+				answered = true;
+				answerVideoId = panel.answerVideoId;
+				//TODO(Simon): Does this work if destroy is triggered at wrong time? e.g. destroy before this.answered can be read
 				Destroy(detailPanel);
 				detailPanel = null;
 			}

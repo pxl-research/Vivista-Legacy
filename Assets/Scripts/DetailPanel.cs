@@ -19,6 +19,9 @@ public class DetailPanel : MonoBehaviour
 	public Button playButton;
 	public Button downloadButton;
 	public Button deleteButton;
+
+	public bool answered;
+	public string answerVideoId;
 	
 	private WWW imageDownload;
 	private float time;
@@ -62,7 +65,7 @@ public class DetailPanel : MonoBehaviour
 		timestamp.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
 
-		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)) + ".jpg");
+		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)));
 		Refresh();
 	}
 	
@@ -81,6 +84,8 @@ public class DetailPanel : MonoBehaviour
 
 	public void Play()
 	{
+		answered = true;
+		answerVideoId = video.uuid;
 	}
 
 	public void Delete()

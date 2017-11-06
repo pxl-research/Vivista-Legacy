@@ -5,10 +5,11 @@ using UnityEngine;
 
 public static class SaveFile
 {
-	public static string GetSaveFileContents(string filename)
+	public static string GetSaveFileContents(string videoId)
 	{
 		string str;
-		using (var fileContents = File.OpenText(Path.Combine(Application.persistentDataPath, filename)))
+		string path = Path.Combine(Application.persistentDataPath, Path.Combine(videoId, "meta.json"));
+		using (var fileContents = File.OpenText(path))
 		{
 			try
 			{
@@ -25,10 +26,11 @@ public static class SaveFile
 		return str;
 	}
 
-	public static byte[] GetSaveFileContentsBinary(string filename)
+	public static byte[] GetSaveFileContentsBinary(string videoId)
 	{
 		byte[] data;
-		using (var fileContents = File.OpenRead(Path.Combine(Application.persistentDataPath, filename)))
+		string path = Path.Combine(Application.persistentDataPath, Path.Combine(videoId, "meta.json"));
+		using (var fileContents = File.OpenRead(path))
 		{
 			try
 			{
@@ -52,6 +54,12 @@ public static class SaveFile
 		public List<InteractionpointSerialize> points = new List<InteractionpointSerialize>();
 	}
 
+	/*
+	public static List<string> GetExtraFiles(string metaFileName)
+	{
+		var str = GetSaveFileContents(metaFileName);
+	}
+	*/
 	public static SaveFileData OpenFile(string filename)
 	{
 		var str = GetSaveFileContents(filename);
