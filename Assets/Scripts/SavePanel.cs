@@ -1,31 +1,22 @@
 ﻿using System;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SavePanel : MonoBehaviour 
 {
-	public Canvas canvas;
-	public RectTransform resizePanel;
-	public InputField filenameInput;
 	public InputField titleInput;
 	public InputField descriptionInput;
 	public Button done;
 	public Text fileExistsWarning;
 
 	public bool answered;
-	public string answerFilename;
 	public string answerTitle;
 	public string answerDescription;
 
-	private bool fileExists;
+	public bool fileExists;
 	
-	public void Init(string filename, string title, string description)
+	public void Init(string title, string description)
 	{
-		if (filename != null)
-		{
-			filenameInput.text = filename;
-		}
 		if (title != null)
 		{
 			titleInput.text = title;
@@ -38,22 +29,17 @@ public class SavePanel : MonoBehaviour
 
 	void Update () 
 	{
-		if (filenameInput.text != answerFilename && !string.IsNullOrEmpty(filenameInput.text))
+		var titles = SaveFile.GetAllSavefileNames();
+
+		foreach(var title in titles)
 		{
-			answerFilename = filenameInput.text;
-			var jsonFilename = filenameInput.text + ".json";
-			var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.json");
-
-			foreach(var file in files)
+			if (String.Compare(title, titleInput.text, true) == 0)
 			{
-				if (String.Compare(file.Name, jsonFilename, true) == 0)
-				{
-					fileExists = true;
-					break;
-				}
-
-				fileExists = false;
+				fileExists = true;
+				break;
 			}
+
+			fileExists = false;
 		}
 
 		fileExistsWarning.enabled = fileExists;
@@ -62,7 +48,7 @@ public class SavePanel : MonoBehaviour
 
 	public void Answer()
 	{
-		answerTitle = filenameInput.text;
+		answerTitle = titleInput.text;
 		answerDescription = descriptionInput.text;
 		answered = true;
 	}

@@ -155,9 +155,9 @@ public class Player : MonoBehaviour
 		}
 	}
 	
-	private bool OpenFile(string filename)
+	private bool OpenFile(string path)
 	{
-		var data = SaveFile.OpenFile(filename);
+		var data = SaveFile.OpenFile(path);
 	
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), "main.mp4"));
 		fileLoader.LoadFile(openVideo);

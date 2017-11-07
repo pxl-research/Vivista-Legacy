@@ -75,7 +75,6 @@ public struct Timing
 
 public struct Metadata
 {
-	public string filename;
 	public string title;
 	public string description;
 	public Guid guid;
@@ -175,7 +174,7 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		if (!String.IsNullOrEmpty(meta.videoFilename))
+		if (videoController.videoLoaded)
 		{
 			UpdateTimeline();
 		}
@@ -510,17 +509,23 @@ public class Editor : MonoBehaviour
 					var result = dialog.ShowDialog();
 					if (result == System.Windows.Forms.DialogResult.OK)
 					{
-						//TODO(Simon): Generate folder and copy video, then open.
-						fileLoader.LoadFile(dialog.FileName);
-						var guid = new Guid();
+						//TODO(Simon): Potentially unsafe, look into generating on server side.
+						meta.guid = Guid.NewGuid();
+						var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
-						while (Directory.Exists(Path.Combine(Application.persistentDataPath, guid.ToString())))
+						if (!Directory.Exists(path))
 						{
-							//Note(Simon): Should in theory never happen, but who knows.
-							guid = new Guid();
+							Directory.CreateDirectory(path);
+							File.Create(Path.Combine(path, ".editable"));
+						}
+						else
+						{
+							Debug.LogError("The hell you doin' boy");
 						}
 
-						meta.videoFilename = dialog.FileName;
+						var videopath = Path.Combine(path, "main.mp4");
+						File.Copy(dialog.FileName, videopath);
+						fileLoader.LoadFile(videopath);
 
 						timelineWindowEndTime = (float)videoController.videoLength;
 					}
@@ -565,11 +570,10 @@ public class Editor : MonoBehaviour
 			if (savePanel.GetComponent<SavePanel>().answered)
 			{
 				var panel = savePanel.GetComponent<SavePanel>();
-				meta.filename = panel.answerFilename;
 				meta.title = panel.answerTitle;
 				meta.description = panel.answerDescription;
 
-				if (!SaveToFile(meta.filename))
+				if (!SaveToFile(!panel.fileExists))
 				{
 					Debug.LogError("Something went wrong while saving the file");
 					return;
@@ -591,15 +595,11 @@ public class Editor : MonoBehaviour
 		{
 			if (openPanel.GetComponent<OpenPanel>().answered)
 			{
-				var filename = openPanel.GetComponent<OpenPanel>().answerFilename;
+				var guid = openPanel.GetComponent<OpenPanel>().answerGuid;
+				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, "meta.json"));
 
-				if (OpenFile(filename))
+				if (!OpenFile(metaPath))
 				{
-					meta.filename = filename;
-				}
-				else
-				{
-					meta.filename = "";
 					Debug.LogError("Something went wrong while loading the file");
 				}
 
@@ -645,12 +645,11 @@ public class Editor : MonoBehaviour
 			if (savePanel != null && savePanel.GetComponent<SavePanel>().answered)
 			{
 				var panel = savePanel.GetComponent<SavePanel>();
-				panel.Init(meta.filename, meta.title, meta.description);
-				meta.filename = panel.answerFilename;
+				panel.Init(meta.title, meta.description);
 				meta.title = panel.answerTitle;
 				meta.description = panel.answerDescription;
 
-				if (!SaveToFile(meta.filename))
+				if (!SaveToFile(!panel.fileExists))
 				{
 					Debug.LogError("Something went wrong while saving the file");
 					return;
@@ -683,10 +682,7 @@ public class Editor : MonoBehaviour
 			&& AreFileOpsAllowed())
 #endif
 		{
-			savePanel = Instantiate(savePanelPrefab);
-			savePanel.transform.SetParent(Canvass.main.transform, false);
-			savePanel.GetComponent<SavePanel>().Init(meta.filename, meta.title, meta.description);
-			Canvass.modalBackground.SetActive(true);
+			InitSavePanel();
 			editorState = EditorState.Saving;
 		}
 
@@ -1153,14 +1149,29 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	private bool SaveToFile(string filename)
+	private bool SaveToFile(bool isNew)
 	{
 		var sb = new StringBuilder();
 
 		//TODO(Simon): Potentially unsafe. Look to generate on server side
-		if (meta.guid == Guid.Empty)
+		if (isNew)
 		{
+			var oldGuid = meta.guid;
 			meta.guid = Guid.NewGuid();
+			var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+
+			if (!Directory.Exists(path))
+			{
+				Directory.CreateDirectory(path);
+				File.Create(Path.Combine(path, ".editable"));
+			}
+			else
+			{
+				Debug.LogError("The hell you doin' boy");
+			}
+
+			var videopath = Path.Combine(path, "main.mp4");
+			File.Copy(Path.Combine(Application.persistentDataPath ,Path.Combine(oldGuid.ToString(), "main.mp4")), videopath);
 		}
 
 		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
@@ -1235,12 +1246,12 @@ public class Editor : MonoBehaviour
 		return true;
 	}
 
-	private bool OpenFile(string filename)
+	private bool OpenFile(string path)
 	{
-		var data = SaveFile.OpenFile(filename + ".json");
+		var data = SaveFile.OpenFile(path);
 	
 		meta = data.meta;
-		fileLoader.LoadFile(meta.videoFilename); 
+		fileLoader.LoadFile(Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "main.mp4")));
 		fileLoader.SetPerspective(meta.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
@@ -1293,26 +1304,29 @@ public class Editor : MonoBehaviour
 	
 	private IEnumerator UploadFile()
 	{
-		var str = SaveFile.GetSaveFileContentsBinary(meta.filename + ".json");
+		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var thumbPath = Path.Combine(path, "thumb.jpg");
+		var metaPath = Path.Combine(path, "meta.json");
+		var videoPath = Path.Combine(path, "main.mp4");
+		
+		var str = SaveFile.GetSaveFileContentsBinary(metaPath);
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);
 		form.AddField("uuid", meta.guid.ToString());
-		form.AddBinaryData("jsonFile", str, "json" + meta.guid);
+		form.AddBinaryData("meta", str, "json" + meta.guid);
 
-		var vidSize = (int)new FileInfo(meta.videoFilename).Length;
-		var thumbSize = (int)new FileInfo(meta.thumbFilename).Length;
+		var vidSize = (int)new FileInfo(videoPath).Length;
+		var thumbSize = (int)new FileInfo(metaPath).Length;
 
 		uploadStatus.totalSize = vidSize + thumbSize;
-
-		while (!File.Exists(meta.thumbFilename)) { }
 
 		//TODO(Simon): Guard against big files
 		var videoData = new byte[vidSize];
 		var thumbData = new byte[thumbSize];
 
-		using (var videoStream = File.OpenRead(meta.videoFilename))
-		using (var thumbStream = File.OpenRead(meta.thumbFilename))
+		using (var thumbStream = File.OpenRead(thumbPath))
+		using (var videoStream = File.OpenRead(videoPath))
 		{
 			try
 			{
@@ -1337,14 +1351,7 @@ public class Editor : MonoBehaviour
 		if (status != 200)
 		{
 			uploadStatus.failed = true;
-			if (status == 401)
-			{
-				uploadStatus.error = "Not logged in ";
-			}
-			else
-			{
-				uploadStatus.error = "Something went wrong while uploading the file: ";
-			}
+			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: ";
 			uploadStatus.request.Dispose();
 			yield break;
 		}
@@ -1416,7 +1423,7 @@ public class Editor : MonoBehaviour
 	{
 		savePanel = Instantiate(savePanelPrefab);
 		savePanel.transform.SetParent(Canvass.main.transform, false);
-		savePanel.GetComponent<SavePanel>().Init(meta.filename, meta.title, meta.description);
+		savePanel.GetComponent<SavePanel>().Init(meta.title, meta.description);
 		Canvass.modalBackground.SetActive(true);
 	}
 

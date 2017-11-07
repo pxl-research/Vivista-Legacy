@@ -19,6 +19,8 @@ public class VideoController : MonoBehaviour
 	public VideoPlayer screenshots;
 	public bool playing = true;
 
+	public bool videoLoaded;
+
 	public double videoLength;
 	public double currentTime;
 	public double currentFractionalTime;
@@ -134,14 +136,18 @@ public class VideoController : MonoBehaviour
 
 		video.time = 0;
 		video.Pause();
-		video.errorReceived += VideoErrorHandler;
-		screenshots.errorReceived += VideoErrorHandler;
+		video.errorReceived += delegate(VideoPlayer player, string message)
+		{
+			videoLoaded = false;
+			Debug.Log(message);
+		};
+		screenshots.errorReceived += delegate(VideoPlayer player, string message)
+		{
+			Debug.Log(message);
+		};
+		videoLoaded = true;
 	}
 
-	static void VideoErrorHandler(VideoPlayer player, string message)
-	{
-		Debug.Log(message);
-	}
 
 	public void Pause()
 	{

@@ -5,10 +5,9 @@ using UnityEngine;
 
 public static class SaveFile
 {
-	public static string GetSaveFileContents(string videoId)
+	public static string GetSaveFileContents(string path)
 	{
 		string str;
-		string path = Path.Combine(Application.persistentDataPath, Path.Combine(videoId, "meta.json"));
 		using (var fileContents = File.OpenText(path))
 		{
 			try
@@ -26,10 +25,9 @@ public static class SaveFile
 		return str;
 	}
 
-	public static byte[] GetSaveFileContentsBinary(string videoId)
+	public static byte[] GetSaveFileContentsBinary(string path)
 	{
 		byte[] data;
-		string path = Path.Combine(Application.persistentDataPath, Path.Combine(videoId, "meta.json"));
 		using (var fileContents = File.OpenRead(path))
 		{
 			try
@@ -54,15 +52,31 @@ public static class SaveFile
 		public List<InteractionpointSerialize> points = new List<InteractionpointSerialize>();
 	}
 
+	public static List<string> GetAllSavefileNames()
+	{
+		var dirs = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
+		var dirNames = new List<string>();
+		foreach (var dir in dirs)
+		{
+			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
+			{
+				var title = OpenFile(Path.Combine(dir.FullName, "meta.json")).meta.title;
+				dirNames.Add(title);
+			}
+		}
+
+		return dirNames;
+	}
+
 	/*
 	public static List<string> GetExtraFiles(string metaFileName)
 	{
 		var str = GetSaveFileContents(metaFileName);
 	}
 	*/
-	public static SaveFileData OpenFile(string filename)
+	public static SaveFileData OpenFile(string path)
 	{
-		var str = GetSaveFileContents(filename);
+		var str = GetSaveFileContents(path);
 
 		var level = 0;
 		var start = 0;
@@ -77,21 +91,15 @@ public static class SaveFile
 		saveFileData.meta.guid = new Guid(result.value);
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.meta.videoFilename = result.value;
-
-		
-		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.title = result.value;
 
-		
 		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.description = result.value;
-
 
 		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
 
-		//Note(Simon): Value is only used server side, but we still need to skip over the text in the file.
+		//Note(Simon): Value "length" is only used server side, but we still need to skip over the text in the file.
 		result = JsonGetValueFromLine(str, result.endindex);
 
 		var stringObjects = new List<string>();

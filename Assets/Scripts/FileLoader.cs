@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 
 public class FileLoader : MonoBehaviour 
 {
@@ -26,6 +25,8 @@ public class FileLoader : MonoBehaviour
 	public GameObject playerInfo;
 
 	public GameObject playerInfoGUI;
+
+	private VideoController controller;
 
 	public FileType fileType = FileType.Video360;
 	public Perspective currentPerspective;
@@ -109,15 +110,14 @@ public class FileLoader : MonoBehaviour
 	public void LoadFile(string filename)
 	{
 		var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
-		var controller = videoController.GetComponent<VideoController>();
+		controller = videoController.GetComponent<VideoController>();
 		seekbar.controller = controller;
 		controller.seekbar = seekbar.transform.GetChild(0).GetComponent<RectTransform>();
 		controller.timeText = seekbar.transform.parent.GetComponentInChildren<Text>();
 
 		if (fileType == FileType.Video || fileType == FileType.Video180 || fileType == FileType.Video360)
 		{
-			videoController.GetComponent<VideoController>().PlayFile(filename);
+			controller.PlayFile(filename);
 		}
 	}
-	
 }

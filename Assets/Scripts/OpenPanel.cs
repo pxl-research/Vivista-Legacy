@@ -5,62 +5,72 @@ using UnityEngine.UI;
 
 public class OpenPanel : MonoBehaviour 
 {
+	public struct FileItem
+	{
+		public string guid;
+		public string name;
+		public GameObject listItem;
+	}
+
 	public RectTransform fileList;
 	public Text chosenFile;
 
 	public GameObject filenameItemPrefab;
 
 	public bool answered;
-	public string answerFilename;
+	public string answerGuid;
 
-	private List<string> filenames = new List<string>();
-	private List<GameObject> filenameItems = new List<GameObject>();
+	private List<FileItem> files = new List<FileItem>();
 	private int selectedIndex = -1;
 
 	public void Init()
 	{
-		var files = new DirectoryInfo(Application.persistentDataPath).GetFiles("*.json");
-		foreach (var file in files)
+		var directories = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
+		foreach (var directory in directories)
 		{
-			filenames.Add(StripExtension(file.Name));
-		}
-
-		foreach (var filename in filenames)
-		{
-			var filenameListItem = Instantiate(filenameItemPrefab);
-			filenameListItem.transform.SetParent(fileList, false);
-			filenameListItem.GetComponentInChildren<Text>().text = filename;
-			filenameItems.Add(filenameListItem);
+			var editable = File.Exists(Path.Combine(directory.FullName, ".editable"));
+			if (editable)
+			{
+				var title = SaveFile.OpenFile(Path.Combine(directory.FullName, "meta.json")).meta.title;
+				var newFileItem = new FileItem {name = title, guid = directory.Name};
+				
+				var filenameListItem = Instantiate(filenameItemPrefab);
+				filenameListItem.transform.SetParent(fileList, false);
+				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.name;
+				newFileItem.listItem = filenameListItem;
+				
+				files.Add(newFileItem);
+			}
 		}
 	}
 
 	void Update ()
 	{
-		for (var i = 0; i < filenameItems.Count; i++)
+		for (var i = 0; i < files.Count; i++)
 		{
-			var item = filenameItems[i];
+			var file = files[i];
+			var listItem = file.listItem;
 
-			if (RectTransformUtility.RectangleContainsScreenPoint(item.GetComponent<RectTransform>(), Input.mousePosition))
+			if (RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition))
 			{
-				item.GetComponentInChildren<Text>().color = Color.red;
-				item.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
+				listItem.GetComponentInChildren<Text>().color = Color.red;
+				listItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
 			}
 			else if (i == selectedIndex)
 			{
-				item.GetComponentInChildren<Text>().color = Color.red;
+				listItem.GetComponentInChildren<Text>().color = Color.red;
 			}
 			else
 			{
-				item.GetComponentInChildren<Text>().color = Color.black;
-				item.GetComponent<Image>().color = new Color(239 / 255f, 239 / 255f, 239 / 255f);
+				listItem.GetComponentInChildren<Text>().color = Color.black;
+				listItem.GetComponent<Image>().color = new Color(239 / 255f, 239 / 255f, 239 / 255f);
 			}
 
-			if (RectTransformUtility.RectangleContainsScreenPoint(item.GetComponent<RectTransform>(), Input.mousePosition)
+			if (RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition)
 				&& Input.GetMouseButtonDown(0))
 			{
-				var filename = item.GetComponentInChildren<Text>().text;
-				chosenFile.text = "Chosen file: " + filename;
-				answerFilename = filename;
+				chosenFile.text = "Chosen file: " + file.name;
+				answerGuid = file.guid;
 				selectedIndex = i;
 			}
 		}
@@ -68,7 +78,7 @@ public class OpenPanel : MonoBehaviour
 
 	public void Answer()
 	{
-		if (answerFilename != "")
+		if (answerGuid != "")
 		{
 			answered = true;
 		}
