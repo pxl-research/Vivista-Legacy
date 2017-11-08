@@ -71,7 +71,7 @@ public class VideoDownloadManager : MonoBehaviour
 			client.DownloadProgressChanged += OnProgress;
 
 			string directory = Path.Combine(Application.persistentDataPath, video.uuid);
-			string path = Path.Combine(directory, "meta.json");
+			string path = Path.Combine(directory, SaveFile.metaFilename);
 
 			if (!Directory.Exists(directory))
 			{

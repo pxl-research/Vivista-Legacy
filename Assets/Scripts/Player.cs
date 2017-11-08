@@ -159,7 +159,7 @@ public class Player : MonoBehaviour
 	{
 		var data = SaveFile.OpenFile(path);
 	
-		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), "main.mp4"));
+		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 		fileLoader.SetPerspective(data.meta.perspective);
 

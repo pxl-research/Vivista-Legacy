@@ -31,7 +31,7 @@ public class OpenPanel : MonoBehaviour
 			var editable = File.Exists(Path.Combine(directory.FullName, ".editable"));
 			if (editable)
 			{
-				var title = SaveFile.OpenFile(Path.Combine(directory.FullName, "meta.json")).meta.title;
+				var title = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta.title;
 				var newFileItem = new FileItem {name = title, guid = directory.Name};
 				
 				var filenameListItem = Instantiate(filenameItemPrefab);
@@ -82,10 +82,5 @@ public class OpenPanel : MonoBehaviour
 		{
 			answered = true;
 		}
-	}
-
-	public static string StripExtension(string filename)
-	{
-		return filename.LastIndexOf(".") > 0 ? filename.Substring(0, filename.LastIndexOf(".")) : filename;
 	}
 }

@@ -517,13 +517,14 @@ public class Editor : MonoBehaviour
 						{
 							Directory.CreateDirectory(path);
 							File.Create(Path.Combine(path, ".editable"));
+							File.Create(Path.Combine(path, SaveFile.metaFilename));
 						}
 						else
 						{
 							Debug.LogError("The hell you doin' boy");
 						}
 
-						var videopath = Path.Combine(path, "main.mp4");
+						var videopath = Path.Combine(path, SaveFile.videoFilename);
 						File.Copy(dialog.FileName, videopath);
 						fileLoader.LoadFile(videopath);
 
@@ -596,7 +597,7 @@ public class Editor : MonoBehaviour
 			if (openPanel.GetComponent<OpenPanel>().answered)
 			{
 				var guid = openPanel.GetComponent<OpenPanel>().answerGuid;
-				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, "meta.json"));
+				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
 
 				if (!OpenFile(metaPath))
 				{
@@ -1164,14 +1165,15 @@ public class Editor : MonoBehaviour
 			{
 				Directory.CreateDirectory(path);
 				File.Create(Path.Combine(path, ".editable"));
+				File.Create(Path.Combine(path, SaveFile.metaFilename));
 			}
 			else
 			{
 				Debug.LogError("The hell you doin' boy");
 			}
 
-			var videopath = Path.Combine(path, "main.mp4");
-			File.Copy(Path.Combine(Application.persistentDataPath ,Path.Combine(oldGuid.ToString(), "main.mp4")), videopath);
+			var videopath = Path.Combine(path, SaveFile.videoFilename);
+			File.Copy(Path.Combine(Application.persistentDataPath, Path.Combine(oldGuid.ToString(), SaveFile.videoFilename)), videopath);
 		}
 
 		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
@@ -1229,8 +1231,8 @@ public class Editor : MonoBehaviour
 		try
 		{
 			string path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-			string jsonname = Path.Combine(path, "meta.json");
-			string thumbname = Path.Combine(path, "thumb.jpg");;
+			string jsonname = Path.Combine(path, SaveFile.metaFilename);
+			string thumbname = Path.Combine(path, SaveFile.thumbFilename);
 			using (var file = File.CreateText(jsonname))
 			{
 				videoController.Screenshot(thumbname, 10, 1000, 1000);
@@ -1251,7 +1253,7 @@ public class Editor : MonoBehaviour
 		var data = SaveFile.OpenFile(path);
 	
 		meta = data.meta;
-		fileLoader.LoadFile(Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "main.mp4")));
+		fileLoader.LoadFile(Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename)));
 		fileLoader.SetPerspective(meta.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
@@ -1305,9 +1307,9 @@ public class Editor : MonoBehaviour
 	private IEnumerator UploadFile()
 	{
 		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var thumbPath = Path.Combine(path, "thumb.jpg");
-		var metaPath = Path.Combine(path, "meta.json");
-		var videoPath = Path.Combine(path, "main.mp4");
+		var thumbPath = Path.Combine(path, SaveFile.thumbFilename);
+		var metaPath = Path.Combine(path, SaveFile.metaFilename);
+		var videoPath = Path.Combine(path, SaveFile.videoFilename);
 		
 		var str = SaveFile.GetSaveFileContentsBinary(metaPath);
 
