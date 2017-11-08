@@ -56,16 +56,20 @@ public static class SaveFile
 		public List<InteractionpointSerialize> points = new List<InteractionpointSerialize>();
 	}
 
-	public static List<string> GetAllSavefileNames()
+	public static Dictionary<string, Guid> GetAllSavefileNames()
 	{
 		var dirs = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
-		var dirNames = new List<string>();
+		var dirNames = new Dictionary<string, Guid>();
 		foreach (var dir in dirs)
 		{
 			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
 			{
-				var title = OpenFile(Path.Combine(dir.FullName, "meta.json")).meta.title;
-				dirNames.Add(title);
+				var metaPath = Path.Combine(dir.FullName, metaFilename);
+				if (new FileInfo(metaPath).Length > 0)
+				{
+					var meta = OpenFile(metaPath).meta;
+					dirNames.Add(meta.title, meta.guid);
+				}
 			}
 		}
 

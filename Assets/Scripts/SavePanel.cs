@@ -12,6 +12,7 @@ public class SavePanel : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public string answerDescription;
+	public Guid answerGuid;
 
 	public bool fileExists;
 	
@@ -33,9 +34,10 @@ public class SavePanel : MonoBehaviour
 
 		foreach(var title in titles)
 		{
-			if (String.Compare(title, titleInput.text, true) == 0)
+			if (String.Compare(title.Key, titleInput.text, true) == 0)
 			{
 				fileExists = true;
+				answerGuid = title.Value;
 				break;
 			}
 

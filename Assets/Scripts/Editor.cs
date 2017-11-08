@@ -79,6 +79,7 @@ public struct Metadata
 	public string description;
 	public Guid guid;
 	public Perspective perspective;
+	public bool isNew;
 }
 
 public class Editor : MonoBehaviour 
@@ -511,6 +512,7 @@ public class Editor : MonoBehaviour
 					{
 						//TODO(Simon): Potentially unsafe, look into generating on server side.
 						meta.guid = Guid.NewGuid();
+						meta.isNew = true;
 						var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
 						if (!Directory.Exists(path))
@@ -573,6 +575,14 @@ public class Editor : MonoBehaviour
 				var panel = savePanel.GetComponent<SavePanel>();
 				meta.title = panel.answerTitle;
 				meta.description = panel.answerDescription;
+
+				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file. 
+				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
+				if (panel.fileExists)
+				{
+					meta.isNew = false;
+					meta.guid = panel.answerGuid;
+				}
 
 				if (!SaveToFile(!panel.fileExists))
 				{
@@ -1150,31 +1160,11 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	private bool SaveToFile(bool isNew)
+	private bool SaveToFile()
 	{
 		var sb = new StringBuilder();
 
 		//TODO(Simon): Potentially unsafe. Look to generate on server side
-		if (isNew)
-		{
-			var oldGuid = meta.guid;
-			meta.guid = Guid.NewGuid();
-			var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-
-			if (!Directory.Exists(path))
-			{
-				Directory.CreateDirectory(path);
-				File.Create(Path.Combine(path, ".editable"));
-				File.Create(Path.Combine(path, SaveFile.metaFilename));
-			}
-			else
-			{
-				Debug.LogError("The hell you doin' boy");
-			}
-
-			var videopath = Path.Combine(path, SaveFile.videoFilename);
-			File.Copy(Path.Combine(Application.persistentDataPath, Path.Combine(oldGuid.ToString(), SaveFile.videoFilename)), videopath);
-		}
 
 		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
 		data.meta = meta;
