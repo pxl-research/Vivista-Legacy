@@ -76,6 +76,29 @@ public static class SaveFile
 		return dirNames;
 	}
 
+	public static string GetPathForTitle(string title)
+	{
+		var dirs = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
+		
+		foreach (var dir in dirs)
+		{
+			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
+			{
+				var metaPath = Path.Combine(dir.FullName, metaFilename);
+				if (new FileInfo(metaPath).Length > 0)
+				{
+					var meta = OpenFile(metaPath).meta;
+					if (meta.title == title)
+					{
+						return dir.FullName;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
 	/*
 	public static List<string> GetExtraFiles(string metaFileName)
 	{

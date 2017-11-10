@@ -108,7 +108,7 @@ public class Editor : MonoBehaviour
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
 	private GameObject savePanel;
-	private GameObject newPanel;
+	//private GameObject newPanel;
 	private GameObject perspectivePanel;
 	private GameObject openPanel;
 	private GameObject uploadPanel;
@@ -160,14 +160,15 @@ public class Editor : MonoBehaviour
 		SetEditorActive(false);
 		meta = new Metadata();
 
-		newPanel = Instantiate(newPanelPrefab);
-		newPanel.transform.SetParent(Canvass.main.transform, false);
-		editorState = EditorState.NewOpen;
+		openPanel = Instantiate(openPanelPrefab);
+		openPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 
-		VRSettings.enabled = true;
+		//VRSettings.enabled = true;
+
+		editorState = EditorState.Opening;
 	}
 	
 	void Update () 
@@ -494,6 +495,7 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		/*
 		if (editorState == EditorState.NewOpen)
 		{
 			var panel = newPanel.GetComponent<NewPanel>();
@@ -518,8 +520,8 @@ public class Editor : MonoBehaviour
 						if (!Directory.Exists(path))
 						{
 							Directory.CreateDirectory(path);
-							File.Create(Path.Combine(path, ".editable"));
-							File.Create(Path.Combine(path, SaveFile.metaFilename));
+							File.Create(Path.Combine(path, ".editable")).Close();
+							File.Create(Path.Combine(path, SaveFile.metaFilename)).Close();
 						}
 						else
 						{
@@ -554,7 +556,7 @@ public class Editor : MonoBehaviour
 				}
 			}
 		}
-
+		*/
 		if (editorState == EditorState.PickingPerspective)
 		{
 			var panel = perspectivePanel.GetComponent<PerspectivePanel>();
@@ -584,10 +586,9 @@ public class Editor : MonoBehaviour
 					meta.guid = panel.answerGuid;
 				}
 
-				if (!SaveToFile(!panel.fileExists))
+				if (!SaveToFile())
 				{
 					Debug.LogError("Something went wrong while saving the file");
-					return;
 				}
 				SetEditorActive(true);
 				Destroy(savePanel);
@@ -660,7 +661,7 @@ public class Editor : MonoBehaviour
 				meta.title = panel.answerTitle;
 				meta.description = panel.answerDescription;
 
-				if (!SaveToFile(!panel.fileExists))
+				if (!SaveToFile())
 				{
 					Debug.LogError("Something went wrong while saving the file");
 					return;
@@ -1164,7 +1165,28 @@ public class Editor : MonoBehaviour
 	{
 		var sb = new StringBuilder();
 
-		//TODO(Simon): Potentially unsafe. Look to generate on server side
+		//NOTE(Simon): Is true when saving file under new title. So generate all extra fodlers and files
+		if (SaveFile.GetPathForTitle(meta.title) == null)
+		{
+			var oldGuid = meta.guid;
+			meta.guid = Guid.NewGuid();
+			var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+
+			if (!Directory.Exists(path))
+			{
+				Directory.CreateDirectory(path);
+				File.Create(Path.Combine(path, ".editable")).Close();
+				File.Create(Path.Combine(path, SaveFile.metaFilename)).Close();
+			}
+			else
+			{
+				Debug.LogError("The hell you doin' boy");
+			}
+
+			var newVideoPath = Path.Combine(path, SaveFile.videoFilename);
+			var oldVideoPath = Path.Combine(Application.persistentDataPath, Path.Combine(oldGuid.ToString(), SaveFile.videoFilename));
+			File.Copy(oldVideoPath, newVideoPath);
+		}
 
 		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
 		data.meta = meta;

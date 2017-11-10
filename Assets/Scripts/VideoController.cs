@@ -61,7 +61,10 @@ public class VideoController : MonoBehaviour
 	//NOTE(Simon): This executes asynchronously. OnScreenshotRendered will eventually save the image
 	public void Screenshot(string filename, int frameIndex, float width, float height, bool keepAspect = true)
 	{
-		while (!screenshots.isPrepared) {}
+		while (!screenshots.isPrepared) 
+		{
+			var a = 1;
+		}
 
 		screenshots.sendFrameReadyEvents = true;
 		screenshots.frameReady += OnScreenshotRendered;
