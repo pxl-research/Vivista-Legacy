@@ -93,9 +93,8 @@ public class OpenPanel : MonoBehaviour
 		filenameListItem.transform.SetParent(fileList, false);
 		filenameListItem.GetComponentInChildren<Text>().text = newFileItem.name;
 		newFileItem.listItem = filenameListItem;
-		SetIndex(files.Count - 1);
-
 		files.Add(newFileItem);
+		SetIndex(files.Count - 1);
 
 		isNew = true;
 		RenameStart();
