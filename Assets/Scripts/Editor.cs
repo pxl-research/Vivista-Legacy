@@ -1272,7 +1272,7 @@ public class Editor : MonoBehaviour
 			var result = dialog.ShowDialog();
 			if (result == System.Windows.Forms.DialogResult.OK)
 			{
-				videoPath = dialog.FileName;
+				File.Copy(dialog.FileName, videoPath);
 			}
 			else
 			{
