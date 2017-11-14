@@ -81,9 +81,7 @@ public class OpenPanel : MonoBehaviour
 			{
 				SetIndex(i);
 
-				deleteButton.interactable = true;
-				renameButton.interactable = true;
-				openButton.interactable = true;
+				
 			}
 		}
 	}
@@ -184,6 +182,7 @@ public class OpenPanel : MonoBehaviour
 	{
 		var label = files[selectedIndex].listItem.GetComponentInChildren<Text>(true);
 		var input = files[selectedIndex].listItem.GetComponentInChildren<InputField>();
+		input.onEndEdit.RemoveListener(RenameStop);
 
 		label.gameObject.SetActive(true);
 		input.gameObject.SetActive(false);
@@ -209,8 +208,14 @@ public class OpenPanel : MonoBehaviour
 	{
 		if (selectedIndex != -1)
 		{
-			var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
-			Directory.Delete(path);
+			var file = files[selectedIndex];
+			var path = Path.Combine(Application.persistentDataPath, file.guid);
+			Directory.Delete(path, true);
+
+			Destroy(file.listItem);
+			files.RemoveAt(selectedIndex);
+
+			SetIndex(selectedIndex);
 		}
 	}
 
@@ -224,10 +229,25 @@ public class OpenPanel : MonoBehaviour
 
 	public void SetIndex(int i)
 	{
+		i = Mathf.Clamp(i, 0, files.Count - 1);
+
+		//NOTE(Simon): If last item was removed, and list is now empty
+		if (files.Count == 0)
+		{
+			deleteButton.interactable = false;
+			renameButton.interactable = false;
+			openButton.interactable = false;
+			chosenFile.text = "Chosen file: <none>";
+
+			return;
+		}
+
 		var file = files[i];
 		chosenFile.text = "Chosen file: " + file.title;
 		answerGuid = file.guid;
+
 		selectedIndex = i;
+
 		var thumbPath = Path.Combine(Application.persistentDataPath, Path.Combine(file.guid, SaveFile.thumbFilename));
 		if (File.Exists(thumbPath))
 		{
@@ -236,5 +256,9 @@ public class OpenPanel : MonoBehaviour
 			tex.LoadImage(data);
 			thumb.texture = tex;
 		}
+
+		deleteButton.interactable = true;
+		renameButton.interactable = true;
+		openButton.interactable = true;
 	}
 }

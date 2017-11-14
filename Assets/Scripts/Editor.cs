@@ -164,8 +164,6 @@ public class Editor : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
-
-		//VRSettings.enabled = true;
 	}
 	
 	void Update () 
