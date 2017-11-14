@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,12 +10,14 @@ public class OpenPanel : MonoBehaviour
 	public class FileItem
 	{
 		public string guid;
-		public string name;
+		public string title;
 		public GameObject listItem;
 	}
 
+	public ScrollRect scrollRect;
 	public RectTransform fileList;
 	public Text chosenFile;
+	public RawImage thumb;
 
 	public Button newButton;
 	public Button renameButton;
@@ -39,11 +42,11 @@ public class OpenPanel : MonoBehaviour
 			if (editable)
 			{
 				var title = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta.title;
-				var newFileItem = new FileItem {name = title, guid = directory.Name};
+				var newFileItem = new FileItem {title = title, guid = directory.Name};
 				
 				var filenameListItem = Instantiate(filenameItemPrefab);
 				filenameListItem.transform.SetParent(fileList, false);
-				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.name;
+				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
 				newFileItem.listItem = filenameListItem;
 				
 				files.Add(newFileItem);
@@ -71,7 +74,6 @@ public class OpenPanel : MonoBehaviour
 			if (i == selectedIndex)
 			{
 				listItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
-				listItem.GetComponentInChildren<Text>().color = Color.red;
 			}
 
 			if (RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition)
@@ -88,13 +90,16 @@ public class OpenPanel : MonoBehaviour
 
 	public void NewStart()
 	{
-		var newFileItem = new FileItem {name = "New File", guid = Guid.NewGuid().ToString()};
+		var newFileItem = new FileItem {title = "New File", guid = Guid.NewGuid().ToString()};
 		var filenameListItem = Instantiate(filenameItemPrefab);
 		filenameListItem.transform.SetParent(fileList, false);
-		filenameListItem.GetComponentInChildren<Text>().text = newFileItem.name;
+		filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
 		newFileItem.listItem = filenameListItem;
 		files.Add(newFileItem);
 		SetIndex(files.Count - 1);
+
+		Canvas.ForceUpdateCanvases();
+		scrollRect.verticalNormalizedPosition = 0.0f;
 
 		isNew = true;
 		RenameStart();
@@ -103,6 +108,61 @@ public class OpenPanel : MonoBehaviour
 	public void NewStop(string title)
 	{
 		SetIndex(files.Count - 1);
+
+		var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
+
+		if (!Directory.Exists(path))
+		{
+			Directory.CreateDirectory(path);
+			File.Create(Path.Combine(path, ".editable")).Close();
+			
+			var meta = new Metadata
+			{
+				title = files[selectedIndex].title,
+				description = "",
+				guid = new Guid(files[selectedIndex].guid),
+				perspective = Perspective.Perspective360,
+			};
+
+			var sb = new StringBuilder();
+			sb.Append("uuid:")
+				.Append(meta.guid)
+				.Append(",\n");
+
+			sb.Append("title:")
+				.Append(meta.title)
+				.Append(",\n");
+
+			sb.Append("description:")
+				.Append(meta.description)
+				.Append(",\n");
+
+			sb.Append("perspective:")
+				.Append("0")
+				.Append(",\n");
+
+			sb.Append("length:")
+				.Append("0")
+				.Append(",\n");
+
+			sb.Append("[[]]");
+
+			try
+			{
+				using (var metaFile = File.CreateText(Path.Combine(path, SaveFile.metaFilename)))
+				{
+					metaFile.WriteLine(sb.ToString());
+				}
+			}
+			catch(Exception e)
+			{
+				Debug.Log(e.ToString());
+			}
+		}
+		else
+		{
+			Debug.LogError("The hell you doin' boy");
+		}
 	}
 
 	public void RenameStart()
@@ -122,26 +182,27 @@ public class OpenPanel : MonoBehaviour
 
 	public void RenameStop(string newTitle)
 	{
-		if (isNew)
-		{
-			NewStop(newTitle);
-
-			isNew = false;
-		}
-		else if (selectedIndex != -1)
-		{
-			var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
-			var file = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
-			file.meta.title = newTitle;
-		}
-
 		var label = files[selectedIndex].listItem.GetComponentInChildren<Text>(true);
 		var input = files[selectedIndex].listItem.GetComponentInChildren<InputField>();
 
 		label.gameObject.SetActive(true);
 		input.gameObject.SetActive(false);
 		label.text = newTitle;
-		files[selectedIndex].name = newTitle;
+		files[selectedIndex].title = newTitle;
+
+		if (isNew)
+		{
+			NewStop(newTitle);
+			isNew = false;
+		}
+		else if (selectedIndex != -1)
+		{
+			var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
+
+			//TODO(Simon): Probabaly a bug. Not closing. Fix
+			var file = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
+			file.meta.title = newTitle;
+		}
 	}
 
 	public void Delete()
@@ -164,8 +225,16 @@ public class OpenPanel : MonoBehaviour
 	public void SetIndex(int i)
 	{
 		var file = files[i];
-		chosenFile.text = "Chosen file: " + file.name;
+		chosenFile.text = "Chosen file: " + file.title;
 		answerGuid = file.guid;
 		selectedIndex = i;
+		var thumbPath = Path.Combine(Application.persistentDataPath, Path.Combine(file.guid, SaveFile.thumbFilename));
+		if (File.Exists(thumbPath))
+		{
+			var data = File.ReadAllBytes(thumbPath);
+			var tex = new Texture2D(1, 1);
+			tex.LoadImage(data);
+			thumb.texture = tex;
+		}
 	}
 }

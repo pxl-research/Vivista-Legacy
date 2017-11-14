@@ -160,15 +160,12 @@ public class Editor : MonoBehaviour
 		SetEditorActive(false);
 		meta = new Metadata();
 
-		openPanel = Instantiate(openPanelPrefab);
-		openPanel.transform.SetParent(Canvass.main.transform, false);
-		Canvass.modalBackground.SetActive(true);
+		InitOpenFilePanel();
+
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 
 		//VRSettings.enabled = true;
-
-		editorState = EditorState.Opening;
 	}
 	
 	void Update () 
