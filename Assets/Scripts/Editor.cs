@@ -7,7 +7,6 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.VR;
 
 public enum EditorState {
 	Inactive,
@@ -19,7 +18,6 @@ public enum EditorState {
 	Saving,
 	EditingInteractionPoint,
 	Opening,
-	NewOpen,
 	PickingPerspective,
 	SavingThenUploading,
 	LoggingIn
@@ -108,7 +106,6 @@ public class Editor : MonoBehaviour
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
 	private GameObject savePanel;
-	//private GameObject newPanel;
 	private GameObject perspectivePanel;
 	private GameObject openPanel;
 	private GameObject uploadPanel;
@@ -605,14 +602,16 @@ public class Editor : MonoBehaviour
 				var guid = openPanel.GetComponent<OpenPanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
 
-				if (!OpenFile(metaPath))
+				if (OpenFile(metaPath))
+				{
+					SetEditorActive(true);
+					Destroy(openPanel);
+					Canvass.modalBackground.SetActive(false);
+				}
+				else
 				{
 					Debug.LogError("Something went wrong while loading the file");
 				}
-
-				SetEditorActive(true);
-				Destroy(openPanel);
-				Canvass.modalBackground.SetActive(false);
 			}
 			
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -729,7 +728,6 @@ public class Editor : MonoBehaviour
 	{
 		return editorState != EditorState.Saving 
 			&& editorState != EditorState.Opening 
-			&& editorState != EditorState.NewOpen
 			&& editorState != EditorState.PickingPerspective;
 	}
 	
@@ -1260,7 +1258,30 @@ public class Editor : MonoBehaviour
 		var data = SaveFile.OpenFile(path);
 	
 		meta = data.meta;
-		fileLoader.LoadFile(Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename)));
+
+		var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
+
+		if (!File.Exists(videoPath))
+		{
+			var dialog = new System.Windows.Forms.OpenFileDialog
+			{
+				Title = "Choose a video or photo to enrich",
+				Filter = "Video (*.mp4)|*.mp4"
+			};
+
+			var result = dialog.ShowDialog();
+			if (result == System.Windows.Forms.DialogResult.OK)
+			{
+				videoPath = dialog.FileName;
+			}
+			else
+			{
+				openPanel.GetComponent<OpenPanel>().answered = false;
+				return false;
+			}
+		}
+
+		fileLoader.LoadFile(videoPath);
 		fileLoader.SetPerspective(meta.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
