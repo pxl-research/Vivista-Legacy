@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class OpenPanel : MonoBehaviour 
+public class FilePanel : MonoBehaviour 
 {
 	public class FileItem
 	{
@@ -13,6 +13,9 @@ public class OpenPanel : MonoBehaviour
 		public string title;
 		public GameObject listItem;
 	}
+
+	public Text titleSave;
+	public Text titleOpen;
 
 	public ScrollRect scrollRect;
 	public RectTransform fileList;
@@ -23,18 +26,38 @@ public class OpenPanel : MonoBehaviour
 	public Button renameButton;
 	public Button deleteButton;
 	public Button openButton;
+	public Button saveButton;
 
 	public GameObject filenameItemPrefab;
 
 	public bool answered;
 	public string answerGuid;
+	public string answerTitle;
 
 	private List<FileItem> files = new List<FileItem>();
 	private int selectedIndex = -1;
 	private bool isNew;
+	private bool isSaving;
 
-	public void Init()
+	public void Init(bool isSaveFileDialog)
 	{
+		//NOTE(Simon): Window setup. Display controls belonging to either open or save window.
+		{
+			if (isSaveFileDialog)
+			{
+				isSaving = true;
+				titleOpen.gameObject.SetActive(false);
+				openButton.gameObject.SetActive(false);
+			}
+			else
+			{
+				titleSave.gameObject.SetActive(false);
+				saveButton.gameObject.SetActive(false);
+			}
+		}
+
+		SetIndex(-1);
+
 		var directories = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
 		foreach (var directory in directories)
 		{
@@ -80,8 +103,6 @@ public class OpenPanel : MonoBehaviour
 				&& Input.GetMouseButtonDown(0))
 			{
 				SetIndex(i);
-
-				
 			}
 		}
 	}
@@ -237,16 +258,31 @@ public class OpenPanel : MonoBehaviour
 			deleteButton.interactable = false;
 			renameButton.interactable = false;
 			openButton.interactable = false;
-			chosenFile.text = "Chosen file: <none>";
+			saveButton.interactable = false;
+			chosenFile.text = isSaving ? "Save as: <none>" : "Chosen file: <none>";
 
 			return;
 		}
 
 		var file = files[i];
-		chosenFile.text = "Chosen file: " + file.title;
+		if (isSaving)
+		{
+			chosenFile.text = "Save as: " + file.title;
+		}
+		else
+		{
+			chosenFile.text = "Chosen file: " + file.title;
+		}
+
 		answerGuid = file.guid;
+		answerTitle = file.title;
 
 		selectedIndex = i;
+
+		deleteButton.interactable = true;
+		renameButton.interactable = true;
+		openButton.interactable = true;
+		saveButton.interactable = true;
 
 		var thumbPath = Path.Combine(Application.persistentDataPath, Path.Combine(file.guid, SaveFile.thumbFilename));
 		if (File.Exists(thumbPath))
@@ -256,9 +292,9 @@ public class OpenPanel : MonoBehaviour
 			tex.LoadImage(data);
 			thumb.texture = tex;
 		}
-
-		deleteButton.interactable = true;
-		renameButton.interactable = true;
-		openButton.interactable = true;
+		else
+		{
+			thumb.texture = Texture2D.whiteTexture;
+		}
 	}
 }

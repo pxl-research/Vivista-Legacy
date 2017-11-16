@@ -92,10 +92,9 @@ public class Editor : MonoBehaviour
 
 	public GameObject interactionTypePrefab;
 
-	public GameObject openPanelPrefab;
+	public GameObject filePanelPrefab;
 	public GameObject newPanelPrefab;
 	public GameObject perspectivePanelPrefab;
-	public GameObject savePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject textPanelEditorPrefab;
 	public GameObject imagePanelPrefab;
@@ -105,7 +104,7 @@ public class Editor : MonoBehaviour
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
-	private GameObject savePanel;
+	private GameObject filePanel;
 	private GameObject perspectivePanel;
 	private GameObject openPanel;
 	private GameObject uploadPanel;
@@ -564,42 +563,37 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Saving)
 		{
-			if (savePanel.GetComponent<SavePanel>().answered)
+			if (filePanel.GetComponent<FilePanel>().answered)
 			{
-				var panel = savePanel.GetComponent<SavePanel>();
-				meta.title = panel.answerTitle;
-				meta.description = panel.answerDescription;
+				var panel = filePanel.GetComponent<FilePanel>();
 
 				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file. 
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
-				if (panel.fileExists)
-				{
-					meta.isNew = false;
-					meta.guid = panel.answerGuid;
-				}
+				meta.guid = new Guid(panel.answerGuid);
+				meta.title = panel.answerTitle;
 
 				if (!SaveToFile())
 				{
 					Debug.LogError("Something went wrong while saving the file");
 				}
 				SetEditorActive(true);
-				Destroy(savePanel);
+				Destroy(filePanel);
 				Canvass.modalBackground.SetActive(false);
 			}
 			
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				SetEditorActive(true);
-				Destroy(savePanel);
+				Destroy(filePanel);
 				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
 		if (editorState == EditorState.Opening)
 		{
-			if (openPanel.GetComponent<OpenPanel>().answered)
+			if (openPanel.GetComponent<FilePanel>().answered)
 			{
-				var guid = openPanel.GetComponent<OpenPanel>().answerGuid;
+				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
 
 				if (OpenFile(metaPath))
@@ -648,9 +642,9 @@ public class Editor : MonoBehaviour
 				Destroy(loginPanel);
 				InitSavePanel();
 			}
-			if (savePanel != null && savePanel.GetComponent<SavePanel>().answered)
+			if (filePanel != null && filePanel.GetComponent<SavePanel>().answered)
 			{
-				var panel = savePanel.GetComponent<SavePanel>();
+				var panel = filePanel.GetComponent<SavePanel>();
 				panel.Init(meta.title, meta.description);
 				meta.title = panel.answerTitle;
 				meta.description = panel.answerDescription;
@@ -660,7 +654,7 @@ public class Editor : MonoBehaviour
 					Debug.LogError("Something went wrong while saving the file");
 					return;
 				}
-				Destroy(savePanel);
+				Destroy(filePanel);
 				InitUploadPanel();
 			}
 			if (uploadPanel != null)
@@ -1276,7 +1270,7 @@ public class Editor : MonoBehaviour
 			}
 			else
 			{
-				openPanel.GetComponent<OpenPanel>().answered = false;
+				openPanel.GetComponent<FilePanel>().answered = false;
 				return false;
 			}
 		}
@@ -1303,7 +1297,7 @@ public class Editor : MonoBehaviour
 				body = point.body,
 				type = point.type,
 				filled = true,
-				point = newPoint,
+				point = newPoint
 			};
 
 			switch (newInteractionPoint.type)
@@ -1435,8 +1429,8 @@ public class Editor : MonoBehaviour
 	
 	private void InitOpenFilePanel()
 	{
-		openPanel = Instantiate(openPanelPrefab);
-		openPanel.GetComponent<OpenPanel>().Init();
+		openPanel = Instantiate(filePanelPrefab);
+		openPanel.GetComponent<FilePanel>().Init(isSaveFileDialog: false);
 		openPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Opening;
@@ -1451,9 +1445,9 @@ public class Editor : MonoBehaviour
 
 	private void InitSavePanel()
 	{
-		savePanel = Instantiate(savePanelPrefab);
-		savePanel.transform.SetParent(Canvass.main.transform, false);
-		savePanel.GetComponent<SavePanel>().Init(meta.title, meta.description);
+		filePanel = Instantiate(filePanelPrefab);
+		filePanel.transform.SetParent(Canvass.main.transform, false);
+		filePanel.GetComponent<FilePanel>().Init(isSaveFileDialog: true);
 		Canvass.modalBackground.SetActive(true);
 	}
 
