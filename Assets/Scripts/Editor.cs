@@ -485,69 +485,7 @@ public class Editor : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 		}
-
-		/*
-		if (editorState == EditorState.NewOpen)
-		{
-			var panel = newPanel.GetComponent<NewPanel>();
-			if (panel.answered)
-			{
-				if (panel.answerNew)
-				{
-					var dialog = new System.Windows.Forms.OpenFileDialog
-					{
-						Title = "Choose a video or photo to enrich",
-						Filter = "Video (*.mp4)|*.mp4"
-					};
-
-					var result = dialog.ShowDialog();
-					if (result == System.Windows.Forms.DialogResult.OK)
-					{
-						//TODO(Simon): Potentially unsafe, look into generating on server side.
-						meta.guid = Guid.NewGuid();
-						meta.isNew = true;
-						var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-
-						if (!Directory.Exists(path))
-						{
-							Directory.CreateDirectory(path);
-							File.Create(Path.Combine(path, ".editable")).Close();
-							File.Create(Path.Combine(path, SaveFile.metaFilename)).Close();
-						}
-						else
-						{
-							Debug.LogError("The hell you doin' boy");
-						}
-
-						var videopath = Path.Combine(path, SaveFile.videoFilename);
-						File.Copy(dialog.FileName, videopath);
-						fileLoader.LoadFile(videopath);
-
-						timelineWindowEndTime = (float)videoController.videoLength;
-					}
-					else
-					{
-						panel.answered = false;
-						return;
-					}
-					SetEditorActive(true);
-					Destroy(newPanel);
-					Canvass.modalBackground.SetActive(false);
-
-					editorState = EditorState.PickingPerspective;
-					perspectivePanel = Instantiate(perspectivePanelPrefab);
-					perspectivePanel.transform.SetParent(Canvass.main.transform, false);
-					Canvass.modalBackground.SetActive(true);
-				}
-
-				if (panel.answerOpen)
-				{
-					InitOpenFilePanel();
-					Destroy(newPanel);
-				}
-			}
-		}
-		*/
+		
 		if (editorState == EditorState.PickingPerspective)
 		{
 			var panel = perspectivePanel.GetComponent<PerspectivePanel>();
@@ -1152,27 +1090,11 @@ public class Editor : MonoBehaviour
 	{
 		var sb = new StringBuilder();
 
-		//NOTE(Simon): Is true when saving file under new title. So generate all extra fodlers and files
-		if (SaveFile.GetPathForTitle(meta.title) == null)
+		var path = SaveFile.GetPathForTitle(meta.title);
+		var videoPath = Path.Combine(path, SaveFile.videoFilename);
+		if (!File.Exists(videoPath))
 		{
-			var oldGuid = meta.guid;
-			meta.guid = Guid.NewGuid();
-			var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-
-			if (!Directory.Exists(path))
-			{
-				Directory.CreateDirectory(path);
-				File.Create(Path.Combine(path, ".editable")).Close();
-				File.Create(Path.Combine(path, SaveFile.metaFilename)).Close();
-			}
-			else
-			{
-				Debug.LogError("The hell you doin' boy");
-			}
-
-			var newVideoPath = Path.Combine(path, SaveFile.videoFilename);
-			var oldVideoPath = Path.Combine(Application.persistentDataPath, Path.Combine(oldGuid.ToString(), SaveFile.videoFilename));
-			File.Copy(oldVideoPath, newVideoPath);
+			File.Copy(videoController.VideoPath(), videoPath);
 		}
 
 		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
@@ -1229,7 +1151,6 @@ public class Editor : MonoBehaviour
 
 		try
 		{
-			string path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 			string jsonname = Path.Combine(path, SaveFile.metaFilename);
 			string thumbname = Path.Combine(path, SaveFile.thumbFilename);
 			using (var file = File.CreateText(jsonname))
@@ -1267,6 +1188,7 @@ public class Editor : MonoBehaviour
 			if (result == System.Windows.Forms.DialogResult.OK)
 			{
 				File.Copy(dialog.FileName, videoPath);
+
 			}
 			else
 			{

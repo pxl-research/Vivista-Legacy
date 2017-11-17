@@ -151,6 +151,10 @@ public class VideoController : MonoBehaviour
 		videoLoaded = true;
 	}
 
+	public string VideoPath()
+	{
+		return video.url;
+	}
 
 	public void Pause()
 	{
