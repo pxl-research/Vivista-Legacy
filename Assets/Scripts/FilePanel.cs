@@ -39,6 +39,9 @@ public class FilePanel : MonoBehaviour
 	private bool isNew;
 	private bool isSaving;
 
+	private int lastClickIndex;
+	private float lastClickDelta;
+
 	public void Init(bool isSaveFileDialog)
 	{
 		//NOTE(Simon): Window setup. Display controls belonging to either open or save window.
@@ -102,8 +105,18 @@ public class FilePanel : MonoBehaviour
 			if (RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition)
 				&& Input.GetMouseButtonDown(0))
 			{
+				if (lastClickIndex == i && lastClickDelta < .5)
+				{
+					Answer();
+				}
+
 				SetIndex(i);
+
+				lastClickIndex = i;
+				lastClickDelta = 0;
 			}
+
+			lastClickDelta += Time.deltaTime;
 		}
 	}
 
