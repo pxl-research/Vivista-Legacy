@@ -38,6 +38,7 @@ public class InteractionPointEditor
 	public InteractionType type;
 	public string title;
 	public string body;
+	public string filename;
 	public double startTime;
 	public double endTime;
 	public bool filled;
@@ -50,6 +51,7 @@ public class InteractionpointSerialize
 	public InteractionType type;
 	public string title;
 	public string body;
+	public string filename;
 	public double startTime;
 	public double endTime;
 }
@@ -77,7 +79,7 @@ public struct Metadata
 	public string description;
 	public Guid guid;
 	public Perspective perspective;
-	public bool isNew;
+	public int extraCounter;
 }
 
 public class Editor : MonoBehaviour 
@@ -351,10 +353,22 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
 					if (editor.answered)
 					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var filename = "extra" + meta.extraCounter++;
+						var path = Path.Combine(folder, filename);
+
+						var tex = (Texture2D)editor.imagePreview.texture;
+						var data = tex.EncodeToJPG(75);
+						using (var image = File.Create(path))
+						{
+							image.Write(data, 0, data.Length);
+						}
+
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, editor.answerURL);
+						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, "file:///" + path);
 						lastPlacedPoint.title = editor.answerTitle;
-						lastPlacedPoint.body = editor.answerURL;
+						lastPlacedPoint.body = "";
+						lastPlacedPoint.filename = filename;
 						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
@@ -452,10 +466,21 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
 					if (editor.answered)
 					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var filename = "extra" + meta.extraCounter++;
+						var path = Path.Combine(folder, filename);
+
+						var tex = (Texture2D)editor.imagePreview.texture;
+						var data = tex.EncodeToJPG(75);
+						using (var image = File.Create(path))
+						{
+							image.Write(data, 0, data.Length);
+						}
+
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerURL);
+						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path);
 						pointToEdit.title = editor.answerTitle;
-						pointToEdit.body = editor.answerURL;
+						pointToEdit.filename = filename;
 						pointToEdit.panel = panel;
 
 						Destroy(interactionEditor);
@@ -513,7 +538,10 @@ public class Editor : MonoBehaviour
 				if (!SaveToFile())
 				{
 					Debug.LogError("Something went wrong while saving the file");
+					return;
 				}
+				Toasts.AddToast(5, "File saved!");
+
 				SetEditorActive(true);
 				Destroy(filePanel);
 				Canvass.modalBackground.SetActive(false);
@@ -544,13 +572,6 @@ public class Editor : MonoBehaviour
 				{
 					Debug.LogError("Something went wrong while loading the file");
 				}
-			}
-			
-			if (Input.GetKeyDown(KeyCode.Escape))
-			{
-				SetEditorActive(true);
-				Destroy(openPanel);
-				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
@@ -592,6 +613,8 @@ public class Editor : MonoBehaviour
 					Debug.LogError("Something went wrong while saving the file");
 					return;
 				}
+				Toasts.AddToast(5, "File saved!");
+
 				Destroy(filePanel);
 				InitUploadPanel();
 			}
@@ -602,22 +625,18 @@ public class Editor : MonoBehaviour
 		}
 
 #if UNITY_EDITOR
-		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) 
-			&& AreFileOpsAllowed())
+		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O)
-			&& AreFileOpsAllowed())
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
 #endif
 		{
 			InitOpenFilePanel();
 		}
 
 #if UNITY_EDITOR
-		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S)
-			&& AreFileOpsAllowed())
+		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) 
-			&& AreFileOpsAllowed())
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) && AreFileOpsAllowed())
 #endif
 		{
 			InitSavePanel();
@@ -625,11 +644,9 @@ public class Editor : MonoBehaviour
 		}
 
 #if UNITY_EDITOR
-		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.U)
-			&& AreFileOpsAllowed())
+		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.U) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.U) 
-			&& AreFileOpsAllowed())
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.U) && AreFileOpsAllowed())
 #endif
 		{
 			if (String.IsNullOrEmpty(userToken))
@@ -645,11 +662,9 @@ public class Editor : MonoBehaviour
 		}
 
 #if UNITY_EDITOR
-		if(Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.L)
-			&& AreFileOpsAllowed())
+		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.L) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.L) 
-			&& AreFileOpsAllowed())
+		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.L) && AreFileOpsAllowed())
 #endif
 		{
 			editorState = EditorState.LoggingIn;
@@ -1132,6 +1147,7 @@ public class Editor : MonoBehaviour
 					type = point.type,
 					title = point.title,
 					body = point.body,
+					filename = point.filename,
 					startTime = point.startTime,
 					endTime = point.endTime
 				};
@@ -1217,6 +1233,7 @@ public class Editor : MonoBehaviour
 				endTime = point.endTime,
 				title = point.title,
 				body = point.body,
+				filename = point.filename,
 				type = point.type,
 				filled = true,
 				point = newPoint
@@ -1234,7 +1251,16 @@ public class Editor : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+
+					int extraCount = Int32.Parse(url.Substring(url.LastIndexOf("extra") + "extra".Length));
+
+					if (extraCount > meta.extraCounter)
+					{
+						meta.extraCounter = extraCount;
+					}
+
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, "file:///" + url);
 					newInteractionPoint.panel = panel;
 					break;
 				}
