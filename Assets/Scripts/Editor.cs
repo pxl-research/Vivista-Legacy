@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -60,7 +61,7 @@ public class UploadStatus
 {
 	public Coroutine coroutine;
 	public WWW request;
-	public int totalSize;
+	public long totalSize;
 	public bool done;
 	public bool failed;
 	public string error;
@@ -601,12 +602,11 @@ public class Editor : MonoBehaviour
 				Destroy(loginPanel);
 				InitSavePanel();
 			}
-			if (filePanel != null && filePanel.GetComponent<SavePanel>().answered)
+			if (filePanel != null && filePanel.GetComponent<FilePanel>().answered)
 			{
-				var panel = filePanel.GetComponent<SavePanel>();
-				panel.Init(meta.title, meta.description);
+				var panel = filePanel.GetComponent<FilePanel>();
+				panel.Init(true);
 				meta.title = panel.answerTitle;
-				meta.description = panel.answerDescription;
 
 				if (!SaveToFile())
 				{
@@ -1286,12 +1286,12 @@ public class Editor : MonoBehaviour
 		var form = new WWWForm();
 		form.AddField("token", userToken);
 		form.AddField("uuid", meta.guid.ToString());
-		form.AddBinaryData("meta", str, "json" + meta.guid);
+		form.AddBinaryData("meta", str, SaveFile.metaFilename);
 
-		var vidSize = (int)new FileInfo(videoPath).Length;
-		var thumbSize = (int)new FileInfo(metaPath).Length;
+		var vidSize = (int)FileSize(videoPath);
+		var thumbSize = (int)FileSize(metaPath);
 
-		uploadStatus.totalSize = vidSize + thumbSize;
+		uploadStatus.totalSize = DirectorySize(new DirectoryInfo(path));
 
 		//TODO(Simon): Guard against big files
 		var videoData = new byte[vidSize];
@@ -1313,12 +1313,71 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		form.AddBinaryData("video", videoData, "video" + meta.guid, "multipart/form-data");
-		form.AddBinaryData("thumb", thumbData, "thumb" + meta.guid, "multipart/form-data");
+		form.AddBinaryData("video", videoData, SaveFile.videoFilename, "multipart/form-data");
+		form.AddBinaryData("thumb", thumbData, SaveFile.thumbFilename, "multipart/form-data");
 
 		uploadStatus.request = new WWW(Web.videoUrl, form);
 
 		yield return uploadStatus.request;
+		var status = uploadStatus.request.StatusCode();
+		if (status != 200)
+		{
+			uploadStatus.failed = true;
+			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: ";
+			uploadStatus.request.Dispose();
+			yield break;
+		}
+
+		uploadStatus.coroutine = StartCoroutine(UploadExtras());
+	}
+
+	private IEnumerator UploadExtras()
+	{
+		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+
+		var extras = new List<string>();
+		
+		foreach (var point in interactionPoints)
+		{
+			if (point.type == InteractionType.Image)
+			{
+				extras.Add(point.filename);
+			}
+		}
+
+		var form = new WWWForm();
+		form.AddField("token", userToken);
+		form.AddField("uuid", meta.guid.ToString());
+		form.AddField("indices", String.Join(",", extras.Select(x => x.Substring(5)).ToArray()));
+
+
+		foreach (var extra in extras)
+		{
+			var extraPath = Path.Combine(path, extra);
+			var extraSize = (int)FileSize(extraPath);
+			var extraData = new byte[extraSize];
+
+			using (var extraStream = File.OpenRead(extraPath))
+			{
+				try
+				{
+					extraStream.Read(extraData, 0, extraSize);
+				}
+				catch (Exception e)
+				{
+					uploadStatus.failed = true;
+					uploadStatus.error = "Something went wrong while loading the file form disk: " + e.Message;
+					yield break;
+				}
+			}
+
+			form.AddBinaryData(extra, extraData, extra, "multipart/form-data");
+		}
+
+		uploadStatus.request = new WWW(Web.extraURL, form);
+
+		yield return uploadStatus.request;
+
 		var status = uploadStatus.request.StatusCode();
 		if (status != 200)
 		{
@@ -1435,4 +1494,27 @@ public class Editor : MonoBehaviour
 		return niceTimes[0];
 	}
 
+	private static long DirectorySize(DirectoryInfo directory)
+	{
+		long size = 0;    
+		var files = directory.GetFiles();
+
+		foreach (var file in files) 
+		{      
+			size += file.Length;    
+		}
+
+		var subDirectories = directory.GetDirectories();
+
+		foreach (var sub in subDirectories) 
+		{
+			size += DirectorySize(sub);   
+		}
+		return size;  
+	}
+
+	private static long FileSize(string path)
+	{
+		return (int)new FileInfo(path).Length;
+	}
 }

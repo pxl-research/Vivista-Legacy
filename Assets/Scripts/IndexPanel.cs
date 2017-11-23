@@ -319,7 +319,6 @@ public class IndexPanel : MonoBehaviour
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v);
 			}
 		}
-
 	}
 
 	public void Previous()
