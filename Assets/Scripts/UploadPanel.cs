@@ -24,8 +24,8 @@ public class UploadPanel : MonoBehaviour
 
 		if (status.request != null)
 		{
-			var totalUploaded = status.request.uploadProgress * status.totalSize;
-
+			var totalUploaded = status.uploaded + (long)status.request.uploadedBytes;
+			
 			var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
 			status.timings.Enqueue(newestTiming);
 		
@@ -36,7 +36,7 @@ public class UploadPanel : MonoBehaviour
 
 			speed = status.timings.Count >= 2 ? (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time) : float.NaN;
 			timeRemaining = (status.totalSize - totalUploaded) / speed;
-			progressBar.SetProgress(status.request.progress);
+			progressBar.SetProgress(totalUploaded / (float)status.totalSize);
 
 			//TODO(Simon): Show kB and GB when appropriate
 			progressMB.text = String.Format("{0:F2}/{1:F2}MB", totalUploaded / megabyte, status.totalSize / megabyte);

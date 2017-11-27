@@ -63,7 +63,7 @@ public class VideoController : MonoBehaviour
 	{
 		while (!screenshots.isPrepared) 
 		{
-			var a = 1;
+			//NOTE(Simon): Busy wait
 		}
 
 		screenshots.sendFrameReadyEvents = true;

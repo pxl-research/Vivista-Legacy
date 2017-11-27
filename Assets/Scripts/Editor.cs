@@ -7,6 +7,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public enum EditorState {
@@ -60,12 +61,13 @@ public class InteractionpointSerialize
 public class UploadStatus
 {
 	public Coroutine coroutine;
-	public WWW request;
+	public UnityWebRequest request;
 	public long totalSize;
 	public bool done;
 	public bool failed;
 	public string error;
 	public Queue<Timing> timings = new Queue<Timing>();
+	public long uploaded;
 }
 
 public struct Timing
@@ -1316,17 +1318,19 @@ public class Editor : MonoBehaviour
 		form.AddBinaryData("video", videoData, SaveFile.videoFilename, "multipart/form-data");
 		form.AddBinaryData("thumb", thumbData, SaveFile.thumbFilename, "multipart/form-data");
 
-		uploadStatus.request = new WWW(Web.videoUrl, form);
+		uploadStatus.request = UnityWebRequest.Post(Web.videoUrl, form);
 
-		yield return uploadStatus.request;
-		var status = uploadStatus.request.StatusCode();
+		yield return uploadStatus.request.Send();
+		var status = uploadStatus.request.responseCode;
 		if (status != 200)
 		{
 			uploadStatus.failed = true;
 			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: ";
-			uploadStatus.request.Dispose();
 			yield break;
 		}
+
+		uploadStatus.uploaded = vidSize + thumbSize;
+		uploadStatus.request.Dispose();
 
 		uploadStatus.coroutine = StartCoroutine(UploadExtras());
 	}
@@ -1374,16 +1378,16 @@ public class Editor : MonoBehaviour
 			form.AddBinaryData(extra, extraData, extra, "multipart/form-data");
 		}
 
-		uploadStatus.request = new WWW(Web.extraURL, form);
+		uploadStatus.request = UnityWebRequest.Post(Web.extraURL + "/" + meta.guid, form);
 
-		yield return uploadStatus.request;
+		yield return uploadStatus.request.Send();
 
-		var status = uploadStatus.request.StatusCode();
+		var status = uploadStatus.request.responseCode;
 		if (status != 200)
 		{
 			uploadStatus.failed = true;
-			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: ";
-			uploadStatus.request.Dispose();
+			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: " + uploadStatus.request.error;
+			Debug.Log(uploadStatus.error);
 			yield break;
 		}
 
