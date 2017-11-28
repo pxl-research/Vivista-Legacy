@@ -65,7 +65,7 @@ public class DetailPanel : MonoBehaviour
 		timestamp.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
 
-		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid)));
+		imageDownload = new WWW(Web.thumbnailUrl + "/" + video.uuid);
 		Refresh();
 	}
 	

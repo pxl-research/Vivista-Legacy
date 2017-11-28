@@ -26,7 +26,7 @@ public class IndexPanelVideo : MonoBehaviour
 		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		uuid = video.uuid;
 
-		imageDownload = new WWW(Web.thumbnailUrl + "/" + Encoding.UTF8.GetString(Convert.FromBase64String(uuid)));
+		imageDownload = new WWW(Web.thumbnailUrl + "/" + uuid);
 		Refresh();
 	}
 

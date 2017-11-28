@@ -290,7 +290,9 @@ public class IndexPanel : MonoBehaviour
 
 		for(int i = offset; i < loadedVideos.videos.Count; i++)
 		{
-			loadedVideos.videos[i].realTimestamp = DateTime.Parse(loadedVideos.videos[i].timestamp);
+			var video = loadedVideos.videos[i];
+			video.realTimestamp = DateTime.Parse(video.timestamp);
+			video.uuid = Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid));
 		}
 		
 		totalVideos = loadedVideos.totalcount;

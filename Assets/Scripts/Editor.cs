@@ -1291,7 +1291,7 @@ public class Editor : MonoBehaviour
 		form.AddBinaryData("meta", str, SaveFile.metaFilename);
 
 		var vidSize = (int)FileSize(videoPath);
-		var thumbSize = (int)FileSize(metaPath);
+		var thumbSize = (int)FileSize(thumbPath);
 
 		uploadStatus.totalSize = DirectorySize(new DirectoryInfo(path));
 

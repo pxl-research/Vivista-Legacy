@@ -70,8 +70,7 @@ public class VideoDownloadManager : MonoBehaviour
 			client.DownloadFileCompleted += OnMetaComplete;
 			client.DownloadProgressChanged += OnProgress;
 			
-			string decodedUuid = Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid));
-			string directory = Path.Combine(Application.persistentDataPath, decodedUuid);
+			string directory = Path.Combine(Application.persistentDataPath, video.uuid);
 			string path = Path.Combine(directory, SaveFile.metaFilename);
 
 			if (!Directory.Exists(directory))
@@ -79,7 +78,7 @@ public class VideoDownloadManager : MonoBehaviour
 				Directory.CreateDirectory(directory);
 			}
 
-			var metaUrl = Web.metaUrl + "/" + decodedUuid;
+			var metaUrl = Web.metaUrl + "/" + video.uuid;
 			client.DownloadFileAsync(new Uri(metaUrl), path, video.uuid);
 			var panel = Instantiate(DownloadPanelPrefab, DownloadList, false);
 			var download = new Download
