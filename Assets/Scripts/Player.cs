@@ -136,7 +136,8 @@ public class Player : MonoBehaviour
 			var panel = indexPanel.GetComponent<IndexPanel>();
 			if (panel.answered)
 			{
-				if(OpenFile(panel.answerVideoId))
+				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
+				if(OpenFile(metaFilename))
 				{
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;

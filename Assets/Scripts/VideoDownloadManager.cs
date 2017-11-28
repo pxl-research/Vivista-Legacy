@@ -3,20 +3,25 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
-using System.Text;
 using UnityEngine;
 
 public class Download
 {
 	public VideoSerialize video;
-	public WebClient metaDownloadClient;
+	public WebClient client;
 	public WebClient filesDownloadClient;
 	public float progress;
 	public long totalBytes;
 	public long bytesDownloaded;
 	public bool failed;
 	public DownloadPanel panel;
-	public Queue<string> filesToDownload;
+	public Queue<DownloadItem> filesToDownload;
+}
+
+public class DownloadItem
+{
+	public string url;
+	public string path;
 }
 
 public class VideoDownloadManager : MonoBehaviour
@@ -30,10 +35,13 @@ public class VideoDownloadManager : MonoBehaviour
 
 	private static VideoDownloadManager _main;
 	private Dictionary<string, Download> queued;
+	//Can't call Application.persistentDataPath from another thread, so cache it
+	private string dataPath;
 
 	void Start()
 	{
 		Main.queued = new Dictionary<string, Download>();
+		dataPath = Application.persistentDataPath;
 	}
 
 	void Update()
@@ -41,7 +49,7 @@ public class VideoDownloadManager : MonoBehaviour
 		foreach (var kvp in Main.queued)
 		{
 			var download = kvp.Value;
-			download.panel.UpdatePanel(kvp.Value.progress);
+			download.panel.UpdatePanel(download.progress);
 
 			if (download.failed)
 			{
@@ -50,14 +58,14 @@ public class VideoDownloadManager : MonoBehaviour
 
 			if (download.panel.ShouldRetry)
 			{
-				download.metaDownloadClient.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, kvp.Value.video.uuid), kvp.Key);
+				download.client.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, download.video.uuid), kvp.Key);
 				download.failed = false;
 				download.panel.Reset();
 			}
 
 			if (download.panel.ShouldCancel)
 			{
-				download.metaDownloadClient.CancelAsync();
+				download.client.CancelAsync();
 			}
 		}
 	}
@@ -67,34 +75,57 @@ public class VideoDownloadManager : MonoBehaviour
 		if (!queued.ContainsKey(video.uuid))
 		{
 			var client = new WebClient();
-			client.DownloadFileCompleted += OnMetaComplete;
-			client.DownloadProgressChanged += OnProgress;
-			
-			string directory = Path.Combine(Application.persistentDataPath, video.uuid);
-			string path = Path.Combine(directory, SaveFile.metaFilename);
 
-			if (!Directory.Exists(directory))
-			{
-				Directory.CreateDirectory(directory);
-			}
-
-			var metaUrl = Web.metaUrl + "/" + video.uuid;
-			client.DownloadFileAsync(new Uri(metaUrl), path, video.uuid);
 			var panel = Instantiate(DownloadPanelPrefab, DownloadList, false);
 			var download = new Download
 			{
-				metaDownloadClient = client,
+				client = client,
 				video = video,
-				panel = panel.GetComponent<DownloadPanel>()
+				panel = panel.GetComponent<DownloadPanel>(),
+				filesToDownload = new Queue<DownloadItem>()
 			};
-
+			
 			download.panel.SetTitle(video.title);
-
 			queued.Add(video.uuid, download);
+
+			client.DownloadStringCompleted += OnExtraListDownloaded;
+			client.DownloadStringAsync(new Uri(Web.extraURL + "?videoid=" + video.uuid), video.uuid);
 		}
 	}
 
-	private void OnMetaComplete(object sender, AsyncCompletedEventArgs e)
+	private void OnExtraListDownloaded(object sender, DownloadStringCompletedEventArgs e)
+	{
+		var uuid = (string)e.UserState;
+		var download = queued[uuid];
+		download.client.DownloadStringCompleted -= OnExtraListDownloaded;
+
+		int[] files = JsonHelper.ToArray<int>(e.Result);
+
+		string directory = Path.Combine(dataPath, uuid);
+		if (!Directory.Exists(directory))
+		{
+			Directory.CreateDirectory(directory);
+		}
+
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.metaFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.videoFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.thumbFilename)});
+
+		foreach (int file in files)
+		{
+			download.filesToDownload.Enqueue(new DownloadItem 
+			{
+				url = String.Format("{0}/{1}?index={2}", Web.extraURL, uuid, file), 
+				path = Path.Combine(directory, "extra" + file)
+			});
+		}
+
+		download.client.DownloadFileCompleted += OnFileDownloaded;
+		var item = download.filesToDownload.Dequeue();
+		download.client.DownloadFileAsync(new Uri(item.url), item.path, uuid);
+	}
+
+	private void OnFileDownloaded(object sender, AsyncCompletedEventArgs e)
 	{
 		var uuid = (string)e.UserState;
 		if (e.Error != null)
@@ -103,6 +134,11 @@ public class VideoDownloadManager : MonoBehaviour
 			//TODO(Simon): Error handling
 			//TODO(Simon): Do not remove if error, but keep in queue to retry
 			queued[uuid].failed = true;
+		}
+		else if (queued[uuid].filesToDownload.Count > 0)
+		{
+			var item = queued[uuid].filesToDownload.Dequeue();
+			queued[uuid].client.DownloadFileAsync(new Uri(item.url), item.path, uuid);
 		}
 		else
 		{
