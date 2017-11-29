@@ -33,6 +33,7 @@ public class VideoDownloadManager : MonoBehaviour
 		get { return _main ?? (_main = GameObject.Find("VideoDownloadManager").GetComponent<VideoDownloadManager>()); }
 	}
 
+	private static System.Random rand = new System.Random();
 	private static VideoDownloadManager _main;
 	private Dictionary<string, Download> queued;
 	//Can't call Application.persistentDataPath from another thread, so cache it
@@ -89,7 +90,7 @@ public class VideoDownloadManager : MonoBehaviour
 			queued.Add(video.uuid, download);
 
 			client.DownloadStringCompleted += OnExtraListDownloaded;
-			client.DownloadStringAsync(new Uri(Web.extraURL + "?videoid=" + video.uuid), video.uuid);
+			client.DownloadStringAsync(new Uri(Web.extrasURL + "?videoid=" + video.uuid), video.uuid);
 		}
 	}
 
@@ -107,15 +108,15 @@ public class VideoDownloadManager : MonoBehaviour
 			Directory.CreateDirectory(directory);
 		}
 
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.metaFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.videoFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.thumbFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + uuid + RandomUrlParam(), path = Path.Combine(directory, SaveFile.metaFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "/" + uuid + RandomUrlParam(), path = Path.Combine(directory, SaveFile.videoFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + uuid + RandomUrlParam(), path = Path.Combine(directory, SaveFile.thumbFilename)});
 
 		foreach (int file in files)
 		{
 			download.filesToDownload.Enqueue(new DownloadItem 
 			{
-				url = String.Format("{0}/{1}?index={2}", Web.extraURL, uuid, file), 
+				url = String.Format("{0}/{1}?index={2}{3}", Web.extraURL, uuid, file, RandomUrlParam()), 
 				path = Path.Combine(directory, "extra" + file)
 			});
 		}
@@ -153,5 +154,10 @@ public class VideoDownloadManager : MonoBehaviour
 		queued[uuid].totalBytes = e.TotalBytesToReceive;
 		queued[uuid].bytesDownloaded = e.BytesReceived;
 		queued[uuid].progress = e.ProgressPercentage / 100f;
+	}
+
+	private string RandomUrlParam()
+	{
+		return "?p=" + (int)(rand.NextDouble() * Int32.MaxValue);
 	}
 }

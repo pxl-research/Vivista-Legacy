@@ -1290,6 +1290,9 @@ public class Editor : MonoBehaviour
 		form.AddField("uuid", meta.guid.ToString());
 		form.AddBinaryData("meta", str, SaveFile.metaFilename);
 
+		//NOTE(Simon): Busy wait until file is saved
+		while (!File.Exists(thumbPath)) {yield return null;}
+
 		var vidSize = (int)FileSize(videoPath);
 		var thumbSize = (int)FileSize(thumbPath);
 
@@ -1340,13 +1343,19 @@ public class Editor : MonoBehaviour
 		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
 		var extras = new List<string>();
-		
+
 		foreach (var point in interactionPoints)
 		{
 			if (point.type == InteractionType.Image)
 			{
 				extras.Add(point.filename);
 			}
+		}
+
+		if (extras.Count == 0)
+		{
+			uploadStatus.done = true;
+			yield break;
 		}
 
 		var form = new WWWForm();
@@ -1378,7 +1387,7 @@ public class Editor : MonoBehaviour
 			form.AddBinaryData(extra, extraData, extra, "multipart/form-data");
 		}
 
-		uploadStatus.request = UnityWebRequest.Post(Web.extraURL + "/" + meta.guid, form);
+		uploadStatus.request = UnityWebRequest.Post(Web.extrasURL + "/" + meta.guid, form);
 
 		yield return uploadStatus.request.Send();
 
@@ -1400,7 +1409,15 @@ public class Editor : MonoBehaviour
 		{
 			editorState = EditorState.Active;
 			Destroy(uploadPanel);
-			uploadStatus.request.Dispose();
+			//TODO(Simn): temp fix. Make proper
+			try
+			{
+				uploadStatus.request.Dispose();
+			}
+			catch (Exception e)
+			{
+				Debug.Log(e);
+			}
 			Canvass.modalBackground.SetActive(false);
 			Toasts.AddToast(5, "Upload succesful");
 		}

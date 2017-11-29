@@ -21,6 +21,7 @@ public class InteractionPointPlayer
 	public InteractionType type;
 	public string title;
 	public string body;
+	public string filename;
 	public double startTime;
 	public double endTime;
 	public float interactionTimer;
@@ -181,8 +182,9 @@ public class Player : MonoBehaviour
 				endTime = point.endTime,
 				title = point.title,
 				body = point.body,
+				filename = "file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
 				type = point.type,
-				point = newPoint,
+				point = newPoint
 			};
 
 			switch (newInteractionPoint.type)
@@ -197,7 +199,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename);
 					newInteractionPoint.panel = panel;
 					break;
 				}

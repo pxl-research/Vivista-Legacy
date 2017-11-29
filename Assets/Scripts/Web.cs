@@ -6,5 +6,6 @@ public static class Web
 	public static string metaUrl = baseUrl + "/meta";
 	public static string videoUrl = baseUrl + "/video";
 	public static string thumbnailUrl = baseUrl + "/thumbnail";
-	public static string extraURL = baseUrl + "/extras";
+	public static string extrasURL = baseUrl + "/extras";
+	public static string extraURL = baseUrl + "/extra";
 }
