@@ -1284,10 +1284,12 @@ public class Editor : MonoBehaviour
 		var videoPath = Path.Combine(path, SaveFile.videoFilename);
 		
 		var str = SaveFile.GetSaveFileContentsBinary(metaPath);
+		uploadStatus.totalSize = DirectorySize(new DirectoryInfo(path));
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);
 		form.AddField("uuid", meta.guid.ToString());
+		form.AddField("downloadSize", uploadStatus.totalSize.ToString());
 		form.AddBinaryData("meta", str, SaveFile.metaFilename);
 
 		//NOTE(Simon): Busy wait until file is saved
@@ -1296,7 +1298,6 @@ public class Editor : MonoBehaviour
 		var vidSize = (int)FileSize(videoPath);
 		var thumbSize = (int)FileSize(thumbPath);
 
-		uploadStatus.totalSize = DirectorySize(new DirectoryInfo(path));
 
 		//TODO(Simon): Guard against big files
 		var videoData = new byte[vidSize];
