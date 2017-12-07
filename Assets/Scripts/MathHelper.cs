@@ -56,7 +56,7 @@ public static class MathHelper
 		return "Just now";
 	}
 
-	public static string FormatBytes(int bytes)
+	public static string FormatBytes(long bytes)
 	{
  		var names = new[] {"B", "kB", "MB", "GB"};
 		var magnitude = (int)Mathf.Max(0, Mathf.Floor(Mathf.Log(bytes, 1024)));

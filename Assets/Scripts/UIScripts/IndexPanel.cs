@@ -4,13 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [Serializable]
 public class VideoResponseSerialize
 {
-	
 	public int totalcount;
 	public int page;
 	public int count;
@@ -26,7 +24,7 @@ public class VideoSerialize
 	public string timestamp;
 	[NonSerialized]
 	public DateTime realTimestamp;
-	public int downloadsize;
+	public long downloadsize;
 
 	public string title;
 	public int length;
@@ -61,6 +59,10 @@ public class IndexPanel : MonoBehaviour
 	public Image spinner;
 	public Text noVideos;
 	public GameObject serverConnectionError;
+
+	public Button2 localButton;
+	public Button2 internetButton;
+	public bool isInternet;
 
 	public Dropdown2 searchAge;
 
@@ -246,10 +248,17 @@ public class IndexPanel : MonoBehaviour
 			StopCoroutine(loadFunction);
 		}
 
-		loadFunction = StartCoroutine(LoadPageInternal());
+		if (isInternet)
+		{
+			loadFunction = StartCoroutine(LoadInternetPageInternal());
+		}
+		else
+		{
+			LoadLocalPageInternal();
+		}
 	}
 
-	public IEnumerator LoadPageInternal()
+	public IEnumerator LoadInternetPageInternal()
 	{
 		serverConnectionError.SetActive(false);
 		videoContainer.SetActive(false);
@@ -318,7 +327,73 @@ public class IndexPanel : MonoBehaviour
 			for (int i = 0; i < videosThisPage.Count; i++)
 			{
 				var v = videosThisPage[i];
-				videos[i].GetComponent<IndexPanelVideo>().SetData(v);
+				videos[i].GetComponent<IndexPanelVideo>().SetData(v, false);
+			}
+		}
+	}
+
+	public void LoadLocalPageInternal()
+	{
+		serverConnectionError.SetActive(false);
+		videoContainer.SetActive(false);
+		spinner.enabled = true;
+		spinner.rectTransform.rotation = Quaternion.identity;
+
+		var di = new DirectoryInfo(Application.persistentDataPath);
+
+		var localVideos = di.GetDirectories("*-*-*-*-*");
+
+		if (loadedVideos == null) { loadedVideos = new VideoResponseSerialize(); }
+		loadedVideos.videos = new List<VideoSerialize>();
+
+		loadedVideos.totalcount = localVideos.Length;
+
+		foreach (var v in localVideos)
+		{
+			var path = v.FullName;
+
+			var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
+			var folderInfo = new DirectoryInfo(path);
+
+			loadedVideos.videos.Add(new VideoSerialize
+			{
+				title = data.meta.title,
+				description = data.meta.description,
+				downloadsize = SaveFile.DirectorySize(folderInfo),
+				realTimestamp = folderInfo.LastWriteTime,
+				uuid = v.Name,
+			});
+		}
+
+		videoContainer.SetActive(true);
+		spinner.enabled = false;
+
+		noVideos.enabled = loadedVideos.videos.Count == 0;
+
+		totalVideos = loadedVideos.totalcount;
+		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)loadedVideos.count));
+		page = loadedVideos.page;
+
+		//Note(Simon): Videos
+		{
+			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
+			while (videos.Count < Math.Min(videosPerPage, videosThisPage.Count))
+			{
+				var video = Instantiate(videoPrefab);
+				video.transform.SetParent(videoContainer.transform, false);
+				videos.Add(video);
+			}
+			while (videos.Count > Math.Min(videosPerPage, videosThisPage.Count))
+			{
+				var video = videos[videos.Count - 1];
+				videos.RemoveAt(videos.Count - 1);
+				Destroy(video);
+			}
+
+			for (int i = 0; i < videosThisPage.Count; i++)
+			{
+				var v = videosThisPage[i];
+				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
 			}
 		}
 	}
@@ -380,5 +455,21 @@ public class IndexPanel : MonoBehaviour
 		searchParamAuthor = author;
 		LoadPage();
 		page = 1;
+	}
+
+	public void SetLocal()
+	{
+		isInternet = false;
+		localButton.GetComponent<Image>().color = new Color(1, 1, 1);
+		internetButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
+		LoadPage();
+	}
+
+	public void SetInternet()
+	{
+		isInternet = true;
+		localButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
+		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
+		LoadPage();
 	}
 }

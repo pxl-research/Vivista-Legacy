@@ -1284,7 +1284,7 @@ public class Editor : MonoBehaviour
 		var videoPath = Path.Combine(path, SaveFile.videoFilename);
 		
 		var str = SaveFile.GetSaveFileContentsBinary(metaPath);
-		uploadStatus.totalSize = DirectorySize(new DirectoryInfo(path));
+		uploadStatus.totalSize = SaveFile.DirectorySize(new DirectoryInfo(path));
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);
@@ -1514,25 +1514,6 @@ public class Editor : MonoBehaviour
 		}
 
 		return niceTimes[0];
-	}
-
-	private static long DirectorySize(DirectoryInfo directory)
-	{
-		long size = 0;    
-		var files = directory.GetFiles();
-
-		foreach (var file in files) 
-		{      
-			size += file.Length;    
-		}
-
-		var subDirectories = directory.GetDirectories();
-
-		foreach (var sub in subDirectories) 
-		{
-			size += DirectorySize(sub);   
-		}
-		return size;  
 	}
 
 	private static long FileSize(string path)

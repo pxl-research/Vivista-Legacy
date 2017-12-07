@@ -193,4 +193,23 @@ public static class SaveFile
 			endindex = endValue
 		};
 	}
+
+	public static long DirectorySize(DirectoryInfo directory)
+	{
+		long size = 0;    
+		var files = directory.GetFiles();
+
+		foreach (var file in files) 
+		{      
+			size += file.Length;    
+		}
+
+		var subDirectories = directory.GetDirectories();
+
+		foreach (var sub in subDirectories) 
+		{
+			size += DirectorySize(sub);   
+		}
+		return size;  
+	}
 }

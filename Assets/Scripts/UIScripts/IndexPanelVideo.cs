@@ -14,8 +14,9 @@ public class IndexPanelVideo : MonoBehaviour
 
 	private WWW imageDownload;
 	private string uuid;
+	private bool isLocal;
 
-	public void SetData(VideoSerialize video)
+	public void SetData(VideoSerialize video, bool local)
 	{
 		titleText.text = video.title;
 		authorText.text = video.username;
@@ -23,8 +24,17 @@ public class IndexPanelVideo : MonoBehaviour
 		lengthText.text = MathHelper.FormatSeconds(video.length);
 		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		uuid = video.uuid;
+		isLocal = local;
 
-		imageDownload = new WWW(Web.thumbnailUrl + "/" + uuid);
+		if (isLocal)
+		{
+			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.uuid, SaveFile.thumbFilename)));
+		}
+		else
+		{
+			imageDownload = new WWW(Web.thumbnailUrl + "/" + uuid);
+		}
+
 		Refresh();
 	}
 
@@ -51,6 +61,5 @@ public class IndexPanelVideo : MonoBehaviour
 				thumbnailImage.color = Color.white;
 			}
 		}
-
 	}
 }
