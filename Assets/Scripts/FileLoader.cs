@@ -43,7 +43,7 @@ public class FileLoader : MonoBehaviour
 	public void Start()
 	{
 		videoController = Instantiate(videoMesh);
-		currentCamera = Instantiate(cameraFlat);
+		//currentCamera = Instantiate(cameraFlat);
 
 		playerInfo = Instantiate(playerInfoGUI);
 		var newParent = Canvass.main.transform.Find("LayoutSplitter");
@@ -59,7 +59,7 @@ public class FileLoader : MonoBehaviour
 
 	public void SetPerspective(Perspective perspective)
 	{
-		Destroy(currentCamera);
+		//Destroy(currentCamera);
 
 		currentPerspective = perspective;
 
@@ -67,7 +67,7 @@ public class FileLoader : MonoBehaviour
 		{
 			case Perspective.Perspective360:
 			{
-				currentCamera = Instantiate(camera360);
+				//currentCamera = Instantiate(camera360);
 				videoController.GetComponent<MeshFilter>().sharedMesh = Mesh360;
 
 				Destroy(videoController.GetComponent<BoxCollider>());
@@ -80,7 +80,7 @@ public class FileLoader : MonoBehaviour
 			}
 			case Perspective.Perspective180:
 			{
-				currentCamera = Instantiate(camera180);
+				//currentCamera = Instantiate(camera180);
 				videoController.GetComponent<MeshFilter>().sharedMesh = Mesh180;
 
 				Destroy(videoController.GetComponent<BoxCollider>());
@@ -93,7 +93,7 @@ public class FileLoader : MonoBehaviour
 			}
 			case Perspective.PerspectiveFlat:
 			{
-				currentCamera = Instantiate(cameraFlat);
+				//currentCamera = Instantiate(cameraFlat);
 				videoController.GetComponent<MeshFilter>().sharedMesh = MeshFlat;
 
 				Destroy(videoController.GetComponent<BoxCollider>());

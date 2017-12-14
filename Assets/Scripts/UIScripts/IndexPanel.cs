@@ -59,6 +59,7 @@ public class IndexPanel : MonoBehaviour
 	public Image spinner;
 	public Text noVideos;
 	public GameObject serverConnectionError;
+	public GameObject Filters;
 
 	public Button2 localButton;
 	public Button2 internetButton;
@@ -66,8 +67,10 @@ public class IndexPanel : MonoBehaviour
 
 	public Dropdown2 searchAge;
 
-	private float time;
-	private const float refreshTime = 1.0f;
+	private float downloadedMessageTime;
+	private const float downloadedMessageRefreshTime = 1.0f;
+	private float lastFilterInteractionTime;
+	private const float filterInteractionRefreshTime = 0.4f;
 
 	private int page = 1;
 	private int numPages = 1;
@@ -231,13 +234,19 @@ public class IndexPanel : MonoBehaviour
 		{
 			foreach (var video in videos)
 			{
-				time += Time.deltaTime;
-				if (time > refreshTime)
+				downloadedMessageTime += Time.deltaTime;
+				if (downloadedMessageTime > downloadedMessageRefreshTime)
 				{
 					video.GetComponent<IndexPanelVideo>().Refresh();
-					time = 0;
+					downloadedMessageTime = 0;
 				}
 			}
+		}
+
+		if (Time.time > lastFilterInteractionTime + filterInteractionRefreshTime)
+		{
+			LoadPage();
+			lastFilterInteractionTime = float.MaxValue;
 		}
 	}
 
@@ -439,21 +448,21 @@ public class IndexPanel : MonoBehaviour
 				break;
 		}
 
-		LoadPage();
+		lastFilterInteractionTime = Time.time;
 		page = 1;
 	}
 
 	public void SetSearchText(string text)
 	{
 		searchParamText = text;
-		LoadPage();
+		lastFilterInteractionTime = Time.time;
 		page = 1;
 	}
 
 	public void SetAuthorText(string author)
 	{
 		searchParamAuthor = author;
-		LoadPage();
+		lastFilterInteractionTime = Time.time;
 		page = 1;
 	}
 
@@ -462,6 +471,7 @@ public class IndexPanel : MonoBehaviour
 		isInternet = false;
 		localButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		internetButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
+		Filters.SetActive(false);
 		LoadPage();
 	}
 
@@ -470,6 +480,7 @@ public class IndexPanel : MonoBehaviour
 		isInternet = true;
 		localButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
+		Filters.SetActive(true);
 		LoadPage();
 	}
 }

@@ -41,7 +41,7 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
 
 		//TODO(Simon): Verify that this works.
-		if (!VRSettings.enabled)
+		if (!UnityEngine.XR.XRSettings.enabled)
 		{
 			compassForeground.SetActive(true);
 			compassBackground.SetActive(true);

@@ -30,7 +30,7 @@ public class MouseLook : MonoBehaviour
 		var mouseDelta = Input.mousePosition - mousePos;
 		mousePos = Input.mousePosition;
 
-		if (!VRSettings.enabled)
+		if (!UnityEngine.XR.XRSettings.enabled)
 		{
 			if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
 			{

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.VR;
+using UnityEngine.XR;
 
 public enum PlayerState
 {
@@ -34,7 +34,6 @@ public class Player : MonoBehaviour
 	private List<InteractionPointPlayer> interactionPoints;
 	private FileLoader fileLoader;
 	private VideoController videoController;
-	private LineRenderer interactionLineRenderer;
 	private Image crosshair;
 	private Image crosshairTimer;
 
@@ -76,19 +75,15 @@ public class Player : MonoBehaviour
 			}
 
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
-			interactionLineRenderer = Camera.main.GetComponent<LineRenderer>();
-			if (VRSettings.enabled)
+			if (XRSettings.enabled)
 			{
+				videoController.transform.position = Camera.main.transform.position;
+
 				crosshair.enabled = false;
-				interactionLineRenderer.enabled = true;
-				//TODO(Simon): Cast line from controller
-				interactionLineRenderer.SetPosition(0, Camera.main.ViewportToWorldPoint(new Vector3(0.4f, 0.4f, 0.01f)));
-				interactionLineRenderer.SetPosition(1, ray.GetPoint(99.5f));
 			}
 			else
 			{
 				crosshair.enabled = true;
-				interactionLineRenderer.enabled = false;
 			}
 
 			//Note(Simon): Interaction with points
@@ -164,6 +159,7 @@ public class Player : MonoBehaviour
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 		fileLoader.SetPerspective(data.meta.perspective);
+		videoController.screenshots.enabled = false;
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
