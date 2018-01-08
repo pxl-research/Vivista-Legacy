@@ -85,7 +85,7 @@ public struct Metadata
 	public int extraCounter;
 }
 
-public class Editor : MonoBehaviour 
+public class Editor : MonoBehaviour
 {
 	private EditorState editorState;
 
@@ -151,8 +151,10 @@ public class Editor : MonoBehaviour
 	public List<Color> timelineColors;
 	private int colorIndex;
 
-	void Start () 
+	void Start()
 	{
+		UnityEngine.XR.XRSettings.enabled = false;
+
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPointEditor>();
 
@@ -160,7 +162,7 @@ public class Editor : MonoBehaviour
 
 		SetEditorActive(false);
 		meta = new Metadata();
-
+		 
 		InitOpenFilePanel();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
