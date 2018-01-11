@@ -158,7 +158,6 @@ public class Player : MonoBehaviour
 	
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
-		fileLoader.SetPerspective(data.meta.perspective);
 		videoController.screenshots.enabled = false;
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)

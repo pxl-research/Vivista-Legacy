@@ -516,6 +516,7 @@ public class Editor : MonoBehaviour
 			}
 		}
 		
+		/*
 		if (editorState == EditorState.PickingPerspective)
 		{
 			var panel = perspectivePanel.GetComponent<PerspectivePanel>();
@@ -528,6 +529,7 @@ public class Editor : MonoBehaviour
 				Canvass.modalBackground.SetActive(false);
 			}
 		}
+		*/
 
 		if (editorState == EditorState.Saving)
 		{
@@ -1116,7 +1118,7 @@ public class Editor : MonoBehaviour
 			File.Copy(videoController.VideoPath(), videoPath);
 		}
 
-		SaveFile.SaveFileData data = new SaveFile.SaveFileData();
+		var data = new SaveFile.SaveFileData();
 		data.meta = meta;
 
 		sb.Append("uuid:")
@@ -1172,10 +1174,8 @@ public class Editor : MonoBehaviour
 		try
 		{
 			string jsonname = Path.Combine(path, SaveFile.metaFilename);
-			string thumbname = Path.Combine(path, SaveFile.thumbFilename);
 			using (var file = File.CreateText(jsonname))
 			{
-				videoController.Screenshot(thumbname, 10, 1000, 1000);
 				file.Write(sb.ToString());
 			}
 		}
@@ -1185,13 +1185,16 @@ public class Editor : MonoBehaviour
 			return false;
 		}
 
+		string thumbname = Path.Combine(path, SaveFile.thumbFilename);
+		videoController.Screenshot(thumbname, 10, 1000, 1000);
+
 		return true;
 	}
 
 	private bool OpenFile(string path)
 	{
 		var data = SaveFile.OpenFile(path);
-	
+
 		meta = data.meta;
 
 		var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
@@ -1208,7 +1211,6 @@ public class Editor : MonoBehaviour
 			if (result == System.Windows.Forms.DialogResult.OK)
 			{
 				File.Copy(dialog.FileName, videoPath);
-
 			}
 			else
 			{
@@ -1218,7 +1220,6 @@ public class Editor : MonoBehaviour
 		}
 
 		fileLoader.LoadFile(videoPath);
-		fileLoader.SetPerspective(meta.perspective);
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
@@ -1326,7 +1327,7 @@ public class Editor : MonoBehaviour
 
 		uploadStatus.request = UnityWebRequest.Post(Web.videoUrl, form);
 
-		yield return uploadStatus.request.Send();
+		yield return uploadStatus.request.SendWebRequest();
 		var status = uploadStatus.request.responseCode;
 		if (status != 200)
 		{
@@ -1392,7 +1393,7 @@ public class Editor : MonoBehaviour
 
 		uploadStatus.request = UnityWebRequest.Post(Web.extrasURL + "/" + meta.guid, form);
 
-		yield return uploadStatus.request.Send();
+		yield return uploadStatus.request.SendWebRequest();
 
 		var status = uploadStatus.request.responseCode;
 		if (status != 200)

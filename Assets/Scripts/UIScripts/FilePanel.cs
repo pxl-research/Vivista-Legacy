@@ -67,9 +67,18 @@ public class FilePanel : MonoBehaviour
 			var editable = File.Exists(Path.Combine(directory.FullName, ".editable"));
 			if (editable)
 			{
-				var title = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta.title;
-				var newFileItem = new FileItem {title = title, guid = directory.Name};
-				
+				FileItem newFileItem;
+
+				try
+				{
+					string title = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta.title;
+					newFileItem = new FileItem { title = title, guid = directory.Name };
+				}
+				catch (Exception e)
+				{
+					newFileItem = new FileItem { title = "corrupted file: " + directory.Name, guid = directory.Name };
+				}
+
 				var filenameListItem = Instantiate(filenameItemPrefab);
 				filenameListItem.transform.SetParent(fileList, false);
 				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
@@ -153,7 +162,6 @@ public class FilePanel : MonoBehaviour
 				title = files[selectedIndex].title,
 				description = "",
 				guid = new Guid(files[selectedIndex].guid),
-				perspective = Perspective.Perspective360,
 			};
 
 			var sb = new StringBuilder();

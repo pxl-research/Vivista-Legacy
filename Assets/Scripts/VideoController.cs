@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Video;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
@@ -11,6 +13,7 @@ public struct ScreenshotParams
 	public float height;
 	public bool keepAspect;
 	public string filename;
+	public int frameIndex;
 }
 
 public class VideoController : MonoBehaviour 
@@ -18,6 +21,7 @@ public class VideoController : MonoBehaviour
 	public VideoPlayer video;
 	public VideoPlayer screenshots;
 	public bool playing = true;
+	public RenderTexture baseRenderTexture;
 
 	public bool videoLoaded;
 
@@ -33,18 +37,18 @@ public class VideoController : MonoBehaviour
 	void Start () 
 	{
 		var players = GetComponents<VideoPlayer>();
-		if (players[0].renderMode == VideoRenderMode.RenderTexture)
-		{
-			screenshots = players[0];
-			video = players[1];
-		}
-		else
+		if (players[0].playOnAwake)
 		{
 			screenshots = players[1];
 			video = players[0];
 		}
-		playing = video.isPlaying;
+		else
+		{
+			screenshots = players[0];
+			video = players[1];
+		}
 
+		playing = video.isPlaying;
 	}
 	
 	void Update () 
@@ -61,22 +65,27 @@ public class VideoController : MonoBehaviour
 	//NOTE(Simon): This executes asynchronously. OnScreenshotRendered will eventually save the image
 	public void Screenshot(string filename, int frameIndex, float width, float height, bool keepAspect = true)
 	{
-		while (!screenshots.isPrepared) 
-		{
-			//NOTE(Simon): Busy wait
-		}
-
-		screenshots.sendFrameReadyEvents = true;
-		screenshots.frameReady += OnScreenshotRendered;
-
-		screenshots.frame = frameIndex;
+		screenshots.enabled = true;
+		screenshots.prepareCompleted += OnPrepared;
+		screenshots.Prepare();
+		
 		screenshotParams = new ScreenshotParams
 		{
+			frameIndex = frameIndex,
 			width = width,
 			height = height,
 			keepAspect = keepAspect,
 			filename = filename
 		};
+	}
+
+	public void OnPrepared(VideoPlayer vid)
+	{
+		screenshots.sendFrameReadyEvents = true;
+		screenshots.frameReady += OnScreenshotRendered;
+		screenshots.playbackSpeed = 0.01f;
+		screenshots.Play();
+		screenshots.frame = 10;
 	}
 
 	public void OnScreenshotRendered(VideoPlayer vid, long number)
@@ -95,7 +104,8 @@ public class VideoController : MonoBehaviour
 			}
 		}
 
-		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24,false);
+		Graphics.SetRenderTarget(screenshots.targetTexture);
+		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24, false);
 		tex.ReadPixels(new Rect(0, 0, screenshots.texture.width, screenshots.texture.height), 0, 0);
 		TextureScale.Bilinear(tex, (int)screenshotParams.width, (int)screenshotParams.height);
 
@@ -103,13 +113,16 @@ public class VideoController : MonoBehaviour
 
 		screenshots.frameReady -= OnScreenshotRendered;
 		screenshots.sendFrameReadyEvents = false;
-
+		screenshots.prepareCompleted -= OnPrepared;
 
 		using (var thumb = File.Create(screenshotParams.filename))
 		{
 			thumb.Write(data, 0, data.Length);
 			thumb.Close();
 		}
+
+		screenshots.enabled = false;
+		screenshots.Pause();
 	}
 	
 	public void Seek(float fractionalTime)
@@ -135,10 +148,32 @@ public class VideoController : MonoBehaviour
 	{
 		video.url = filename;
 		screenshots.url = filename;
-		screenshots.Prepare();
+		video.Prepare();
 
-		video.time = 0;
-		video.Pause();
+		video.prepareCompleted += delegate
+		{
+			int videoWidth = video.texture.width;
+			int videoHeight = video.texture.height;
+			var perspective = Perspective.PerspectiveFlat;
+			if (videoWidth == videoHeight * 2)
+			{
+				Debug.Log("360");
+				perspective = Perspective.Perspective360;
+			}
+			else if (videoWidth == videoHeight)
+			{
+				Debug.Log("180");
+				perspective = Perspective.Perspective180;
+			}
+			SetPerspective(perspective, videoWidth, videoHeight);
+
+			videoLoaded = true;
+
+			video.time = 0;
+			video.Pause();
+		};
+
+		
 		video.errorReceived += delegate(VideoPlayer player, string message)
 		{
 			videoLoaded = false;
@@ -148,7 +183,65 @@ public class VideoController : MonoBehaviour
 		{
 			Debug.Log(message);
 		};
-		videoLoaded = true;
+	}
+
+	public void SetPerspective(Perspective perspective, int width, int height)
+	{
+		switch (perspective)
+		{
+			case Perspective.Perspective360:
+			{
+				//currentCamera = Instantiate(camera360);
+				//videoController.GetComponent<MeshFilter>().sharedMesh = Mesh360;
+
+				Destroy(GetComponent<BoxCollider>());
+				var coll = gameObject.AddComponent<SphereCollider>();
+				coll.radius = 1;
+
+				var descriptor = baseRenderTexture.descriptor;
+				descriptor.sRGB = false;
+				descriptor.width = width;
+				descriptor.height = height;
+				
+				var renderTexture = new RenderTexture(descriptor);
+				RenderSettings.skybox.mainTexture = renderTexture;
+				video.targetTexture = renderTexture;
+
+				screenshots.targetTexture = new RenderTexture(descriptor);
+
+				transform.localScale = Vector3.one;
+				transform.position = Vector3.zero;
+				break;
+			}
+			/*
+			case Perspective.Perspective180:
+			{
+				//currentCamera = Instantiate(camera180);
+				GetComponent<MeshFilter>().sharedMesh = Mesh180;
+
+				Destroy(GetComponent<BoxCollider>());
+				gameObject.AddComponent<SphereCollider>();
+
+				GetComponent<MeshRenderer>().material = Material180;
+				transform.localScale = Vector3.one;
+				transform.position = Vector3.zero;
+				break;
+			}
+			case Perspective.PerspectiveFlat:
+			{
+				//currentCamera = Instantiate(cameraFlat);
+				GetComponent<MeshFilter>().sharedMesh = MeshFlat;
+
+				Destroy(GetComponent<BoxCollider>());
+				gameObject.AddComponent<BoxCollider>();
+
+				GetComponent<MeshRenderer>().material = MaterialFlat;
+				transform.localScale = new Vector3(1.536f, 0.864f, 1);
+				transform.position = new Vector3(0, 0, 1);
+				break;
+			}
+			*/
+		}
 	}
 
 	public string VideoPath()
