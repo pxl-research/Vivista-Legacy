@@ -90,12 +90,11 @@ public class Player : MonoBehaviour
 				bool interacting = false;
 				foreach (var point in interactionPoints)
 				{
-					const float timeToInteract = 1f;
+					const float timeToInteract = 0.75f;
 
 					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
 
-					Debug.Log(hit.transform);
 					if (hit.transform != null && hit.transform.gameObject == point.point)
 					{
 						interacting = true;

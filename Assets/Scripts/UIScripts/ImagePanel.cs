@@ -37,6 +37,7 @@ public class ImagePanel : MonoBehaviour
 		}
 
 		canvas.GetComponent<RectTransform>().position = newPos;
+		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 
 	public void Update()
@@ -45,16 +46,32 @@ public class ImagePanel : MonoBehaviour
 		{
 			var texture = www.texture;
 			image.texture = texture;
-			var width = image.rectTransform.rect.width;
-			var ratio = texture.width / width;
-			var height = texture.height / ratio;
+
+			float newWidth = image.rectTransform.rect.width;
+			float newHeight = image.rectTransform.rect.height;
+			float imageRatio = newWidth / newHeight;
+
+			if (imageRatio <= 1)
+			{
+				float width = image.rectTransform.rect.width;
+				float ratio = texture.width / width;
+				newHeight = texture.height / ratio;
+			}
+			else
+			{
+				float height = image.rectTransform.rect.height;
+				float ratio = texture.height / height;
+				newWidth = texture.width / ratio;
+			}
+
+			
 
 			//NOTE(Simon): Title + Triangle + bottomMargin
 			const float extraHeight = 40 + 16 + 10;
 			//NOTE(Simon): LeftMargin + RightMargin;
 			const float extraWidth = 10 + 10;
 			
-			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(width + extraWidth, height + extraHeight);
+			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth + extraWidth, newHeight + extraHeight);
 			downloading = false;
 		}
 
