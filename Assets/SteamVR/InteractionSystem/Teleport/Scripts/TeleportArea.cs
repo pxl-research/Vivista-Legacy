@@ -158,7 +158,8 @@ namespace Valve.VR.InteractionSystem
 		}
 	}
 
-#if Editor
+
+#if UNITY_EDITOR
 	//-------------------------------------------------------------------------
 	[CustomEditor( typeof( TeleportArea ) )]
 	public class TeleportAreaEditor : UnityEditor.Editor
