@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Video;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
@@ -157,12 +155,10 @@ public class VideoController : MonoBehaviour
 			var perspective = Perspective.PerspectiveFlat;
 			if (videoWidth == videoHeight * 2)
 			{
-				Debug.Log("360");
 				perspective = Perspective.Perspective360;
 			}
 			else if (videoWidth == videoHeight)
 			{
-				Debug.Log("180");
 				perspective = Perspective.Perspective180;
 			}
 			SetPerspective(perspective, videoWidth, videoHeight);
@@ -196,7 +192,7 @@ public class VideoController : MonoBehaviour
 
 				Destroy(GetComponent<BoxCollider>());
 				var coll = gameObject.AddComponent<SphereCollider>();
-				coll.radius = 1;
+				coll.radius = 0.75f;
 
 				var descriptor = baseRenderTexture.descriptor;
 				descriptor.sRGB = false;
@@ -207,6 +203,7 @@ public class VideoController : MonoBehaviour
 				RenderSettings.skybox.mainTexture = renderTexture;
 				video.targetTexture = renderTexture;
 
+				//TODO(Simon) Fix colors, looks way too dark
 				screenshots.targetTexture = new RenderTexture(descriptor);
 
 				transform.localScale = Vector3.one;

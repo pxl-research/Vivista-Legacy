@@ -705,7 +705,11 @@ public class Editor : MonoBehaviour
 		var newRow = Instantiate(timelineRow);
 		point.timelineRow = newRow;
 		newRow.transform.SetParent(timeline.transform);
+
+		//Note(Simon): By default, make interactionPoints invisible on load
 		interactionPoints.Add(point);
+		newRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>().SetState(true);
+		point.panel.SetActive(false);
 	}
 	
 	void RemoveItemFromTimeline(InteractionPointEditor point)
@@ -737,13 +741,21 @@ public class Editor : MonoBehaviour
 
 			if (Input.mousePosition.y < coords[1].y)
 			{
-				if (Input.mouseScrollDelta.y > 0)
+				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftControl))
 				{
-					timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
+					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
+					if (Input.mouseScrollDelta.y > 0)
+					{
+						timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
+					}
+					else if (Input.mouseScrollDelta.y < 0)
+					{
+						timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+					}
 				}
-				else if (Input.mouseScrollDelta.y < 0)
+				else
 				{
-					timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 10;
 				}
 			}
 		}
@@ -1273,6 +1285,7 @@ public class Editor : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 
+			newInteractionPoint.panel.SetActive(false);
 			AddItemToTimeline(newInteractionPoint);
 		}
 

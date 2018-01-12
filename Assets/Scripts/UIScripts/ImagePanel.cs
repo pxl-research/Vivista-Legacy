@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class ImagePanel : MonoBehaviour 
+public class ImagePanel : MonoBehaviour
 {
 	public Text title;
 	public RawImage image;
@@ -10,15 +10,15 @@ public class ImagePanel : MonoBehaviour
 	public GameObject interactionPoint;
 	
 	private bool downloading = false;
+	private bool neverOpened;
 	private WWW www;
 
 	public void Init(Vector3 position, string newTitle, string newImageURL)
 	{
 		title.text = newTitle;
 		imageURL = newImageURL;
-		www = new WWW(newImageURL);
-		downloading = true;
 		Move(position);
+		neverOpened = true;
 	}
 
 	public void Move(Vector3 position)
@@ -59,5 +59,15 @@ public class ImagePanel : MonoBehaviour
 		}
 
 		canvas.transform.rotation = Camera.main.transform.rotation;
+	}
+
+	public void OnEnable ()
+	{
+		if (neverOpened)
+		{
+			www = new WWW(imageURL);
+			neverOpened = true;
+			downloading = true;
+		}
 	}
 }

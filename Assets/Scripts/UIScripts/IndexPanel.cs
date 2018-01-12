@@ -63,7 +63,7 @@ public class IndexPanel : MonoBehaviour
 
 	public Button2 localButton;
 	public Button2 internetButton;
-	public bool isInternet;
+	public bool isLocal;
 
 	public Dropdown2 searchAge;
 
@@ -89,7 +89,8 @@ public class IndexPanel : MonoBehaviour
 	public void Start()
 	{
 		pageLabels = new List<GameObject>();
-		
+		isLocal = true;
+
 		LoadPage();
 
 		searchAge.options.Clear();
@@ -159,7 +160,7 @@ public class IndexPanel : MonoBehaviour
 					detailPanel = Instantiate(detailPanelPrefab);
 					detailPanel.transform.SetParent(Canvass.main.transform, false);
 
-					detailPanel.GetComponent<DetailPanel>().Init(detailVideo);
+					detailPanel.GetComponent<DetailPanel>().Init(detailVideo, isLocal);
 				}
 			}
 		}
@@ -257,13 +258,13 @@ public class IndexPanel : MonoBehaviour
 			StopCoroutine(loadFunction);
 		}
 
-		if (isInternet)
+		if (isLocal)
 		{
-			loadFunction = StartCoroutine(LoadInternetPageInternal());
+			LoadLocalPageInternal();
 		}
 		else
 		{
-			LoadLocalPageInternal();
+			loadFunction = StartCoroutine(LoadInternetPageInternal());
 		}
 	}
 
@@ -468,7 +469,7 @@ public class IndexPanel : MonoBehaviour
 
 	public void SetLocal()
 	{
-		isInternet = false;
+		isLocal = true;
 		localButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		internetButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
 		Filters.SetActive(false);
@@ -477,7 +478,7 @@ public class IndexPanel : MonoBehaviour
 
 	public void SetInternet()
 	{
-		isInternet = true;
+		isLocal = false;
 		localButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		Filters.SetActive(true);

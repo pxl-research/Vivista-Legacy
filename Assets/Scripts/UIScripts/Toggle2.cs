@@ -35,4 +35,9 @@ public class Toggle2 : Toggle
 		switchedOff = !isOn && WasOn;
 		WasOn = isOn;
 	}
+
+	public void SetState(bool isOn)
+	{
+		this.isOn = isOn;
+	}
 }

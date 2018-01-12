@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Text;
-using System;
 using System.IO;
 
 public class DetailPanel : MonoBehaviour
@@ -54,7 +52,7 @@ public class DetailPanel : MonoBehaviour
 		}
 	}
 
-	public void Init(VideoSerialize videoToDownload)
+	public void Init(VideoSerialize videoToDownload, bool isLocal)
 	{
 		video = videoToDownload;
 
