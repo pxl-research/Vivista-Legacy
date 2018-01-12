@@ -62,8 +62,15 @@ public class DetailPanel : MonoBehaviour
 		author.text = video.username;
 		timestamp.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
+		if (isLocal)
+		{
+			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.uuid, SaveFile.thumbFilename)));
+		}
+		else
+		{
+			imageDownload = new WWW(Web.thumbnailUrl + "/" + video.uuid);
+		}
 
-		imageDownload = new WWW(Web.thumbnailUrl + "/" + video.uuid);
 		Refresh();
 	}
 	

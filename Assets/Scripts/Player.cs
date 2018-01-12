@@ -61,7 +61,6 @@ public class Player : MonoBehaviour
 	void Update () 
 	{
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
-		//var ray = Camera.main.ScreenPointToRay(Input.mousePosition;
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
@@ -93,9 +92,10 @@ public class Player : MonoBehaviour
 				{
 					const float timeToInteract = 1f;
 
-					var pointActive = point.startTime < videoController.currentTime && point.endTime > videoController.currentTime;
+					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
 
+					Debug.Log(hit.transform);
 					if (hit.transform != null && hit.transform.gameObject == point.point)
 					{
 						interacting = true;

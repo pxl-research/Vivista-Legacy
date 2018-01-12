@@ -77,6 +77,7 @@ public class FilePanel : MonoBehaviour
 				catch (Exception e)
 				{
 					newFileItem = new FileItem { title = "corrupted file: " + directory.Name, guid = directory.Name };
+					Debug.Log(e);
 				}
 
 				var filenameListItem = Instantiate(filenameItemPrefab);

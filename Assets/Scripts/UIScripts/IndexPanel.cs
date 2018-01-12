@@ -351,6 +351,7 @@ public class IndexPanel : MonoBehaviour
 
 		var di = new DirectoryInfo(Application.persistentDataPath);
 
+		//Note(Simon): Regex to match Guids
 		var localVideos = di.GetDirectories("*-*-*-*-*");
 
 		if (loadedVideos == null) { loadedVideos = new VideoResponseSerialize(); }

@@ -9,7 +9,7 @@ public class ImagePanel : MonoBehaviour
 	public Canvas canvas;
 	public GameObject interactionPoint;
 	
-	private bool downloading = false;
+	private bool downloading;
 	private bool neverOpened;
 	private WWW www;
 
@@ -66,7 +66,7 @@ public class ImagePanel : MonoBehaviour
 		if (neverOpened)
 		{
 			www = new WWW(imageURL);
-			neverOpened = true;
+			neverOpened = false;
 			downloading = true;
 		}
 	}
