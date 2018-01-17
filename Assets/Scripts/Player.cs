@@ -192,7 +192,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
 					newInteractionPoint.panel = panel;
 					break;
 				}

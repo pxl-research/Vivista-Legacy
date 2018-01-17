@@ -13,12 +13,21 @@ public class ImagePanel : MonoBehaviour
 	private bool neverOpened;
 	private WWW www;
 
-	public void Init(Vector3 position, string newTitle, string newImageURL)
+	public void Init(Vector3 position, string newTitle, string newImageURL, bool loadImageImmediately)
 	{
 		title.text = newTitle;
 		imageURL = newImageURL;
 		Move(position);
-		neverOpened = true;
+		if (loadImageImmediately)
+		{
+			www = new WWW(imageURL);
+			neverOpened = false;
+			downloading = true;
+		}
+		else
+		{
+			neverOpened = true;
+		}
 	}
 
 	public void Move(Vector3 position)
@@ -47,31 +56,29 @@ public class ImagePanel : MonoBehaviour
 			var texture = www.texture;
 			image.texture = texture;
 
-			float newWidth = image.rectTransform.rect.width;
-			float newHeight = image.rectTransform.rect.height;
-			float imageRatio = newWidth / newHeight;
-
-			if (imageRatio <= 1)
-			{
-				float width = image.rectTransform.rect.width;
-				float ratio = texture.width / width;
-				newHeight = texture.height / ratio;
-			}
-			else
-			{
-				float height = image.rectTransform.rect.height;
-				float ratio = texture.height / height;
-				newWidth = texture.width / ratio;
-			}
-
-			
-
 			//NOTE(Simon): Title + Triangle + bottomMargin
 			const float extraHeight = 40 + 16 + 10;
 			//NOTE(Simon): LeftMargin + RightMargin;
 			const float extraWidth = 10 + 10;
+
+			float newWidth = (Screen.width / 2f);
+			float newHeight = (Screen.height / 2f);
+			float imageRatio = newWidth / newHeight;
 			
-			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth + extraWidth, newHeight + extraHeight);
+			//NOTE(Simon): Portrait
+			if (imageRatio <= 1)
+			{
+				float ratio = (texture.width + extraWidth) / newWidth;
+				newHeight = (texture.height + extraHeight) / ratio;
+			}
+			//NOTE(Simon): Landscape
+			else
+			{
+				float ratio = (texture.height + extraHeight) / newHeight;
+				newWidth = (texture.width + extraWidth) / ratio;
+			}
+			
+			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
 			downloading = false;
 		}
 

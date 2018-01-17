@@ -258,7 +258,7 @@ public class Editor : MonoBehaviour
 					endTime = videoController.currentTime + (videoController.videoLength / 10),
 				};
 
-				AddItemToTimeline(point);
+				AddItemToTimeline(point, false);
 
 				interactionTypePicker = Instantiate(interactionTypePrefab);
 				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint.transform.position);
@@ -370,7 +370,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, "file:///" + path);
+						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, "file:///" + path, true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename;
@@ -483,7 +483,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path);
+						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, true);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename;
 						pointToEdit.panel = panel;
@@ -700,7 +700,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	void AddItemToTimeline(InteractionPointEditor point)
+	void AddItemToTimeline(InteractionPointEditor point, bool hidden)
 	{
 		var newRow = Instantiate(timelineRow);
 		point.timelineRow = newRow;
@@ -708,8 +708,11 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): By default, make interactionPoints invisible on load
 		interactionPoints.Add(point);
-		newRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>().SetState(true);
-		point.panel.SetActive(false);
+		if (point.panel != null && hidden)
+		{
+			newRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>().SetState(true);
+			point.panel.SetActive(false);
+		}
 	}
 	
 	void RemoveItemFromTimeline(InteractionPointEditor point)
@@ -1277,7 +1280,7 @@ public class Editor : MonoBehaviour
 						meta.extraCounter = extraCount;
 					}
 
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, "file:///" + url);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, "file:///" + url, false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1286,7 +1289,7 @@ public class Editor : MonoBehaviour
 			}
 
 			newInteractionPoint.panel.SetActive(false);
-			AddItemToTimeline(newInteractionPoint);
+			AddItemToTimeline(newInteractionPoint, true);
 		}
 
 		return true;
