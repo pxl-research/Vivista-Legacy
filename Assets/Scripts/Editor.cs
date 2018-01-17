@@ -174,6 +174,12 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
+		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
+		foreach (var point in interactionPoints)
+		{
+			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+		}
+
 		if (videoController.videoLoaded)
 		{
 			UpdateTimeline();
@@ -185,11 +191,6 @@ public class Editor : MonoBehaviour
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
-		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
-		foreach (var point in interactionPoints)
-		{
-			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
-		}
 		
 		if (editorState == EditorState.Inactive)
 		{
@@ -515,21 +516,6 @@ public class Editor : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 		}
-		
-		/*
-		if (editorState == EditorState.PickingPerspective)
-		{
-			var panel = perspectivePanel.GetComponent<PerspectivePanel>();
-			if (panel.answered)
-			{
-				fileLoader.SetPerspective(panel.answerPerspective);
-				meta.perspective = panel.answerPerspective;
-				Destroy(perspectivePanel);
-				SetEditorActive(true);
-				Canvass.modalBackground.SetActive(false);
-			}
-		}
-		*/
 
 		if (editorState == EditorState.Saving)
 		{
@@ -851,6 +837,14 @@ public class Editor : MonoBehaviour
 		
 			image.color = timelineColors[colorIndex];
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
+		}
+
+		foreach (var point in interactionPoints)
+		{
+			if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition))
+			{
+				point.point.GetComponent<MeshRenderer>().material.color = Color.red;
+			}
 		}
 
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
