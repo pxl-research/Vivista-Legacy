@@ -839,12 +839,15 @@ public class Editor : MonoBehaviour
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
+		//NOTE(Simon): Highlight interactionPoint and show preview when hovering over timelineRow
 		foreach (var point in interactionPoints)
 		{
 			if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition))
 			{
 				point.point.GetComponent<MeshRenderer>().material.color = Color.red;
 			}
+
+			//TODO(Simon): Show Preview
 		}
 
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
