@@ -210,7 +210,9 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Active)
 		{
-			if (Input.GetMouseButtonDown(0) && !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+			if (Input.GetMouseButtonDown(0) 
+				&& !EventSystem.current.IsPointerOverGameObject() 
+				&& !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
 			{
 				editorState = EditorState.PlacingInteractionPoint;
 			}
@@ -1117,6 +1119,11 @@ public class Editor : MonoBehaviour
 			var pointerEvent = (PointerEventData)e;
 			timelineOffset += PxToRelativeTime(pointerEvent.delta.x * 5);
 		}
+	}
+
+	public void DebugLog(string message)
+	{
+		Debug.Log(message);
 	}
 
 	private bool SaveToFile()
