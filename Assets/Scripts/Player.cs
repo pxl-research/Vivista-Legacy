@@ -85,6 +85,11 @@ public class Player : MonoBehaviour
 				crosshair.enabled = true;
 			}
 
+			if (Input.mouseScrollDelta.y != 0)
+			{
+				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
+			}
+
 			//Note(Simon): Interaction with points
 			{
 				bool interacting = false;
