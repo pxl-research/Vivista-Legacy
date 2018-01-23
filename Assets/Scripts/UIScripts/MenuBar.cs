@@ -33,6 +33,13 @@ public class MenuBar : MonoBehaviour
 				menuBarPanels[i].SetActive(false);
 			}
 		}
+	}
 
+	public void ClosePanels()
+	{
+		foreach (var p in menuBarPanels)
+		{
+			p.SetActive(false);
+		}
 	}
 }
