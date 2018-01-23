@@ -834,7 +834,8 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): Highlight interactionPoint and show preview when hovering over timelineRow
 		foreach (var point in interactionPoints)
 		{
-			if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition))
+			if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition)
+				&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
 			{
 				point.point.GetComponent<MeshRenderer>().material.color = Color.red;
 			}
@@ -957,7 +958,8 @@ public class Editor : MonoBehaviour
 				var leftAreaX = 5;
 				var rightAreaX = imageRect.rect.width - 5;
 
-				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
+				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
+					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
 				{
 					if (isDraggingTimelineItem)
 					{
@@ -978,7 +980,8 @@ public class Editor : MonoBehaviour
 				}
 
 				if (!isDraggingTimelineItem && !isResizingTimelineItem
-					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition))
+					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
+					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
 				{
 					if (rectPixel.x < leftAreaX)
 					{

@@ -16,8 +16,10 @@ public class TextPanel : MonoBehaviour
 		canvas = GetComponent<Canvas>();
 		Move(position);
 		
-		var width = Mathf.Clamp(newBody.Length, 150, 450);
-		var height = Mathf.Max(100, newBody.Length / 3);
+		var textComponent = body.GetComponent<Text>();
+		
+		var width = Mathf.Clamp(newBody.Length, 200, 500);
+		var height = UIHelper.CalculateTextFieldHeight(textComponent.text, textComponent.font, textComponent.fontSize, width, 100);
 
 		canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
 	}
