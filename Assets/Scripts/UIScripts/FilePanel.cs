@@ -121,13 +121,11 @@ public class FilePanel : MonoBehaviour
 				}
 
 				SetIndex(i);
-
 				lastClickIndex = i;
 				lastClickDelta = 0;
 			}
-
-			lastClickDelta += Time.deltaTime;
 		}
+		lastClickDelta += Time.deltaTime;
 	}
 
 	public void NewStart()
