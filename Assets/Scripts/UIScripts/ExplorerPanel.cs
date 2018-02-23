@@ -1,265 +1,339 @@
-﻿using System.Collections;
-using System.IO;
+﻿using System.IO;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 public class ExplorerPanel : MonoBehaviour
 {
+	private class ExplorerEntry
+	{
+		public string fullPath;
+		public string name;
+		public DateTime date;
+		public Sprite sprite;
+		public GameObject filenameIconItem;
+		public EntryType entryType;
+	}
 
-    public bool answered, sortByDate;
-    public string filePath, currentDirectory, osType;
+	private enum EntryType
+	{
+		File,
+		Directory,
+		Drive,
+	}
 
-    public Text CurrentPath;
-    public UnityEngine.UI.Button UpButton;
-    public ScrollRect DirectoryContent;
-    public GameObject filenameIconItemPrefab;
-    public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
-    public GameObject DirUpItem;
+	public bool answered;
+	public string answerFilePath;
 
+	public InputField currentPath;
+	public Button upButton;
+	public ScrollRect directoryContent;
+	public GameObject filenameIconItemPrefab;
+	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
+	public Button sortDateButton;
+	public Button sortNameButton;
 
-    private FileInfo[] files;
-    private DirectoryInfo[] directories;
-    private string[] drives;
-    private string searchPattern;
+	private FileInfo[] files;
+	private DirectoryInfo[] directories;
+	private string[] drives;
 
-    private class ExplorerEntry
-    {
-        public string fullPath, name, strDate;
-        public DateTime date;
-        public Sprite sprite;
-        public GameObject filenameIconItem;
-    }
+	private string searchPattern;
+	private string currentDirectory;
+	private string osType;
+	private bool sortByDate;
+	private bool sortByName = true;
+	private bool sortAscending = true;
 
-    private List<ExplorerEntry> explorer;
+	private float timeSinceLastClick;
+	private int lastClickIndex;
 
-    // Use this for initialization
-    void Start()
-    {
-        Init();
-    }
+	private List<ExplorerEntry> explorer;
 
-    void Init(string searchPattern = "*")
-    {
-        answered = false;
-        osType = Environment.OSVersion.Platform.ToString();
-        currentDirectory = Directory.GetCurrentDirectory();
-        this.searchPattern = searchPattern;
+	public void Start()
+	{
+		Init();
+	}
 
-        UpdateDir();
-    }
+	public void Update()
+	{
+		if (RectTransformUtility.RectangleContainsScreenPoint(directoryContent.GetComponent<RectTransform>(), Input.mousePosition))
+		{
+			//TODO(Simon): Figure out current scroll position, and only check x items before and after position
+			for (int i = 0; i < explorer.Count; i++)
+			{
+				var entry = explorer[i];
+				if (entry.filenameIconItem != null)
+				{
+					entry.filenameIconItem.GetComponent<Image>().color = new Color(255, 255, 255);
 
-    public void dirUp()
-    {
-        try
-        {
-            currentDirectory = Directory.GetParent(currentDirectory).ToString();
-            UpdateDir();
-        }
-        catch (NullReferenceException e)
-        {
-            if (osType == "Win32NT") // Is that the only string for Windows?
-            {
-                Debug.Log("Attempting to change disk");
-                SelectDisk();
-            }
-            else
-            {
-                Debug.LogError("This is the root of the disk");
-            }
-        }
-    }
+					if (RectTransformUtility.RectangleContainsScreenPoint(entry.filenameIconItem.GetComponent<RectTransform>(), Input.mousePosition))
+					{
+						entry.filenameIconItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
 
-    void UpdateDir()
-    {
-        var dirinfo = new DirectoryInfo(currentDirectory);
-        files = dirinfo.GetFiles(this.searchPattern);
-        directories = dirinfo.GetDirectories();
-        CurrentPath.text = currentDirectory;
+						if (Input.GetMouseButtonDown(0))
+						{
+							if (lastClickIndex == i && timeSinceLastClick < 0.5f)
+							{
+								if (entry.entryType == EntryType.Directory)
+								{
+									OnDirectoryClick(entry.fullPath);
+									break;
+								}
 
-        if (sortByDate == true)
-        {
-            Array.Sort(files, (x, y) => { return x.LastWriteTime.CompareTo(y.LastWriteTime); });
-            Array.Sort(directories, (x, y) => { return x.LastWriteTime.CompareTo(y.LastWriteTime); });
-        }
+								if (entry.entryType == EntryType.File)
+								{
+									Answer(entry.fullPath);
+									break;
+								}
 
-        ClearItems();
+								if (entry.entryType == EntryType.Drive)
+								{
+									DriveClick(entry.fullPath);
+									break;
+								}
+							}
 
-        ExplorerEntry dirUpEntry = new ExplorerEntry();
-        dirUpEntry.name = "Dir Up";
-        dirUpEntry.sprite = iconArrowUp;
-        explorer.Add(dirUpEntry);
+							timeSinceLastClick = 0;
+							lastClickIndex = i;
+						}
+					}
+				}
+			}
+		}
 
-        // List Directories
-        foreach (DirectoryInfo directory in directories)
-        {
-            ExplorerEntry entry = new ExplorerEntry();
-            entry.name = directory.Name;
-            entry.sprite = iconDirectory;
-            entry.fullPath = directory.FullName;
-            entry.date = directory.LastWriteTime;
+		timeSinceLastClick += Time.deltaTime;
+	}
 
-            explorer.Add(entry);
-        }
-        foreach (FileInfo file in files)
-        {
-            ExplorerEntry entry = new ExplorerEntry();
-            entry.name = file.Name;
-            entry.sprite = iconFile;
-            entry.fullPath = file.FullName;
-            entry.date = file.LastWriteTime;
+	public void Init(string startDirectory = "", string searchPattern = "*")
+	{
+		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
 
-            explorer.Add(entry);
-        }
+		answered = false;
+		osType = Environment.OSVersion.Platform.ToString();
+		this.searchPattern = searchPattern;
+		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 
-        FillItems();
+		UpdateDir();
+	}
 
-    }
+	public void DirUp()
+	{
+		try
+		{
+			currentDirectory = Directory.GetParent(currentDirectory).ToString();
+			UpdateDir();
+		}
+		catch (NullReferenceException e)
+		{
+			if (osType == "Win32NT") // Is that the only string for Windows?
+			{
+				Debug.Log("Attempting to change disk");
+				SelectDisk();
+			}
+			else
+			{
+				Debug.LogError("This is the root of the disk");
+			}
+		}
+	}
 
-    void ClearItems()
-    {
-        if (explorer != null)
-        {
-            foreach (var item in explorer)
-            {
-                Destroy(item.filenameIconItem);
-            }
-            explorer.Clear();
-        }
-        explorer = new List<ExplorerEntry>();
-    }
+	public void OnSortNameClick()
+	{
+		if (sortByName && sortAscending)
+		{
+			sortNameButton.GetComponentInChildren<Text>().text = "Name ↑";
+			sortAscending = false;
+		}
+		else
+		{
+			sortDateButton.GetComponentInChildren<Text>().text = "Date";
+			sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
+			sortAscending = true;
+			sortByName = true;
+			sortByDate = false;
+		}
 
-    void FillItems()
-    {
-        for (int i = 0; i < explorer.Count; i++)
-        {
-            GameObject filenameIconItem = Instantiate(filenameIconItemPrefab);
-            filenameIconItem.transform.SetParent(DirectoryContent.content, false);
-            filenameIconItem.GetComponentsInChildren<Text>()[0].text = explorer[i].name;
-            if (explorer[i].date != default(DateTime))
-                filenameIconItem.GetComponentsInChildren<Text>()[1].text = explorer[i].date.ToString();
-            else
-            {
-                if (sortByDate)
-                    filenameIconItem.GetComponentsInChildren<Text>()[1].text = "Date  ↓";
-                else
-                    filenameIconItem.GetComponentsInChildren<Text>()[1].text = "Date";
-            }
-            filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = explorer[i].sprite;
-            explorer[i].filenameIconItem = filenameIconItem;
-        }
+		UpdateDir();
+	}
 
-        float scrollHeight = 0;
+	public void OnSortDateClick()
+	{
+		if (sortByDate && sortAscending)
+		{
+			sortDateButton.GetComponentInChildren<Text>().text = "Date ↑";
+			sortAscending = false;
+		}
+		else
+		{
+			sortNameButton.GetComponentInChildren<Text>().text = "Name";
+			sortDateButton.GetComponentInChildren<Text>().text = "Date ↓";
+			sortAscending = true;
+			sortByDate = true;
+			sortByName = false;
 
-        // HACK(Lander): this expands the contet below the preview window
-        // TODO(Lander): fix the content to be 0 at the start
-        if (explorer.Count > 13)
-        {
-            scrollHeight = 32 * (explorer.Count - 13);
-        }
+		}
 
-        // set size
-        DirectoryContent.content.sizeDelta = new Vector2(DirectoryContent.content.sizeDelta.x, scrollHeight);
+		UpdateDir();
+	}
 
-        // scroll to top
-        DirectoryContent.normalizedPosition = new Vector2(0, 1);
-    }
+	public void OnPathSubmit(InputField inputField)
+	{
+		string path = inputField.text;
+		if (Directory.Exists(path))
+		{
+			currentDirectory = path;
+			UpdateDir();
+			currentPath.GetComponentInChildren<Text>().color = Color.black;
+		}
+		else if (File.Exists(path))
+		{
+			Answer(path);
+		}
+		else
+		{
+			currentPath.GetComponentInChildren<Text>().color = Color.red;
+		}
+	}
 
+	private void UpdateDir()
+	{
+		var dirinfo = new DirectoryInfo(currentDirectory);
+		files = dirinfo.GetFiles(searchPattern);
+		directories = dirinfo.GetDirectories();
+		currentPath.text = currentDirectory;
 
-    // Update is called once per frame
-    void Update()
-    {
-        try
-        {
-            foreach (var entry in explorer)
-            {
-                if (entry.filenameIconItem != null)
-                {
-                    entry.filenameIconItem.GetComponent<Image>().color = new Color(255, 255, 255);
-                    if (RectTransformUtility.RectangleContainsScreenPoint(entry.filenameIconItem.GetComponent<RectTransform>(), Input.mousePosition))
-                    {
-                        entry.filenameIconItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
-                        if (Input.GetMouseButtonDown(0))
-                        {
-                            entry.filenameIconItem.GetComponent<Image>().color = Color.blue;
-                            if (entry.sprite == iconDirectory)
-                            {
-                                DirectoryClick(entry.fullPath);
-                            }
-                            else if (entry.sprite == iconFile)
-                            {
-                                FileClick(entry.fullPath);
-                            }
-                            else if (entry.sprite == iconDrive)
-                            {
-                                DriveClick(entry.fullPath);
-                            }
-                            else if (entry.sprite == iconArrowUp)
-                            {
-                                RectTransform clickArea = entry.filenameIconItem.transform.Find("DateText").gameObject.GetComponent<RectTransform>();
+		if (sortByName)
+		{
+			if (sortAscending)
+			{
+				Array.Sort(directories, (x, y) => x.Name.CompareTo(y.Name));
+				Array.Sort(files, (x, y) => x.Name.CompareTo(y.Name));
+			}
+			else
+			{
+				Array.Sort(directories, (x, y) => -x.Name.CompareTo(y.Name));
+				Array.Sort(files, (x, y) => -x.Name.CompareTo(y.Name));
+			}
+		}
 
-                                if (RectTransformUtility.RectangleContainsScreenPoint(clickArea, Input.mousePosition))
-                                {
-                                    sortByDate = !sortByDate;
-                                    UpdateDir();
-                                }
-                                else
-                                {
-                                    dirUp();
-                                }
-                            }
-                        }
+		if (sortByDate)
+		{
+			if (sortAscending)
+			{
+				Array.Sort(directories, (x, y) => x.LastWriteTime.CompareTo(y.LastWriteTime));
+				Array.Sort(files, (x, y) => x.LastWriteTime.CompareTo(y.LastWriteTime));
+			}
+			else
+			{
+				Array.Sort(directories, (x, y) => -x.LastWriteTime.CompareTo(y.LastWriteTime));
+				Array.Sort(files, (x, y) => -x.LastWriteTime.CompareTo(y.LastWriteTime));
+			}
+		}
 
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
+		ClearItems();
 
-        }
-    }
+		foreach (var directory in directories)
+		{
+			var entry = new ExplorerEntry
+			{
+				name = directory.Name,
+				sprite = iconDirectory,
+				fullPath = directory.FullName,
+				date = directory.LastWriteTime,
+				entryType = EntryType.Directory
+			};
 
+			explorer.Add(entry);
+		}
 
-    void FileClick(string path)
-    {
-        answered = true;
-        filePath = path;
-    }
-    void DirectoryClick(string path)
-    {
-        currentDirectory = path;
-        UpdateDir();
-    }
+		foreach (var file in files)
+		{
+			var entry = new ExplorerEntry
+			{
+				name = file.Name,
+				sprite = iconFile,
+				fullPath = file.FullName,
+				date = file.LastWriteTime,
+				entryType = EntryType.File
+			};
 
-    void SelectDisk()
-    {
+			explorer.Add(entry);
+		}
 
-        UpButton.enabled = false;
-        ClearItems();
+		FillItems();
+	}
 
-        drives = Directory.GetLogicalDrives();
+	private void ClearItems()
+	{
+		if (explorer != null)
+		{
+			foreach (var item in explorer)
+			{
+				Destroy(item.filenameIconItem);
+			}
 
-        CurrentPath.text = "Select Drive";
+			explorer.Clear();
+		}
+		explorer = new List<ExplorerEntry>();
+	}
 
-        foreach (string drive in drives)
-        {
-            ExplorerEntry entry = new ExplorerEntry();
-            entry.fullPath = drive;
-            entry.name = drive;
-            entry.sprite = iconDrive;
-            explorer.Add(entry);
-        }
-        FillItems();
+	private void FillItems()
+	{
+		foreach (var entry in explorer)
+		{
+			var filenameIconItem = Instantiate(filenameIconItemPrefab);
+			filenameIconItem.transform.SetParent(directoryContent.content, false);
+			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
 
-    }
+			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.date.ToString();
 
-    void DriveClick(string path)
-    {
-        currentDirectory = path;
-        UpdateDir();
-        UpButton.enabled = true;
-    }
+			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
+			entry.filenameIconItem = filenameIconItem;
+		}
+
+		// scroll to top
+		Canvas.ForceUpdateCanvases();
+		directoryContent.verticalNormalizedPosition = 1;
+	}
+
+	private void OnDirectoryClick(string path)
+	{
+		currentDirectory = path;
+		UpdateDir();
+	}
+
+	private void SelectDisk()
+	{
+		upButton.enabled = false;
+		ClearItems();
+
+		drives = Directory.GetLogicalDrives();
+
+		currentPath.text = "Select Drive";
+
+		foreach (var drive in drives)
+		{
+			var entry = new ExplorerEntry();
+			entry.fullPath = drive;
+			entry.name = drive;
+			entry.sprite = iconDrive;
+			explorer.Add(entry);
+		}
+		FillItems();
+	}
+
+	private void DriveClick(string path)
+	{
+		currentDirectory = path;
+		UpdateDir();
+		upButton.enabled = true;
+	}
+
+	private void Answer(String path)
+	{
+		answered = true;
+		answerFilePath = path;
+	}
+
 }
