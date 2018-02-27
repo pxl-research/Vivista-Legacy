@@ -24,12 +24,15 @@ public class InteractionPointPlayer
 	public double startTime;
 	public double endTime;
 	public float interactionTimer;
+
+	public Vector3 returnRayOrigin;
+	public Vector3 returnRayDirection;
 }
 
-public class Player : MonoBehaviour 
+public class Player : MonoBehaviour
 {
 	private PlayerState playerState;
-	
+
 	private List<InteractionPointPlayer> interactionPoints;
 	private FileLoader fileLoader;
 	private VideoController videoController;
@@ -45,7 +48,7 @@ public class Player : MonoBehaviour
 
 	private string openVideo;
 
-	void Start () 
+	void Start ()
 	{
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -57,10 +60,11 @@ public class Player : MonoBehaviour
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 	}
 
-	void Update () 
+	void Update ()
 	{
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+
 		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
@@ -77,7 +81,7 @@ public class Player : MonoBehaviour
 			{
 				videoController.transform.position = Camera.main.transform.position;
 
-				crosshair.enabled = false;
+				crosshair.enabled = true;
 			}
 			else
 			{
@@ -88,6 +92,8 @@ public class Player : MonoBehaviour
 			{
 				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
 			}
+
+			UpdatePointPositions();
 
 			//Note(Simon): Interaction with points
 			{
@@ -136,7 +142,7 @@ public class Player : MonoBehaviour
 			if (panel.answered)
 			{
 				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
-				if(OpenFile(metaFilename))
+				if (OpenFile(metaFilename))
 				{
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
@@ -149,11 +155,12 @@ public class Player : MonoBehaviour
 			}
 		}
 	}
-	
+
 	private bool OpenFile(string path)
 	{
+		Debug.Log("OpenFile");
 		var data = SaveFile.OpenFile(path);
-	
+
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 
@@ -166,7 +173,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
+			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);        
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -176,7 +183,9 @@ public class Player : MonoBehaviour
 				body = point.body,
 				filename = "file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
 				type = point.type,
-				point = newPoint
+				point = newPoint,
+				returnRayOrigin = point.returnRayOrigin,
+				returnRayDirection = point.returnRayDirection
 			};
 
 			switch (newInteractionPoint.type)
@@ -213,12 +222,12 @@ public class Player : MonoBehaviour
 		Canvass.modalBackground.SetActive(true);
 		playerState = PlayerState.Opening;
 	}
-	
+
 	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
 		interactionPoints.Add(point);
 	}
-	
+
 	private void RemoveInteractionPoint(InteractionPointPlayer point)
 	{
 		interactionPoints.Remove(point);
@@ -227,5 +236,27 @@ public class Player : MonoBehaviour
 		{
 			Destroy(point.panel);
 		}
+	}
+
+	private void UpdatePointPositions()
+	{
+		foreach (var interactionPoint in interactionPoints)
+		{
+			Vector3 drawLocation = new Vector3();
+
+			var ray = new Ray
+			{
+				origin = interactionPoint.returnRayOrigin,
+				direction = interactionPoint.returnRayDirection
+			};
+
+			RaycastHit hit;
+
+			if (Physics.Raycast(ray, out hit, 100))
+			{
+				drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.3f : 0.01f);
+				interactionPoint.point.transform.position = drawLocation;
+			}
+		}   
 	}
 }

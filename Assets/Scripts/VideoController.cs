@@ -192,7 +192,8 @@ public class VideoController : MonoBehaviour
 
 				Destroy(GetComponent<BoxCollider>());
 				var coll = gameObject.AddComponent<SphereCollider>();
-				coll.radius = 0.75f;
+				//coll.radius = 0.75f;
+				coll.radius = 90f;
 
 				var descriptor = baseRenderTexture.descriptor;
 				descriptor.sRGB = false;
