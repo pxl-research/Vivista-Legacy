@@ -254,7 +254,7 @@ public class Player : MonoBehaviour
 
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.3f : 0.01f);
+				drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
 			}
 		}   

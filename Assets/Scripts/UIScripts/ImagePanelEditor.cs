@@ -93,7 +93,8 @@ public class ImagePanelEditor : MonoBehaviour
 			if (!Camera.main.orthographic)
 			{
 				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-				newPos.y += 0.01f;
+				//newPos.y += 0.01f;
+				newPos.y -= 1f;
 			}
 			else
 			{
