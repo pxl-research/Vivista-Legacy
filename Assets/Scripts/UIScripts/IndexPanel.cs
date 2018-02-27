@@ -152,6 +152,11 @@ public class IndexPanel : MonoBehaviour
 				var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y
 								&& !searchAge.isOpen();
 
+				var x0 = Input.mousePosition.x > rect[0].x;
+				var x2 = Input.mousePosition.x < rect[2].x;
+				var y0 = Input.mousePosition.y > rect[0].y;
+				var y2 = Input.mousePosition.y < rect[2].y;
+
 				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
 
 				if (hovering && Input.GetMouseButtonDown(0))
