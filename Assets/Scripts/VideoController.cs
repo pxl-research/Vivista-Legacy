@@ -83,7 +83,7 @@ public class VideoController : MonoBehaviour
 		screenshots.frameReady += OnScreenshotRendered;
 		screenshots.playbackSpeed = 0.01f;
 		screenshots.Play();
-		screenshots.frame = 10;
+		screenshots.frame = screenshotParams.frameIndex;
 	}
 
 	public void OnScreenshotRendered(VideoPlayer vid, long number)

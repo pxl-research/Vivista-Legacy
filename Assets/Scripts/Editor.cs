@@ -727,7 +727,7 @@ public class Editor : MonoBehaviour
 
 			if (Input.mousePosition.y < coords[1].y)
 			{
-				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftControl))
+				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
 				{
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
 					if (Input.mouseScrollDelta.y > 0)

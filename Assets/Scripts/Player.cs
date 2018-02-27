@@ -9,7 +9,6 @@ public enum PlayerState
 {
 	Opening,
 	Watching,
-	Index,
 }
 
 public class InteractionPointPlayer
@@ -148,11 +147,6 @@ public class Player : MonoBehaviour
 					Debug.Log("Couldn't open savefile");
 				}
 			}
-		}
-
-		if (playerState == PlayerState.Index)
-		{
-			
 		}
 	}
 	
