@@ -149,13 +149,8 @@ public class IndexPanel : MonoBehaviour
 				var rect = new Vector3[4];
 				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
 
-				var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y
-								&& !searchAge.isOpen();
-
-				var x0 = Input.mousePosition.x > rect[0].x;
-				var x2 = Input.mousePosition.x < rect[2].x;
-				var y0 = Input.mousePosition.y > rect[0].y;
-				var y2 = Input.mousePosition.y < rect[2].y;
+				//var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
+				var hovering = checkIndexPanelVideoHovering(videos[i].GetComponent<BoxCollider>());
 
 				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
 
@@ -343,6 +338,8 @@ public class IndexPanel : MonoBehaviour
 			{
 				var v = videosThisPage[i];
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, false);
+
+				SetIndexPanelVideoCollisionSize(videos[i].GetComponent<IndexPanelVideo>());
 			}
 		}
 	}
@@ -410,6 +407,8 @@ public class IndexPanel : MonoBehaviour
 			{
 				var v = videosThisPage[i];
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
+
+				SetIndexPanelVideoCollisionSize(videos[i].GetComponent<IndexPanelVideo>());
 			}
 		}
 	}
@@ -489,5 +488,32 @@ public class IndexPanel : MonoBehaviour
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		Filters.SetActive(true);
 		LoadPage();
+	}
+
+	private bool checkIndexPanelVideoHovering(BoxCollider collider)
+	{
+		var point = new Vector3(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
+		var ray = Camera.main.ViewportPointToRay(point);
+
+		RaycastHit hit;
+
+		Debug.DrawRay(ray.origin, ray.direction * 10000, Color.yellow);
+
+		if (Physics.Raycast(ray, out hit) && hit.collider == collider)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+
+	//resize the Box Collider to match the IndePanelVideo area
+	private void SetIndexPanelVideoCollisionSize(IndexPanelVideo indexPanelVideo)
+	{
+		var panelSize = indexPanelVideo.GetComponent<RectTransform>().rect.size;
+		indexPanelVideo.GetComponent<BoxCollider>().size = new Vector3(panelSize.x, panelSize.y, 10);
+		indexPanelVideo.GetComponent<BoxCollider>().center = new Vector3(panelSize.x/2, -(panelSize.y/2), 0);
+
 	}
 }

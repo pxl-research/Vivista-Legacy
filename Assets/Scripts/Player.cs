@@ -50,6 +50,7 @@ public class Player : MonoBehaviour
 
 	void Start ()
 	{
+		XRSettings.enabled = false;
 		interactionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
@@ -147,6 +148,7 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
+					XRSettings.enabled = true;
 				}
 				else
 				{
