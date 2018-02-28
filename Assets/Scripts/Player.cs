@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -93,8 +94,6 @@ public class Player : MonoBehaviour
 			{
 				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
 			}
-
-			UpdatePointPositions();
 
 			//Note(Simon): Interaction with points
 			{
@@ -212,7 +211,7 @@ public class Player : MonoBehaviour
 
 			AddInteractionPoint(newInteractionPoint);
 		}
-
+		StartCoroutine(UpdatePointPositions());
 		return true;
 	}
 
@@ -240,8 +239,11 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	private void UpdatePointPositions()
+	private IEnumerator UpdatePointPositions()
 	{
+		// wait one frame
+		yield return null;
+
 		foreach (var interactionPoint in interactionPoints)
 		{
 			Vector3 drawLocation = new Vector3();
@@ -252,7 +254,7 @@ public class Player : MonoBehaviour
 				direction = interactionPoint.returnRayDirection
 			};
 
-			RaycastHit hit;
+			RaycastHit hit;			
 
 			if (Physics.Raycast(ray, out hit, 100))
 			{
