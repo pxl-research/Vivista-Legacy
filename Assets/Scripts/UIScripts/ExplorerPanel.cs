@@ -33,6 +33,7 @@ public class ExplorerPanel : MonoBehaviour
 	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
 	public Button sortDateButton;
 	public Button sortNameButton;
+	public Text title;
 
 	private FileInfo[] files;
 	private DirectoryInfo[] directories;
@@ -105,7 +106,7 @@ public class ExplorerPanel : MonoBehaviour
 		timeSinceLastClick += Time.deltaTime;
 	}
 
-	public void Init(string startDirectory = "", string searchPattern = "*")
+	public void Init(string startDirectory = "", string searchPattern = "*", string title="Select file")
 	{
 		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
 
@@ -113,6 +114,7 @@ public class ExplorerPanel : MonoBehaviour
 		osType = Environment.OSVersion.Platform.ToString();
 		this.searchPattern = searchPattern;
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
+		this.title.text = title;
 
 		UpdateDir();
 	}
