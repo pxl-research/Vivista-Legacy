@@ -120,6 +120,7 @@ public class Editor : MonoBehaviour
 	public GameObject timelineHeader;
 	public GameObject timelineRow;
 	public Text labelPrefab;
+	public ExplorerPanel explorerPanel;
 
 	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
@@ -1150,6 +1151,10 @@ public class Editor : MonoBehaviour
 		openPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Opening;
+
+		//NOTE(Lander): Try to deactivate the file panel
+		filePanel.SetActive(false);
+		explorerPanel.gameObject.SetActive(true);
 	}
 
 	public void InitLoginPanel()
@@ -1263,20 +1268,33 @@ public class Editor : MonoBehaviour
 
 		if (!File.Exists(videoPath))
 		{
-			var dialog = new System.Windows.Forms.OpenFileDialog
+			var fileName = "C://cat.mp4";
+			// NOTE(Lander): oude file selector
+			/*var dialog = new System.Windows.Forms.OpenFileDialog
 			{
 				Title = "Choose a video or photo to enrich",
 				Filter = "Video (*.mp4)|*.mp4"
 			};
+			*/
 
-			var result = dialog.ShowDialog();
-			if (result == System.Windows.Forms.DialogResult.OK)
+			// var explorerPanel = Instantiate(explorerPanelPrefab); // NOTE(Lander): we don't instantiate it anymore
+			// explorerPanel.transform.SetParent(Canvas.rootCanvas, false); // NOTE(Lander): attempt at changing order
+			// explorerPanel.gameObject.SetActive(true);
+			// filePanel.SetActive(false);  // more attempts to change order
+
+
+			//var result = dialog.ShowDialog(); // old method
+			if (explorerPanel.answered)
 			{
-				File.Copy(dialog.FileName, videoPath);
+				// File.Copy(dialog.FileName, videoPath); // should be inside the explorerPanel.answerPath
+				filePanel.SetActive(true);
+				explorerPanel.gameObject.SetActive(false);
+
 			}
 			else
 			{
 				openPanel.GetComponent<FilePanel>().answered = false;
+				//filePanel.SetActive(false); // only show required dialog
 				return false;
 			}
 		}
