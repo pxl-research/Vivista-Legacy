@@ -25,6 +25,7 @@ public class ExplorerPanel : MonoBehaviour
 
 	public bool answered;
 	public string answerFilePath;
+	public string searchPattern;
 
 	public InputField currentPath;
 	public Button upButton;
@@ -39,7 +40,6 @@ public class ExplorerPanel : MonoBehaviour
 	private DirectoryInfo[] directories;
 	private string[] drives;
 
-	private string searchPattern;
 	private string currentDirectory;
 	private string osType;
 	private bool sortByDate;

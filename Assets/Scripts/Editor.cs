@@ -1264,18 +1264,11 @@ public class Editor : MonoBehaviour
 
 		if (!File.Exists(videoPath))
 		{
-			var fileName = "C://cat.mp4";
-			// NOTE(Lander): oude file selector
-			/*var dialog = new System.Windows.Forms.OpenFileDialog
-			{
-				Title = "Choose a video or photo to enrich",
-				Filter = "Video (*.mp4)|*.mp4"
-			};
-			*/
+			explorerPanel.title.text = "Choose a video or photo to enrich";
+			explorerPanel.searchPattern = "Video (*.mp4)|*.mp4";
 
 			explorerPanel.gameObject.SetActive(true);
 			openPanel.SetActive(false);
-
 
 
 			//var result = dialog.ShowDialog(); // old method
@@ -1284,6 +1277,7 @@ public class Editor : MonoBehaviour
 				// File.Copy(dialog.FileName, videoPath); // should be inside the explorerPanel.answerPath
 				openPanel.SetActive(true);
 				explorerPanel.gameObject.SetActive(false);
+				return true;
 
 			}
 			else
