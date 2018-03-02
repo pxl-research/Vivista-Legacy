@@ -1151,10 +1151,6 @@ public class Editor : MonoBehaviour
 		openPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Opening;
-
-		//NOTE(Lander): Try to deactivate the file panel
-		filePanel.SetActive(false);
-		explorerPanel.gameObject.SetActive(true);
 	}
 
 	public void InitLoginPanel()
@@ -1277,17 +1273,16 @@ public class Editor : MonoBehaviour
 			};
 			*/
 
-			// var explorerPanel = Instantiate(explorerPanelPrefab); // NOTE(Lander): we don't instantiate it anymore
-			// explorerPanel.transform.SetParent(Canvas.rootCanvas, false); // NOTE(Lander): attempt at changing order
-			// explorerPanel.gameObject.SetActive(true);
-			// filePanel.SetActive(false);  // more attempts to change order
+			explorerPanel.gameObject.SetActive(true);
+			openPanel.SetActive(false);
+
 
 
 			//var result = dialog.ShowDialog(); // old method
 			if (explorerPanel.answered)
 			{
 				// File.Copy(dialog.FileName, videoPath); // should be inside the explorerPanel.answerPath
-				filePanel.SetActive(true);
+				openPanel.SetActive(true);
 				explorerPanel.gameObject.SetActive(false);
 
 			}
