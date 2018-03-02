@@ -22,7 +22,8 @@ public enum EditorState {
 	Opening,
 	PickingPerspective,
 	SavingThenUploading,
-	LoggingIn
+	LoggingIn,
+	SelectingFile
 }
 
 public enum InteractionType {
@@ -147,6 +148,7 @@ public class Editor : MonoBehaviour
 	private Metadata meta;
 	private string userToken = "";
 	private UploadStatus uploadStatus;
+	private bool isFileSelected;
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
@@ -558,13 +560,18 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Opening)
 		{
-			if (openPanel.GetComponent<FilePanel>().answered)
+			if ( openPanel.GetComponent<FilePanel>().answerGuid != null)
 			{
 				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
 
+				//explorerPanel.gameObject.SetActive(true);
+				//openPanel.SetActive(true);
+
 				if (OpenFile(metaPath))
 				{
+					openPanel.SetActive(true);
+					explorerPanel.gameObject.SetActive(false);
 					SetEditorActive(true);
 					Destroy(openPanel);
 					Canvass.modalBackground.SetActive(false);
@@ -623,6 +630,7 @@ public class Editor : MonoBehaviour
 				UpdateUploadPanel();
 			}
 		}
+
 
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
@@ -1257,26 +1265,21 @@ public class Editor : MonoBehaviour
 	private bool OpenFile(string path)
 	{
 		var data = SaveFile.OpenFile(path);
-
 		meta = data.meta;
-
 		var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 
 		if (!File.Exists(videoPath))
 		{
 			explorerPanel.title.text = "Choose a video or photo to enrich";
-			explorerPanel.searchPattern = "Video (*.mp4)|*.mp4";
+			explorerPanel.searchPattern = "*.mp4";
 
 			explorerPanel.gameObject.SetActive(true);
 			openPanel.SetActive(false);
 
-
-			//var result = dialog.ShowDialog(); // old method
 			if (explorerPanel.answered)
 			{
-				// File.Copy(dialog.FileName, videoPath); // should be inside the explorerPanel.answerPath
-				openPanel.SetActive(true);
-				explorerPanel.gameObject.SetActive(false);
+				File.Copy(explorerPanel.answerFilePath, videoPath);
+		
 				return true;
 
 			}
