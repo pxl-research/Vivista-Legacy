@@ -241,7 +241,7 @@ public class Player : MonoBehaviour
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
 	private IEnumerator UpdatePointPositions()
 	{
-		//NTOE(Simon): wait one frame
+		//NOTE(Simon): wait one frame
 		yield return null;
 
 		foreach (var interactionPoint in interactionPoints)
