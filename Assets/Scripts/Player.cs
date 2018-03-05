@@ -67,7 +67,6 @@ public class Player : MonoBehaviour
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 
-		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
@@ -78,6 +77,7 @@ public class Player : MonoBehaviour
 				videoController.TogglePlay();
 			}
 
+			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 			if (XRSettings.enabled)
 			{
@@ -159,7 +159,6 @@ public class Player : MonoBehaviour
 
 	private bool OpenFile(string path)
 	{
-		Debug.Log("OpenFile");
 		var data = SaveFile.OpenFile(path);
 
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
@@ -239,26 +238,21 @@ public class Player : MonoBehaviour
 		}
 	}
 
+	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
 	private IEnumerator UpdatePointPositions()
 	{
-		// wait one frame
+		//NTOE(Simon): wait one frame
 		yield return null;
 
 		foreach (var interactionPoint in interactionPoints)
 		{
-			Vector3 drawLocation = new Vector3();
+			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
 
-			var ray = new Ray
-			{
-				origin = interactionPoint.returnRayOrigin,
-				direction = interactionPoint.returnRayDirection
-			};
-
-			RaycastHit hit;			
+			RaycastHit hit;
 
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				drawLocation = hit.point;
+				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
 			}
 		}   
