@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -9,7 +10,6 @@ public enum PlayerState
 {
 	Opening,
 	Watching,
-	Index,
 }
 
 public class InteractionPointPlayer
@@ -25,12 +25,15 @@ public class InteractionPointPlayer
 	public double startTime;
 	public double endTime;
 	public float interactionTimer;
+
+	public Vector3 returnRayOrigin;
+	public Vector3 returnRayDirection;
 }
 
-public class Player : MonoBehaviour 
+public class Player : MonoBehaviour
 {
 	private PlayerState playerState;
-	
+
 	private List<InteractionPointPlayer> interactionPoints;
 	private FileLoader fileLoader;
 	private VideoController videoController;
@@ -46,8 +49,9 @@ public class Player : MonoBehaviour
 
 	private string openVideo;
 
-	void Start () 
+	void Start ()
 	{
+		XRSettings.enabled = false;
 		interactionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
@@ -58,11 +62,11 @@ public class Player : MonoBehaviour
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 	}
 
-	void Update () 
+	void Update ()
 	{
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
-		RaycastHit hit;
+
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
@@ -73,12 +77,13 @@ public class Player : MonoBehaviour
 				videoController.TogglePlay();
 			}
 
+			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
 
-				crosshair.enabled = false;
+				crosshair.enabled = true;
 			}
 			else
 			{
@@ -137,11 +142,12 @@ public class Player : MonoBehaviour
 			if (panel.answered)
 			{
 				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
-				if(OpenFile(metaFilename))
+				if (OpenFile(metaFilename))
 				{
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
+					XRSettings.enabled = true;
 				}
 				else
 				{
@@ -149,17 +155,12 @@ public class Player : MonoBehaviour
 				}
 			}
 		}
-
-		if (playerState == PlayerState.Index)
-		{
-			
-		}
 	}
-	
+
 	private bool OpenFile(string path)
 	{
 		var data = SaveFile.OpenFile(path);
-	
+
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 
@@ -172,7 +173,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
+			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);        
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -182,7 +183,9 @@ public class Player : MonoBehaviour
 				body = point.body,
 				filename = "file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
 				type = point.type,
-				point = newPoint
+				point = newPoint,
+				returnRayOrigin = point.returnRayOrigin,
+				returnRayDirection = point.returnRayDirection
 			};
 
 			switch (newInteractionPoint.type)
@@ -207,7 +210,7 @@ public class Player : MonoBehaviour
 
 			AddInteractionPoint(newInteractionPoint);
 		}
-
+		StartCoroutine(UpdatePointPositions());
 		return true;
 	}
 
@@ -219,12 +222,12 @@ public class Player : MonoBehaviour
 		Canvass.modalBackground.SetActive(true);
 		playerState = PlayerState.Opening;
 	}
-	
+
 	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
 		interactionPoints.Add(point);
 	}
-	
+
 	private void RemoveInteractionPoint(InteractionPointPlayer point)
 	{
 		interactionPoints.Remove(point);
@@ -233,5 +236,25 @@ public class Player : MonoBehaviour
 		{
 			Destroy(point.panel);
 		}
+	}
+
+	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
+	private IEnumerator UpdatePointPositions()
+	{
+		//NOTE(Simon): wait one frame
+		yield return null;
+
+		foreach (var interactionPoint in interactionPoints)
+		{
+			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
+
+			RaycastHit hit;
+
+			if (Physics.Raycast(ray, out hit, 100))
+			{
+				var drawLocation = hit.point;
+				interactionPoint.point.transform.position = drawLocation;
+			}
+		}   
 	}
 }

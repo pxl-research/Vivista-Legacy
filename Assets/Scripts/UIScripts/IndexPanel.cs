@@ -149,8 +149,18 @@ public class IndexPanel : MonoBehaviour
 				var rect = new Vector3[4];
 				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
 
-				var hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y
-								&& !searchAge.isOpen();
+				bool hovering = false;
+				//NOTE(Simon): Check if hovering
+				{
+					var point = new Vector3(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
+					var ray = Camera.main.ViewportPointToRay(point);
+
+					RaycastHit hit;
+					if (Physics.Raycast(ray, out hit) && hit.collider == videos[i].GetComponent<BoxCollider>())
+					{
+						hovering = true;
+					}
+				}
 
 				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
 
@@ -338,6 +348,8 @@ public class IndexPanel : MonoBehaviour
 			{
 				var v = videosThisPage[i];
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, false);
+
+				ResizeVideoCollider(videos[i].GetComponent<IndexPanelVideo>());
 			}
 		}
 	}
@@ -405,6 +417,8 @@ public class IndexPanel : MonoBehaviour
 			{
 				var v = videosThisPage[i];
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
+
+				ResizeVideoCollider(videos[i].GetComponent<IndexPanelVideo>());
 			}
 		}
 	}
@@ -484,5 +498,14 @@ public class IndexPanel : MonoBehaviour
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		Filters.SetActive(true);
 		LoadPage();
+	}
+	
+	//NOTE(Simon): Index panel allows selection of videos in VR. Best way to do this in VR is through a ray-box collision check. This funciton resizes the box collider to match the video item size
+	private static void ResizeVideoCollider(IndexPanelVideo indexPanelVideo)
+	{
+		var panelSize = indexPanelVideo.GetComponent<RectTransform>().rect.size;
+		indexPanelVideo.GetComponent<BoxCollider>().size = new Vector3(panelSize.x, panelSize.y, 10);
+		indexPanelVideo.GetComponent<BoxCollider>().center = new Vector3(panelSize.x/2, -(panelSize.y/2), 0);
+
 	}
 }
