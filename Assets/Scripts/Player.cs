@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -49,9 +51,14 @@ public class Player : MonoBehaviour
 
 	private string openVideo;
 
-	void Start ()
+	void Start()
 	{
-		XRSettings.enabled = false;
+		//NOTE(Kristof): Assume no devices are connected on startup
+		VRDevices.loadedDevice = VRDevices.LoadedDevice.None;
+		VRDevices.hasLeftController = false;
+		VRDevices.hasRightController = false;
+		VRDevices.hasRemote = false;
+
 		interactionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
@@ -62,8 +69,10 @@ public class Player : MonoBehaviour
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 	}
 
-	void Update ()
+	void Update()
 	{
+		VRDevices.DetectDevices();
+
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 
@@ -147,7 +156,8 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-					XRSettings.enabled = true;
+
+					StartCoroutine(EnableVr());
 				}
 				else
 				{
@@ -173,7 +183,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);        
+			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -255,6 +265,32 @@ public class Player : MonoBehaviour
 				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
 			}
-		}   
+		}
+	}
+
+	private IEnumerator EnableVr()
+	{
+		//NOTE(Kristof): this will load the first SDK that is usable by the plugged in device
+		XRSettings.LoadDeviceByName(new string[] { "Oculus", "OpenVR", "None" });
+
+		//todo delete this line - only used for testing
+		//XRSettings.LoadDeviceByName(new string[] { "OpenVR", "None"});
+
+		//NOTE(Kristof): wait one frame to allow the device to be loaded
+		yield return null;
+
+		if (XRSettings.loadedDeviceName.Equals("Oculus"))
+		{
+			VRDevices.loadedDevice = VRDevices.LoadedDevice.Oculus;
+		}
+		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
+		{
+			VRDevices.loadedDevice = VRDevices.LoadedDevice.OpenVr;
+		}
+		else if (XRSettings.loadedDeviceName.Equals("None"))
+		{
+			VRDevices.loadedDevice = VRDevices.LoadedDevice.None;
+		}
+		XRSettings.enabled = true;
 	}
 }
