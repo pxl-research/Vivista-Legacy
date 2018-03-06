@@ -165,7 +165,9 @@ public class VideoController : MonoBehaviour
 
 			videoLoaded = true;
 
-			video.time = 0;
+
+			//NOTE(Kristof):loading the video at video.Time = 0, or loading it at video.frame = 1, and then pausing it will show a black screen, this is unclear for the user.
+			video.frame = 2;
 			video.Pause();
 		};
 
