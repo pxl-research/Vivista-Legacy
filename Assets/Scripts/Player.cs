@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -49,9 +51,14 @@ public class Player : MonoBehaviour
 
 	private string openVideo;
 
-	void Start ()
+	void Start()
 	{
-		XRSettings.enabled = false;
+		//NOTE(Kristof): Assume no devices are connected on startup
+		ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.None;
+		ConnectedDevices.hasLeftController = false;
+		ConnectedDevices.hasRightController = false;
+		ConnectedDevices.hasRemote = false;
+
 		interactionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
@@ -62,12 +69,13 @@ public class Player : MonoBehaviour
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 	}
 
-	void Update ()
+	void Update()
 	{
+		ConnectedDevices.DetectDevices();
+
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 
-		RaycastHit hit;
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
@@ -78,6 +86,7 @@ public class Player : MonoBehaviour
 				videoController.TogglePlay();
 			}
 
+			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 			if (XRSettings.enabled)
 			{
@@ -147,7 +156,8 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-					XRSettings.enabled = true;
+
+					StartCoroutine(EnableVr());
 				}
 				else
 				{
@@ -159,7 +169,6 @@ public class Player : MonoBehaviour
 
 	private bool OpenFile(string path)
 	{
-		Debug.Log("OpenFile");
 		var data = SaveFile.OpenFile(path);
 
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
@@ -174,7 +183,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);        
+			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -239,28 +248,49 @@ public class Player : MonoBehaviour
 		}
 	}
 
+	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
 	private IEnumerator UpdatePointPositions()
 	{
-		// wait one frame
+		//NOTE(Simon): wait one frame
 		yield return null;
 
 		foreach (var interactionPoint in interactionPoints)
 		{
-			Vector3 drawLocation = new Vector3();
+			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
 
-			var ray = new Ray
-			{
-				origin = interactionPoint.returnRayOrigin,
-				direction = interactionPoint.returnRayDirection
-			};
-
-			RaycastHit hit;			
+			RaycastHit hit;
 
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				drawLocation = hit.point;
+				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
 			}
-		}   
+		}
+	}
+
+	private IEnumerator EnableVr()
+	{
+		//NOTE(Kristof): this will load the first SDK that is usable by the plugged in device
+		XRSettings.LoadDeviceByName(new string[] { "Oculus", "OpenVR", "None" });
+
+		//todo delete this line - only used for testing
+		//XRSettings.LoadDeviceByName(new string[] { "OpenVR", "None"});
+
+		//NOTE(Kristof): wait one frame to allow the device to be loaded
+		yield return null;
+
+		if (XRSettings.loadedDeviceName.Equals("Oculus"))
+		{
+			ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.Oculus;
+		}
+		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
+		{
+			ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.OpenVr;
+		}
+		else if (XRSettings.loadedDeviceName.Equals("None"))
+		{
+			ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.None;
+		}
+		XRSettings.enabled = true;
 	}
 }

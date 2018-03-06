@@ -34,7 +34,7 @@ public class ImagePanelEditor : MonoBehaviour
 	void Update()
 	{
 		var titleRect = title.GetComponent<RectTransform>();
-		var newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
+		float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
 		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
 
 		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
@@ -64,9 +64,9 @@ public class ImagePanelEditor : MonoBehaviour
 		{
 			var texture = www.texture;
 			imagePreview.texture = texture;
-			var width = imagePreview.rectTransform.sizeDelta.x;
-			var ratio = texture.width / width;
-			var height = texture.height / ratio;
+			float width = imagePreview.rectTransform.sizeDelta.x;
+			float ratio = texture.width / width;
+			float height = texture.height / ratio;
 			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
 
 			downloading = false;
@@ -93,7 +93,6 @@ public class ImagePanelEditor : MonoBehaviour
 			if (!Camera.main.orthographic)
 			{
 				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-				//newPos.y += 0.01f;
 				newPos.y -= 1f;
 			}
 			else
