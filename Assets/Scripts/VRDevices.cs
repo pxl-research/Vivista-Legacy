@@ -17,7 +17,14 @@ public static class VRDevices
 	public static bool hasRightController;
 	public static bool hasRemote;
 
-	public static bool HasDevice()
+	//NOTE(Kristof): This functions checks if there are controllers that can be used for Raycasting.
+	public static bool HasControllerDevice()
+	{
+		return hasLeftController || hasRightController;
+	}
+
+	//NOTE(Kristof): This function also checks for the remote.
+	public static bool HasAnyDevice()
 	{
 		return hasLeftController || hasRightController || hasRemote;
 	}

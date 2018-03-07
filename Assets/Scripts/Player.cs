@@ -91,8 +91,11 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
+			}
 
-				crosshair.enabled = true;
+			if (VRDevices.HasControllerDevice())
+			{
+				crosshair.enabled = false;
 			}
 			else
 			{
