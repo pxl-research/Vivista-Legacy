@@ -46,6 +46,7 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
+    public GameObject localAvatarPrefab;
 
 	private GameObject indexPanel;
 
@@ -285,6 +286,8 @@ public class Player : MonoBehaviour
 		if (XRSettings.loadedDeviceName.Equals("Oculus"))
 		{
 			VRDevices.loadedDevice = VRDevices.LoadedDevice.Oculus;
+            Instantiate(localAvatarPrefab);
+			localAvatarPrefab.GetComponent<OvrAvatar>().StartWithControllers = true;
 		}
 		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
 		{
