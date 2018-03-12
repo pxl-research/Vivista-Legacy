@@ -46,7 +46,7 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
-    public GameObject localAvatarPrefab;
+	public GameObject localAvatarPrefab;
 
 	private GameObject indexPanel;
 
@@ -54,11 +54,7 @@ public class Player : MonoBehaviour
 
 	void Start()
 	{
-		//NOTE(Kristof): Assume no devices are connected on startup
-		VRDevices.loadedDevice = VRDevices.LoadedDevice.None;
-		VRDevices.hasLeftController = false;
-		VRDevices.hasRightController = false;
-		VRDevices.hasRemote = false;
+		StartCoroutine(EnableVr());
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -160,8 +156,6 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-
-					StartCoroutine(EnableVr());
 				}
 				else
 				{
@@ -205,19 +199,19 @@ public class Player : MonoBehaviour
 			switch (newInteractionPoint.type)
 			{
 				case InteractionType.Text:
-				{
-					var panel = Instantiate(textPanelPrefab);
-					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
-					newInteractionPoint.panel = panel;
-					break;
-				}
+					{
+						var panel = Instantiate(textPanelPrefab);
+						panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+						newInteractionPoint.panel = panel;
+						break;
+					}
 				case InteractionType.Image:
-				{
-					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
-					newInteractionPoint.panel = panel;
-					break;
-				}
+					{
+						var panel = Instantiate(imagePanelPrefab);
+						panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+						newInteractionPoint.panel = panel;
+						break;
+					}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -286,17 +280,18 @@ public class Player : MonoBehaviour
 		if (XRSettings.loadedDeviceName.Equals("Oculus"))
 		{
 			VRDevices.loadedDevice = VRDevices.LoadedDevice.Oculus;
-            Instantiate(localAvatarPrefab);
+			Instantiate(localAvatarPrefab);
 			localAvatarPrefab.GetComponent<OvrAvatar>().StartWithControllers = true;
+			XRSettings.enabled = true;
 		}
 		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
 		{
 			VRDevices.loadedDevice = VRDevices.LoadedDevice.OpenVr;
+			XRSettings.enabled = true;
 		}
-		else if (XRSettings.loadedDeviceName.Equals("None"))
+		else if (XRSettings.loadedDeviceName.Equals(""))
 		{
 			VRDevices.loadedDevice = VRDevices.LoadedDevice.None;
 		}
-		XRSettings.enabled = true;
 	}
 }

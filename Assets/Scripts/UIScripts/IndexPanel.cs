@@ -150,17 +150,9 @@ public class IndexPanel : MonoBehaviour
 				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
 
 				bool hovering = false;
-				//NOTE(Simon): Check if hovering
-				{
-					var point = new Vector3(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height);
-					var ray = Camera.main.ViewportPointToRay(point);
 
-					RaycastHit hit;
-					if (Physics.Raycast(ray, out hit) && hit.collider == videos[i].GetComponent<BoxCollider>())
-					{
-						hovering = true;
-					}
-				}
+				//NOTE(Simon): Check if hovering
+				hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
 
 				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
 
