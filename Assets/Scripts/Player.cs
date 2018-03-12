@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
+using Valve.VR;
 
 public enum PlayerState
 {
@@ -90,13 +91,14 @@ public class Player : MonoBehaviour
 				videoController.transform.position = Camera.main.transform.position;
 			}
 
-			if (VRDevices.HasControllerDevice())
+			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 			{
 				crosshair.enabled = false;
 			}
 			else
 			{
 				crosshair.enabled = true;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 			}
 
 			if (Input.mouseScrollDelta.y != 0)
@@ -276,19 +278,19 @@ public class Player : MonoBehaviour
 
 		if (XRSettings.loadedDeviceName.Equals("Oculus"))
 		{
-			VRDevices.loadedDevice = VRDevices.LoadedDevice.Oculus;
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.Oculus;
 			Instantiate(localAvatarPrefab);
 			localAvatarPrefab.GetComponent<OvrAvatar>().StartWithControllers = true;
 			XRSettings.enabled = true;
 		}
 		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
 		{
-			VRDevices.loadedDevice = VRDevices.LoadedDevice.OpenVr;
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
 			XRSettings.enabled = true;
 		}
 		else if (XRSettings.loadedDeviceName.Equals(""))
 		{
-			VRDevices.loadedDevice = VRDevices.LoadedDevice.None;
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 		}
 	}
 }
