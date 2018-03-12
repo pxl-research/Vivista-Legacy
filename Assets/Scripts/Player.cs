@@ -268,11 +268,8 @@ public class Player : MonoBehaviour
 
 	private IEnumerator EnableVr()
 	{
-		//NOTE(Kristof): this will load the first SDK that is usable by the plugged in device
-		XRSettings.LoadDeviceByName(new string[] { "Oculus", "OpenVR", "None" });
-
-		//todo delete this line - only used for testing
-		//XRSettings.LoadDeviceByName(new string[] { "OpenVR", "None"});
+		//NOTE(Kristof) If More APIs need to be implemented, add them here
+		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None"});
 
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
 		yield return null;
