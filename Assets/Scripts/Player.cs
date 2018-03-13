@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
+using Valve.VR;
 
 public enum PlayerState
 {
@@ -46,6 +47,7 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
+	public GameObject localAvatarPrefab;
 
 	private GameObject indexPanel;
 
@@ -53,11 +55,7 @@ public class Player : MonoBehaviour
 
 	void Start()
 	{
-		//NOTE(Kristof): Assume no devices are connected on startup
-		ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.None;
-		ConnectedDevices.hasLeftController = false;
-		ConnectedDevices.hasRightController = false;
-		ConnectedDevices.hasRemote = false;
+		StartCoroutine(EnableVr());
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -71,7 +69,7 @@ public class Player : MonoBehaviour
 
 	void Update()
 	{
-		ConnectedDevices.DetectDevices();
+		VRDevices.DetectDevices();
 
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
@@ -88,15 +86,20 @@ public class Player : MonoBehaviour
 
 			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
+			}
 
-				crosshair.enabled = true;
+			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
+			{
+				crosshair.enabled = false;
 			}
 			else
 			{
 				crosshair.enabled = true;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 			}
 
 			if (Input.mouseScrollDelta.y != 0)
@@ -156,8 +159,6 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-
-					StartCoroutine(EnableVr());
 				}
 				else
 				{
@@ -270,27 +271,27 @@ public class Player : MonoBehaviour
 
 	private IEnumerator EnableVr()
 	{
-		//NOTE(Kristof): this will load the first SDK that is usable by the plugged in device
-		XRSettings.LoadDeviceByName(new string[] { "Oculus", "OpenVR", "None" });
-
-		//todo delete this line - only used for testing
-		//XRSettings.LoadDeviceByName(new string[] { "OpenVR", "None"});
+		//NOTE(Kristof) If More APIs need to be implemented, add them here
+		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None"});
 
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
 		yield return null;
 
 		if (XRSettings.loadedDeviceName.Equals("Oculus"))
 		{
-			ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.Oculus;
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.Oculus;
+			Instantiate(localAvatarPrefab);
+			localAvatarPrefab.GetComponent<OvrAvatar>().StartWithControllers = true;
+			XRSettings.enabled = true;
 		}
 		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
 		{
-			ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.OpenVr;
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
+			XRSettings.enabled = true;
 		}
-		else if (XRSettings.loadedDeviceName.Equals("None"))
+		else if (XRSettings.loadedDeviceName.Equals(""))
 		{
-			ConnectedDevices.loadedDevice = ConnectedDevices.LoadedDevice.None;
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 		}
-		XRSettings.enabled = true;
 	}
 }
