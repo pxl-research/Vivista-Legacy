@@ -2,12 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
-using Valve.VR;
 
 public enum PlayerState
 {
@@ -49,6 +46,9 @@ public class Player : MonoBehaviour
 	public GameObject textPanelPrefab;
 	public GameObject localAvatarPrefab;
 
+	public GameObject controllerLeft;
+	public GameObject controlleRight;
+
 	private GameObject indexPanel;
 
 	private string openVideo;
@@ -71,8 +71,20 @@ public class Player : MonoBehaviour
 	{
 		VRDevices.DetectDevices();
 
+		Ray ray;
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
-		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+		var cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+		//TODO(Kristof): envetually make it so you check for last used controller rather than only using the right controller
+		var controllerRay = new Ray(controlleRight.transform.position, controlleRight.transform.forward);
+
+		if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
+		{
+			ray = controllerRay;
+		}
+		else
+		{
+			ray = cameraRay;
+		}
 
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
