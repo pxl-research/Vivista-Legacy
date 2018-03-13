@@ -93,7 +93,7 @@ public struct Metadata
 
 public class Editor : MonoBehaviour
 {
-	private EditorState editorState;
+	public EditorState editorState;
 
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
