@@ -20,6 +20,7 @@ public class VideoController : MonoBehaviour
 	public VideoPlayer screenshots;
 	public bool playing = true;
 	public RenderTexture baseRenderTexture;
+	public AudioSource audioSource;
 
 	public bool videoLoaded;
 
@@ -45,6 +46,9 @@ public class VideoController : MonoBehaviour
 			screenshots = players[0];
 			video = players[1];
 		}
+
+		audioSource = video.gameObject.AddComponent<AudioSource>();
+		audioSource.playOnAwake = false;
 
 		playing = video.isPlaying;
 	}
@@ -133,11 +137,13 @@ public class VideoController : MonoBehaviour
 		if (!playing)
 		{
 			video.Play();
+			audioSource.Play();
 			playing = true;
 		}
 		else
 		{
 			video.Pause();
+			audioSource.Pause();
 			playing = false;
 		}
 	}
@@ -146,8 +152,17 @@ public class VideoController : MonoBehaviour
 	{
 		video.url = filename;
 		screenshots.url = filename;
-		video.Prepare();
 
+		video.EnableAudioTrack(0, true);
+		video.SetTargetAudioSource(0, audioSource);
+		video.controlledAudioTrackCount = 1;
+
+		//NOTE(Kristof): duct tape
+		video.enabled = false;
+		video.enabled = true;
+
+		video.Prepare();
+		
 		video.prepareCompleted += delegate
 		{
 			int videoWidth = video.texture.width;
@@ -164,7 +179,6 @@ public class VideoController : MonoBehaviour
 			SetPerspective(perspective, videoWidth, videoHeight);
 
 			videoLoaded = true;
-
 
 			//NOTE(Kristof):loading the video at video.Time = 0, or loading it at video.frame = 1, and then pausing it will show a black screen, this is unclear for the user.
 			video.frame = 2;
