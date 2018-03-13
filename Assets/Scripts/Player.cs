@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -86,6 +84,7 @@ public class Player : MonoBehaviour
 
 			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
@@ -201,19 +200,19 @@ public class Player : MonoBehaviour
 			switch (newInteractionPoint.type)
 			{
 				case InteractionType.Text:
-					{
-						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
-						newInteractionPoint.panel = panel;
-						break;
-					}
+				{
+					var panel = Instantiate(textPanelPrefab);
+					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					newInteractionPoint.panel = panel;
+					break;
+				}
 				case InteractionType.Image:
-					{
-						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
-						newInteractionPoint.panel = panel;
-						break;
-					}
+				{
+					var panel = Instantiate(imagePanelPrefab);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+					newInteractionPoint.panel = panel;
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

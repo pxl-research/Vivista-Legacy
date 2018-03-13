@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEditor;
 
 [CustomEditor(typeof(OvrAvatarSettings))]
-public class OvrAvatarSettingsEditor : Editor {
+public class OvrAvatarSettingsEditor : UnityEditor.Editor {
     GUIContent appIDLabel = new GUIContent("Oculus Rift App Id [?]", 
       "This AppID will be used for OvrAvatar registration.");
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
-using Valve.VR;
 
 public static class VRDevices
 {
@@ -54,7 +53,6 @@ public static class VRDevices
 				break;
 
 			case LoadedSdk.OpenVr:
-
 				//NOTE(Kristof): Better way to do this?
 				if (devices.Contains("OpenVR Controller(Oculus Rift CV1 (Left Controller)) - Left") || devices.Contains("OpenVR Controller(Oculus Rift CV1 (Right Controller)) - Right"))
 				{
