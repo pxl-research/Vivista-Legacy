@@ -25,7 +25,11 @@ public class MouseLook : MonoBehaviour
 	{
 		mousePos = Input.mousePosition;
 		originalRotation = transform.localRotation;
-		editor = GameObject.Find("Editor").GetComponent<Editor>();
+		var editorObject = GameObject.Find("Editor");
+		if (editorObject != null)
+		{
+			editor = editorObject.GetComponent<Editor>();
+		}
 	}
 	
 	void Update () 
@@ -33,30 +37,34 @@ public class MouseLook : MonoBehaviour
 		var mouseDelta = Input.mousePosition - mousePos;
 		mousePos = Input.mousePosition;
 
-		if (!UnityEngine.XR.XRSettings.enabled 
-			&& editor != null 
-			&& (editor.GetComponent<Editor>().editorState == EditorState.Active
-				|| editor.editorState == EditorState.Inactive
-				|| editor.editorState == EditorState.MovingInteractionPoint
-				|| editor.editorState == EditorState.PlacingInteractionPoint))
+		//NOTE(Simon): Do not use mouselook in VR
+		//NOTE(Simon): Do use mouselook if not in editor
+		//NOTE(Simon): Do use mouselook if in editor and correct editorstate
+		if (!UnityEngine.XR.XRSettings.enabled)
 		{
-			if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
+			if (editor == null || (editor.GetComponent<Editor>().editorState == EditorState.Active
+									|| editor.editorState == EditorState.Inactive
+									|| editor.editorState == EditorState.MovingInteractionPoint
+									|| editor.editorState == EditorState.PlacingInteractionPoint))
 			{
-				mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
-				mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
-				mouseRotX = ClampAngle(mouseRotX, minX, maxX);
-				mouseRotY = ClampAngle(mouseRotY, minY, maxY);
+				if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
+				{
+					mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
+					mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
+					mouseRotX = ClampAngle(mouseRotX, minX, maxX);
+					mouseRotY = ClampAngle(mouseRotY, minY, maxY);
 
-				var newRotx = Quaternion.AngleAxis(mouseRotX, Vector3.up);
-				var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
+					var newRotx = Quaternion.AngleAxis(mouseRotX, Vector3.up);
+					var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
 
-				transform.localRotation = originalRotation * newRotx * newRoty;
-			}
+					transform.localRotation = originalRotation * newRotx * newRoty;
+				}
 
-			if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-				&& Input.GetKeyDown(KeyCode.Space))
-			{
-				LookEnabled = !LookEnabled;
+				if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+					&& Input.GetKeyDown(KeyCode.Space))
+				{
+					LookEnabled = !LookEnabled;
+				}
 			}
 		}
 	}
