@@ -19,10 +19,13 @@ public class MouseLook : MonoBehaviour
 
 	public Quaternion originalRotation;
 
+	public Editor editor;
+
 	void Start () 
 	{
 		mousePos = Input.mousePosition;
 		originalRotation = transform.localRotation;
+		editor = GameObject.Find("Editor").GetComponent<Editor>();
 	}
 	
 	void Update () 
@@ -30,7 +33,12 @@ public class MouseLook : MonoBehaviour
 		var mouseDelta = Input.mousePosition - mousePos;
 		mousePos = Input.mousePosition;
 
-		if (!UnityEngine.XR.XRSettings.enabled)
+		if (!UnityEngine.XR.XRSettings.enabled 
+			&& editor != null 
+			&& (editor.GetComponent<Editor>().editorState == EditorState.Active
+				|| editor.editorState == EditorState.Inactive
+				|| editor.editorState == EditorState.MovingInteractionPoint
+				|| editor.editorState == EditorState.PlacingInteractionPoint))
 		{
 			if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(0)) && !EventSystem.current.IsPointerOverGameObject())
 			{
