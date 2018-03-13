@@ -95,6 +95,7 @@ public class Player : MonoBehaviour
 			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 			{
 				crosshair.enabled = false;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 			}
 			else
 			{
