@@ -99,7 +99,15 @@ public class Player : MonoBehaviour
 			else
 			{
 				crosshair.enabled = true;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+
+				if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+				{
+					Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
+				}
+				else
+				{
+					Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+				}
 			}
 
 			if (Input.mouseScrollDelta.y != 0)
