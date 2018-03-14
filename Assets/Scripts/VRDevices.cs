@@ -27,6 +27,7 @@ public static class VRDevices
 
 	public static LoadedSdk loadedSdk;
 	public static LoadedControllerSet loadedControllerSet;
+	public static ActiveController activeController;
 
 	public static bool hasLeftController;
 	public static bool hasRightController;
