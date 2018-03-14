@@ -140,15 +140,15 @@ public class Player : MonoBehaviour
 				Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 				Ray controllerRay = new Ray();
 
-				if (controllerLeft.triggerPressed)
+				const ulong ulTriggerValue = (ulong)1 << 33;
+
+				if (controllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
 				{
-					VRDevices.activeController = VRDevices.ActiveController.LeftController;
 					controllerRay = new Ray(oControllerLeft.transform.position, oControllerLeft.transform.forward);
 				}
 
-				if (controllerRight.triggerPressed)
+				if (controllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
 				{
-					VRDevices.activeController = VRDevices.ActiveController.RightController;
 					controllerRay = new Ray(oControllerRight.transform.position, oControllerRight.transform.forward);
 				}
 
@@ -218,7 +218,7 @@ public class Player : MonoBehaviour
 					}
 					else if (point.panel.activeSelf)
 					{
-						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 						{
 							point.panel.SetActive(false);
 						}
@@ -308,6 +308,7 @@ public class Player : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 
+			newInteractionPoint.panel.SetActive(false);
 			AddInteractionPoint(newInteractionPoint);
 		}
 		StartCoroutine(UpdatePointPositions());
