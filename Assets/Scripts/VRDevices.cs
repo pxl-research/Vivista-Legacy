@@ -18,6 +18,13 @@ public static class VRDevices
 		Oculus
 	}
 
+	//NOTE(Kristof): This enum is used to store the last controller that send an input, only the active controller draws the laser
+	public enum ActiveController
+	{
+		LeftController,
+		RightController
+	}
+
 	public static LoadedSdk loadedSdk;
 	public static LoadedControllerSet loadedControllerSet;
 
@@ -26,14 +33,14 @@ public static class VRDevices
 	public static bool hasRemote;
 
 	//NOTE(Kristof): These functions are no londer needed, use LoadedControllerSet
-	//NOTE(Kristof): This functions checks if there are controllers that can be used for Raycasting.
+	//NOTE(Kristof): This functions checks if there are controllers that can be used for Raycasting
 	public static bool HasControllerDevice()
 	{
 		return hasLeftController || hasRightController;
 	}
 
 	//NOTE(Kristof): These functions are no londer needed, use LoadedControllerSet
-	//NOTE(Kristof): This function also checks for the remote.
+	//NOTE(Kristof): This function also checks for the remote
 	public static bool HasAnyDevice()
 	{
 		return hasLeftController || hasRightController || hasRemote;
