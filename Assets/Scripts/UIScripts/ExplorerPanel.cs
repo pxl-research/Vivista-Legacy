@@ -51,11 +51,6 @@ public class ExplorerPanel : MonoBehaviour
 
 	private List<ExplorerEntry> explorer;
 
-	public void Start()
-	{
-		Init();
-	}
-
 	public void Update()
 	{
 		if (RectTransformUtility.RectangleContainsScreenPoint(directoryContent.GetComponent<RectTransform>(), Input.mousePosition))
@@ -105,7 +100,12 @@ public class ExplorerPanel : MonoBehaviour
 
 		timeSinceLastClick += Time.deltaTime;
 	}
-
+	/// <summary>
+	/// Initialiase the explorepanel
+	/// </summary>
+	/// <param name="startDirectory"></param>
+	/// <param name="searchPattern">Separate filename patterns with ';' </param>
+	/// <param name="title"></param>
 	public void Init(string startDirectory = "", string searchPattern = "*", string title="Select file")
 	{
 		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
@@ -201,7 +201,16 @@ public class ExplorerPanel : MonoBehaviour
 	private void UpdateDir()
 	{
 		var dirinfo = new DirectoryInfo(currentDirectory);
-		files = dirinfo.GetFiles(searchPattern);
+		var filteredFiles = new List<FileInfo>();
+
+		foreach (var pattern in searchPattern.Split(';'))
+		{
+			foreach (var file in dirinfo.GetFiles(pattern))
+			{
+				filteredFiles.Add(file);
+			}
+		}
+		files = filteredFiles.ToArray();
 		directories = dirinfo.GetDirectories();
 		currentPath.text = currentDirectory;
 

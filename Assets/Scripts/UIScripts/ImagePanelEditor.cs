@@ -11,6 +11,7 @@ public class ImagePanelEditor : MonoBehaviour
 	public InputField url;
 	public Button done;
 	public RawImage imagePreview;
+	public ExplorerPanel explorerPanelPrefab;
 
 	public bool answered;
 	public string answerTitle;
@@ -19,6 +20,8 @@ public class ImagePanelEditor : MonoBehaviour
 	private string prevURL = "";
 	private bool downloading = false;
 	private WWW www;
+	private bool fileOpening;
+	private ExplorerPanel explorerPanel;
 
 	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
 	{
@@ -71,6 +74,15 @@ public class ImagePanelEditor : MonoBehaviour
 
 			downloading = false;
 		}
+
+		if (fileOpening)
+		{
+			if (explorerPanel != null && explorerPanel.answered)
+			{
+				url.text = explorerPanel.answerFilePath;
+				Destroy(explorerPanel.gameObject);
+			}
+		}
 	}
 
 	public void Answer()
@@ -107,22 +119,12 @@ public class ImagePanelEditor : MonoBehaviour
 
 	public void Browse()
 	{
-		var dialog = new System.Windows.Forms.OpenFileDialog
-		{
-			Filter = "Images (*.jpg;*.jpeg;*.bmp;*.png)|*.jpg;*.jpeg;*.bmp;*.png"
-		};
+		var searchPattern = "*.jpg;*.jpeg;*.bmp;*.png";
 
-		var result = dialog.ShowDialog();
-		if (result == System.Windows.Forms.DialogResult.OK)
-		{
-			try
-			{
-				answerTitle = url.text = dialog.FileName;
-			}
-			catch(Exception e)
-			{
-				Debug.Log("File Loading error: " + e.StackTrace);
-			}
-		}
+		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel.transform.SetParent(Canvass.main.transform, false);
+		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
+
+		fileOpening = true;
 	}
 }
