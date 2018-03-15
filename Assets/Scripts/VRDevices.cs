@@ -18,16 +18,8 @@ public static class VRDevices
 		Oculus
 	}
 
-	//NOTE(Kristof): This enum is used to store the last controller that send an input, only the active controller draws the laser
-	public enum ActiveController
-	{
-		LeftController,
-		RightController
-	}
-
 	public static LoadedSdk loadedSdk;
 	public static LoadedControllerSet loadedControllerSet;
-	public static ActiveController activeController;
 
 	public static bool hasLeftController;
 	public static bool hasRightController;

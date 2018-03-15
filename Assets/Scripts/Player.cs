@@ -65,7 +65,6 @@ public class Player : MonoBehaviour
 
 		controllerLeft = oControllerLeft.GetComponent<SteamVR_TrackedController>();
 		controllerRight = oControllerRight.GetComponent<SteamVR_TrackedController>();
-		VRDevices.activeController = VRDevices.ActiveController.RightController;
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -123,20 +122,6 @@ public class Player : MonoBehaviour
 			Ray ray;
 			//NOTE(Kristof): Deciding on which object the Ray will be based on
 			{
-				//if ((controllerLeftOldState.ulButtonPressed & 8) != (controllerLeft.controllerState.ulButtonPressed & 8) 
-				//	&& controllerLeft.controllerState.ulButtonPressed != 0 
-				//	&& !controllerRight.triggerPressed)
-				//{
-				//	VRDevices.activeController = VRDevices.ActiveController.LeftController;
-				//}
-
-				//if (!controllerRightOldState.ulButtonPressed.Equals(controllerRight.controllerState.ulButtonPressed) && !controllerLeft.triggerPressed)
-				//{
-				//	VRDevices.activeController = VRDevices.ActiveController.RightController;
-				//}
-
-				Debug.Log(controllerLeft.controllerState.ulButtonPressed);
-
 				Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 				Ray controllerRay = new Ray();
 
@@ -154,21 +139,6 @@ public class Player : MonoBehaviour
 
 				controllerLeftOldState = controllerLeft.controllerState;
 				controllerRightOldState = controllerRight.controllerState;
-
-				//if (VRDevices.activeController == VRDevices.ActiveController.LeftController)
-				//{
-				//	oControllerLeft.GetComponent<SteamVR_LaserPointer>().thickness = 0.002f;
-				//	oControllerRight.GetComponent<SteamVR_LaserPointer>().thickness = 0;
-				//}
-				//else
-				//{
-				//	oControllerLeft.GetComponent<SteamVR_LaserPointer>().thickness = 0;
-				//	oControllerRight.GetComponent<SteamVR_LaserPointer>().thickness = 0.002f;
-				//}
-
-				//var controllerRay = VRDevices.activeController == VRDevices.ActiveController.LeftController
-				//	? new Ray(oControllerLeft.transform.position, oControllerLeft.transform.forward)
-				//	: new Ray(oControllerRight.transform.position, oControllerRight.transform.forward);
 
 				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 				{
