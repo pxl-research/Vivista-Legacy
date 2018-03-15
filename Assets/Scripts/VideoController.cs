@@ -20,6 +20,7 @@ public class VideoController : MonoBehaviour
 	public VideoPlayer screenshots;
 	public bool playing = true;
 	public RenderTexture baseRenderTexture;
+	public AudioSource audioSource;
 
 	public bool videoLoaded;
 
@@ -45,6 +46,9 @@ public class VideoController : MonoBehaviour
 			screenshots = players[0];
 			video = players[1];
 		}
+
+		audioSource = video.gameObject.AddComponent<AudioSource>();
+		audioSource.playOnAwake = false;
 
 		playing = video.isPlaying;
 	}
@@ -83,7 +87,7 @@ public class VideoController : MonoBehaviour
 		screenshots.frameReady += OnScreenshotRendered;
 		screenshots.playbackSpeed = 0.01f;
 		screenshots.Play();
-		screenshots.frame = 10;
+		screenshots.frame = screenshotParams.frameIndex;
 	}
 
 	public void OnScreenshotRendered(VideoPlayer vid, long number)
@@ -133,11 +137,13 @@ public class VideoController : MonoBehaviour
 		if (!playing)
 		{
 			video.Play();
+			audioSource.Play();
 			playing = true;
 		}
 		else
 		{
 			video.Pause();
+			audioSource.Pause();
 			playing = false;
 		}
 	}
@@ -146,8 +152,17 @@ public class VideoController : MonoBehaviour
 	{
 		video.url = filename;
 		screenshots.url = filename;
-		video.Prepare();
 
+		video.EnableAudioTrack(0, true);
+		video.SetTargetAudioSource(0, audioSource);
+		video.controlledAudioTrackCount = 1;
+
+		//NOTE(Kristof): duct tape
+		video.enabled = false;
+		video.enabled = true;
+
+		video.Prepare();
+		
 		video.prepareCompleted += delegate
 		{
 			int videoWidth = video.texture.width;
@@ -165,7 +180,8 @@ public class VideoController : MonoBehaviour
 
 			videoLoaded = true;
 
-			video.time = 0;
+			//NOTE(Kristof):loading the video at video.Time = 0, or loading it at video.frame = 1, and then pausing it will show a black screen, this is unclear for the user.
+			video.frame = 2;
 			video.Pause();
 		};
 
@@ -192,7 +208,7 @@ public class VideoController : MonoBehaviour
 
 				Destroy(GetComponent<BoxCollider>());
 				var coll = gameObject.AddComponent<SphereCollider>();
-				coll.radius = 0.75f;
+				coll.radius = 90f;
 
 				var descriptor = baseRenderTexture.descriptor;
 				descriptor.sRGB = false;
@@ -211,6 +227,7 @@ public class VideoController : MonoBehaviour
 				break;
 			}
 			/*
+			NOTE(Simon): This was used when I special cased types of video. Might be neede din the future.
 			case Perspective.Perspective180:
 			{
 				//currentCamera = Instantiate(camera180);

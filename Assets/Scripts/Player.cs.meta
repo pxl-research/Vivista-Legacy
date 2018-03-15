@@ -3,8 +3,14 @@ guid: 55d39cd1a33c827408a6c51034306da8
 timeCreated: 1494918495
 licenseType: Free
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - interactionPointPrefab: {instanceID: 0}
+  - indexPanelPrefab: {instanceID: 0}
+  - imagePanelPrefab: {instanceID: 0}
+  - textPanelPrefab: {instanceID: 0}
+  - localAvatarPrefab: {fileID: 158226, guid: 84c8b8609f9bb434eaf5248f17ff1293, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

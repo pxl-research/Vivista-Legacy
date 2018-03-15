@@ -129,7 +129,7 @@ public class ExplorerPanel : MonoBehaviour
 			currentDirectory = Directory.GetParent(currentDirectory).ToString();
 			UpdateDir();
 		}
-		catch (NullReferenceException e)
+		catch (Exception)
 		{
 			if (osType == "Win32NT") // Is that the only string for Windows?
 			{

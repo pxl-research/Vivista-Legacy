@@ -45,6 +45,9 @@ public class InteractionPointEditor
 	public double startTime;
 	public double endTime;
 	public bool filled;
+
+	public Vector3 returnRayOrigin;
+	public Vector3 returnRayDirection;
 }
 
 public class InteractionpointSerialize
@@ -57,6 +60,9 @@ public class InteractionpointSerialize
 	public string filename;
 	public double startTime;
 	public double endTime;
+
+	public Vector3 returnRayOrigin;
+	public Vector3 returnRayDirection;
 }
 
 public class UploadStatus
@@ -88,7 +94,7 @@ public struct Metadata
 
 public class Editor : MonoBehaviour
 {
-	private EditorState editorState;
+	public EditorState editorState;
 
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
@@ -263,6 +269,8 @@ public class Editor : MonoBehaviour
 				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
 				var point = new InteractionPointEditor
 				{
+					returnRayOrigin = ray.origin,
+					returnRayDirection = ray.direction,
 					point = newPoint,
 					type = InteractionType.None,
 					startTime = videoController.currentTime,
@@ -756,7 +764,7 @@ public class Editor : MonoBehaviour
 
 			if (Input.mousePosition.y < coords[1].y)
 			{
-				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftControl))
+				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
 				{
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
 					if (Input.mouseScrollDelta.y > 0)
@@ -1253,7 +1261,9 @@ public class Editor : MonoBehaviour
 					body = point.body,
 					filename = point.filename,
 					startTime = point.startTime,
-					endTime = point.endTime
+					endTime = point.endTime,
+					returnRayOrigin = point.returnRayOrigin,
+					returnRayDirection = point.returnRayDirection,
 				};
 
 				sb.Append(JsonUtility.ToJson(temp, true));
@@ -1325,7 +1335,9 @@ public class Editor : MonoBehaviour
 				filename = point.filename,
 				type = point.type,
 				filled = true,
-				point = newPoint
+				point = newPoint,
+				returnRayOrigin = point.returnRayOrigin,
+				returnRayDirection = point.returnRayDirection
 			};
 
 			switch (newInteractionPoint.type)
