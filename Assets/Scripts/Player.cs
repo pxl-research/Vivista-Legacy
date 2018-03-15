@@ -47,15 +47,15 @@ public class Player : MonoBehaviour
 	public GameObject textPanelPrefab;
 	public GameObject localAvatarPrefab;
 
-	public GameObject oControllerLeft;
-	public GameObject oControllerRight;
+	public GameObject controllerLeft;
+	public GameObject controllerRight;
 
 	private GameObject indexPanel;
 
 	private VRControllerState_t controllerLeftOldState;
 	private VRControllerState_t controllerRightOldState;
-	private SteamVR_TrackedController controllerLeft;
-	private SteamVR_TrackedController controllerRight;
+	private SteamVR_TrackedController trackedControllerLeft;
+	private SteamVR_TrackedController trackedControllerRight;
 
 	private string openVideo;
 
@@ -63,8 +63,8 @@ public class Player : MonoBehaviour
 	{
 		StartCoroutine(EnableVr());
 
-		controllerLeft = oControllerLeft.GetComponent<SteamVR_TrackedController>();
-		controllerRight = oControllerRight.GetComponent<SteamVR_TrackedController>();
+		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
+		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -127,18 +127,18 @@ public class Player : MonoBehaviour
 
 				const ulong ulTriggerValue = (ulong)1 << 33;
 
-				if (controllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
+				if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
 				{
-					controllerRay = new Ray(oControllerLeft.transform.position, oControllerLeft.transform.forward);
+					controllerRay = new Ray(controllerLeft.transform.position, controllerLeft.transform.forward);
 				}
 
-				if (controllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
+				if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
 				{
-					controllerRay = new Ray(oControllerRight.transform.position, oControllerRight.transform.forward);
+					controllerRay = new Ray(controllerRight.transform.position, controllerRight.transform.forward);
 				}
 
-				controllerLeftOldState = controllerLeft.controllerState;
-				controllerRightOldState = controllerRight.controllerState;
+				controllerLeftOldState = trackedControllerLeft.controllerState;
+				controllerRightOldState = trackedControllerRight.controllerState;
 
 				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 				{
