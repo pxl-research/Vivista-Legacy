@@ -34,6 +34,8 @@ public class ExplorerPanel : MonoBehaviour
 	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
 	public Button sortDateButton;
 	public Button sortNameButton;
+	public InputField FilenameField;
+	public Button OpenButton;
 	public Text title;
 
 	private FileInfo[] files;
@@ -106,7 +108,7 @@ public class ExplorerPanel : MonoBehaviour
 	/// <param name="startDirectory"></param>
 	/// <param name="searchPattern">Separate filename patterns with ';' </param>
 	/// <param name="title"></param>
-	public void Init(string startDirectory = "", string searchPattern = "*", string title="Select file")
+	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file")
 	{
 		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
 
@@ -117,6 +119,7 @@ public class ExplorerPanel : MonoBehaviour
 		this.title.text = title;
 
 		UpdateDir();
+
 	}
 
 	public void DirUp()
@@ -297,7 +300,7 @@ public class ExplorerPanel : MonoBehaviour
 			filenameIconItem.transform.SetParent(directoryContent.content, false);
 			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
 
-			filenameIconItem.GetComponentsInChildren<Text>()[1].text =  entry.entryType == EntryType.Drive ? "" : entry.date.ToString();
+			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.entryType == EntryType.Drive ? "" : entry.date.ToString();
 
 			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
 			entry.filenameIconItem = filenameIconItem;
@@ -349,4 +352,19 @@ public class ExplorerPanel : MonoBehaviour
 		answerFilePath = path;
 	}
 
+	public void OpenButtonClicked()
+	{
+		if (FilenameField.text != "")
+		{
+			var fullName = currentPath.text + "\\" + FilenameField.text;
+			if (File.Exists(fullName))
+			{
+				Answer(fullName);
+			}
+			else
+			{
+				Debug.LogError("file does not exist!");
+			}
+		}
+	}
 }
