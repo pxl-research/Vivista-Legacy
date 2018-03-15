@@ -288,7 +288,7 @@ public class ExplorerPanel : MonoBehaviour
 			filenameIconItem.transform.SetParent(directoryContent.content, false);
 			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
 
-			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.date.ToString();
+			filenameIconItem.GetComponentsInChildren<Text>()[1].text =  entry.entryType == EntryType.Drive ? "" : entry.date.ToString();
 
 			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
 			entry.filenameIconItem = filenameIconItem;
@@ -321,12 +321,14 @@ public class ExplorerPanel : MonoBehaviour
 			entry.name = drive;
 			entry.sprite = iconDrive;
 			explorer.Add(entry);
+			entry.entryType = EntryType.Drive;
 		}
 		FillItems();
 	}
 
 	private void DriveClick(string path)
 	{
+		ClearItems();
 		currentDirectory = path;
 		UpdateDir();
 		upButton.enabled = true;
