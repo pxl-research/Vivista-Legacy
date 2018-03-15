@@ -20,6 +20,7 @@ public enum EditorState {
 	Saving,
 	EditingInteractionPoint,
 	Opening,
+	PickingVideo,
 	PickingPerspective,
 	SavingThenUploading,
 	LoggingIn
@@ -112,6 +113,7 @@ public class Editor : MonoBehaviour
 	public GameObject imagePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
+	public GameObject explorerPanelPrefab;
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
@@ -120,6 +122,7 @@ public class Editor : MonoBehaviour
 	private GameObject openPanel;
 	private GameObject uploadPanel;
 	private GameObject loginPanel;
+	private GameObject explorerPanel;
 
 	public GameObject timelineContainer;
 	public GameObject timeline;
@@ -578,6 +581,31 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
+					//TODO(Simon): Figure out a way to differentiate between a real error, and when the video is not copied yet.
+					Debug.LogError("Something went wrong while loading the file");
+				}
+			}
+		}
+
+		if (editorState == EditorState.PickingVideo)
+		{
+			var panel = explorerPanel.GetComponent<ExplorerPanel>();
+
+			if (panel.answered)
+			{
+				var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
+				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.metaFilename));
+
+				File.Copy(panel.answerFilePath, videoPath);
+
+				if (OpenFile(metaPath))
+				{
+					Destroy(explorerPanel);
+					SetEditorActive(true);
+					Canvass.modalBackground.SetActive(false);
+				}
+				else
+				{
 					Debug.LogError("Something went wrong while loading the file");
 				}
 			}
@@ -630,6 +658,7 @@ public class Editor : MonoBehaviour
 				UpdateUploadPanel();
 			}
 		}
+
 
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
@@ -1176,6 +1205,13 @@ public class Editor : MonoBehaviour
 		editorState = EditorState.Saving;
 	}
 
+	public void InitExplorerPanel(string searchPattern, string title)
+	{
+		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel.transform.SetParent(Canvass.main.transform, false);
+		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
+	}
+
 	
 	private bool SaveToFile()
 	{
@@ -1266,29 +1302,15 @@ public class Editor : MonoBehaviour
 	private bool OpenFile(string path)
 	{
 		var data = SaveFile.OpenFile(path);
-
 		meta = data.meta;
-
 		var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 
 		if (!File.Exists(videoPath))
 		{
-			var dialog = new System.Windows.Forms.OpenFileDialog
-			{
-				Title = "Choose a video or photo to enrich",
-				Filter = "Video (*.mp4)|*.mp4"
-			};
-
-			var result = dialog.ShowDialog();
-			if (result == System.Windows.Forms.DialogResult.OK)
-			{
-				File.Copy(dialog.FileName, videoPath);
-			}
-			else
-			{
-				openPanel.GetComponent<FilePanel>().answered = false;
-				return false;
-			}
+			InitExplorerPanel("*.mp4", "Choose a video or photo to enrich");
+			openPanel.SetActive(false);
+			editorState = EditorState.PickingVideo;
+			return false;
 		}
 
 		fileLoader.LoadFile(videoPath);

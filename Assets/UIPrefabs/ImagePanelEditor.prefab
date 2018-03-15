@@ -849,6 +849,8 @@ MonoBehaviour:
   url: {fileID: 114281726030516760}
   done: {fileID: 114784032326119256}
   imagePreview: {fileID: 114466767973747876}
+  explorerPanelPrefab: {fileID: 114736433206684330, guid: c3751d423a86941178b17285cd8bac54,
+    type: 2}
   answered: 0
   answerTitle: 
   answerURL: 
