@@ -989,8 +989,8 @@ public class Editor : MonoBehaviour
 		{
 			var startx = TimeToPx(0);
 			var endx = TimeToPx(timelineEndTime);
-			UILineRenderer.DrawLine(new Vector2(startx, 0), new Vector2(startx, 100), 2);
-			UILineRenderer.DrawLine(new Vector2(endx, 0), new Vector2(endx, 100), 2);
+			UILineRenderer.DrawLine(new Vector2(startx, 0), new Vector2(startx, 100), 2, Color.blue);
+			UILineRenderer.DrawLine(new Vector2(endx, 0), new Vector2(endx, 100), 2, Color.red);
 		}
 
 		//Note(Simon): Resizing and moving of timeline items. Also Cursors

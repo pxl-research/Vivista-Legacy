@@ -7,6 +7,7 @@ public struct Line
 	public Vector2 start;
 	public Vector2 end;
 	public float thickness;
+	public Color color;
 }
 
 //NOTE(Simon): Immediate-ish mode line drawer. Lines to be drawn need to be re-added every frame.
@@ -25,13 +26,14 @@ public class UILineRenderer : Graphic
 		SetAllDirty();
 	}
 
-	public static void DrawLine(Vector2 start, Vector2 end, float thickness)
+	public static void DrawLine(Vector2 start, Vector2 end, float thickness, Color color)
 	{
 		lines.Add(new Line
 		{
 			start = start,
 			end = end,
-			thickness = thickness
+			thickness = thickness,
+			color = color
 		});
 	}
 
@@ -61,10 +63,10 @@ public class UILineRenderer : Graphic
 				verts[2].position = y2;
 				verts[3].position = x2;
 
-				verts[0].color = color;
-				verts[1].color = color;
-				verts[2].color = color;
-				verts[3].color = color;
+				verts[0].color = line.color;
+				verts[1].color = line.color;
+				verts[2].color = line.color;
+				verts[3].color = line.color;
 
 				vh.AddUIVertexQuad(verts);
 			}
