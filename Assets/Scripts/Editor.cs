@@ -874,15 +874,18 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Highlight interactionPoint and show preview when hovering over timelineRow
-		foreach (var point in interactionPoints)
+		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
 		{
-			if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition)
-				&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
+			foreach (var point in interactionPoints)
 			{
-				point.point.GetComponent<MeshRenderer>().material.color = Color.red;
-			}
+				if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition)
+					&& !isDraggingTimelineItem && !isResizingTimelineItem)
+				{
+					HighlightPoint(point);
+				}
 
-			//TODO(Simon): Show Preview
+				//TODO(Simon): Show Preview
+			}
 		}
 
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
@@ -1064,6 +1067,7 @@ public class Editor : MonoBehaviour
 						timelineItemBeingDragged.startTime = newStart;
 						timelineItemBeingDragged.endTime = newEnd;
 					}
+					HighlightPoint(timelineItemBeingDragged);
 				}
 			}
 			else if (isResizingTimelineItem)
@@ -1091,6 +1095,7 @@ public class Editor : MonoBehaviour
 							timelineItemBeingResized.endTime = newEnd;
 						}
 					}
+					HighlightPoint(timelineItemBeingResized);
 				}
 			}
 		}
@@ -1123,7 +1128,12 @@ public class Editor : MonoBehaviour
 			}
 		}
 	}
-	
+
+	public void HighlightPoint(InteractionPointEditor point)
+	{
+		point.point.GetComponent<MeshRenderer>().material.color = Color.red;
+	}
+
 	public float TimeToPx(double time)
 	{
 		if (time < timelineWindowStartTime || time > timelineWindowEndTime)
@@ -1155,6 +1165,7 @@ public class Editor : MonoBehaviour
 			timelineOffset += PxToRelativeTime(pointerEvent.delta.x * 5);
 		}
 	}
+
 
 	public void InitUpload()
 	{
