@@ -987,7 +987,10 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Render various stuff, such as indicator lines for begin and end of video, and lines for the timestamps.
 		{
-			
+			var startx = TimeToPx(0);
+			var endx = TimeToPx(timelineEndTime);
+			UILineRenderer.DrawLine(new Vector2(startx, 0), new Vector2(startx, 100), 2);
+			UILineRenderer.DrawLine(new Vector2(endx, 0), new Vector2(endx, 100), 2);
 		}
 
 		//Note(Simon): Resizing and moving of timeline items. Also Cursors
