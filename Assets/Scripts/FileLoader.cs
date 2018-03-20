@@ -37,7 +37,17 @@ public class FileLoader : MonoBehaviour
 		videoController = Instantiate(videoMesh);
 
 		playerInfo = Instantiate(playerInfoGUI);
-		var newParent = Canvass.main.transform.Find("LayoutSplitter");
+
+		Transform newParent;
+		if (UnityEngine.XR.XRSettings.enabled)
+		{
+			newParent = Canvass.seekbar.transform;
+			playerInfo.GetComponent<RectTransform>().sizeDelta = new Vector2(200f, 40f);
+		}
+		else
+		{
+			newParent = Canvass.main.transform.Find("LayoutSplitter");
+		}
 		playerInfo.transform.SetParent(newParent, false);
 		playerInfo.transform.SetAsFirstSibling();
 

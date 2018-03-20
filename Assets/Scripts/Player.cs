@@ -66,6 +66,8 @@ public class Player : MonoBehaviour
 		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
 		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
 
+		//Canvass.seekbar.transform.RotateAround(Vector3.zero, Vector3.up, 90f);
+
 		interactionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
@@ -80,6 +82,11 @@ public class Player : MonoBehaviour
 	{
 
 		VRDevices.DetectDevices();
+		var angle = -(Camera.main.transform.eulerAngles.y -90)* Math.PI / 180;
+		var x = 1.8f * Math.Cos(angle);
+		var z = 1.8f * Math.Sin(angle);
+		Canvass.seekbar.transform.position = new Vector3((float)x, 0, (float)z);
+		Canvass.seekbar.transform.eulerAngles = new Vector3(30, Camera.main.transform.eulerAngles.y,0);
 
 		if (playerState == PlayerState.Watching)
 		{
@@ -91,27 +98,22 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+			}
+			else
+			{
+				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
 			}
 
 			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 			{
 				crosshair.enabled = false;
 				crosshairTimer.enabled = false;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 			}
 			else
 			{
 				crosshair.enabled = true;
 				crosshairTimer.enabled = true;
-
-				if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
-				{
-					Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
-				}
-				else
-				{
-					Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
-				}
 			}
 
 			if (Input.mouseScrollDelta.y != 0)
@@ -332,7 +334,7 @@ public class Player : MonoBehaviour
 	private IEnumerator EnableVr()
 	{
 		//NOTE(Kristof) If More APIs need to be implemented, add them here
-		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None"});
+		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None" });
 
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
 		yield return null;
