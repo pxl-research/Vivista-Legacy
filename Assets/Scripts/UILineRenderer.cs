@@ -11,23 +11,27 @@ public struct Line
 }
 
 //NOTE(Simon): Immediate-ish mode line drawer. Lines to be drawn need to be re-added every frame.
+//TODO(Simon): Performance test
 public class UILineRenderer : Graphic
 {
 	public static List<Line> lines;
-
-	public UILineRenderer()
-	{
-		lines = new List<Line>();
-	}
+	private static UIVertex[] verts = new UIVertex[4];
 
 	void Update()
 	{
-		lines.Clear();
-		SetAllDirty();
+		if (lines != null)
+		{
+			lines.Clear();
+			SetAllDirty();
+		}
 	}
 
 	public static void DrawLine(Vector2 start, Vector2 end, float thickness, Color color)
 	{
+		if (lines == null)
+		{
+			lines = new List<Line>();
+		}
 		lines.Add(new Line
 		{
 			start = start,
@@ -48,7 +52,8 @@ public class UILineRenderer : Graphic
 				{
 					var dx = line.end.x - line.start.x;
 					var dy = line.end.y - line.start.y;
-					perpendicular = new Vector2(-dy, dx);
+					perpendicular.x = -dy;
+					perpendicular.y = -dx;
 					perpendicular.Normalize();
 				}
 
@@ -57,7 +62,6 @@ public class UILineRenderer : Graphic
 				var x2 = line.end - (line.thickness / 2) * perpendicular;
 				var y2 = line.end + (line.thickness / 2) * perpendicular;
 
-				var verts = new UIVertex[4];
 				verts[0].position = x1;
 				verts[1].position = y1;
 				verts[2].position = y2;

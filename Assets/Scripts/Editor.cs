@@ -832,8 +832,22 @@ public class Editor : MonoBehaviour
 			for (int i = 0; i < realNumLabels; i++)
 			{
 				var time = (i + numTicksOffScreen) * timelineTickSize;
-				headerLabels[i].text = MathHelper.FormatSeconds(time);
-				headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
+				if (time >= 0 && time <= timelineEndTime)
+				{
+					headerLabels[i].enabled = true;
+					var timePx = TimeToPx(time);
+					headerLabels[i].text = MathHelper.FormatSeconds(time);
+					headerLabels[i].rectTransform.position = new Vector2(timePx, headerLabels[i].rectTransform.position.y);
+					UILineRenderer.DrawLine(
+						new Vector2(timePx, 0), 
+						new Vector2(timePx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5), 
+						1, 
+						new Color(0, 0, 0, 47f / 255));
+				}
+				else
+				{
+					headerLabels[i].enabled = false;
+				}
 			}
 		}
 
@@ -987,10 +1001,22 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Render various stuff, such as indicator lines for begin and end of video, and lines for the timestamps.
 		{
-			var startx = TimeToPx(0);
-			var endx = TimeToPx(timelineEndTime);
-			UILineRenderer.DrawLine(new Vector2(startx, 0), new Vector2(startx, 100), 2, Color.blue);
-			UILineRenderer.DrawLine(new Vector2(endx, 0), new Vector2(endx, 100), 2, Color.red);
+			if (timelineZoom < 1)
+			{
+				var startx = TimeToPx(0);
+				var endx = TimeToPx(timelineEndTime);
+				UILineRenderer.DrawLine(
+					new Vector2(startx, 0),
+					new Vector2(startx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
+					2,
+					new Color(0, 0, 0, 47f / 255));
+				UILineRenderer.DrawLine(
+					new Vector2(endx, 0),
+					new Vector2(endx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
+					2,
+					new Color(0, 0, 0, 47f / 255));
+			}
+
 		}
 
 		//Note(Simon): Resizing and moving of timeline items. Also Cursors
