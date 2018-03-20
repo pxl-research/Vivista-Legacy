@@ -50,6 +50,8 @@ public class Player : MonoBehaviour
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
 
+	public Vector3 worldUpVector;
+
 	private GameObject indexPanel;
 
 	private VRControllerState_t controllerLeftOldState;
@@ -57,7 +59,11 @@ public class Player : MonoBehaviour
 	private SteamVR_TrackedController trackedControllerLeft;
 	private SteamVR_TrackedController trackedControllerRight;
 
+	private float currentSeekbarAngle;
 	private string openVideo;
+	private bool isOutofView;
+
+	public float offset;
 
 	void Start()
 	{
@@ -65,8 +71,6 @@ public class Player : MonoBehaviour
 
 		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
 		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
-
-		//Canvass.seekbar.transform.RotateAround(Vector3.zero, Vector3.up, 90f);
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -82,12 +86,7 @@ public class Player : MonoBehaviour
 	{
 
 		VRDevices.DetectDevices();
-		var angle = -(Camera.main.transform.eulerAngles.y -90)* Math.PI / 180;
-		var x = 1.8f * Math.Cos(angle);
-		var z = 1.8f * Math.Sin(angle);
-		Canvass.seekbar.transform.position = new Vector3((float)x, 0, (float)z);
-		Canvass.seekbar.transform.eulerAngles = new Vector3(30, Camera.main.transform.eulerAngles.y,0);
-
+ 
 		if (playerState == PlayerState.Watching)
 		{
 			if (Input.GetKeyDown(KeyCode.Space))
@@ -99,6 +98,22 @@ public class Player : MonoBehaviour
 			{
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+
+				var seekbarAngle = Vector3.Angle(Vector3.zero, Canvass.seekbar.transform.position);
+				var fov = Camera.main.fieldOfView / 2;
+				var cameraAngle = Camera.main.transform.eulerAngles.y + offset;
+
+				var distanceLeft = (cameraAngle - seekbarAngle + 360) % 360;
+				//var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
+
+				var angle = distanceLeft; //Mathf.Min(distanceLeft, distanceRight);
+
+				isOutofView = angle > fov;
+
+				if (isOutofView)
+				{
+					moveSeekBar(cameraAngle, seekbarAngle);
+				}
 			}
 			else
 			{
@@ -309,6 +324,30 @@ public class Player : MonoBehaviour
 		{
 			Destroy(point.panel);
 		}
+	}
+
+	private void moveSeekBar(float currentAngle, float targetAngle)
+	{
+		//if (!(currentSeekbarAngle < Camera.main.transform.eulerAngles.y + 1f &&
+		//    currentSeekbarAngle > Camera.main.transform.eulerAngles.y - 1f))
+		//{
+			currentAngle = Mathf.LerpAngle(targetAngle, currentAngle, 0.01f);
+			var angle = (currentAngle) * Mathf.PI / 180;
+			var x = 3f * Mathf.Cos(-angle);
+			var z = 3f * Mathf.Sin(-angle);
+
+			//Canvass.seekbar.transform.position = new Vector3((float) x, 0, (float) z);
+			//Canvass.seekbar.transform.eulerAngles = new Vector3(30, targetAngle, 0);
+
+			Canvass.seekbar.transform.position = new Vector3(x, 0, z);
+			Canvass.seekbar.transform.LookAt(Camera.main.transform);
+		Canvass.seekbar.transform.transform.eulerAngles = new Vector3(30, Canvass.seekbar.transform.eulerAngles.y + 180, 0);
+		//currentSeekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
+		//}
+		//else
+		//{
+		//	isOutofView = false;
+		//}
 	}
 
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
