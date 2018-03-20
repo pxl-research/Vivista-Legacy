@@ -783,7 +783,7 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			if (Math.Abs(timelineZoom - timelineZoomTarget) > 0.001)
+			if (Math.Abs(timelineZoom - timelineZoomTarget) > 0.0025)
 			{
 				timelineZoom = Mathf.Lerp(timelineZoom, timelineZoomTarget, 0.15f);
 			}
