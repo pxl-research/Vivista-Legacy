@@ -138,6 +138,7 @@ public class Editor : MonoBehaviour
 	private float timelineWindowEndTime;
 	private float timelineEndTime;
 	private int timelineTickSize;
+	private float timelineZoomTarget = 1;
 	private float timelineZoom = 1;
 	private float timelineOffset;
 	private float timelineWidth;
@@ -769,17 +770,26 @@ public class Editor : MonoBehaviour
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
 					if (Input.mouseScrollDelta.y > 0)
 					{
-						timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
+						timelineZoomTarget = Mathf.Clamp01(timelineZoomTarget * 0.9f);
 					}
 					else if (Input.mouseScrollDelta.y < 0)
 					{
-						timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+						timelineZoomTarget = Mathf.Clamp01(timelineZoomTarget * 1.1f);
 					}
 				}
 				else
 				{
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 10;
 				}
+			}
+
+			if (Math.Abs(timelineZoom - timelineZoomTarget) > 0.001)
+			{
+				timelineZoom = Mathf.Lerp(timelineZoom, timelineZoomTarget, 0.15f);
+			}
+			else
+			{
+				timelineZoom = timelineZoomTarget;
 			}
 		}
 
