@@ -50,7 +50,7 @@ public class Player : MonoBehaviour
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
 
-	public Vector3 worldUpVector;
+	public bool isOutofView;
 
 	private GameObject indexPanel;
 
@@ -61,9 +61,6 @@ public class Player : MonoBehaviour
 
 	private float currentSeekbarAngle;
 	private string openVideo;
-	private bool isOutofView;
-
-	public float offset;
 
 	void Start()
 	{
@@ -86,7 +83,7 @@ public class Player : MonoBehaviour
 	{
 
 		VRDevices.DetectDevices();
- 
+
 		if (playerState == PlayerState.Watching)
 		{
 			if (Input.GetKeyDown(KeyCode.Space))
@@ -98,21 +95,39 @@ public class Player : MonoBehaviour
 			{
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+				
+				//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
+				//var seekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
+				var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
 
-				var seekbarAngle = Vector3.Angle(Vector3.zero, Canvass.seekbar.transform.position);
-				var fov = Camera.main.fieldOfView / 2;
-				var cameraAngle = Camera.main.transform.eulerAngles.y + offset;
+				var fov = Camera.main.fieldOfView;
+				//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking
+				var cameraAngle = Camera.main.transform.eulerAngles.y;
 
-				var distanceLeft = (cameraAngle - seekbarAngle + 360) % 360;
-				//var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
+				//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
+				var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
+				var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
 
-				var angle = distanceLeft; //Mathf.Min(distanceLeft, distanceRight);
-
-				isOutofView = angle > fov;
+				var angle = Mathf.Min(distanceLeft, distanceRight);
 
 				if (isOutofView)
 				{
-					moveSeekBar(cameraAngle, seekbarAngle);
+					if (angle < 2.5f)
+					{
+						isOutofView = false;
+					}
+				}
+				else
+				{
+					if (angle > fov)
+					{
+						isOutofView = true;
+					}
+				}
+
+				if (isOutofView)
+				{
+					moveSeekBar(seekbarAngle, cameraAngle);
 				}
 			}
 			else
@@ -328,26 +343,16 @@ public class Player : MonoBehaviour
 
 	private void moveSeekBar(float currentAngle, float targetAngle)
 	{
-		//if (!(currentSeekbarAngle < Camera.main.transform.eulerAngles.y + 1f &&
-		//    currentSeekbarAngle > Camera.main.transform.eulerAngles.y - 1f))
-		//{
-			currentAngle = Mathf.LerpAngle(targetAngle, currentAngle, 0.01f);
-			var angle = (currentAngle) * Mathf.PI / 180;
-			var x = 3f * Mathf.Cos(-angle);
-			var z = 3f * Mathf.Sin(-angle);
+		var newAngle = Mathf.LerpAngle(currentAngle, targetAngle, 0.025f);
 
-			//Canvass.seekbar.transform.position = new Vector3((float) x, 0, (float) z);
-			//Canvass.seekbar.transform.eulerAngles = new Vector3(30, targetAngle, 0);
+		//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
+		//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
+		var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
+		var x = 1.8f * Mathf.Cos(radianAngle);
+		var z = 1.8f * Mathf.Sin(radianAngle);
 
-			Canvass.seekbar.transform.position = new Vector3(x, 0, z);
-			Canvass.seekbar.transform.LookAt(Camera.main.transform);
-		Canvass.seekbar.transform.transform.eulerAngles = new Vector3(30, Canvass.seekbar.transform.eulerAngles.y + 180, 0);
-		//currentSeekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
-		//}
-		//else
-		//{
-		//	isOutofView = false;
-		//}
+		Canvass.seekbar.transform.position = new Vector3(x, 0, z);
+		Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
 	}
 
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
