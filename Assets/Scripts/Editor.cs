@@ -162,7 +162,7 @@ public class Editor : MonoBehaviour
 
 	void Start()
 	{
-		UnityEngine.XR.XRSettings.enabled = false;
+		UnityEngine.XR.XRSettings.LoadDeviceByName("None");
 
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPointEditor>();

@@ -95,7 +95,7 @@ public class Player : MonoBehaviour
 			{
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
-				
+
 				//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
 				//var seekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
 				var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
@@ -110,24 +110,36 @@ public class Player : MonoBehaviour
 
 				var angle = Mathf.Min(distanceLeft, distanceRight);
 
-				if (isOutofView)
+				//NOTE(Kristof): Rotating the seekbar
 				{
-					if (angle < 2.5f)
+					if (isOutofView)
 					{
-						isOutofView = false;
+						if (angle < 2.5f)
+						{
+							isOutofView = false;
+						}
 					}
-				}
-				else
-				{
-					if (angle > fov)
+					else
 					{
-						isOutofView = true;
+						if (angle > fov)
+						{
+							isOutofView = true;
+						}
 					}
-				}
 
-				if (isOutofView)
-				{
-					moveSeekBar(seekbarAngle, cameraAngle);
+					if (isOutofView)
+					{
+						var newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
+
+						//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
+						//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
+						var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
+						var x = 1.8f * Mathf.Cos(radianAngle);
+						var z = 1.8f * Mathf.Sin(radianAngle);
+
+						Canvass.seekbar.transform.position = new Vector3(x, 0, z);
+						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
+					}
 				}
 			}
 			else
@@ -343,16 +355,6 @@ public class Player : MonoBehaviour
 
 	private void moveSeekBar(float currentAngle, float targetAngle)
 	{
-		var newAngle = Mathf.LerpAngle(currentAngle, targetAngle, 0.025f);
-
-		//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
-		//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
-		var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
-		var x = 1.8f * Mathf.Cos(radianAngle);
-		var z = 1.8f * Mathf.Sin(radianAngle);
-
-		Canvass.seekbar.transform.position = new Vector3(x, 0, z);
-		Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
 	}
 
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
