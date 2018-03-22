@@ -22,6 +22,7 @@ public class DetailPanel : MonoBehaviour
 	public string answerVideoId;
 	
 	private WWW imageDownload;
+	private IndexPanel indexPanel;
 	private float time;
 	private const float refreshTime = 1.0f;
 
@@ -52,8 +53,11 @@ public class DetailPanel : MonoBehaviour
 		}
 	}
 
-	public void Init(VideoSerialize videoToDownload, bool isLocal)
+	public void Init(VideoSerialize videoToDownload, IndexPanel indexPanel, bool isLocal)
 	{
+		this.indexPanel = indexPanel;
+		indexPanel.enabled = false;
+
 		video = videoToDownload;
 
 		videoLength.text = MathHelper.FormatSeconds(video.length);
@@ -84,6 +88,7 @@ public class DetailPanel : MonoBehaviour
 
 	public void Back()
 	{
+		indexPanel.enabled = true;
 		shouldClose = true;
 	}
 
