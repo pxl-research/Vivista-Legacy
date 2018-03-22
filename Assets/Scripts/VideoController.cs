@@ -126,6 +126,11 @@ public class VideoController : MonoBehaviour
 		video.time = fractionalTime * videoLength;
 	}
 
+	public double TimeForFraction(float fractionalTime)
+	{
+		return fractionalTime * videoLength;
+	}
+
 	public void TogglePlay()
 	{
 		if (!playing)
