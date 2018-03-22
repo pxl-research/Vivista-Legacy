@@ -138,6 +138,7 @@ public class Editor : MonoBehaviour
 	private float timelineWindowEndTime;
 	private float timelineEndTime;
 	private int timelineTickSize;
+	private float timelineZoomTarget = 1;
 	private float timelineZoom = 1;
 	private float timelineOffset;
 	private float timelineWidth;
@@ -769,17 +770,26 @@ public class Editor : MonoBehaviour
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
 					if (Input.mouseScrollDelta.y > 0)
 					{
-						timelineZoom = Mathf.Clamp01(timelineZoom * 0.9f);
+						timelineZoomTarget = Mathf.Clamp01(timelineZoomTarget * 0.9f);
 					}
 					else if (Input.mouseScrollDelta.y < 0)
 					{
-						timelineZoom = Mathf.Clamp01(timelineZoom * 1.1f);
+						timelineZoomTarget = Mathf.Clamp01(timelineZoomTarget * 1.1f);
 					}
 				}
 				else
 				{
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 10;
 				}
+			}
+
+			if (Math.Abs(timelineZoom - timelineZoomTarget) > 0.0025)
+			{
+				timelineZoom = Mathf.Lerp(timelineZoom, timelineZoomTarget, 0.15f);
+			}
+			else
+			{
+				timelineZoom = timelineZoomTarget;
 			}
 		}
 
@@ -832,8 +842,22 @@ public class Editor : MonoBehaviour
 			for (int i = 0; i < realNumLabels; i++)
 			{
 				var time = (i + numTicksOffScreen) * timelineTickSize;
-				headerLabels[i].text = MathHelper.FormatSeconds(time);
-				headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
+				if (time >= 0 && time <= timelineEndTime)
+				{
+					headerLabels[i].enabled = true;
+					var timePx = TimeToPx(time);
+					headerLabels[i].text = MathHelper.FormatSeconds(time);
+					headerLabels[i].rectTransform.position = new Vector2(timePx, headerLabels[i].rectTransform.position.y);
+					UILineRenderer.DrawLine(
+						new Vector2(timePx, 0), 
+						new Vector2(timePx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5), 
+						1, 
+						new Color(0, 0, 0, 47f / 255));
+				}
+				else
+				{
+					headerLabels[i].enabled = false;
+				}
 			}
 		}
 
@@ -874,15 +898,18 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Highlight interactionPoint and show preview when hovering over timelineRow
-		foreach (var point in interactionPoints)
+		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
 		{
-			if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition)
-				&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
+			foreach (var point in interactionPoints)
 			{
-				point.point.GetComponent<MeshRenderer>().material.color = Color.red;
-			}
+				if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition)
+					&& !isDraggingTimelineItem && !isResizingTimelineItem)
+				{
+					HighlightPoint(point);
+				}
 
-			//TODO(Simon): Show Preview
+				//TODO(Simon): Show Preview
+			}
 		}
 
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
@@ -984,7 +1011,22 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Render various stuff, such as indicator lines for begin and end of video, and lines for the timestamps.
 		{
-			
+			if (timelineZoom < 1)
+			{
+				var startx = TimeToPx(0);
+				var endx = TimeToPx(timelineEndTime);
+				UILineRenderer.DrawLine(
+					new Vector2(startx, 0),
+					new Vector2(startx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
+					2,
+					new Color(0, 0, 0, 47f / 255));
+				UILineRenderer.DrawLine(
+					new Vector2(endx, 0),
+					new Vector2(endx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
+					2,
+					new Color(0, 0, 0, 47f / 255));
+			}
+
 		}
 
 		//Note(Simon): Resizing and moving of timeline items. Also Cursors
@@ -1064,6 +1106,7 @@ public class Editor : MonoBehaviour
 						timelineItemBeingDragged.startTime = newStart;
 						timelineItemBeingDragged.endTime = newEnd;
 					}
+					HighlightPoint(timelineItemBeingDragged);
 				}
 			}
 			else if (isResizingTimelineItem)
@@ -1091,6 +1134,7 @@ public class Editor : MonoBehaviour
 							timelineItemBeingResized.endTime = newEnd;
 						}
 					}
+					HighlightPoint(timelineItemBeingResized);
 				}
 			}
 		}
@@ -1123,7 +1167,12 @@ public class Editor : MonoBehaviour
 			}
 		}
 	}
-	
+
+	public void HighlightPoint(InteractionPointEditor point)
+	{
+		point.point.GetComponent<MeshRenderer>().material.color = Color.red;
+	}
+
 	public float TimeToPx(double time)
 	{
 		if (time < timelineWindowStartTime || time > timelineWindowEndTime)
@@ -1155,6 +1204,7 @@ public class Editor : MonoBehaviour
 			timelineOffset += PxToRelativeTime(pointerEvent.delta.x * 5);
 		}
 	}
+
 
 	public void InitUpload()
 	{

@@ -566,10 +566,10 @@ MonoBehaviour:
     width: 1
     height: 1
   m_points:
-  - {x: 200, y: 100}
+  - {x: 200, y: 119}
   - {x: 200, y: -10000}
   LineThickness: 1
-  UseMargins: 0
+  UseMargins: 1
   Margin: {x: 0, y: 0}
   relativeSize: 0
   LineList: 0
@@ -1029,7 +1029,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 10, y: -40}
-  m_SizeDelta: {x: 1490, y: 20}
+  m_SizeDelta: {x: 1490, y: 16}
   m_Pivot: {x: 0, y: 0}
 --- !u!224 &224948370479637070
 RectTransform:
