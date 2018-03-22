@@ -323,13 +323,13 @@ public class IndexPanel : MonoBehaviour
 		//Note(Simon): Videos
 		{
 			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-			while (videos.Count < Math.Min(videosPerPage, videosThisPage.Count))
+			while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
 			{
 				var video = Instantiate(videoPrefab);
 				video.transform.SetParent(videoContainer.transform, false);
 				videos.Add(video);
 			}
-			while (videos.Count > Math.Min(videosPerPage, videosThisPage.Count))
+			while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
 			{
 				var video = videos[videos.Count - 1];
 				videos.RemoveAt(videos.Count - 1);
@@ -392,13 +392,13 @@ public class IndexPanel : MonoBehaviour
 		//Note(Simon): Videos
 		{
 			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-			while (videos.Count < Math.Min(videosPerPage, videosThisPage.Count))
+			while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
 			{
 				var video = Instantiate(videoPrefab);
 				video.transform.SetParent(videoContainer.transform, false);
 				videos.Add(video);
 			}
-			while (videos.Count > Math.Min(videosPerPage, videosThisPage.Count))
+			while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
 			{
 				var video = videos[videos.Count - 1];
 				videos.RemoveAt(videos.Count - 1);
