@@ -50,6 +50,8 @@ public class Player : MonoBehaviour
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
 
+	public bool isOutofView;
+
 	private GameObject indexPanel;
 
 	private VRControllerState_t controllerLeftOldState;
@@ -57,6 +59,7 @@ public class Player : MonoBehaviour
 	private SteamVR_TrackedController trackedControllerLeft;
 	private SteamVR_TrackedController trackedControllerRight;
 
+	private float currentSeekbarAngle;
 	private string openVideo;
 
 	void Start()
@@ -91,27 +94,68 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+
+				//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
+				//var seekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
+				var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
+
+				var fov = Camera.main.fieldOfView;
+				//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking
+				var cameraAngle = Camera.main.transform.eulerAngles.y;
+
+				//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
+				var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
+				var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
+
+				var angle = Mathf.Min(distanceLeft, distanceRight);
+
+				//NOTE(Kristof): Rotating the seekbar
+				{
+					if (isOutofView)
+					{
+						if (angle < 2.5f)
+						{
+							isOutofView = false;
+						}
+					}
+					else
+					{
+						if (angle > fov)
+						{
+							isOutofView = true;
+						}
+					}
+
+					if (isOutofView)
+					{
+						var newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
+
+						//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
+						//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
+						var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
+						var x = 1.8f * Mathf.Cos(radianAngle);
+						var z = 1.8f * Mathf.Sin(radianAngle);
+
+						Canvass.seekbar.transform.position = new Vector3(x, 0, z);
+						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
+					}
+				}
+			}
+			else
+			{
+				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
 			}
 
 			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 			{
 				crosshair.enabled = false;
 				crosshairTimer.enabled = false;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 			}
 			else
 			{
 				crosshair.enabled = true;
 				crosshairTimer.enabled = true;
-
-				if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
-				{
-					Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
-				}
-				else
-				{
-					Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
-				}
 			}
 
 			if (Input.mouseScrollDelta.y != 0)
@@ -332,7 +376,7 @@ public class Player : MonoBehaviour
 	private IEnumerator EnableVr()
 	{
 		//NOTE(Kristof) If More APIs need to be implemented, add them here
-		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None"});
+		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None" });
 
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
 		yield return null;
