@@ -162,7 +162,7 @@ public class IndexPanel : MonoBehaviour
 					detailPanel = Instantiate(detailPanelPrefab);
 					detailPanel.transform.SetParent(Canvass.main.transform, false);
 
-					detailPanel.GetComponent<DetailPanel>().Init(detailVideo, this, isLocal);
+					detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal);
 				}
 			}
 		}
