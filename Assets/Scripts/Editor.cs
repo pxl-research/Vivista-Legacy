@@ -160,10 +160,14 @@ public class Editor : MonoBehaviour
 	public List<Color> timelineColors;
 	private int colorIndex;
 
+	void Awake()
+	{
+		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
+		UnityEngine.XR.XRSettings.enabled = false;
+	}
+
 	void Start()
 	{
-		UnityEngine.XR.XRSettings.LoadDeviceByName("None");
-
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPointEditor>();
 
@@ -171,13 +175,13 @@ public class Editor : MonoBehaviour
 
 		SetEditorActive(false);
 		meta = new Metadata();
-		 
+
 		InitOpenFilePanel();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 	}
-	
+
 	void Update () 
 	{
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
