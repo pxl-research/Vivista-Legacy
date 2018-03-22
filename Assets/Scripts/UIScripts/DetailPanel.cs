@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 using UnityEngine.UI;
-using System.IO;
 
 public class DetailPanel : MonoBehaviour
 {
@@ -22,6 +22,7 @@ public class DetailPanel : MonoBehaviour
 	public string answerVideoId;
 	
 	private WWW imageDownload;
+	private GameObject indexPanel;
 	private float time;
 	private const float refreshTime = 1.0f;
 
@@ -52,8 +53,11 @@ public class DetailPanel : MonoBehaviour
 		}
 	}
 
-	public void Init(VideoSerialize videoToDownload, bool isLocal)
+	public void Init(VideoSerialize videoToDownload, GameObject indexPanel, bool isLocal)
 	{
+		this.indexPanel = indexPanel;
+		this.indexPanel.SetActive(false);
+
 		video = videoToDownload;
 
 		videoLength.text = MathHelper.FormatSeconds(video.length);
@@ -84,6 +88,7 @@ public class DetailPanel : MonoBehaviour
 
 	public void Back()
 	{
+		indexPanel.SetActive(true);
 		shouldClose = true;
 	}
 
