@@ -17,26 +17,33 @@ class UIHelper
 			font = font,
 			fontSize = fontSize
 		};
-		var words = text.Split(' ');
+		var paragraphs = text.Split('\n');
 
 		var currentWidth = 0f;
 
-		var lineHeight = style.lineHeight;
+		var lineHeight = style.fontSize;
 		var currentHeight = 2 * lineHeight;
 
-		for (var i = 0; i < words.Length; i++)
+		for (var i = 0; i < paragraphs.Length; i++)
 		{
-			var size = style.CalcSize(i != words.Length - 1
-				? new GUIContent(words[i] + " ")
-				: new GUIContent(words[i]));
-			currentWidth += size.x;
+			var words = paragraphs[i].Split(' ');
 
-			if (currentWidth >= maxWidth)
+			for (int j = 0; j < words.Length; j++)
 			{
-				var lines = Mathf.Floor(currentWidth / maxWidth);
-				currentWidth = size.x % maxWidth;
-				currentHeight += lines * style.lineHeight;
+				var size = style.CalcSize(j != words.Length - 1
+					? new GUIContent(words[j] + " ")
+					: new GUIContent(words[j]));
+				currentWidth += size.x;
+
+				if (currentWidth >= maxWidth)
+				{
+					var lines = Mathf.Floor(currentWidth / maxWidth);
+					currentWidth = size.x % maxWidth;
+					currentHeight += (int)(lines * style.lineHeight * 0.9f);
+				}
 			}
+
+			currentHeight += (int)(style.lineHeight * 0.9f);
 		}
 
 		return Mathf.Max(currentHeight, minHeight);
