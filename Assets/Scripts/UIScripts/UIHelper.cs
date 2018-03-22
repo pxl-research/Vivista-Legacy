@@ -26,7 +26,6 @@ class UIHelper
 
 		for (var i = 0; i < words.Length; i++)
 		{
-
 			var size = style.CalcSize(i != words.Length - 1
 				? new GUIContent(words[i] + " ")
 				: new GUIContent(words[i]));
