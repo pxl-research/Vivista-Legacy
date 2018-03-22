@@ -90,7 +90,7 @@ public struct Metadata
 	public Guid guid;
 	public Perspective perspective;
 	public int extraCounter;
-	public double length;
+	public float length;
 }
 
 public class Editor : MonoBehaviour
@@ -1298,7 +1298,7 @@ public class Editor : MonoBehaviour
 			.Append(",\n");
 
 		sb.Append("length:")
-			.Append(videoController.videoLength)
+			.Append((float) videoController.videoLength)
 			.Append(",\n");
 
 		sb.Append("[");

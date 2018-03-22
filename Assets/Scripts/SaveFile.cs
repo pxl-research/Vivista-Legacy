@@ -131,7 +131,7 @@ public static class SaveFile
 		saveFileData.meta.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
 		
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.meta.length = Convert.ToDouble(result.value);
+		saveFileData.meta.length = Convert.ToSingle(result.value);
 
 		var stringObjects = new List<string>();
 			
