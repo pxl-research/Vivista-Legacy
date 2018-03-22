@@ -1,12 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class Seekbar : MonoBehaviour, IPointerDownHandler
 {
 	public VideoController controller;
+	public RectTransform seekbarBackground;
 	public RectTransform seekbar;
 	public GameObject compassBackground;
 	public GameObject compassForeground;
+	public Text timeText;
 
 	public bool hovering = false;
 	public float minSeekbarHeight = 0.1f;
@@ -14,21 +18,19 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 	public float maxSeekbarHeight = 0.25f;
 	public float seekbarAnimationDuration = 0.2f;
 	public float startRotation;
+	public double lastSmoothTime;
 
 	public void Start()
 	{
-		seekbar = GetComponent<RectTransform>();
 		curSeekbarHeight = maxSeekbarHeight;
 
-		compassBackground = GameObject.Find("CompassBackground");
-		compassForeground = GameObject.Find("CompassForeground");
 		startRotation = 0;
 	}
 
 	public void Update()
 	{
 		var coords = new Vector3[4];
-		seekbar.parent.GetComponent<RectTransform>().GetWorldCorners(coords);
+		seekbarBackground.parent.GetComponent<RectTransform>().GetWorldCorners(coords);
 
 		hovering = Input.mousePosition.y < coords[1].y;
 
@@ -36,8 +38,16 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 			? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
 			: curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
 
+		var smoothedTime = Mathf.Lerp((float)lastSmoothTime, (float)controller.currentFractionalTime, 0.33f);
+
 		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
-		seekbar.anchorMax = new Vector2(seekbar.anchorMax.x, curSeekbarHeight);
+		seekbar.anchorMax = new Vector2(smoothedTime, seekbar.anchorMax.y);
+		seekbarBackground.anchorMax = new Vector2(seekbarBackground.anchorMax.x, curSeekbarHeight);
+		
+		lastSmoothTime = float.IsNaN(smoothedTime) ? 0 : smoothedTime;
+
+		//TODO(Simon): Maybe make this run less often because it generates garbage
+		timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.currentTime), MathHelper.FormatSeconds(controller.videoLength));
 
 		//TODO(Simon): Verify that this works.
 		if (!UnityEngine.XR.XRSettings.enabled)

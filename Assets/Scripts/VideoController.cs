@@ -30,9 +30,6 @@ public class VideoController : MonoBehaviour
 
 	public ScreenshotParams screenshotParams;
 
-	public RectTransform seekbar;
-	public Text timeText;
-
 	void Start () 
 	{
 		var players = GetComponents<VideoPlayer>();
@@ -58,9 +55,6 @@ public class VideoController : MonoBehaviour
 		videoLength = video.frameCount / video.frameRate;
 		currentTime = videoLength * (video.frame / (double)video.frameCount);
 		currentFractionalTime = video.frame / (double)video.frameCount;
-
-		seekbar.anchorMax = new Vector2((float) currentFractionalTime, seekbar.anchorMax.y);
-		timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(currentTime), MathHelper.FormatSeconds(videoLength));
 	}
 
 	//NOTE(Simon): if keepAspect == true, the screenshot will be resized to keep the correct aspectratio, and still fit within the requested size.
