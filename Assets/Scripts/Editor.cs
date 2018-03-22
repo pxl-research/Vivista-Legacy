@@ -788,7 +788,7 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			if (Math.Abs(timelineZoom - timelineZoomTarget) > 0.0025)
+			if (Mathf.Abs(timelineZoom - timelineZoomTarget) > 0.0025)
 			{
 				timelineZoom = Mathf.Lerp(timelineZoom, timelineZoomTarget, 0.15f);
 			}
@@ -819,7 +819,7 @@ public class Editor : MonoBehaviour
 
 		//NOTE(Simon): Timeline labels
 		{
-			var maxNumLabels = Math.Floor(timelineWidth / 100);
+			var maxNumLabels = Mathf.Floor(timelineWidth / 100);
 			var lowerround = FloorTime(zoomedLength / maxNumLabels);
 			var upperround = CeilTime(zoomedLength / maxNumLabels);
 
