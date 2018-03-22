@@ -240,9 +240,62 @@ public class FilePanel : MonoBehaviour
 		{
 			var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
 
-			//TODO(Simon): Probabaly a bug. Not closing. Fix
 			var file = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
 			file.meta.title = newTitle;
+
+			var sb = new StringBuilder();
+
+			sb.Append("uuid:")
+				.Append(file.meta.guid)
+				.Append(",\n");
+
+			sb.Append("title:")
+				.Append(file.meta.title)
+				.Append(",\n");
+
+			sb.Append("description:")
+				.Append(file.meta.description)
+				.Append(",\n");
+
+			sb.Append("perspective:")
+				.Append(file.meta.perspective)
+				.Append(",\n");
+
+			sb.Append("length:")
+				.Append(file.meta.length)
+				.Append(",\n");
+
+			//NOTE(Kristof): Add the interaction points to the string
+			sb.Append("[");
+			if (file.points.Count > 0)
+			{
+				foreach (var point in file.points)
+				{
+					sb.Append(JsonUtility.ToJson(point, true));
+					sb.Append(",");
+				}
+
+				sb.Remove(sb.Length - 1, 1);
+			}
+			else
+			{
+				sb.Append("[]");
+			}
+
+			sb.Append("]");
+
+			try
+			{
+				string jsonname = Path.Combine(path, SaveFile.metaFilename);
+				using (var renamedFile = File.CreateText(jsonname))
+				{
+					renamedFile.Write(sb.ToString());
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.Log(e.ToString());
+			}
 		}
 	}
 

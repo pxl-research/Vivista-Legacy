@@ -90,6 +90,7 @@ public struct Metadata
 	public Guid guid;
 	public Perspective perspective;
 	public int extraCounter;
+	public float length;
 }
 
 public class Editor : MonoBehaviour
@@ -1265,7 +1266,6 @@ public class Editor : MonoBehaviour
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
 	}
-
 	
 	private bool SaveToFile()
 	{
@@ -1298,7 +1298,7 @@ public class Editor : MonoBehaviour
 			.Append(",\n");
 
 		sb.Append("length:")
-			.Append(videoController.videoLength)
+			.Append((float) videoController.videoLength)
 			.Append(",\n");
 
 		sb.Append("[");
