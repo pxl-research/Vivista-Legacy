@@ -90,6 +90,7 @@ public struct Metadata
 	public Guid guid;
 	public Perspective perspective;
 	public int extraCounter;
+	public double length;
 }
 
 public class Editor : MonoBehaviour
@@ -1265,7 +1266,6 @@ public class Editor : MonoBehaviour
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
 	}
-
 	
 	private bool SaveToFile()
 	{

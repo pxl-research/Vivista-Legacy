@@ -129,9 +129,9 @@ public static class SaveFile
 
 		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
-
-		//Note(Simon): Value "length" is only used server side, but we still need to skip over the text in the file.
+		
 		result = JsonGetValueFromLine(str, result.endindex);
+		saveFileData.meta.length = Convert.ToDouble(result.value);
 
 		var stringObjects = new List<string>();
 			
