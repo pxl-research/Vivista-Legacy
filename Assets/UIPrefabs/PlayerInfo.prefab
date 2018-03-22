@@ -206,7 +206,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 1
-    m_MaxSize: 40
+    m_MaxSize: 75
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -237,6 +237,7 @@ MonoBehaviour:
   maxSeekbarHeight: 0.25
   seekbarAnimationDuration: 0.2
   startRotation: 0
+  lastSmoothTime: 0
 --- !u!222 &222175902139825812
 CanvasRenderer:
   m_ObjectHideFlags: 1
