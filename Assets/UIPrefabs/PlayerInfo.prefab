@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 114933417644068934}
   - component: {fileID: 114384316180678858}
   m_Layer: 5
-  m_Name: SeekbarClickable
+  m_Name: SeekbarBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -213,7 +213,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: New Text
+  m_Text: 00:00 / 00:00
 --- !u!114 &114933417644068934
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -226,9 +226,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 0}
-  seekbar: {fileID: 0}
+  seekbarBackground: {fileID: 224538786021987510}
+  seekbar: {fileID: 224009011589476856}
   compassBackground: {fileID: 0}
   compassForeground: {fileID: 0}
+  timeText: {fileID: 114568478522721584}
   hovering: 0
   minSeekbarHeight: 0.05
   curSeekbarHeight: 0
@@ -294,7 +296,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 20}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224473555433699382

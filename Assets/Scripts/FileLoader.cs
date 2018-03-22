@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 public class FileLoader : MonoBehaviour 
 {
@@ -20,8 +19,6 @@ public class FileLoader : MonoBehaviour
 	public GameObject videoController;
 	public GameObject playerInfo;
 
-	public GameObject playerInfoGUI;
-
 	private VideoController controller;
 
 	public FileType fileType = FileType.Video;
@@ -35,8 +32,6 @@ public class FileLoader : MonoBehaviour
 	public void Start()
 	{
 		videoController = Instantiate(videoMesh);
-
-		playerInfo = Instantiate(playerInfoGUI);
 
 		Transform newParent;
 		if (UnityEngine.XR.XRSettings.enabled)
@@ -54,8 +49,6 @@ public class FileLoader : MonoBehaviour
 		var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
 		controller = videoController.GetComponent<VideoController>();
 		seekbar.controller = controller;
-		controller.seekbar = seekbar.transform.GetChild(0).GetComponent<RectTransform>();
-		controller.timeText = seekbar.transform.parent.GetComponentInChildren<Text>();
 	}
 
 	public void LoadFile(string filename)
