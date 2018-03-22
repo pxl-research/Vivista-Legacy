@@ -25,6 +25,7 @@ public class ExplorerPanel : MonoBehaviour
 
 	public bool answered;
 	public string answerFilePath;
+	public string searchPattern;
 
 	public InputField currentPath;
 	public Button upButton;
@@ -33,12 +34,14 @@ public class ExplorerPanel : MonoBehaviour
 	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
 	public Button sortDateButton;
 	public Button sortNameButton;
+	public InputField FilenameField;
+	public Button OpenButton;
+	public Text title;
 
 	private FileInfo[] files;
 	private DirectoryInfo[] directories;
 	private string[] drives;
 
-	private string searchPattern;
 	private string currentDirectory;
 	private string osType;
 	private bool sortByDate;
@@ -49,11 +52,6 @@ public class ExplorerPanel : MonoBehaviour
 	private int lastClickIndex;
 
 	private List<ExplorerEntry> explorer;
-
-	public void Start()
-	{
-		Init();
-	}
 
 	public void Update()
 	{
@@ -104,8 +102,13 @@ public class ExplorerPanel : MonoBehaviour
 
 		timeSinceLastClick += Time.deltaTime;
 	}
-
-	public void Init(string startDirectory = "", string searchPattern = "*")
+	/// <summary>
+	/// Initialiase the explorepanel
+	/// </summary>
+	/// <param name="startDirectory"></param>
+	/// <param name="searchPattern">Separate filename patterns with ';' </param>
+	/// <param name="title"></param>
+	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file")
 	{
 		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
 
@@ -113,8 +116,10 @@ public class ExplorerPanel : MonoBehaviour
 		osType = Environment.OSVersion.Platform.ToString();
 		this.searchPattern = searchPattern;
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
+		this.title.text = title;
 
 		UpdateDir();
+
 	}
 
 	public void DirUp()
@@ -199,7 +204,16 @@ public class ExplorerPanel : MonoBehaviour
 	private void UpdateDir()
 	{
 		var dirinfo = new DirectoryInfo(currentDirectory);
-		files = dirinfo.GetFiles(searchPattern);
+		var filteredFiles = new List<FileInfo>();
+
+		foreach (var pattern in searchPattern.Split(';'))
+		{
+			foreach (var file in dirinfo.GetFiles(pattern))
+			{
+				filteredFiles.Add(file);
+			}
+		}
+		files = filteredFiles.ToArray();
 		directories = dirinfo.GetDirectories();
 		currentPath.text = currentDirectory;
 
@@ -286,7 +300,7 @@ public class ExplorerPanel : MonoBehaviour
 			filenameIconItem.transform.SetParent(directoryContent.content, false);
 			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
 
-			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.date.ToString();
+			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.entryType == EntryType.Drive ? "" : entry.date.ToString();
 
 			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
 			entry.filenameIconItem = filenameIconItem;
@@ -319,12 +333,14 @@ public class ExplorerPanel : MonoBehaviour
 			entry.name = drive;
 			entry.sprite = iconDrive;
 			explorer.Add(entry);
+			entry.entryType = EntryType.Drive;
 		}
 		FillItems();
 	}
 
 	private void DriveClick(string path)
 	{
+		ClearItems();
 		currentDirectory = path;
 		UpdateDir();
 		upButton.enabled = true;
@@ -336,4 +352,19 @@ public class ExplorerPanel : MonoBehaviour
 		answerFilePath = path;
 	}
 
+	public void OpenButtonClicked()
+	{
+		if (FilenameField.text != "")
+		{
+			var fullName = currentPath.text + "\\" + FilenameField.text;
+			if (File.Exists(fullName))
+			{
+				Answer(fullName);
+			}
+			else
+			{
+				Debug.LogError("file does not exist!");
+			}
+		}
+	}
 }

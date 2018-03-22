@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -49,13 +47,24 @@ public class Player : MonoBehaviour
 	public GameObject textPanelPrefab;
 	public GameObject localAvatarPrefab;
 
+	public GameObject controllerLeft;
+	public GameObject controllerRight;
+
 	private GameObject indexPanel;
+
+	private VRControllerState_t controllerLeftOldState;
+	private VRControllerState_t controllerRightOldState;
+	private SteamVR_TrackedController trackedControllerLeft;
+	private SteamVR_TrackedController trackedControllerRight;
 
 	private string openVideo;
 
 	void Start()
 	{
 		StartCoroutine(EnableVr());
+
+		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
+		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -69,13 +78,8 @@ public class Player : MonoBehaviour
 
 	void Update()
 	{
+
 		VRDevices.DetectDevices();
-
-		//Note(Simon): Create a reversed raycast to find positions on the sphere with
-		var ray = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
-
-		ray.origin = ray.GetPoint(100);
-		ray.direction = -ray.direction;
 
 		if (playerState == PlayerState.Watching)
 		{
@@ -83,9 +87,6 @@ public class Player : MonoBehaviour
 			{
 				videoController.TogglePlay();
 			}
-
-			RaycastHit hit;
-			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 			if (XRSettings.enabled)
 			{
@@ -95,10 +96,13 @@ public class Player : MonoBehaviour
 			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 			{
 				crosshair.enabled = false;
+				crosshairTimer.enabled = false;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 			}
 			else
 			{
 				crosshair.enabled = true;
+				crosshairTimer.enabled = true;
 
 				if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
 				{
@@ -115,8 +119,46 @@ public class Player : MonoBehaviour
 				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
 			}
 
+			Ray ray;
+			//NOTE(Kristof): Deciding on which object the Ray will be based on
+			{
+				Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+				Ray controllerRay = new Ray();
+
+				const ulong ulTriggerValue = (ulong)1 << 33;
+
+				if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
+				{
+					controllerRay = new Ray(controllerLeft.transform.position, controllerLeft.transform.forward);
+				}
+
+				if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
+				{
+					controllerRay = new Ray(controllerRight.transform.position, controllerRight.transform.forward);
+				}
+
+				controllerLeftOldState = trackedControllerLeft.controllerState;
+				controllerRightOldState = trackedControllerRight.controllerState;
+
+				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+				{
+					ray = controllerRay;
+				}
+				else
+				{
+					ray = cameraRay;
+				}
+			}
+
+			//Note(Simon): Create a reversed raycast to find positions on the sphere with
+			ray.origin = ray.GetPoint(100);
+			ray.direction = -ray.direction;
+
 			//Note(Simon): Interaction with points
 			{
+				RaycastHit hit;
+				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+
 				bool interacting = false;
 				foreach (var point in interactionPoints)
 				{
@@ -127,20 +169,29 @@ public class Player : MonoBehaviour
 
 					if (hit.transform != null && hit.transform.gameObject == point.point)
 					{
-						interacting = true;
-						point.interactionTimer += Time.deltaTime;
-						crosshairTimer.fillAmount = point.interactionTimer / timeToInteract;
-						crosshair.fillAmount = 1 - (point.interactionTimer / timeToInteract);
-
-						if (point.interactionTimer > timeToInteract)
+						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 						{
-							point.panel.SetActive(true);
+							point.panel.SetActive(!point.panel.activeSelf);
+						}
+						else
+						{
+							interacting = true;
+							point.interactionTimer += Time.deltaTime;
+							crosshairTimer.fillAmount = point.interactionTimer / timeToInteract;
+							crosshair.fillAmount = 1 - (point.interactionTimer / timeToInteract);
+
+							if (point.interactionTimer > timeToInteract)
+							{
+								point.panel.SetActive(true);
+							}
 						}
 					}
 					else if (point.panel.activeSelf)
 					{
-						point.panel.SetActive(false);
-						point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
+						{
+							point.panel.SetActive(false);
+						}
 					}
 					else
 					{
@@ -227,6 +278,7 @@ public class Player : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 
+			newInteractionPoint.panel.SetActive(false);
 			AddInteractionPoint(newInteractionPoint);
 		}
 		StartCoroutine(UpdatePointPositions());
