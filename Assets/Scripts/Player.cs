@@ -81,7 +81,6 @@ public class Player : MonoBehaviour
 
 	void Update()
 	{
-
 		VRDevices.DetectDevices();
 
 		if (playerState == PlayerState.Watching)
@@ -96,22 +95,22 @@ public class Player : MonoBehaviour
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 
-				//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
-				//var seekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
-				var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
-
-				var fov = Camera.main.fieldOfView;
-				//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking
-				var cameraAngle = Camera.main.transform.eulerAngles.y;
-
-				//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
-				var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
-				var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
-
-				var angle = Mathf.Min(distanceLeft, distanceRight);
-
 				//NOTE(Kristof): Rotating the seekbar
 				{
+					//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
+					//var seekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
+					var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
+
+					var fov = Camera.main.fieldOfView;
+					//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking towards
+					var cameraAngle = Camera.main.transform.eulerAngles.y;
+
+					//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
+					var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
+					var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
+
+					var angle = Mathf.Min(distanceLeft, distanceRight);
+
 					if (isOutofView)
 					{
 						if (angle < 2.5f)
