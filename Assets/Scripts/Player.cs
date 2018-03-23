@@ -61,6 +61,7 @@ public class Player : MonoBehaviour
 
 	private float currentSeekbarAngle;
 	private string openVideo;
+	private int interactionPointCount;
 
 	void Start()
 	{
@@ -287,8 +288,8 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
-
+			var newPoint = Instantiate(interactionPointPrefab, point.position, Quaternion.identity);//point.rotation);
+			
 			var newInteractionPoint = new InteractionPointPlayer
 			{
 				startTime = point.startTime,
@@ -322,7 +323,6 @@ public class Player : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 
-			newInteractionPoint.panel.SetActive(false);
 			AddInteractionPoint(newInteractionPoint);
 		}
 		StartCoroutine(UpdatePointPositions());
@@ -340,6 +340,12 @@ public class Player : MonoBehaviour
 
 	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
+		//TODO(Simon): Make sure these are numbered chronologically
+		point.point.transform.LookAt(Vector3.zero, Vector3.up);
+		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
+
+		point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
+		point.panel.SetActive(false);
 		interactionPoints.Add(point);
 	}
 
