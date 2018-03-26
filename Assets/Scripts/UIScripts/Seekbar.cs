@@ -60,7 +60,7 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		else
 		{
 			//TODO(Simon): Maybe make this run less often because it generates garbage
-			timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.currentTime), MathHelper.FormatSeconds(controller.videoLength));
+			timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.rawCurrentTime), MathHelper.FormatSeconds(controller.videoLength));
 		}
 
 		//TODO(Simon): Verify that this works.
