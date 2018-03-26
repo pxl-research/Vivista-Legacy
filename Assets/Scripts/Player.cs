@@ -26,6 +26,7 @@ public class InteractionPointPlayer
 	public double startTime;
 	public double endTime;
 	public float interactionTimer;
+	public bool isStartPoint = false;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
@@ -41,7 +42,22 @@ public class Player : MonoBehaviour
 	private Image crosshair;
 	private Image crosshairTimer;
 
+	private GameObject indexPanel;
+	private GameObject[] controllerArray;
+
+	private VRControllerState_t controllerLeftOldState;
+	private VRControllerState_t controllerRightOldState;
+	private SteamVR_TrackedController trackedControllerLeft;
+	private SteamVR_TrackedController trackedControllerRight;
+
+	private SaveFile.SaveFileData data;
+
+	private bool isOutofView;
+	private int activePoints;
+	private string openVideo;
+
 	public GameObject interactionPointPrefab;
+	public GameObject startPointGroup;
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
@@ -50,17 +66,6 @@ public class Player : MonoBehaviour
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
 
-	public bool isOutofView;
-
-	private GameObject indexPanel;
-
-	private VRControllerState_t controllerLeftOldState;
-	private VRControllerState_t controllerRightOldState;
-	private SteamVR_TrackedController trackedControllerLeft;
-	private SteamVR_TrackedController trackedControllerRight;
-
-	private float currentSeekbarAngle;
-	private string openVideo;
 
 	void Start()
 	{
@@ -68,6 +73,7 @@ public class Player : MonoBehaviour
 
 		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
 		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
+		controllerArray = new GameObject[]{ controllerLeft, controllerRight};
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -92,6 +98,13 @@ public class Player : MonoBehaviour
 
 			if (XRSettings.enabled)
 			{
+
+				//NOTE(Lander): enable the highlight in the tutorial mode, even if the controller is activated too late
+				if (startPointGroup.activeSelf)
+				{
+					//NOTE(Kristof): Better way to do this? Always wrap controllers in array?
+					VRDevices.SetControllersTutorialMode(controllerArray, true);
+				}
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 
@@ -203,19 +216,51 @@ public class Player : MonoBehaviour
 				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				bool interacting = false;
-				foreach (var point in interactionPoints)
+				foreach (var point in interactionPoints) //pointlist
 				{
 					const float timeToInteract = 0.75f;
 
-					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
+					var pointActive = point.startTime <= videoController.CurrentTime && point.endTime >= videoController.CurrentTime;
 					point.point.SetActive(pointActive);
 
 					if (hit.transform != null && hit.transform.gameObject == point.point)
 					{
+						//NOTE(Kristof): Interacting with controller
 						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 						{
-							point.panel.SetActive(!point.panel.activeSelf);
+							//NOTE(Kristof): Interacting with StartPoints
+							if (point.isStartPoint)
+							{
+								videoController.TogglePlay();
+								startPointGroup.SetActive(false);
+								VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, false);
+								//NOTE(Kristof): gives InvalidOperationException: Collection was modified
+								//interactionPoints.RemoveRange(0, 4);
+							}
+							//NOTE(Kristof): Interacting with InteractionPoints
+							else
+							{
+								point.panel.SetActive(!point.panel.activeSelf);
+
+								if (point.panel.activeSelf)
+								{
+									activePoints++;
+								}
+								else
+								{
+									activePoints--;
+								}
+
+								videoController.Pause();
+
+								//NOTE(Kristof): Play the video when you deactivate the last point
+								if (activePoints == 0)
+								{
+									videoController.TogglePlay();
+								}
+							}
 						}
+						//NOTE(Kristof): Interacting without controllers
 						else
 						{
 							interacting = true;
@@ -225,15 +270,29 @@ public class Player : MonoBehaviour
 
 							if (point.interactionTimer > timeToInteract)
 							{
-								point.panel.SetActive(true);
+								//NOTE(Kristof): Interacting with StartPoints
+								if (point.isStartPoint)
+								{
+									videoController.TogglePlay();
+									startPointGroup.SetActive(false);
+									VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, false);
+								}
+								//NOTE(Kristof): Interacting with InteractionPoints
+								else
+								{
+									point.panel.SetActive(true);
+									videoController.Pause();
+								}
 							}
 						}
 					}
-					else if (point.panel.activeSelf)
+					//NOTE(Kristof): Gets executed when you stop interacting with a point with an active panel
+					else if (point.panel != null && point.panel.activeSelf)
 					{
 						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 						{
 							point.panel.SetActive(false);
+							videoController.TogglePlay();
 						}
 					}
 					else
@@ -272,7 +331,7 @@ public class Player : MonoBehaviour
 
 	private bool OpenFile(string path)
 	{
-		var data = SaveFile.OpenFile(path);
+		data = SaveFile.OpenFile(path);
 
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
@@ -283,6 +342,37 @@ public class Player : MonoBehaviour
 		}
 
 		interactionPoints.Clear();
+
+		//NOTE(Kristof): Add the 4 interactionpoints used for the mini-tutorial and starting the video, then load the InteractionPoints
+		{
+
+			startPointGroup = Instantiate(startPointGroup);
+			var startPoints = new List<GameObject>();
+			startPoints.AddRange(GameObject.FindGameObjectsWithTag("StartPoint"));
+
+			foreach (var startPoint in startPoints)
+			{
+				AddInteractionPoint(new InteractionPointPlayer
+				{
+					point = startPoint,
+					isStartPoint = true,
+					startTime = -1,
+					endTime = -1
+				});
+
+				var content = startPoint.GetComponentInChildren<Text>();
+
+				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+				{
+					content.text = "Aim at the white point below and press the trigger";
+
+				}
+				else
+				{
+					content.text = "Align the central circle with the white point below";
+				}
+			}
+		}
 
 		foreach (var point in data.points)
 		{
@@ -325,6 +415,7 @@ public class Player : MonoBehaviour
 			AddInteractionPoint(newInteractionPoint);
 		}
 		StartCoroutine(UpdatePointPositions());
+
 		return true;
 	}
 
@@ -369,6 +460,8 @@ public class Player : MonoBehaviour
 				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
 			}
+
+			//pointslist.add(interactionPoint)
 		}
 	}
 
