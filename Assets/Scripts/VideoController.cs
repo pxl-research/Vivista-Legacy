@@ -16,7 +16,7 @@ public class VideoController : MonoBehaviour
 {
 	private enum VideoState
 	{
-		Tutorial,
+		Intro,
 		Watching
 	}
 
@@ -38,7 +38,7 @@ public class VideoController : MonoBehaviour
 	//NOTE(Kristof): Keep the variable public so that other classes can use it instead of using the property
 	//NOTE(Kristof): Better way to do this?
 	public double rawCurrentTime;
-	public double CurrentTime
+	public double currentTime
 	{
 		get
 		{

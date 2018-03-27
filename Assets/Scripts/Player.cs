@@ -43,7 +43,6 @@ public class Player : MonoBehaviour
 	private Image crosshairTimer;
 
 	private GameObject indexPanel;
-	private GameObject[] controllerArray;
 
 	private VRControllerState_t controllerLeftOldState;
 	private VRControllerState_t controllerRightOldState;
@@ -73,7 +72,6 @@ public class Player : MonoBehaviour
 
 		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
 		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
-		controllerArray = new GameObject[]{ controllerLeft, controllerRight};
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -102,8 +100,7 @@ public class Player : MonoBehaviour
 				//NOTE(Lander): enable the highlight in the tutorial mode, even if the controller is activated too late
 				if (startPointGroup.activeSelf)
 				{
-					//NOTE(Kristof): Better way to do this? Always wrap controllers in array?
-					VRDevices.SetControllersTutorialMode(controllerArray, true);
+					VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, true);
 				}
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
@@ -220,7 +217,7 @@ public class Player : MonoBehaviour
 				{
 					const float timeToInteract = 0.75f;
 
-					var pointActive = point.startTime <= videoController.CurrentTime && point.endTime >= videoController.CurrentTime;
+					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
 
 					if (hit.transform != null && hit.transform.gameObject == point.point)

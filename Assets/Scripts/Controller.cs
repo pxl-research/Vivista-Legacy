@@ -1,16 +1,15 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Controller : MonoBehaviour
 {
-
 	public GameObject laser;
+	public GameObject model;
+	public Material highlightMaterial;
 
 	private MeshRenderer trigger;
 	private Material baseMaterial;
 
 	private SteamVR_TrackedController controller;
-
 
 	// Use this for initialization
 	void Start()
@@ -33,22 +32,25 @@ public class Controller : MonoBehaviour
 
 	public void TriggerHighlight()
 	{
-		try
+		if (trigger == null)
 		{
-			trigger = transform.Find("Model").Find("trigger").gameObject.GetComponent<MeshRenderer>();
-			baseMaterial = trigger.material;
+			var triggerGo = model.transform.Find("trigger");
+			if (triggerGo != null)
+			{
+				trigger = triggerGo.gameObject.GetComponent<MeshRenderer>();
+			}
+		}
 
-			Material[] materialsArray = { baseMaterial, Resources.Load("ControllerHighlight") as Material };
-			trigger.materials = materialsArray;
-		}
-		catch(NullReferenceException e)
+		if (trigger != null)
 		{
-			Debug.LogWarning("Controller is not initialised!");
+			baseMaterial = trigger.material;
+			trigger.materials = new[] { baseMaterial, highlightMaterial};
 		}
+		
 	}
 
 	public void ResetTriggerMaterial()
 	{
-		trigger.materials = new Material[] { baseMaterial };
+		trigger.materials = new[] {baseMaterial};
 	}
 }
