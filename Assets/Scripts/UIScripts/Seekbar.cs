@@ -23,16 +23,18 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 	public void Start()
 	{
 		curSeekbarHeight = maxSeekbarHeight;
-
 		startRotation = 0;
 	}
 
 	public void Update()
 	{
-		var coords = new Vector3[4];
-		seekbarBackground.parent.GetComponent<RectTransform>().GetWorldCorners(coords);
+		var infoPanelCoords = new Vector3[4];
+		var seekbarCoords = new Vector3[4];
+		seekbarBackground.parent.GetComponent<RectTransform>().GetWorldCorners(infoPanelCoords);
+		seekbarBackground.GetComponent<RectTransform>().GetWorldCorners(seekbarCoords);
 
-		hovering = Input.mousePosition.y < coords[1].y;
+		hovering = Input.mousePosition.y < infoPanelCoords[1].y;
+		var onSeekbar = Input.mousePosition.y > seekbarCoords[0].y && Input.mousePosition.y < seekbarCoords[1].y;
 
 		var newHeight = hovering
 			? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
@@ -46,8 +48,20 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		
 		lastSmoothTime = float.IsNaN(smoothedTime) ? 0 : smoothedTime;
 
-		//TODO(Simon): Maybe make this run less often because it generates garbage
-		timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.currentTime), MathHelper.FormatSeconds(controller.videoLength));
+		if (onSeekbar)
+		{
+			var pos = Input.mousePosition.x;
+			var max = GetComponent<RectTransform>().rect.width;
+
+			var time = pos / max;
+
+			timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.TimeForFraction(time)), MathHelper.FormatSeconds(controller.videoLength));
+		}
+		else
+		{
+			//TODO(Simon): Maybe make this run less often because it generates garbage
+			timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.currentTime), MathHelper.FormatSeconds(controller.videoLength));
+		}
 
 		//TODO(Simon): Verify that this works.
 		if (!UnityEngine.XR.XRSettings.enabled)
@@ -70,8 +84,8 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		var pos = e.pressPosition.x;
 		var max = GetComponent<RectTransform>().rect.width;
 
-		var time = pos / max;
+		var fractionalTime = pos / max;
 
-		controller.Seek(time);
+		controller.Seek(fractionalTime);
 	}
 }
