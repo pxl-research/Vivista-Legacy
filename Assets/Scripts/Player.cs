@@ -340,10 +340,11 @@ public class Player : MonoBehaviour
 
 	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
-		//TODO(Simon): Make sure these are numbered chronologically
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
+		//NOTE(Simon): Add a number to interaction points
+		//TODO(Simon): Make sure these are numbered chronologically
 		point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		point.panel.SetActive(false);
 		interactionPoints.Add(point);
