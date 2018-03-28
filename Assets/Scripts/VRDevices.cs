@@ -87,4 +87,25 @@ public static class VRDevices
 				throw new ArgumentOutOfRangeException();
 		}
 	}
+
+	public static void SetControllerTutorialMode(GameObject controller, bool enabled)
+	{
+		GameObject[] controllerArray = { controller };
+		SetControllersTutorialMode(controllerArray, enabled);
+	}
+
+	public static void SetControllersTutorialMode(GameObject[] controllers, bool enabled)
+	{
+		foreach (var controller in controllers)
+		{
+			if (enabled)
+			{
+				controller.GetComponent<Controller>().TriggerHighlight();
+			}
+			else
+			{
+				controller.GetComponent<Controller>().ResetTriggerMaterial();
+			}
+		}
+	}
 }
