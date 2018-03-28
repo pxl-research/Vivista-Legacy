@@ -25,20 +25,6 @@ public static class VRDevices
 	public static bool hasRightController;
 	public static bool hasRemote;
 
-	//NOTE(Kristof): These functions are no londer needed, use LoadedControllerSet
-	//NOTE(Kristof): This functions checks if there are controllers that can be used for Raycasting
-	public static bool HasControllerDevice()
-	{
-		return hasLeftController || hasRightController;
-	}
-
-	//NOTE(Kristof): These functions are no londer needed, use LoadedControllerSet
-	//NOTE(Kristof): This function also checks for the remote
-	public static bool HasAnyDevice()
-	{
-		return hasLeftController || hasRightController || hasRemote;
-	}
-
 	public static void DetectDevices()
 	{
 		var devices = Input.GetJoystickNames();
