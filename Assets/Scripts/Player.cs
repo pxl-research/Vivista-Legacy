@@ -213,8 +213,9 @@ public class Player : MonoBehaviour
 				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				bool interacting = false;
-				foreach (var point in interactionPoints) //pointlist
+				for (var i = interactionPoints.Count - 1; i >= 0; i--)
 				{
+					var point = interactionPoints[i];
 					const float timeToInteract = 0.75f;
 
 					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
@@ -231,8 +232,7 @@ public class Player : MonoBehaviour
 								videoController.TogglePlay();
 								startPointGroup.SetActive(false);
 								VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, false);
-								//NOTE(Kristof): gives InvalidOperationException: Collection was modified
-								//interactionPoints.RemoveRange(0, 4);
+								interactionPoints.RemoveRange(0, 4);
 							}
 							//NOTE(Kristof): Interacting with InteractionPoints
 							else
