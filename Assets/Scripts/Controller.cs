@@ -36,12 +36,12 @@ public class Controller : MonoBehaviour
 		if (hit.transform != null)
 		{
 			laser.transform.localPosition = new Vector3(0, 0, 1.07f);
-			laser.transform.localScale = new Vector3(2, 1.8f, 2);
+			laser.transform.localScale = new Vector3(laser.transform.localScale.x, 1.8f, laser.transform.localScale.z);
 		}
 		else
 		{
 			laser.transform.localPosition = new Vector3(0, 0, 50.175f);
-			laser.transform.localScale = new Vector3(2, 100f, 2);
+			laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
 		}
 	}
 
@@ -59,12 +59,15 @@ public class Controller : MonoBehaviour
 		if (trigger != null)
 		{
 			baseMaterial = trigger.material;
-			trigger.materials = new[] { baseMaterial, highlightMaterial};
+			trigger.materials = new[] { baseMaterial, highlightMaterial };
 		}
 	}
 
 	public void ResetTriggerMaterial()
 	{
-		trigger.materials = new[] {baseMaterial};
-	 }
+		if (trigger != null)
+		{
+			trigger.materials = new[] { baseMaterial };
+		}
+	}
 }
