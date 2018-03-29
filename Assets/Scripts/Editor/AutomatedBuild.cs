@@ -5,19 +5,19 @@ using System.Diagnostics;
 public class AutomatedBuild : MonoBehaviour
 {
 
-	[MenuItem("Build/Win64")]
+	[MenuItem("Build/Win64 %&b")]
 	static void BuildWin64()
 	{
 		//var args = System.Environment.GetCommandLineArgs();
 		var branch = getBranch();
 		string path;
 
-		path = "builds/player-" + branch;
-		var options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "/360_Player.exe", target = BuildTarget.StandaloneWindows64 };
+		path = "builds/" + branch + "/Player/";
+		var options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64 };
 		BuildPipeline.BuildPlayer(options);
 
-		path = "builds/editor-" + branch;
-		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Editor.unity" }, locationPathName = path + "/360_Editor.exe", target = BuildTarget.StandaloneWindows64 };
+		path = "builds/" + branch + "/Editor/";
+		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64 };
 		BuildPipeline.BuildPlayer(options);
 
 		//TODO(Kristof): zip all in folder and copy zips one higher
