@@ -34,7 +34,18 @@ public class InteractionPointPlayer
 
 public class Player : MonoBehaviour
 {
+	public GameObject interactionPointPrefab;
+	public GameObject startPointGroup;
+	public GameObject indexPanelPrefab;
+	public GameObject imagePanelPrefab;
+	public GameObject textPanelPrefab;
+	public GameObject localAvatarPrefab;
+
+	public GameObject controllerLeft;
+	public GameObject controllerRight;
+
 	private PlayerState playerState;
+	private int interactionPointCount;
 
 	private List<InteractionPointPlayer> interactionPoints;
 	private FileLoader fileLoader;
@@ -54,29 +65,6 @@ public class Player : MonoBehaviour
 	private bool isOutofView;
 	private int activePoints;
 	private string openVideo;
-
-	public GameObject interactionPointPrefab;
-	public GameObject startPointGroup;
-	public GameObject indexPanelPrefab;
-	public GameObject imagePanelPrefab;
-	public GameObject textPanelPrefab;
-	public GameObject localAvatarPrefab;
-
-	public GameObject controllerLeft;
-	public GameObject controllerRight;
-
-	public bool isOutofView;
-
-	private GameObject indexPanel;
-
-	private VRControllerState_t controllerLeftOldState;
-	private VRControllerState_t controllerRightOldState;
-	private SteamVR_TrackedController trackedControllerLeft;
-	private SteamVR_TrackedController trackedControllerRight;
-
-	private float currentSeekbarAngle;
-	private string openVideo;
-	private int interactionPointCount;
 
 	void Start()
 	{
@@ -392,7 +380,7 @@ public class Player : MonoBehaviour
 
 			foreach (var startPoint in startPoints)
 			{
-				AddInteractionPoint(new InteractionPointPlayer
+				interactionPoints.Add(new InteractionPointPlayer
 				{
 					point = startPoint,
 					isStartPoint = true,
