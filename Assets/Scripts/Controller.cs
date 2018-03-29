@@ -36,7 +36,7 @@ public class Controller : MonoBehaviour
 		if (hit.transform != null)
 		{
 			laser.transform.localPosition = new Vector3(0, 0, 1.07f);
-			laser.transform.localScale = new Vector3(laser.transform.localScale.x, 1.8f, laser.transform.localScale.z);
+			laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
 		}
 		else
 		{
