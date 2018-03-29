@@ -39,13 +39,4 @@ public class TextPanel : MonoBehaviour
 		//NOTE(Kristof): Initial rotation towards the camera
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 	}
-
-	public void Update()
-	{
-		//NOTE(Kristof): Rotating the Canvas
-		if (!XRSettings.enabled)
-		{
-			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
-		}
-	}
 }

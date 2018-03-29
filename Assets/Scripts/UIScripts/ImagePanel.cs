@@ -8,7 +8,7 @@ public class ImagePanel : MonoBehaviour
 	public string imageURL;
 	public Canvas canvas;
 	public GameObject interactionPoint;
-	
+
 	private bool downloading;
 	private bool neverOpened;
 	private WWW www;
@@ -34,16 +34,8 @@ public class ImagePanel : MonoBehaviour
 	{
 		Vector3 newPos;
 
-		if (!Camera.main.orthographic)
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-			newPos.y += 0.01f;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-			newPos.y += 0.015f;
-		}
+		newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+		newPos.y += 0.015f;
 
 		canvas.GetComponent<RectTransform>().position = newPos;
 		canvas.transform.rotation = Camera.main.transform.rotation;
@@ -70,7 +62,7 @@ public class ImagePanel : MonoBehaviour
 			float newWidth = (Screen.width / 2f);
 			float newHeight = (Screen.height / 2f);
 			float imageRatio = newWidth / newHeight;
-			
+
 			//NOTE(Simon): Portrait
 			if (imageRatio <= 1)
 			{
@@ -83,13 +75,13 @@ public class ImagePanel : MonoBehaviour
 				float ratio = (texture.height + extraHeight) / newHeight;
 				newWidth = (texture.width + extraWidth) / ratio;
 			}
-			
+
 			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
 			downloading = false;
 		}
 	}
 
-	public void OnEnable ()
+	public void OnEnable()
 	{
 		if (neverOpened)
 		{
