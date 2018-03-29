@@ -313,6 +313,13 @@ public class Player : MonoBehaviour
 						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 						{
 							point.interactionTimer = 0;
+
+							//NOTE(Kristof): Video can resume if the user is not using VR
+							if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+							{
+								point.panel.SetActive(false);
+								videoController.TogglePlay();
+							}
 						}
 					}
 					//NOTE(Kristof): Gets executed for all inactive point.panels
