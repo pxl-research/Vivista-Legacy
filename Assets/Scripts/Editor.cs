@@ -279,8 +279,8 @@ public class Editor : MonoBehaviour
 					returnRayDirection = ray.direction,
 					point = newPoint,
 					type = InteractionType.None,
-					startTime = videoController.currentTime,
-					endTime = videoController.currentTime + (videoController.videoLength / 10),
+					startTime = videoController.rawCurrentTime,
+					endTime = videoController.rawCurrentTime + (videoController.videoLength / 10),
 				};
 
 				AddItemToTimeline(point, false);

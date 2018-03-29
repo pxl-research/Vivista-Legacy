@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 33506945699639880}
   - component: {fileID: 23733738473614940}
   - component: {fileID: 65774656462878612}
+  - component: {fileID: 114424501541130760}
   m_Layer: 8
   m_Name: InteractionPoint
   m_TagString: Untagged

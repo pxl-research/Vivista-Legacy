@@ -96,6 +96,7 @@ public class DetailPanel : MonoBehaviour
 	{
 		answered = true;
 		answerVideoId = video.uuid;
+		indexPanel.SetActive(true);
 	}
 
 	public void Delete()

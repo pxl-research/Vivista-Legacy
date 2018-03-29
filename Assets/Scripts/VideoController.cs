@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using UnityEngine.Video;
-using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 public struct ScreenshotParams
@@ -14,8 +12,14 @@ public struct ScreenshotParams
 	public int frameIndex;
 }
 
-public class VideoController : MonoBehaviour 
+public class VideoController : MonoBehaviour
 {
+	private enum VideoState
+	{
+		Intro,
+		Watching
+	}
+
 	public VideoPlayer video;
 	public VideoPlayer screenshots;
 	public bool playing = true;
@@ -25,12 +29,29 @@ public class VideoController : MonoBehaviour
 	public bool videoLoaded;
 
 	public double videoLength;
-	public double currentTime;
 	public double currentFractionalTime;
 
 	public ScreenshotParams screenshotParams;
 
-	void Start () 
+	private VideoState videoState;
+
+	//NOTE(Kristof): Keep the variable public so that other classes can use it instead of using the property
+	//NOTE(Kristof): Better way to do this?
+	public double rawCurrentTime;
+	public double currentTime
+	{
+		get
+		{
+			if (videoState >= VideoState.Watching)
+			{
+				return rawCurrentTime;
+			}
+
+			return -1;
+		}
+	}
+
+	void Start()
 	{
 		var players = GetComponents<VideoPlayer>();
 		if (players[0].playOnAwake)
@@ -49,11 +70,11 @@ public class VideoController : MonoBehaviour
 
 		playing = video.isPlaying;
 	}
-	
-	void Update () 
+
+	void Update()
 	{
 		videoLength = video.frameCount / video.frameRate;
-		currentTime = videoLength * (video.frame / (double)video.frameCount);
+		rawCurrentTime = videoLength * (video.frame / (double)video.frameCount);
 		currentFractionalTime = video.frame / (double)video.frameCount;
 	}
 
@@ -64,7 +85,7 @@ public class VideoController : MonoBehaviour
 		screenshots.enabled = true;
 		screenshots.prepareCompleted += OnPrepared;
 		screenshots.Prepare();
-		
+
 		screenshotParams = new ScreenshotParams
 		{
 			frameIndex = frameIndex,
@@ -120,14 +141,21 @@ public class VideoController : MonoBehaviour
 		screenshots.enabled = false;
 		screenshots.Pause();
 	}
-	
+
 	public void Seek(float fractionalTime)
 	{
 		video.time = fractionalTime * videoLength;
 	}
 
+	public double TimeForFraction(float fractionalTime)
+	{
+		return fractionalTime * videoLength;
+	}
+
 	public void TogglePlay()
 	{
+		videoState=VideoState.Watching;
+
 		if (!playing)
 		{
 			video.Play();
@@ -156,7 +184,7 @@ public class VideoController : MonoBehaviour
 		video.enabled = true;
 
 		video.Prepare();
-		
+
 		video.prepareCompleted += delegate
 		{
 			int videoWidth = video.texture.width;
@@ -179,13 +207,13 @@ public class VideoController : MonoBehaviour
 			video.Pause();
 		};
 
-		
-		video.errorReceived += delegate(VideoPlayer player, string message)
+
+		video.errorReceived += delegate (VideoPlayer player, string message)
 		{
 			videoLoaded = false;
 			Debug.Log(message);
 		};
-		screenshots.errorReceived += delegate(VideoPlayer player, string message)
+		screenshots.errorReceived += delegate (VideoPlayer player, string message)
 		{
 			Debug.Log(message);
 		};
@@ -208,7 +236,7 @@ public class VideoController : MonoBehaviour
 				descriptor.sRGB = false;
 				descriptor.width = width;
 				descriptor.height = height;
-				
+
 				var renderTexture = new RenderTexture(descriptor);
 				RenderSettings.skybox.mainTexture = renderTexture;
 				video.targetTexture = renderTexture;
@@ -221,7 +249,7 @@ public class VideoController : MonoBehaviour
 				break;
 			}
 			/*
-			NOTE(Simon): This was used when I special cased types of video. Might be neede din the future.
+			NOTE(Simon): This was used when I special cased types of video. Might be needed in the future.
 			case Perspective.Perspective180:
 			{
 				//currentCamera = Instantiate(camera180);
