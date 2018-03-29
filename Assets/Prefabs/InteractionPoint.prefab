@@ -45,7 +45,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4100435150306258
 Transform:
   m_ObjectHideFlags: 1
@@ -53,7 +53,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1456363817988398}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.05, y: 0, z: 0}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_Children: []
   m_Father: {fileID: 4572473772486916}
@@ -167,14 +167,14 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1456363817988398}
-  m_Text: 1
+  m_Text: 
   m_OffsetZ: -1
   m_CharacterSize: 1
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 0
-  m_FontSize: 75
+  m_FontSize: 65
   m_FontStyle: 1
   m_RichText: 1
   m_Font: {fileID: 12800000, guid: fb086249c5ddac44f9bcebb3aea43d2a, type: 3}
