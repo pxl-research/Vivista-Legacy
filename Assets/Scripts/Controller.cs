@@ -22,11 +22,26 @@ public class Controller : MonoBehaviour
 	{
 		if (controller.triggerPressed)
 		{
-			laser.transform.localScale = new Vector3(2, 1, 2);
+			laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
 		}
 		else
 		{
-			laser.transform.localScale = new Vector3(1, 1, 1);
+			laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
+		}
+
+		var ray = new Ray(controller.transform.position, controller.transform.forward);
+		RaycastHit hit;
+		Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Seekbar"));
+
+		if (hit.transform != null)
+		{
+			laser.transform.localPosition = new Vector3(0, 0, 1.07f);
+			laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
+		}
+		else
+		{
+			laser.transform.localPosition = new Vector3(0, 0, 50.175f);
+			laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
 		}
 	}
 
@@ -44,13 +59,15 @@ public class Controller : MonoBehaviour
 		if (trigger != null)
 		{
 			baseMaterial = trigger.material;
-			trigger.materials = new[] { baseMaterial, highlightMaterial};
+			trigger.materials = new[] { baseMaterial, highlightMaterial };
 		}
-		
 	}
 
 	public void ResetTriggerMaterial()
 	{
-		trigger.materials = new[] {baseMaterial};
+		if (trigger != null)
+		{
+			trigger.materials = new[] { baseMaterial };
+		}
 	}
 }

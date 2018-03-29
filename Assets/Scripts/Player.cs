@@ -225,6 +225,8 @@ public class Player : MonoBehaviour
 				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				bool interacting = false;
+
+				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
 				for (var i = interactionPoints.Count - 1; i >= 0; i--)
 				{
 					var point = interactionPoints[i];
@@ -233,6 +235,7 @@ public class Player : MonoBehaviour
 					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
 
+					//NOTE(Lander): current point is hit with the raycast
 					if (hit.transform != null && hit.transform.gameObject == point.point)
 					{
 						//NOTE(Kristof): Interacting with controller
@@ -277,33 +280,61 @@ public class Player : MonoBehaviour
 							crosshairTimer.fillAmount = point.interactionTimer / timeToInteract;
 							crosshair.fillAmount = 1 - (point.interactionTimer / timeToInteract);
 
-							if (point.interactionTimer > timeToInteract)
+							if (point.interactionTimer >= timeToInteract)
 							{
 								//NOTE(Kristof): Interacting with StartPoints
 								if (point.isStartPoint)
 								{
 									videoController.TogglePlay();
 									startPointGroup.SetActive(false);
-									VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, false);
+									VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, false);
 								}
 								//NOTE(Kristof): Interacting with InteractionPoints
 								else
 								{
-									point.panel.SetActive(true);
-									videoController.Pause();
+									//NOTE(Kristof): Making a panel active
+									if (!point.panel.activeSelf)
+									{
+										point.panel.SetActive(true);
+										activePoints++;
+										videoController.Pause();
+									}
+									//NOTE(Kristof): Making a panel inactive
+									// This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
+									// will always be between timeToInteract and timeToInteract + deltaTime
+									else if (timeToInteract < point.interactionTimer && point.interactionTimer < timeToInteract + Time.deltaTime)
+									{
+										point.panel.SetActive(false);
+										activePoints--;
+
+										point.interactionTimer = -1;
+										interacting = false;
+
+										if (activePoints == 0)
+										{
+											videoController.TogglePlay();
+										}
+									}
 								}
 							}
 						}
 					}
-					//NOTE(Kristof): Gets executed when you stop interacting with a point with an active panel
+					//NOTE(Kristof): Gets executed for the point.panels that the user made active before but are not currently being interacted with (no hit)
 					else if (point.panel != null && point.panel.activeSelf)
 					{
 						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 						{
-							point.panel.SetActive(false);
-							videoController.TogglePlay();
+							point.interactionTimer = 0;
+
+							//NOTE(Kristof): Video can resume if the user is not using VR
+							if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+							{
+								point.panel.SetActive(false);
+								videoController.TogglePlay();
+							}
 						}
 					}
+					//NOTE(Kristof): Gets executed for all inactive point.panels
 					else
 					{
 						point.interactionTimer = 0;

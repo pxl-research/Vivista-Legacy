@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
-public class TextPanel : MonoBehaviour 
+public class TextPanel : MonoBehaviour
 {
 	public Text title;
 	public Text body;
@@ -15,7 +16,7 @@ public class TextPanel : MonoBehaviour
 
 		canvas = GetComponent<Canvas>();
 		Move(position);
-		
+
 		var titleComponent = title.GetComponent<Text>();
 		var bodyComponent = body.GetComponent<Text>();
 
@@ -27,24 +28,15 @@ public class TextPanel : MonoBehaviour
 
 	public void Move(Vector3 position)
 	{
-		Vector3 newPos;
+		var newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+		newPos.y += 0.015f;
 
-		if (!Camera.main.orthographic)
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-			newPos.y += 0.01f;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-			newPos.y += 0.015f;
-		}
-	
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
-	
-	public void Update()
+
+	public void Start()
 	{
-		canvas.transform.rotation = Camera.main.transform.rotation;
+		//NOTE(Kristof): Initial rotation towards the camera
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 	}
 }
