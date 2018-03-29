@@ -49,6 +49,12 @@ public class ImagePanel : MonoBehaviour
 		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 
+	public void Start()
+	{
+		//NOTE(Kristof): Initial rotation towards the camera
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
+	}
+
 	public void Update()
 	{
 		if (downloading && www.isDone)
@@ -81,8 +87,6 @@ public class ImagePanel : MonoBehaviour
 			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
 			downloading = false;
 		}
-
-		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 
 	public void OnEnable ()
