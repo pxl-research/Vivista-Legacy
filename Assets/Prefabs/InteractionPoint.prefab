@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 33506945699639880}
   - component: {fileID: 23733738473614940}
   - component: {fileID: 65774656462878612}
-  - component: {fileID: 114424501541130760}
+  - component: {fileID: 114129431797566556}
   m_Layer: 8
   m_Name: InteractionPoint
   m_TagString: Untagged
@@ -182,3 +182,14 @@ TextMesh:
   m_Color:
     serializedVersion: 2
     rgba: 4278190080
+--- !u!114 &114129431797566556
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1057334565152188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53be5d7ab3f67ef458716788932b5c69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
