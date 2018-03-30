@@ -9,7 +9,7 @@ public class InteractionPoints : MonoBehaviour
 			gameObject.transform.localScale = new Vector3(2,2,1);
 		} else
 		{
-			gameObject.transform.localScale = new Vector3(3, 3, 1);
+			gameObject.transform.localScale = new Vector3(4, 4, 1);
 		}
 	}
 }
