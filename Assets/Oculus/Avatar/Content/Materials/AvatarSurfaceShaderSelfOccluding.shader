@@ -159,7 +159,7 @@
 			#pragma multi_compile VERTALPHA_OFF VERTALPHA_ON
 			#pragma multi_compile LAYERS_1 LAYERS_2 LAYERS_3 LAYERS_4 LAYERS_5 LAYERS_6 LAYERS_7 LAYERS_8
 
-			#include "Assets/OvrAvatar/Content/Materials/AvatarMaterialStateShader.cginc"
+			#include "Assets/Oculus/Avatar/Content/Materials/AvatarMaterialStateShader.cginc"
 
 			float4 frag(VertexOutput IN) : SV_Target
 			{
