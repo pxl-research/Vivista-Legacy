@@ -1,0 +1,57 @@
+fileFormatVersion: 2
+guid: 86f3bfa073a89944fb69f801c2713b9b
+folderAsset: yes
+timeCreated: 1519421176
+licenseType: Store
+PluginImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  iconMap: {}
+  executionOrder: {}
+  isPreloaded: 0
+  isOverridable: 0
+  platformData:
+  - first:
+      '': Editor
+    second:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+        OS: OSX
+  - first:
+      '': OSXIntel
+    second:
+      enabled: 1
+      settings: {}
+  - first:
+      '': OSXIntel64
+    second:
+      enabled: 1
+      settings: {}
+  - first:
+      Android: Android
+    second:
+      enabled: 0
+      settings:
+        CPU: ARMv7
+  - first:
+      Any: 
+    second:
+      enabled: 0
+      settings: {}
+  - first:
+      Editor: Editor
+    second:
+      enabled: 1
+      settings:
+        CPU: AnyCPU
+        DefaultValueInitialized: true
+        OS: OSX
+  - first:
+      Standalone: OSXUniversal
+    second:
+      enabled: 1
+      settings: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
