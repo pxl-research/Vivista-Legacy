@@ -42,6 +42,7 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
+	public GameObject videoPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
 	public GameObject projectorPrefab;
@@ -600,6 +601,13 @@ public class Player : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
+					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Video:
+				{
+					var panel = Instantiate(videoPanelPrefab);
 					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
 					newInteractionPoint.panel = panel;
 					break;

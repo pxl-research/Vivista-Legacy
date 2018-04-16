@@ -327,7 +327,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 114849243927565466}
-        m_MethodName: AnswerText
+        m_MethodName: AnswerVideo
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

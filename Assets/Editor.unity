@@ -1370,6 +1370,10 @@ MonoBehaviour:
     type: 2}
   imagePanelEditorPrefab: {fileID: 1075775492185780, guid: 701caaecd7e918c47b0be31b70396586,
     type: 2}
+  videoPanelPrefab: {fileID: 1069029354624192, guid: 8820685896856eb4c98218cd678bdd1f,
+    type: 2}
+  videoPanelEditorPrefab: {fileID: 1339106022732690, guid: 088ff0bf21aca5b4b877f84b8ee6303e,
+    type: 2}
   uploadPanelPrefab: {fileID: 1771621273584302, guid: 1007a2f2cc427de4ca38dfbacd1da109,
     type: 2}
   loginPanelPrefab: {fileID: 1961878947762782, guid: 298cea5983329894e976e326980058bc,

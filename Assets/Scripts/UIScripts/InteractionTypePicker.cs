@@ -41,4 +41,10 @@ public class InteractionTypePicker : MonoBehaviour
 		answered = true;
 		answer =  InteractionType.Text;
 	}
+
+	public void AnswerVideo()
+	{
+		answered = true;
+		answer = InteractionType.Video;
+	}
 }

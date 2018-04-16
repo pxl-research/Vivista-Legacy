@@ -30,6 +30,7 @@ public enum InteractionType {
 	None,
 	Text,
 	Image,
+	Video
 }
 
 [Serializable]
@@ -113,6 +114,8 @@ public class Editor : MonoBehaviour
 	public GameObject textPanelEditorPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject imagePanelEditorPrefab;
+	public GameObject videoPanelPrefab;
+	public GameObject videoPanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
@@ -257,6 +260,7 @@ public class Editor : MonoBehaviour
 			{
 				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
 			}
+
 			
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
@@ -268,6 +272,8 @@ public class Editor : MonoBehaviour
 			{
 				videoController.TogglePlay();
 			}
+			
+			
 		}
 
 		if (editorState == EditorState.PlacingInteractionPoint && !EventSystem.current.IsPointerOverGameObject())
@@ -347,6 +353,13 @@ public class Editor : MonoBehaviour
 						{
 							interactionEditor = Instantiate(textPanelEditorPrefab);
 							interactionEditor.GetComponent<TextPanelEditor>().Init(lastPlacedPointPos, "", "");
+
+							break;
+						}
+						case InteractionType.Video:
+						{
+							interactionEditor = Instantiate(videoPanelEditorPrefab);
+							interactionEditor.GetComponent<VideoPanelEditor>().Init(lastPlacedPointPos, "", "");
 
 							break;
 						}
@@ -437,6 +450,32 @@ public class Editor : MonoBehaviour
 						editorState = EditorState.Active;
 						lastPlacedPoint.filled = true;
 					}
+					break;
+				}
+				case InteractionType.Video:
+				{
+					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
+					if (editor.answered)
+					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var filename = "extra" + meta.extraCounter++;
+						var path = Path.Combine(folder, filename);
+
+						File.Copy(editor.answerURL, path);
+
+						var panel = Instantiate(videoPanelPrefab);
+						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, "file:///" + path, true);
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.body = "";
+						lastPlacedPoint.filename = filename;
+						lastPlacedPoint.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						lastPlacedPoint.filled = true;
+
+					}
+
 					break;
 				}
 				default:
@@ -550,6 +589,28 @@ public class Editor : MonoBehaviour
 						editorState = EditorState.Active;
 						pointToEdit.filled = true;
 					}
+					break;
+				}
+				case InteractionType.Video:
+				{
+					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
+					if (editor && editor.answered)
+					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var filename = "extra" + meta.extraCounter++;
+						var path = Path.Combine(folder, filename);
+
+						var panel = Instantiate(videoPanelPrefab);
+						panel.GetComponent<VideoPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, true);
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = filename;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+				
 					break;
 				}
 				default:
@@ -1003,6 +1064,13 @@ public class Editor : MonoBehaviour
 																				panel.GetComponent<ImagePanel>().imageURL, 
 																				true);
 						break;
+					case InteractionType.Video:
+						interactionEditor = Instantiate(videoPanelEditorPrefab);
+						interactionEditor.GetComponent<VideoPanelEditor>().Init(panel.transform.position, 
+																				panel.GetComponent<VideoPanel>().title.text, 
+																				panel.GetComponent<VideoPanel>().url, 
+																				true);
+						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1445,7 +1513,6 @@ public class Editor : MonoBehaviour
 				{
 					var panel = Instantiate(imagePanelPrefab);
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
-
 					int extraCount = Int32.Parse(url.Substring(url.LastIndexOf("extra") + "extra".Length));
 
 					if (extraCount > meta.extraCounter)
@@ -1457,11 +1524,33 @@ public class Editor : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.Video:
+				{
+					var panel = Instantiate(videoPanelPrefab);
+					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+					int extraCount = Int32.Parse(url.Substring(url.LastIndexOf("extra") + "extra".Length));
+
+					if (extraCount > meta.extraCounter)
+					{
+						meta.extraCounter = extraCount;
+					}
+
+					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, "file:///" + url, false);
+					newInteractionPoint.panel = panel;
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 
+			try
+			{
+
 			newInteractionPoint.panel.SetActive(false);
+			} catch(NullReferenceException e)
+			{
+				Debug.LogError(string.Format("{0}, {1}", e, e.Message));
+			}
 			AddItemToTimeline(newInteractionPoint, true);
 		}
 
