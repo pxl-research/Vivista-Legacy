@@ -42,6 +42,7 @@ public class Player : MonoBehaviour
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject localAvatarPrefab;
+	public GameObject projecterPrefab;
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
@@ -56,6 +57,7 @@ public class Player : MonoBehaviour
 	private Image crosshairTimer;
 
 	private GameObject indexPanel;
+	private GameObject projector;
 
 	private VRControllerState_t controllerLeftOldState;
 	private VRControllerState_t controllerRightOldState;
@@ -92,6 +94,20 @@ public class Player : MonoBehaviour
 		playerState = PlayerState.Opening;
 		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
+
+		//NOTE(Kristof): VR specific settings
+		if (XRSettings.enabled)
+		{
+			//NOTE(Kristof): Instantiate the projector
+			projector = Instantiate(projecterPrefab);
+			projector.transform.position = new Vector3(4.5f, 0, 0);
+			projector.transform.eulerAngles = new Vector3(0, 270, 0);
+			projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+			Canvass.main.enabled = false;
+			Canvass.seekbar.enabled = false; 
+		}
+
 	}
 
 	void Update()
@@ -107,7 +123,6 @@ public class Player : MonoBehaviour
 
 			if (XRSettings.enabled)
 			{
-
 				//NOTE(Lander): enable the highlight in the tutorial mode, even if the controller is activated too late
 				if (startPointGroup.activeSelf)
 				{
@@ -526,6 +541,29 @@ public class Player : MonoBehaviour
 		}
 	}
 
+	private void Togglecanvasses()
+	{
+		Canvass.main.enabled = !Canvass.main.enabled;
+		Canvass.seekbar.enabled = !Canvass.seekbar.enabled;
+	}
+
+	public void OnVideoBrowserHologramUp()
+	{
+		if (videoList == null)
+		{
+			StartCoroutine(LoadVideos());
+		}
+	}
+
+	//TODO(Kristof): Remove this function
+	private void DebugLine(float angle, Color colour)
+	{
+		var debugAngle = -angle * Mathf.PI / 180;
+		var debugX = 5f * Mathf.Cos(debugAngle);
+		var debugZ = 5f * Mathf.Sin(debugAngle);
+		Debug.DrawLine(Vector3.zero, new Vector3(debugX, 0, debugZ), colour);
+	}
+
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
 	private IEnumerator UpdatePointPositions()
 	{
@@ -572,5 +610,82 @@ public class Player : MonoBehaviour
 		{
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 		}
+	}
+
+	private IEnumerator LoadVideos()
+	{
+		var panel = indexPanel.GetComponentInChildren<IndexPanel>();
+
+		if (panel != null)
+		{
+			//NOTE(Kristof): ask the IndexPanel to pass the loaded videos
+			var videos = panel.LoadedVideos();
+			if (videos != null)
+			{
+				//NOTE(Kristof): Wait for hologram
+				yield return new WaitForSeconds(0.5f);
+
+				videoList = videos;
+
+				var videoCanvas = projector.GetComponentInChildren<Canvas>().transform;
+				videoCanvas.gameObject.GetComponent<Canvas>().sortingLayerName = "UIPanels";
+				StartCoroutine(FadevideoCanvasIn(videoCanvas));
+
+				//TODO(Kristof): remove debug for
+				//for (int i = 0; i < videoList.Count; i++)
+				for (int i = 0; i <= denominator; i++)
+				{
+					//NOTE(Kristof): Detirmine the next angle to put a video
+					//NOTE 45f			offset serves to skip the dead zone
+					//NOTE (i) * 30f		place a video every 30 degrees 
+					//NOTE 90f			camera rig rotation offset
+					var nextAngle = 45f + ((i) * debugAngleSize) + 90f;
+					var angle = -nextAngle * Mathf.PI / 180;
+					var x = 9.8f * Mathf.Cos(angle);
+					var z = 9.8f * Mathf.Sin(angle);
+
+					//NOTE(Kristof): Parent object that sets location
+					var pos = new GameObject("videoPosition");
+					pos.transform.SetParent(videoCanvas);
+					pos.transform.localScale = Vector3.one;
+					pos.transform.localPosition = new Vector3(x, 0, z);
+					pos.transform.LookAt(Camera.main.transform);
+					pos.transform.localEulerAngles += new Vector3(-pos.transform.localEulerAngles.x, 0, 0);
+
+					//NOTE(Kristof): Positioning the video relative to parent object
+					var trans = videoList[i].GetComponent<RectTransform>();
+					trans.SetParent(pos.transform);
+					trans.pivot = new Vector2(0.5f, 0.5f);
+					trans.gameObject.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+					trans.localPosition = Vector3.zero;
+					trans.localEulerAngles = new Vector3(0, 180, 0);
+					trans.localScale = new Vector3(0.018f, 0.018f, 0.018f);
+				}
+			}
+		}
+	}
+
+	public static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
+	{
+		var group = videoCanvas.GetComponent<CanvasGroup>();
+
+		for (float i = 0; i <= 1; i += Time.deltaTime * 1.5f)
+		{
+			group.alpha = i;
+			yield return null;
+		}
+	}
+
+	public static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
+	{
+		var group = videoCanvas.GetComponent<CanvasGroup>();
+
+		for (float i = 1; i >= 0; i -= Time.deltaTime * 1.5f)
+		{
+			group.alpha = i;
+			yield return null;
+		}
+		//NOTE(Kristof): Force Alpha to 0;
+		group.alpha = 0;
 	}
 }
