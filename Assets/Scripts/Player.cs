@@ -182,12 +182,12 @@ public class Player : MonoBehaviour
 
 				if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
 				{
-					controllerRay = controllerLeft.GetComponent<Controller>().castRay();
+					controllerRay = controllerLeft.GetComponent<Controller>().CastRay();
 				}
 
 				if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
 				{
-					controllerRay = controllerRight.GetComponent<Controller>().castRay();
+					controllerRay = controllerRight.GetComponent<Controller>().CastRay();
 				}
 
 				controllerLeftOldState = trackedControllerLeft.controllerState;

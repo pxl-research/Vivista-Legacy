@@ -75,7 +75,7 @@ public class Controller : MonoBehaviour
 		}
 	}
 
-	public Ray castRay()
+	public Ray CastRay()
 	{
 		return new Ray(laser.transform.position, laser.transform.up);
 	}
