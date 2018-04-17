@@ -340,8 +340,6 @@ public class IndexPanel : MonoBehaviour
 			{
 				var v = videosThisPage[i];
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, false);
-
-				ResizeVideoCollider(videos[i].GetComponent<IndexPanelVideo>());
 			}
 		}
 	}
@@ -409,8 +407,6 @@ public class IndexPanel : MonoBehaviour
 			{
 				var v = videosThisPage[i];
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
-
-				ResizeVideoCollider(videos[i].GetComponent<IndexPanelVideo>());
 			}
 		}
 	}
@@ -490,14 +486,5 @@ public class IndexPanel : MonoBehaviour
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		Filters.SetActive(true);
 		LoadPage();
-	}
-	
-	//NOTE(Simon): Index panel allows selection of videos in VR. Best way to do this in VR is through a ray-box collision check. This funciton resizes the box collider to match the video item size
-	private static void ResizeVideoCollider(IndexPanelVideo indexPanelVideo)
-	{
-		var panelSize = indexPanelVideo.GetComponent<RectTransform>().rect.size;
-		indexPanelVideo.GetComponent<BoxCollider>().size = new Vector3(panelSize.x, panelSize.y, 10);
-		indexPanelVideo.GetComponent<BoxCollider>().center = new Vector3(panelSize.x/2, -(panelSize.y/2), 0);
-
 	}
 }
