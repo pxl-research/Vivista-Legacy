@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 328216774126066080}
   - component: {fileID: 328165492225269240}
   - component: {fileID: 114964698923002538}
+  - component: {fileID: 135511700461891710}
   m_Layer: 0
   m_Name: VideoToTexture
   m_TagString: Untagged
@@ -57,12 +58,23 @@ MonoBehaviour:
   screenshots: {fileID: 328165492225269240}
   playing: 1
   baseRenderTexture: {fileID: 8400000, guid: 6fd7f8d405b8e924ba0862dc5996e864, type: 2}
+  audioSource: {fileID: 0}
   videoLoaded: 0
   videoLength: 0
-  currentTime: 0
   currentFractionalTime: 0
-  seekbar: {fileID: 0}
-  timeText: {fileID: 0}
+  rawCurrentTime: 0
+--- !u!135 &135511700461891710
+SphereCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1655578236565294}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 90
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!328 &328165492225269240
 VideoPlayer:
   m_ObjectHideFlags: 1

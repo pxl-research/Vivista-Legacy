@@ -1,24 +1,32 @@
 ﻿using UnityEngine;
 
-public class AnimateProjector : MonoBehaviour 
+public class AnimateProjector : MonoBehaviour
 {
+	public enum PlayStatus
+	{
+		Stopped,
+		Playing
+	}
 	public Animator projector;
+	public PlayStatus playStatus;
+
 	public ParticleSystem[] part;
 
 	//up = true, down = false
-	bool state = true;
+	public bool state = true;
+	private Player player;
 
 	void OnEnable()
 	{
 		EventManager.OnSpace += MenuAnimation;
 	}
 
-	void OnDisable ()
+	void OnDisable()
 	{
 		EventManager.OnSpace -= MenuAnimation;
 	}
 
-	void Start ()
+	void Start()
 	{
 		foreach (var t in part)
 		{
@@ -28,15 +36,18 @@ public class AnimateProjector : MonoBehaviour
 
 	public void MenuAnimation()
 	{
-		if (state) {
-			projector.SetTrigger ("Down");
-		} else {
-			projector.SetTrigger ("Up");
+		if (state)
+		{
+			projector.SetTrigger("Down");
+		}
+		else
+		{
+			projector.SetTrigger("Up");
 		}
 		state = !state;
 	}
 
-	public void SetParticles ()
+	public void SetParticles()
 	{
 		foreach (var t in part)
 		{
@@ -73,12 +84,11 @@ public class AnimateProjector : MonoBehaviour
 
 	public void AnimStart()
 	{
-
 	}
 
 	public void AnimStop()
 	{
-
+		player.OnVideoBrowserAnimStop();
 	}
 
 	public void Subscribe(Player player)

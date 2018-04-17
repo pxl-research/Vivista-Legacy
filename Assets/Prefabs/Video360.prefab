@@ -101,12 +101,11 @@ MonoBehaviour:
   screenshots: {fileID: 0}
   playing: 1
   baseRenderTexture: {fileID: 0}
+  audioSource: {fileID: 0}
   videoLoaded: 0
   videoLength: 0
-  currentTime: 0
   currentFractionalTime: 0
-  seekbar: {fileID: 0}
-  timeText: {fileID: 0}
+  rawCurrentTime: 0
 --- !u!135 &135985195261359682
 SphereCollider:
   m_ObjectHideFlags: 1
@@ -125,7 +124,7 @@ VideoPlayer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1908685642239088}
-  m_Enabled: 1
+  m_Enabled: 0
   m_VideoClip: {fileID: 0}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0

@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 [Serializable]
 public class VideoResponseSerialize
@@ -154,8 +155,12 @@ public class IndexPanel : MonoBehaviour
 				//NOTE(Simon): Check if hovering
 				hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
 
-				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
-
+				//TODO: Get this to work with Hittable
+				if (!XRSettings.enabled)
+				{
+					videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
+				}
+				
 				if (hovering && Input.GetMouseButtonDown(0))
 				{
 					detailVideo = loadedVideos.videos[i];
@@ -409,6 +414,11 @@ public class IndexPanel : MonoBehaviour
 				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
 			}
 		}
+	}
+
+	public List<GameObject> LoadedVideos()
+	{
+		return videos;
 	}
 
 	public void Previous()
