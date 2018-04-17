@@ -29,7 +29,7 @@ public class Controller : MonoBehaviour
 			laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
 		}
 
-		var ray = castRay();
+		var ray = CastRay();
 		RaycastHit hit;
 		Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Seekbar"));
 
