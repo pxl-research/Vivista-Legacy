@@ -4,10 +4,13 @@ using UnityEngine.Events;
 public class Hittable : MonoBehaviour
 {
 	public UnityEvent onHit;
-	public UnityEvent onHover;
+	public UnityEvent onHoverStart;
+	public UnityEvent onHoverStay;
+	public UnityEvent onHoverEnd;
 
 	public bool hitting;
 	public bool hovering;
+	public bool oldHovering;
 
 	// Use this for initialization
 	void Start()
@@ -17,7 +20,25 @@ public class Hittable : MonoBehaviour
 
 	void Update()
 	{
-		onHit.Invoke();
-		onHover.Invoke();
+		if (hitting)
+		{
+			onHit.Invoke();
+		}
+
+		if (!oldHovering && hovering)
+		{
+			onHoverStart.Invoke();
+		}
+
+		if (oldHovering && hovering)
+		{
+			onHoverStay.Invoke();
+		}
+
+		if (oldHovering && !hovering)
+		{
+			onHoverEnd.Invoke();
+		}
+		oldHovering = hovering;
 	}
 }

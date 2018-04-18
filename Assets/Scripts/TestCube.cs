@@ -10,26 +10,22 @@ public class TestCube : MonoBehaviour
 	{
 		hittable = gameObject.GetComponent<Hittable>();
 		hittable.onHit.AddListener(OnHit);
-		hittable.onHover.AddListener(OnHover);
+		hittable.onHoverStart.AddListener(OnHoverStart);
+		hittable.onHoverEnd.AddListener(OnHoverEnd);
 	}
 
 	public void OnHit()
 	{
-		if (hittable.hitting)
-		{
-			transform.localScale *= 1.5f;
-		}
+		transform.localScale *= 1.5f;
 	}
 
-	public void OnHover()
+	public void OnHoverStart()
 	{
-		if (hittable.hovering)
-		{
-			gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-		}
-		else
-		{
-			gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
-		}
+		gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
+	}
+
+	public void OnHoverEnd()
+	{
+		gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
 	}
 }
