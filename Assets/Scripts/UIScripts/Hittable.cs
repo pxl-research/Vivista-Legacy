@@ -10,6 +10,8 @@ public class Hittable : MonoBehaviour
 
 	public bool hitting;
 	public bool hovering;
+	
+	private bool oldHitting;
 	public bool oldHovering;
 
 	// Use this for initialization
@@ -20,7 +22,7 @@ public class Hittable : MonoBehaviour
 
 	void Update()
 	{
-		if (hitting)
+		if (!oldHitting && hitting)
 		{
 			onHit.Invoke();
 		}
@@ -40,5 +42,6 @@ public class Hittable : MonoBehaviour
 			onHoverEnd.Invoke();
 		}
 		oldHovering = hovering;
+		oldHovering = hitting;
 	}
 }
