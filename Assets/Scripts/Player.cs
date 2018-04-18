@@ -34,7 +34,7 @@ public class InteractionPointPlayer
 
 public class Player : MonoBehaviour
 {
-	public static List<IHittable> hittables;
+	public static List<Hittable> hittables;
 
 	public GameObject interactionPointPrefab;
 	public GameObject startPointGroup;
@@ -74,7 +74,7 @@ public class Player : MonoBehaviour
 
 	void Awake()
 	{
-		hittables = new List<IHittable>();
+		hittables = new List<Hittable>();
 	}
 
 	void Start()
@@ -339,30 +339,38 @@ public class Player : MonoBehaviour
 				//NOTE(Kristof): Looping over hittable UI scripts
 				foreach (var hittable in hittables)
 				{
-					if (hit.transform != null && hit.transform.gameObject == hittable.ReturnObject() )
+					if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
 					{
 						//NOTE(Kristof): Interacting with controller
 						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 						{
 							//NOTE(Kristof): Hovering is handled in Controller.cs
-							hittable.OnHit();
+							hittable.hitting = true;
 						}
 						//NOTE(Kristof): Interacting without controllers
 						else
 						{
 							interacting = true;
-							hittable.Hovering(true);
+							hittable.hovering = true;
 							if (_interactionTimer >= timeToInteract)
 							{
 								_interactionTimer = -1;
-								hittable.OnHit();
+								hittable.hitting = true;
+							}
+							else
+							{
+								hittable.hitting = false;
 							}
 						}
 					}
 					//NOTE(Kristof): Controller hover is handled in Controller.cs
 					else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 					{
-						hittable.Hovering(false);
+						hittable.hovering = false;
+					}
+					else
+					{
+						hittable.hitting = false;
 					}
 				}
 			}

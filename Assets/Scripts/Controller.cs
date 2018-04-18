@@ -60,7 +60,7 @@ public class Controller : MonoBehaviour
 
 		foreach (var hittable in Player.hittables)
 		{
-			if (hit.transform != null && hit.transform.gameObject == hittable.ReturnObject())
+			if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
 			{
 				uiHovering = true;
 			}
@@ -103,15 +103,19 @@ public class Controller : MonoBehaviour
 		return new Ray(laser.transform.position, laser.transform.up);
 	}
 
-	public static void OnHover(IHittable hittable)
+	public static void OnHover(Hittable hittable)
 	{
-		if (controllerList[0].uiHovering || controllerList[1].uiHovering)
+		foreach (var controller in controllerList)
 		{
-			hittable.Hovering(true);
-		}
-		else
-		{
-			hittable.Hovering(false);
+			if (controller.uiHovering)
+			{
+				hittable.hovering = true;
+				break;
+			}
+			else
+			{
+				hittable.hovering = false;
+			}
 		}
 	}
 }
