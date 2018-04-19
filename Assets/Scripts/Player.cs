@@ -41,6 +41,7 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
+	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
 	public GameObject projecterPrefab;
 
@@ -73,6 +74,12 @@ public class Player : MonoBehaviour
 	private const float timeToInteract = 0.75f;
 	private bool interacting;
 	private float _interactionTimer;
+
+	private bool[] cameraRigMovable = new bool[2];
+
+	//NOTE(Kristof): Debug vars
+	private float denominator = 7;
+	private float debugAngleSize;
 
 	void Awake()
 	{
@@ -113,6 +120,53 @@ public class Player : MonoBehaviour
 	void Update()
 	{
 		VRDevices.DetectDevices();
+
+		//TODO(Kristof): Remove debug lines
+		{
+			debugAngleSize = 270 / denominator;
+
+			DebugLine(0, Color.red);
+			DebugLine(-22.5f, Color.blue);
+			DebugLine(22.5f, Color.blue);
+
+			for (int i = 0; i <= denominator; i++)
+			{
+				DebugLine(45f + (i * debugAngleSize), Color.magenta);
+			}
+		}
+
+		Ray ray;
+		//NOTE(Kristof): Deciding on which object the Ray will be based on
+		{
+			Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+			Ray controllerRay = new Ray();
+
+			const ulong ulTriggerValue = (ulong)1 << 33;
+
+			if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
+			{
+				controllerRay = controllerLeft.GetComponent<Controller>().CastRay();
+			}
+
+			if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
+			{
+				controllerRay = controllerRight.GetComponent<Controller>().CastRay();
+			}
+
+			controllerLeftOldState = trackedControllerLeft.controllerState;
+			controllerRightOldState = trackedControllerRight.controllerState;
+
+			if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+			{
+				ray = controllerRay;
+			}
+			else
+			{
+				ray = cameraRay;
+			}
+		}
+
+		interacting = false;
 
 		if (playerState == PlayerState.Watching)
 		{
@@ -413,6 +467,105 @@ public class Player : MonoBehaviour
 				else
 				{
 					Debug.Log("Couldn't open savefile");
+				}
+			}
+		}
+
+
+		//NOTE(Kristof): Interaction with UI
+		{
+			RaycastHit hit;
+			Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("UI"));
+
+			//NOTE(Kristof): Looping over hittable UI scripts
+			foreach (var hittable in hittables)
+			{
+				if (hittable == null) continue;
+				hittable.hitting = false;
+
+				if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+				{
+					//NOTE(Kristof): Interacting with controller
+					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+					{
+						//NOTE(Kristof): Hovering is handled in Controller.cs
+						hittable.hitting = true;
+					}
+					//NOTE(Kristof): Interacting without controllers
+					else
+					{
+						interacting = true;
+						hittable.hovering = true;
+						if (_interactionTimer >= timeToInteract)
+						{
+							_interactionTimer = -1;
+							hittable.hitting = true;
+						}
+					}
+				}
+				//NOTE(Kristof): Controller hover is handled in Controller.cs
+				else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
+				{
+					hittable.hovering = false;
+				}
+			}
+		}
+
+		//NOTE(Kristof): Interaction UI behaviour
+		{
+			if (interacting)
+			{
+				_interactionTimer += Time.deltaTime;
+				crosshairTimer.fillAmount = _interactionTimer / timeToInteract;
+				crosshair.fillAmount = 1 - (_interactionTimer / timeToInteract);
+			}
+			else
+			{
+				_interactionTimer = 0;
+				crosshairTimer.fillAmount = 0;
+				crosshair.fillAmount = 1;
+			}
+		}
+
+		//NOTE(Kristof): Turning CameraRig
+		{
+			//if (OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick).x > 0.8f && oldPrimaryStick < 0.8f)
+			var controllers = new[]
+			{
+				controllerLeft.GetComponent<SteamVR_TrackedObject>(),
+				controllerRight.GetComponent<SteamVR_TrackedObject>()
+			};
+
+			for (var index = 0; index < controllers.Length; index++)
+			{
+				var controller = controllers[index];
+				if (controller.index > SteamVR_TrackedObject.EIndex.None)
+				{
+					var device = SteamVR_Controller.Input((int)controller.index);
+
+					if (device.GetTouch(SteamVR_Controller.ButtonMask.Touchpad))
+					{
+						if ((VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Oculus ||
+							 device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad)))
+						{
+							var touchpad = device.GetAxis();
+
+							if (-0.7f < touchpad.x && touchpad.x < 0.7f)
+							{
+								cameraRigMovable[index] = true;
+							}
+							else if (touchpad.x > 0.7f && cameraRigMovable[index])
+							{
+								cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
+								cameraRigMovable[index] = false;
+							}
+							else if (touchpad.x < -0.7f && cameraRigMovable[index])
+							{
+								cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
+								cameraRigMovable[index] = false;
+							}
+						}
+					}
 				}
 			}
 		}
