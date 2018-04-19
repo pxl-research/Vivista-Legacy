@@ -68,7 +68,7 @@ public class Controller : MonoBehaviour
 			{
 				uiHovering = false;
 			}
-			OnHover(hittable);
+			HoveringOver(hittable);
 		}
 	}
 
@@ -103,7 +103,7 @@ public class Controller : MonoBehaviour
 		return new Ray(laser.transform.position, laser.transform.up);
 	}
 
-	public static void OnHover(Hittable hittable)
+	public static void HoveringOver(Hittable hittable)
 	{
 		foreach (var controller in controllerList)
 		{

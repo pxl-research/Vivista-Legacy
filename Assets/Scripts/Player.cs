@@ -297,8 +297,8 @@ public class Player : MonoBehaviour
 										videoController.Pause();
 									}
 									//NOTE(Kristof): Making a panel inactive
-									// This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
-									// will always be between timeToInteract and timeToInteract + deltaTime
+									//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
+									//NOTE will always be between timeToInteract and timeToInteract + deltaTime
 									else if (timeToInteract < _interactionTimer && _interactionTimer < timeToInteract + Time.deltaTime)
 									{
 										point.panel.SetActive(false);
@@ -339,6 +339,8 @@ public class Player : MonoBehaviour
 				//NOTE(Kristof): Looping over hittable UI scripts
 				foreach (var hittable in hittables)
 				{
+					hittable.hitting = false;
+
 					if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
 					{
 						//NOTE(Kristof): Interacting with controller
@@ -357,20 +359,12 @@ public class Player : MonoBehaviour
 								_interactionTimer = -1;
 								hittable.hitting = true;
 							}
-							else
-							{
-								hittable.hitting = false;
-							}
 						}
 					}
 					//NOTE(Kristof): Controller hover is handled in Controller.cs
 					else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 					{
 						hittable.hovering = false;
-					}
-					else
-					{
-						hittable.hitting = false;
 					}
 				}
 			}
