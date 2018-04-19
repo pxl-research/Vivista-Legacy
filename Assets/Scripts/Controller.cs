@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Controller : MonoBehaviour
 {
@@ -11,10 +12,16 @@ public class Controller : MonoBehaviour
 
 	private SteamVR_TrackedController controller;
 
+	private static List<Controller> controllerList;
+	private bool uiHovering;
+
 	// Use this for initialization
 	void Start()
 	{
 		controller = GetComponent<SteamVR_TrackedController>();
+
+		controllerList = controllerList ?? new List<Controller>();
+		controllerList.Add(this);
 	}
 
 	// Update is called once per frame
@@ -29,7 +36,7 @@ public class Controller : MonoBehaviour
 			laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
 		}
 
-		var ray = castRay();
+		var ray = CastRay();
 		RaycastHit hit;
 		Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Seekbar"));
 
@@ -46,6 +53,22 @@ public class Controller : MonoBehaviour
 		{
 			laser.transform.localPosition = new Vector3(0, 0, 0.1f);
 			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
+		}
+
+		//NOTE(Kristof): Calling Hovering for hittable UI elements
+		Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("UI"));
+
+		foreach (var hittable in Player.hittables)
+		{
+			if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+			{
+				uiHovering = true;
+			}
+			else
+			{
+				uiHovering = false;
+			}
+			OnHover(hittable);
 		}
 	}
 
@@ -78,5 +101,21 @@ public class Controller : MonoBehaviour
 	public Ray CastRay()
 	{
 		return new Ray(laser.transform.position, laser.transform.up);
+	}
+
+	public static void OnHover(Hittable hittable)
+	{
+		foreach (var controller in controllerList)
+		{
+			if (controller.uiHovering)
+			{
+				hittable.hovering = true;
+				break;
+			}
+			else
+			{
+				hittable.hovering = false;
+			}
+		}
 	}
 }

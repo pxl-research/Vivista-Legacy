@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class IndexPanelVideo : MonoBehaviour 
+public class IndexPanelVideo : MonoBehaviour
 {
 	public Text titleText;
 	public Text authorText;
@@ -14,6 +14,7 @@ public class IndexPanelVideo : MonoBehaviour
 
 	private WWW imageDownload;
 	private string uuid;
+
 	private bool isLocal;
 
 	public void SetData(VideoSerialize video, bool local)
@@ -36,6 +37,11 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 
 		Refresh();
+
+		//NOTE(Simon): Index panel allows selection of videos in VR. Best way to do this in VR is through a ray-box collision check. This funciton resizes the box collider to match the video item size
+		var panelSize = GetComponent<RectTransform>().rect.size;
+		GetComponent<BoxCollider>().size = new Vector3(panelSize.x, panelSize.y, 0);
+		GetComponent<BoxCollider>().center = new Vector3(panelSize.x / 2, -(panelSize.y / 2), 0);
 	}
 
 	public void Refresh()

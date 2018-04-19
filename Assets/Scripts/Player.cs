@@ -34,6 +34,8 @@ public class InteractionPointPlayer
 
 public class Player : MonoBehaviour
 {
+	public static List<Hittable> hittables;
+
 	public GameObject interactionPointPrefab;
 	public GameObject startPointGroup;
 	public GameObject indexPanelPrefab;
@@ -65,6 +67,15 @@ public class Player : MonoBehaviour
 	private bool isOutofView;
 	private int activePoints;
 	private string openVideo;
+
+	private const float timeToInteract = 0.75f;
+	private bool interacting;
+	private float _interactionTimer;
+
+	void Awake()
+	{
+		hittables = new List<Hittable>();
+	}
 
 	void Start()
 	{
@@ -207,18 +218,17 @@ public class Player : MonoBehaviour
 			ray.origin = ray.GetPoint(100);
 			ray.direction = -ray.direction;
 
+			interacting = false;
+
 			//Note(Simon): Interaction with points
 			{
 				RaycastHit hit;
 				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
-				bool interacting = false;
-
 				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
 				for (var i = interactionPoints.Count - 1; i >= 0; i--)
 				{
 					var point = interactionPoints[i];
-					const float timeToInteract = 0.75f;
 
 					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
@@ -229,6 +239,7 @@ public class Player : MonoBehaviour
 						//NOTE(Kristof): Interacting with controller
 						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 						{
+							//NOTE(Kristof): The controllers only raycast on trigger down
 							//NOTE(Kristof): Interacting with StartPoints
 							if (point.isStartPoint)
 							{
@@ -264,11 +275,8 @@ public class Player : MonoBehaviour
 						else
 						{
 							interacting = true;
-							point.interactionTimer += Time.deltaTime;
-							crosshairTimer.fillAmount = point.interactionTimer / timeToInteract;
-							crosshair.fillAmount = 1 - (point.interactionTimer / timeToInteract);
-
-							if (point.interactionTimer >= timeToInteract)
+							
+							if (_interactionTimer >= timeToInteract)
 							{
 								//NOTE(Kristof): Interacting with StartPoints
 								if (point.isStartPoint)
@@ -283,6 +291,7 @@ public class Player : MonoBehaviour
 									//NOTE(Kristof): Making a panel active
 									if (!point.panel.activeSelf)
 									{
+										_interactionTimer = -1;
 										point.panel.SetActive(true);
 										activePoints++;
 										videoController.Pause();
@@ -290,13 +299,12 @@ public class Player : MonoBehaviour
 									//NOTE(Kristof): Making a panel inactive
 									// This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
 									// will always be between timeToInteract and timeToInteract + deltaTime
-									else if (timeToInteract < point.interactionTimer && point.interactionTimer < timeToInteract + Time.deltaTime)
+									else if (timeToInteract < _interactionTimer && _interactionTimer < timeToInteract + Time.deltaTime)
 									{
 										point.panel.SetActive(false);
 										activePoints--;
 
-										point.interactionTimer = -1;
-										interacting = false;
+										_interactionTimer = -1;
 
 										if (activePoints == 0)
 										{
@@ -312,8 +320,6 @@ public class Player : MonoBehaviour
 					{
 						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 						{
-							point.interactionTimer = 0;
-
 							//NOTE(Kristof): Video can resume if the user is not using VR
 							if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
 							{
@@ -322,18 +328,64 @@ public class Player : MonoBehaviour
 							}
 						}
 					}
-					//NOTE(Kristof): Gets executed for all inactive point.panels
+				}
+			}
+
+			//NOTE(Kristof): Interaction with UI
+			{
+				RaycastHit hit;
+				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("UI"));
+
+				//NOTE(Kristof): Looping over hittable UI scripts
+				foreach (var hittable in hittables)
+				{
+					if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+					{
+						//NOTE(Kristof): Interacting with controller
+						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+						{
+							//NOTE(Kristof): Hovering is handled in Controller.cs
+							hittable.hitting = true;
+						}
+						//NOTE(Kristof): Interacting without controllers
+						else
+						{
+							interacting = true;
+							hittable.hovering = true;
+							if (_interactionTimer >= timeToInteract)
+							{
+								_interactionTimer = -1;
+								hittable.hitting = true;
+							}
+							else
+							{
+								hittable.hitting = false;
+							}
+						}
+					}
+					//NOTE(Kristof): Controller hover is handled in Controller.cs
+					else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
+					{
+						hittable.hovering = false;
+					}
 					else
 					{
-						point.interactionTimer = 0;
+						hittable.hitting = false;
 					}
 				}
+			}
 
-				if (!interacting)
-				{
-					crosshairTimer.fillAmount = 0;
-					crosshair.fillAmount = 1;
-				}
+			if (interacting)
+			{
+				_interactionTimer += Time.deltaTime;
+				crosshairTimer.fillAmount = _interactionTimer / timeToInteract;
+				crosshair.fillAmount = 1 - (_interactionTimer / timeToInteract);
+			}
+			else
+			{
+				_interactionTimer = 0;
+				crosshairTimer.fillAmount = 0;
+				crosshair.fillAmount = 1;
 			}
 		}
 
@@ -373,7 +425,6 @@ public class Player : MonoBehaviour
 
 		//NOTE(Kristof): Add the 4 interactionpoints used for the mini-tutorial and starting the video, then load the InteractionPoints
 		{
-
 			startPointGroup = Instantiate(startPointGroup);
 			var startPoints = new List<GameObject>();
 			startPoints.AddRange(GameObject.FindGameObjectsWithTag("StartPoint"));
@@ -393,7 +444,6 @@ public class Player : MonoBehaviour
 				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 				{
 					content.text = "Aim at the white point below and press the trigger";
-
 				}
 				else
 				{
@@ -403,13 +453,13 @@ public class Player : MonoBehaviour
 		}
 
 		data.points.Sort((x, y) => x.startTime != y.startTime
-										? x.startTime.CompareTo(y.startTime) 
+										? x.startTime.CompareTo(y.startTime)
 										: x.endTime.CompareTo(y.endTime));
-                    
+
 		foreach (var point in data.points)
 		{
 			var newPoint = Instantiate(interactionPointPrefab, point.position, Quaternion.identity);
-			
+
 			var newInteractionPoint = new InteractionPointPlayer
 			{
 				startTime = point.startTime,
