@@ -161,6 +161,7 @@ public class Editor : MonoBehaviour
 	public Cursors cursors;
 	public List<Color> timelineColors;
 	private int colorIndex;
+	private int interactionPointCount;
 
 	void Awake()
 	{
@@ -189,10 +190,17 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
+		interactionPoints.Sort((x, y) => x.startTime != y.startTime
+			? x.startTime.CompareTo(y.startTime)
+			: x.endTime.CompareTo(y.endTime));
+		interactionPointCount = 0;
+
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
 		foreach (var point in interactionPoints)
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
+
 		}
 
 		if (videoController.videoLoaded)
@@ -731,6 +739,9 @@ public class Editor : MonoBehaviour
 		var newRow = Instantiate(timelineRow);
 		point.timelineRow = newRow;
 		newRow.transform.SetParent(timeline.transform);
+		
+		point.point.transform.LookAt(Vector3.zero, Vector3.up);
+		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
 		//Note(Simon): By default, make interactionPoints invisible on load
 		interactionPoints.Add(point);
