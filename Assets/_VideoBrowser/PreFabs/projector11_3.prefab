@@ -202,7 +202,6 @@ GameObject:
   - component: {fileID: 4976209051309594}
   - component: {fileID: 33028549037915992}
   - component: {fileID: 23210404956737638}
-  - component: {fileID: 65593263192798156}
   m_Layer: 9
   m_Name: Pedistal
   m_TagString: Untagged
@@ -842,18 +841,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1277754259121476}
   m_Mesh: {fileID: 4300002, guid: 48eb6fdab9ba62a40b31b319e0deb078, type: 3}
---- !u!65 &65593263192798156
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1277754259121476}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.02, y: 0.02, z: 0.16}
-  m_Center: {x: 0, y: 0, z: -0.07}
 --- !u!95 &95218602163580132
 Animator:
   serializedVersion: 3
@@ -899,6 +886,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   projector: {fileID: 95218602163580132}
+  playStatus: 0
   part:
   - {fileID: 198958190545631734}
   - {fileID: 198986999227368926}

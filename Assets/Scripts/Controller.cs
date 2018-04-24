@@ -5,16 +5,16 @@ public class Controller : MonoBehaviour
 	public GameObject laser;
 	public GameObject model;
 	public GameObject controllerUI;
+	public GameObject hovered;
+	public GameObject cursor;
+
+	public bool uiHovering;
 
 	public Material highlightMaterial;
-
 	private MeshRenderer trigger;
 	private Material baseMaterial;
 
 	private SteamVR_TrackedController controller;
-
-	public bool uiHovering;
-	public GameObject hovered;
 
 	// Use this for initialization
 	void Start()
@@ -25,6 +25,15 @@ public class Controller : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
+		//NOTE(Lander):Difference rotation and position for Vive and Touch controllers
+		{
+			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
+			{
+				laser.transform.localPosition = new Vector3(0, 0, 0.1f);
+				laser.transform.localEulerAngles = new Vector3(90, 0, 0);
+			}
+		}
+
 		//NOTE(Kristof): Fatty laser when pressing trigger
 		{
 			if (controller.triggerPressed)
@@ -44,26 +53,7 @@ public class Controller : MonoBehaviour
 		var ray = CastRay();
 		RaycastHit hit;
 
-		//NOTE(Kristof): Shortening the laser when it hits the UI
-		{
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI") + LayerMask.GetMask("WorldUI"));
-
-			if (hit.transform != null)
-			{
-				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
-			}
-			else
-			{
-				laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
-			}
-			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
-			{
-				laser.transform.localPosition = new Vector3(0, 0, 0.1f);
-				laser.transform.localEulerAngles = new Vector3(90, 0, 0);
-			}
-		}
-
-		//NOTE(Kristof): Checking for hovered UI elements
+		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
 		{
 			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI") + LayerMask.GetMask("WorldUI"));
 
@@ -71,11 +61,31 @@ public class Controller : MonoBehaviour
 			{
 				uiHovering = true;
 				hovered = hit.transform.gameObject;
+				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
 			}
 			else
 			{
 				uiHovering = false;
 				hovered = null;
+				laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
+			}
+		}
+
+		//NOTE(Kristof): Moving cursor to hit location
+		{
+			cursor.transform.position = Vector3.zero;
+			cursor.SetActive(false);
+
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI") + LayerMask.GetMask("WorldUI") + LayerMask.GetMask("interactionPoints"));
+			if (hit.transform != null)
+			{
+				var r = 0.02f * hit.distance;
+				if (r >= 0.04f)
+				{
+					cursor.SetActive(true);
+					cursor.transform.position = hit.point;
+					cursor.transform.localScale = new Vector3(r, r, r);
+				}
 			}
 		}
 	}

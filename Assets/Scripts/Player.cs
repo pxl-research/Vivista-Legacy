@@ -120,6 +120,8 @@ public class Player : MonoBehaviour
 			//NOTE(Kristof): Hide the canvasses when in VR
 			Togglecanvasses();
 			StartCoroutine(InstantiateStartPointGroup());
+
+			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 		}
 	}
 
@@ -127,10 +129,88 @@ public class Player : MonoBehaviour
 	{
 		VRDevices.DetectDevices();
 
-		//NOTE(Lander): enable the highlight in the tutorial mode
-		if (projector.GetComponent<AnimateProjector>().state || startPointGroup.activeSelf)
+		//NOTE(Kristof): VR specific behaviour
 		{
-			VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, true);
+			if (XRSettings.enabled)
+			{
+				videoController.transform.position = Camera.main.transform.position;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+
+				//NOTE(Lander): enable the highlight in the tutorial mode
+				if (projector.GetComponent<AnimateProjector>().state || startPointGroup.activeSelf)
+				{
+					VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, true);
+				}
+
+				//NOTE(Kristof): Rotating the seekbar
+				{
+					//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
+					var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
+
+					var fov = Camera.main.fieldOfView;
+					//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking towards
+					var cameraAngle = Camera.main.transform.eulerAngles.y;
+
+					//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
+					var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
+					var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
+
+					var angle = Mathf.Min(distanceLeft, distanceRight);
+
+					if (isOutofView)
+					{
+						if (angle < 2.5f)
+						{
+							isOutofView = false;
+						}
+					}
+					else
+					{
+						if (angle > fov)
+						{
+							isOutofView = true;
+						}
+					}
+
+					if (isOutofView)
+					{
+						var newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
+
+						//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
+						//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
+						var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
+						var x = 1.8f * Mathf.Cos(radianAngle);
+						var y = Camera.main.transform.position.y - 2f;
+						var z = 1.8f * Mathf.Sin(radianAngle);
+
+						Canvass.seekbar.transform.position = new Vector3(x, y, z);
+						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
+					}
+				}
+			}
+			else
+			{
+				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
+			}
+		}
+
+		//NOTE(Kristof): Controller specific behaviour
+		{
+			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
+			{
+				crosshair.enabled = false;
+				crosshairTimer.enabled = false;
+			}
+			else
+			{
+				crosshair.enabled = true;
+				crosshairTimer.enabled = true;
+			}
+
+			if (Input.mouseScrollDelta.y != 0)
+			{
+				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
+			}
 		}
 
 		//TODO(Kristof): Remove debug lines
@@ -186,84 +266,6 @@ public class Player : MonoBehaviour
 			{
 				videoController.TogglePlay();
 			}
-
-			//NOTE(Kristof): VR specific behaviour
-			{
-				if (XRSettings.enabled)
-				{
-					videoController.transform.position = Camera.main.transform.position;
-					Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
-
-					//NOTE(Kristof): Rotating the seekbar
-					{
-						//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
-						var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
-
-						var fov = Camera.main.fieldOfView;
-						//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking towards
-						var cameraAngle = Camera.main.transform.eulerAngles.y;
-
-						//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
-						var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
-						var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
-
-						var angle = Mathf.Min(distanceLeft, distanceRight);
-
-						if (isOutofView)
-						{
-							if (angle < 2.5f)
-							{
-								isOutofView = false;
-							}
-						}
-						else
-						{
-							if (angle > fov)
-							{
-								isOutofView = true;
-							}
-						}
-
-						if (isOutofView)
-						{
-							var newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
-
-							//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
-							//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
-							var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
-							var x = 1.8f * Mathf.Cos(radianAngle);
-							var z = 1.8f * Mathf.Sin(radianAngle);
-
-							Canvass.seekbar.transform.position = new Vector3(x, 0, z);
-							Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
-						}
-					}
-				}
-				else
-				{
-					Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
-				}
-			}
-
-			//NOTE(Kristof): Controller specific behaviour
-			{
-				if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
-				{
-					crosshair.enabled = false;
-					crosshairTimer.enabled = false;
-				}
-				else
-				{
-					crosshair.enabled = true;
-					crosshairTimer.enabled = true;
-				}
-
-				if (Input.mouseScrollDelta.y != 0)
-				{
-					Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
-				}
-			}
-
 
 			//Note(Simon): Create a reversed raycast to find positions on the sphere with
 			ray.origin = ray.GetPoint(100);
@@ -340,9 +342,12 @@ public class Player : MonoBehaviour
 									//NOTE(Kristof): Making a panel active
 									if (!point.panel.activeSelf)
 									{
-										_interactionTimer = -1;
+										if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
+										{
+											_interactionTimer = -1;
+											activePoints++;
+										}
 										point.panel.SetActive(true);
-										activePoints++;
 										videoController.Pause();
 									}
 									//NOTE(Kristof): Making a panel inactive
@@ -392,7 +397,10 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-					EventManager.OnSpace();
+					if (XRSettings.enabled)
+					{
+						EventManager.OnSpace();
+					}
 				}
 				else
 				{
@@ -453,9 +461,18 @@ public class Player : MonoBehaviour
 
 		//NOTE(Kristof): Interaction interactionTimer and Crosshair behaviour
 		{
-			_interactionTimer = 0;
-			crosshairTimer.fillAmount = 0;
-			crosshair.fillAmount = 1;
+			if (interacting)
+			{
+				_interactionTimer += Time.deltaTime;
+				crosshairTimer.fillAmount = _interactionTimer / timeToInteract;
+				crosshair.fillAmount = 1 - (_interactionTimer / timeToInteract);
+			}
+			else
+			{
+				_interactionTimer = 0;
+				crosshairTimer.fillAmount = 0;
+				crosshair.fillAmount = 1;
+			}
 		}
 
 		//NOTE(Kristof): Turning CameraRig
