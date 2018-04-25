@@ -118,14 +118,6 @@ public class IndexPanel : MonoBehaviour
 
 	public void Update()
 	{
-#if UNITY_EDITOR
-		// NOTE(Lander): This is to speed up debugging
-		if (Input.GetKeyUp(KeyCode.F9))
-		{
-			answered = true;
-			answerVideoId = loadedVideos.videos[0].uuid;
-		}
-#endif
 		if (detailPanel != null)
 		{
 			var panel = detailPanel.GetComponent<DetailPanel>();

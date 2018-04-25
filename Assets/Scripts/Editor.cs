@@ -10,7 +10,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public enum EditorState {
+public enum EditorState
+{
 	Inactive,
 	Active,
 	PlacingInteractionPoint,
@@ -26,7 +27,8 @@ public enum EditorState {
 	LoggingIn
 }
 
-public enum InteractionType {
+public enum InteractionType
+{
 	None,
 	Text,
 	Image,
@@ -195,7 +197,7 @@ public class Editor : MonoBehaviour
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 	}
 
-	void Update () 
+	void Update()
 	{
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
@@ -225,7 +227,7 @@ public class Editor : MonoBehaviour
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
-		
+
 		if (editorState == EditorState.Inactive)
 		{
 			if (Input.GetKeyDown(KeyCode.F1))
@@ -244,8 +246,22 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Active)
 		{
-			if (Input.GetMouseButtonDown(0) 
-				&& !EventSystem.current.IsPointerOverGameObject() 
+			var ignoreRaycast = false;
+			if (Input.GetMouseButtonDown(0) && Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
+			{
+				foreach (var point in interactionPoints)
+				{
+					if (point.type == InteractionType.Video)
+					{
+						point.panel.GetComponent<VideoPanel>().TogglePlay();
+					}
+				}
+				ignoreRaycast = true;
+			}
+
+			if (!ignoreRaycast
+				&& Input.GetMouseButtonDown(0)
+				&& !EventSystem.current.IsPointerOverGameObject()
 				&& !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
 			{
 				editorState = EditorState.PlacingInteractionPoint;
@@ -261,7 +277,7 @@ public class Editor : MonoBehaviour
 				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
 			}
 
-			
+
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetEditorActive(false);
@@ -272,8 +288,8 @@ public class Editor : MonoBehaviour
 			{
 				videoController.TogglePlay();
 			}
-			
-			
+
+
 		}
 
 		if (editorState == EditorState.PlacingInteractionPoint && !EventSystem.current.IsPointerOverGameObject())
@@ -408,7 +424,7 @@ public class Editor : MonoBehaviour
 			{
 				case InteractionType.Image:
 				{
-					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
+					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
@@ -437,7 +453,7 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.Text:
 				{
-					var editor = interactionEditor.GetComponent<TextPanelEditor>(); 
+					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
@@ -458,16 +474,26 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = "extra" + meta.extraCounter++;
-						var path = Path.Combine(folder, filename);
+						var extension = Path.GetExtension(editor.answerURL);
+						var filename = Path.Combine("extra", BitConverter.ToString(System.Security.Cryptography.SHA1.Create().ComputeHash(File.OpenRead(editor.answerURL))).ToLower().Replace("-", ""));
+						var pathWithExt = Path.Combine(folder, filename + extension);
+						var pathNoExt = Path.Combine(folder, filename);
 
-						File.Copy(editor.answerURL, path);
+						if (File.Exists(pathWithExt) && !File.Exists(pathNoExt))
+						{
+							File.Move(pathWithExt, pathNoExt);
+						}
+
+						if (!File.Exists(pathNoExt))
+						{
+							File.Copy(editor.answerURL, pathNoExt);
+						}
 
 						var panel = Instantiate(videoPanelPrefab);
 						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, "file:///" + path, true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = filename;
+						lastPlacedPoint.filename = filename + extension;
 						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
@@ -499,7 +525,7 @@ public class Editor : MonoBehaviour
 				SetEditorActive(false);
 			}
 		}
-		
+
 		if (editorState == EditorState.MovingInteractionPoint)
 		{
 			if (Physics.Raycast(ray, out hit, 100))
@@ -509,13 +535,16 @@ public class Editor : MonoBehaviour
 				pointToMove.point.transform.position = drawLocation;
 				pointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
 
-				switch(pointToMove.type)
+				switch (pointToMove.type)
 				{
 					case InteractionType.Text:
 						pointToMove.panel.GetComponent<TextPanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.Image:
 						pointToMove.panel.GetComponent<ImagePanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.Video:
+						pointToMove.panel.GetComponent<VideoPanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.None:
 						break;
@@ -544,11 +573,11 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.EditingInteractionPoint)
 		{
-			switch(pointToEdit.type)
+			switch (pointToEdit.type)
 			{
 				case InteractionType.Image:
 				{
-					var editor = interactionEditor.GetComponent<ImagePanelEditor>(); 
+					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
@@ -576,7 +605,7 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.Text:
 				{
-					var editor = interactionEditor.GetComponent<TextPanelEditor>(); 
+					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
@@ -597,20 +626,22 @@ public class Editor : MonoBehaviour
 					if (editor && editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = "extra" + meta.extraCounter++;
-						var path = Path.Combine(folder, filename);
+						var extension = Path.GetExtension(editor.answerURL);
+						var filename = Path.Combine("extra", BitConverter.ToString(System.Security.Cryptography.SHA1.Create().ComputeHash(File.OpenRead(editor.answerURL))).ToLower().Replace("-", ""));
+						var path = Path.Combine(folder, filename + extension);
+
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, true);
+						panel.GetComponent<VideoPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, meta.guid.ToString(), true);
 						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = filename;
+						pointToEdit.filename = filename + extension;
 						pointToEdit.panel = panel;
 
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
 						pointToEdit.filled = true;
 					}
-				
+
 					break;
 				}
 				default:
@@ -640,7 +671,7 @@ public class Editor : MonoBehaviour
 				Destroy(filePanel);
 				Canvass.modalBackground.SetActive(false);
 			}
-			
+
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				SetEditorActive(true);
@@ -782,15 +813,15 @@ public class Editor : MonoBehaviour
 
 	bool AreFileOpsAllowed()
 	{
-		return editorState != EditorState.Saving 
-			&& editorState != EditorState.Opening 
+		return editorState != EditorState.Saving
+			&& editorState != EditorState.Opening
 			&& editorState != EditorState.PickingPerspective;
 	}
-	
+
 	void SetEditorActive(bool active)
 	{
 		ResetInteractionPointTemp();
-		
+
 		if (active)
 		{
 			editorState = EditorState.Active;
@@ -820,7 +851,7 @@ public class Editor : MonoBehaviour
 			point.panel.SetActive(false);
 		}
 	}
-	
+
 	void RemoveItemFromTimeline(InteractionPointEditor point)
 	{
 		Destroy(point.timelineRow);
@@ -836,7 +867,7 @@ public class Editor : MonoBehaviour
 	{
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
-		
+
 		//Note(Simon): Init if not set yet.
 		if (timelineWindowEndTime == 0)
 		{
@@ -890,9 +921,9 @@ public class Editor : MonoBehaviour
 		{
 			zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
 
-			var windowMiddle = (timelineEndTime - timelineOffset) / 2; 
-			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom); 
-			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom); 
+			var windowMiddle = (timelineEndTime - timelineOffset) / 2;
+			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
+			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
 
 			timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
 			timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
@@ -911,7 +942,7 @@ public class Editor : MonoBehaviour
 			realNumLabels += 1;
 
 			timelineTickSize = closestRounding;
-		 
+
 			while (headerLabels.Count < realNumLabels)
 			{
 				var label = Instantiate(labelPrefab, timelineHeader.transform);
@@ -924,7 +955,7 @@ public class Editor : MonoBehaviour
 			}
 
 			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / timelineTickSize);
-			
+
 			for (int i = 0; i < realNumLabels; i++)
 			{
 				var time = (i + numTicksOffScreen) * timelineTickSize;
@@ -935,9 +966,9 @@ public class Editor : MonoBehaviour
 					headerLabels[i].text = MathHelper.FormatSeconds(time);
 					headerLabels[i].rectTransform.position = new Vector2(timePx, headerLabels[i].rectTransform.position.y);
 					UILineRenderer.DrawLine(
-						new Vector2(timePx, 0), 
-						new Vector2(timePx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5), 
-						1, 
+						new Vector2(timePx, 0),
+						new Vector2(timePx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
+						1,
 						new Color(0, 0, 0, 47f / 255));
 				}
 				else
@@ -948,7 +979,7 @@ public class Editor : MonoBehaviour
 		}
 
 		//Note(Simon): Render timeline items
-		foreach(var point in interactionPoints)
+		foreach (var point in interactionPoints)
 		{
 			var row = point.timelineRow;
 			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
@@ -964,21 +995,21 @@ public class Editor : MonoBehaviour
 			}
 			else
 			{
-				if (point.startTime < timelineWindowStartTime)	{ zoomedStartTime = timelineWindowStartTime; }
-				if (point.endTime > timelineWindowEndTime)		{ zoomedEndTime = timelineWindowEndTime; }
+				if (point.startTime < timelineWindowStartTime) { zoomedStartTime = timelineWindowStartTime; }
+				if (point.endTime > timelineWindowEndTime) { zoomedEndTime = timelineWindowEndTime; }
 			}
 
 			imageRect.position = new Vector2(TimeToPx(zoomedStartTime), imageRect.position.y);
 			imageRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), imageRect.sizeDelta.y);
-			
+
 		}
 
 		colorIndex = 0;
 		//Note(Simon): Colors
-		foreach(var point in interactionPoints)
+		foreach (var point in interactionPoints)
 		{
 			var image = point.timelineRow.transform.GetComponentInChildren<Image>();
-		
+
 			image.color = timelineColors[colorIndex];
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
@@ -1011,12 +1042,12 @@ public class Editor : MonoBehaviour
 			if (!point.filled)
 			{
 				edit.interactable = false;
-				move.interactable  = false;
+				move.interactable = false;
 			}
 			if (point.filled)
 			{
-				edit.interactable  = true;
-				move.interactable  = true;
+				edit.interactable = true;
+				move.interactable = true;
 			}
 
 			if (delete.state == SelectState.Pressed)
@@ -1052,23 +1083,23 @@ public class Editor : MonoBehaviour
 				{
 					case InteractionType.Text:
 						interactionEditor = Instantiate(textPanelEditorPrefab);
-						interactionEditor.GetComponent<TextPanelEditor>().Init(panel.transform.position, 
-																				panel.GetComponent<TextPanel>().title.text, 
-																				panel.GetComponent<TextPanel>().body.text, 
+						interactionEditor.GetComponent<TextPanelEditor>().Init(panel.transform.position,
+																				panel.GetComponent<TextPanel>().title.text,
+																				panel.GetComponent<TextPanel>().body.text,
 																				true);
 						break;
 					case InteractionType.Image:
 						interactionEditor = Instantiate(imagePanelEditorPrefab);
-						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.transform.position, 
-																				panel.GetComponent<ImagePanel>().title.text, 
-																				panel.GetComponent<ImagePanel>().imageURL, 
+						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.transform.position,
+																				panel.GetComponent<ImagePanel>().title.text,
+																				panel.GetComponent<ImagePanel>().imageURL,
 																				true);
 						break;
 					case InteractionType.Video:
 						interactionEditor = Instantiate(videoPanelEditorPrefab);
-						interactionEditor.GetComponent<VideoPanelEditor>().Init(panel.transform.position, 
-																				panel.GetComponent<VideoPanel>().title.text, 
-																				panel.GetComponent<VideoPanel>().url, 
+						interactionEditor.GetComponent<VideoPanelEditor>().Init(panel.transform.position,
+																				panel.GetComponent<VideoPanel>().title.text,
+																				panel.GetComponent<VideoPanel>().url,
 																				true);
 						break;
 					default:
@@ -1125,7 +1156,7 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Resizing and moving of timeline items. Also Cursors
 		{
 			Texture2D desiredCursor = null;
-			foreach(var point in interactionPoints)
+			foreach (var point in interactionPoints)
 			{
 				var row = point.timelineRow;
 				var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
@@ -1180,7 +1211,7 @@ public class Editor : MonoBehaviour
 					break;
 				}
 			}
-	
+
 			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.Auto);
 
 			if (isDraggingTimelineItem)
@@ -1219,7 +1250,7 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					if(isResizingStart)
+					if (isResizingStart)
 					{
 						var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + PxToRelativeTime(mouseDelta.x));
 						if (newStart < timelineItemBeingResized.endTime - 0.2f)
@@ -1299,14 +1330,14 @@ public class Editor : MonoBehaviour
 		var realPx = px - timelineXOffset;
 		var fraction = realPx / timelineWidth;
 		var time = fraction * (timelineWindowEndTime - timelineWindowStartTime) + timelineWindowStartTime;
-		return (float) time;
+		return (float)time;
 	}
 
 	public float PxToRelativeTime(float px)
 	{
 		return px * ((timelineWindowEndTime - timelineWindowStartTime) / timelineWidth);
 	}
-	
+
 	public void OnDrag(BaseEventData e)
 	{
 		if (Input.GetMouseButton(1))
@@ -1372,7 +1403,7 @@ public class Editor : MonoBehaviour
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
 	}
-	
+
 	private bool SaveToFile()
 	{
 		var sb = new StringBuilder();
@@ -1404,7 +1435,7 @@ public class Editor : MonoBehaviour
 			.Append(",\n");
 
 		sb.Append("length:")
-			.Append((float) videoController.videoLength)
+			.Append((float)videoController.videoLength)
 			.Append(",\n");
 
 		sb.Append("[");
@@ -1425,6 +1456,10 @@ public class Editor : MonoBehaviour
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
 				};
+				if (!File.Exists(point.filename) && point.type == InteractionType.Image)
+				{
+					Debug.LogFormat("missing file: {0} ", point.filename);
+				}
 
 				sb.Append(JsonUtility.ToJson(temp, true));
 				sb.Append(",");
@@ -1447,7 +1482,7 @@ public class Editor : MonoBehaviour
 				file.Write(sb.ToString());
 			}
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Debug.Log(e.ToString());
 			return false;
@@ -1513,6 +1548,13 @@ public class Editor : MonoBehaviour
 				{
 					var panel = Instantiate(imagePanelPrefab);
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+					if (!File.Exists(url))
+					{
+
+						Debug.LogWarningFormat("File missing: {0}", url);
+						newInteractionPoint.panel = panel;
+						break;
+					}
 					int extraCount = Int32.Parse(url.Substring(url.LastIndexOf("extra") + "extra".Length));
 
 					if (extraCount > meta.extraCounter)
@@ -1528,14 +1570,8 @@ public class Editor : MonoBehaviour
 				{
 					var panel = Instantiate(videoPanelPrefab);
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
-					int extraCount = Int32.Parse(url.Substring(url.LastIndexOf("extra") + "extra".Length));
 
-					if (extraCount > meta.extraCounter)
-					{
-						meta.extraCounter = extraCount;
-					}
-
-					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, "file:///" + url, false);
+					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, url, meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1546,24 +1582,25 @@ public class Editor : MonoBehaviour
 			try
 			{
 
-			newInteractionPoint.panel.SetActive(false);
-			} catch(NullReferenceException e)
+				newInteractionPoint.panel.SetActive(false);
+			}
+			catch (NullReferenceException e)
 			{
-				Debug.LogError(string.Format("{0}, {1}", e, e.Message));
+				Debug.LogErrorFormat("{0}, {1}", e, e.Message);
 			}
 			AddItemToTimeline(newInteractionPoint, true);
 		}
 
 		return true;
 	}
-	
+
 	private IEnumerator UploadFile()
 	{
 		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var thumbPath = Path.Combine(path, SaveFile.thumbFilename);
 		var metaPath = Path.Combine(path, SaveFile.metaFilename);
 		var videoPath = Path.Combine(path, SaveFile.videoFilename);
-		
+
 		var str = SaveFile.GetSaveFileContentsBinary(metaPath);
 		uploadStatus.totalSize = SaveFile.DirectorySize(new DirectoryInfo(path));
 
@@ -1574,7 +1611,7 @@ public class Editor : MonoBehaviour
 		form.AddBinaryData("meta", str, SaveFile.metaFilename);
 
 		//NOTE(Simon): Busy wait until file is saved
-		while (!File.Exists(thumbPath)) {yield return null;}
+		while (!File.Exists(thumbPath)) { yield return null; }
 
 		var vidSize = (int)FileSize(videoPath);
 		var thumbSize = (int)FileSize(thumbPath);
@@ -1715,7 +1752,7 @@ public class Editor : MonoBehaviour
 		{
 			uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
 		}
-		
+
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
 			SetEditorActive(true);
@@ -1727,7 +1764,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	
+
 	private void ResetInteractionPointTemp()
 	{
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
@@ -1735,7 +1772,7 @@ public class Editor : MonoBehaviour
 
 	private static int FloorTime(double time)
 	{
-		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
+		int[] niceTimes = { 1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60 };
 		var result = niceTimes[0];
 
 		for (int i = 0; i < niceTimes.Length; i++)
@@ -1751,8 +1788,8 @@ public class Editor : MonoBehaviour
 
 	private static int CeilTime(double time)
 	{
-		int[] niceTimes = {1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60};
-		
+		int[] niceTimes = { 1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60 };
+
 		for (int i = niceTimes.Length - 1; i >= 0; i--)
 		{
 			if (niceTimes[i] < time)

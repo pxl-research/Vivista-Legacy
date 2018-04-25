@@ -582,12 +582,15 @@ public class Player : MonoBehaviour
 				endTime = point.endTime,
 				title = point.title,
 				body = point.body,
-				filename = "file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
+				filename = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
 				type = point.type,
 				point = newPoint,
 				returnRayOrigin = point.returnRayOrigin,
 				returnRayDirection = point.returnRayDirection
 			};
+
+			// NOTE(Lander): Add file protocol for images, ignore for the rest.
+			newInteractionPoint.filename = (newInteractionPoint.type == InteractionType.Image ? "file:///" : "") + newInteractionPoint.filename;
 
 			switch (newInteractionPoint.type)
 			{
@@ -608,7 +611,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}

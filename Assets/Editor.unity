@@ -1370,7 +1370,7 @@ MonoBehaviour:
     type: 2}
   imagePanelEditorPrefab: {fileID: 1075775492185780, guid: 701caaecd7e918c47b0be31b70396586,
     type: 2}
-  videoPanelPrefab: {fileID: 1069029354624192, guid: 8820685896856eb4c98218cd678bdd1f,
+  videoPanelPrefab: {fileID: 1040955220156240, guid: a8ca42a5d03382b4e8c646309adefc2f,
     type: 2}
   videoPanelEditorPrefab: {fileID: 1339106022732690, guid: 088ff0bf21aca5b4b877f84b8ee6303e,
     type: 2}
