@@ -41,7 +41,14 @@ public class Hittable : MonoBehaviour
 		{
 			onHoverEnd.Invoke();
 		}
+
 		oldHitting = hitting;
 		oldHovering = hovering;
+	}
+
+	void OnDestroy()
+	{
+		Player.hittables.Remove(this);
+		var length = Player.hittables.Count;
 	}
 }
