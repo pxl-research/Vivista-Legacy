@@ -53,6 +53,7 @@ public class Player : MonoBehaviour
 
 	private List<InteractionPointPlayer> interactionPoints;
 	private List<GameObject> startPoints;
+	private List<GameObject> videoPositions;
 	private FileLoader fileLoader;
 	private VideoController videoController;
 	private List<GameObject> videoList;
@@ -81,7 +82,7 @@ public class Player : MonoBehaviour
 	private bool[] cameraRigMovable = new bool[2];
 
 	//NOTE(Kristof): Debug vars
-	private float denominator = 7;
+	private float denominator = 8;
 	private float debugAngleSize;
 
 	void Awake()
@@ -389,6 +390,7 @@ public class Player : MonoBehaviour
 		if (playerState == PlayerState.Opening)
 		{
 			var panel = indexPanel.GetComponent<IndexPanel>();
+
 			if (panel.answered)
 			{
 				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
@@ -397,9 +399,10 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-					if (XRSettings.enabled)
+					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
 						EventManager.OnSpace();
+						videoPositions.Clear();
 					}
 				}
 				else
@@ -645,6 +648,7 @@ public class Player : MonoBehaviour
 		if (videoList == null)
 		{
 			StartCoroutine(LoadVideos());
+			projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
 		}
 	}
 
@@ -687,7 +691,7 @@ public class Player : MonoBehaviour
 
 		OpenFilePanel();
 	}
-
+	
 	//TODO(Kristof): Remove this function
 	private void DebugLine(float angle, Color colour)
 	{
@@ -763,12 +767,10 @@ public class Player : MonoBehaviour
 			var videos = panel.LoadedVideos();
 			if (videos != null)
 			{
-				//NOTE(Kristof): Wait for hologram
-				yield return new WaitForSeconds(0.5f);
-
+				videoPositions = videoPositions ?? new List<GameObject>();
 				videoList = videos;
 
-				videoCanvas = projector.GetComponentInChildren<Canvas>().transform;
+				videoCanvas = projector.transform.root.Find("VideoCanvas").transform;
 				videoCanvas.gameObject.GetComponent<Canvas>().sortingLayerName = "UIPanels";
 				StartCoroutine(FadevideoCanvasIn(videoCanvas));
 
@@ -786,16 +788,21 @@ public class Player : MonoBehaviour
 					var z = 9.8f * Mathf.Sin(angle);
 
 					//NOTE(Kristof): Parent object that sets location
-					var pos = new GameObject("videoPosition");
-					pos.transform.SetParent(videoCanvas);
-					pos.transform.localScale = Vector3.one;
-					pos.transform.localPosition = new Vector3(x, 0, z);
-					pos.transform.LookAt(Camera.main.transform);
-					pos.transform.localEulerAngles += new Vector3(-pos.transform.localEulerAngles.x, 0, 0);
+					if (videoPositions.Count < i + 1)
+					{
+						videoPositions.Add(new GameObject("videoPosition"));
+					}
+					videoPositions[i].transform.SetParent(videoCanvas);
+					videoPositions[i].transform.localScale = Vector3.one;
+					videoPositions[i].transform.localPosition = new Vector3(x, 0, z);
+					videoPositions[i].transform.LookAt(Camera.main.transform);
+					videoPositions[i].transform.localEulerAngles += new Vector3(-videoPositions[i].transform.localEulerAngles.x, 0, 0);
 
 					//NOTE(Kristof): Positioning the video relative to parent object
 					var trans = videoList[i].GetComponent<RectTransform>();
-					trans.SetParent(pos.transform);
+					trans.SetParent(videoPositions[i].transform);
+					trans.anchorMin = Vector2.up;
+					trans.anchorMax = Vector2.up;
 					trans.pivot = new Vector2(0.5f, 0.5f);
 					trans.gameObject.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
 					trans.localPosition = Vector3.zero;
@@ -804,6 +811,35 @@ public class Player : MonoBehaviour
 				}
 			}
 		}
+		yield return null;
+	}
+
+	public IEnumerator PageSelector(int i)
+	{
+		switch (i)
+		{
+			case -1:
+				indexPanel.GetComponent<IndexPanel>().Previous();
+				break;
+			case 1:
+				indexPanel.GetComponent<IndexPanel>().Next();
+				break;
+		}
+
+		//NOTE(Kristof): Wait for IndexPanel to destroy IndexPanelVideos
+		yield return null;
+		
+		for (var index = videoPositions.Count - 1; index >= 0; index--)
+		{
+			var pos = videoPositions[index];
+			if (pos.transform.childCount == 0)
+			{
+				Destroy(pos);
+				videoPositions.Remove(pos);
+			}
+		}
+		StartCoroutine(LoadVideos());
+		projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
 	}
 
 	public static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
@@ -815,10 +851,12 @@ public class Player : MonoBehaviour
 			group.alpha = i;
 			yield return null;
 		}
+		videoCanvas.root.Find("UICanvas").gameObject.SetActive(true);
 	}
 
 	public static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
 	{
+		videoCanvas.root.Find("UICanvas").gameObject.SetActive(false);
 		var group = videoCanvas.GetComponent<CanvasGroup>();
 
 		for (float i = 1; i >= 0; i -= Time.deltaTime * 1.5f)
@@ -829,6 +867,4 @@ public class Player : MonoBehaviour
 		//NOTE(Kristof): Force Alpha to 0;
 		group.alpha = 0;
 	}
-
-
 }

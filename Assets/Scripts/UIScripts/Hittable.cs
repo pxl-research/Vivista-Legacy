@@ -10,7 +10,7 @@ public class Hittable : MonoBehaviour
 
 	public bool hitting;
 	public bool hovering;
-	
+
 	private bool oldHitting;
 	private bool oldHovering;
 

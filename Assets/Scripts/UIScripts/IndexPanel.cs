@@ -435,7 +435,6 @@ public class IndexPanel : MonoBehaviour
 		if (page < numPages)
 		{
 			page++;
-			Debug.Log("page: " + page);
 		}
 
 		LoadPage();

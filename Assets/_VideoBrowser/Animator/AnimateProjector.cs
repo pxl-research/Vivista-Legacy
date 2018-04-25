@@ -7,14 +7,17 @@ public class AnimateProjector : MonoBehaviour
 		Stopped,
 		Playing
 	}
-	public Animator projector;
+
 	public PlayStatus playStatus;
+	public Animator projector;
+	public Player player;
+	public GameObject previousPage;
+	public GameObject nextPage;
 
 	public ParticleSystem[] part;
 
 	//up = true, down = false
 	public bool state = true;
-	private Player player;
 
 	void OnEnable()
 	{
@@ -94,5 +97,11 @@ public class AnimateProjector : MonoBehaviour
 	public void Subscribe(Player player)
 	{
 		this.player = player;
+	}
+
+	public void TogglePageButtons(GameObject indexPanel)
+	{
+		previousPage.SetActive(indexPanel.transform.Find("Panel").Find("Previous").gameObject.activeSelf);
+		nextPage.gameObject.SetActive(indexPanel.transform.Find("Panel").Find("Next").gameObject.activeSelf);
 	}
 }
