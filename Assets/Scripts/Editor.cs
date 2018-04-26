@@ -162,6 +162,7 @@ public class Editor : MonoBehaviour
 	public List<Color> timelineColors;
 	private int colorIndex;
 	private int interactionPointCount;
+	private InteractionPointEditor lastPlacedPoint;
 
 	void Awake()
 	{
@@ -291,6 +292,7 @@ public class Editor : MonoBehaviour
 					endTime = videoController.rawCurrentTime + (videoController.videoLength / 10),
 				};
 
+				lastPlacedPoint = point;
 				AddItemToTimeline(point, false);
 
 				interactionTypePicker = Instantiate(interactionTypePrefab);
@@ -323,9 +325,8 @@ public class Editor : MonoBehaviour
 				var picker = interactionTypePicker.GetComponent<InteractionTypePicker>();
 				if (picker.answered)
 				{
-					var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 					lastPlacedPoint.type = picker.answer;
-					var lastPlacedPointPos = interactionPoints[interactionPoints.Count - 1].point.transform.position;
+					var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 
 					switch (lastPlacedPoint.type)
 					{
@@ -360,8 +361,8 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
-				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 				RemoveItemFromTimeline(lastPlacedPoint);
+				lastPlacedPoint = null;
 				Destroy(interactionTypePicker);
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -382,8 +383,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
-			var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
-			var lastPlacePointPos = lastPlacedPoint.point.transform.position;
+			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 			switch (lastPlacedPoint.type)
 			{
 				case InteractionType.Image:
@@ -403,7 +403,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<ImagePanel>().Init(lastPlacedPointPos, editor.answerTitle, "file:///" + path, true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename;
@@ -421,7 +421,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(lastPlacePointPos, editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Init(lastPlacedPointPos, editor.answerTitle, editor.answerBody);
 						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
 						lastPlacedPoint.panel = panel;
@@ -441,6 +441,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
 				RemoveItemFromTimeline(lastPlacedPoint);
+				lastPlacedPoint = null;
 				Destroy(interactionEditor);
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
