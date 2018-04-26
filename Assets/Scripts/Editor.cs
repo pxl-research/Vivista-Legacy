@@ -88,6 +88,7 @@ public struct Timing
 
 public struct Metadata
 {
+	public int version;
 	public string title;
 	public string description;
 	public Guid guid;
@@ -170,6 +171,8 @@ public class Editor : MonoBehaviour
 	private int colorIndex;
 	private int interactionPointCount;
 	private InteractionPointEditor lastPlacedPoint;
+
+	private const int VERSION = 1;
 
 	void Awake()
 	{
@@ -1419,6 +1422,10 @@ public class Editor : MonoBehaviour
 
 		var data = new SaveFile.SaveFileData();
 		data.meta = meta;
+
+		sb.Append("version:")
+			.Append(VERSION)
+			.Append(",\n");
 
 		sb.Append("uuid:")
 			.Append(meta.guid)
