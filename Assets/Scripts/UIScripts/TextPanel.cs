@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR;
+using UnityEngine.SceneManagement;
 
 public class TextPanel : MonoBehaviour
 {
@@ -8,6 +8,21 @@ public class TextPanel : MonoBehaviour
 	public Text body;
 	public RectTransform panel;
 	public Canvas canvas;
+
+	void Start()
+	{
+		//NOTE(Kristof): Initial rotation towards the camera
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
+	}
+
+	void Update()
+	{
+		// NOTE(Kristof): Turning every frame only needs to happen in Editor
+		if (SceneManager.GetActiveScene().Equals(SceneManager.GetSceneByName("Editor")))
+		{
+			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
+		}
+	}
 
 	public void Init(Vector3 position, string newTitle, string newBody)
 	{
@@ -32,11 +47,5 @@ public class TextPanel : MonoBehaviour
 		newPos.y += 0.015f;
 
 		canvas.GetComponent<RectTransform>().position = newPos;
-	}
-
-	public void Start()
-	{
-		//NOTE(Kristof): Initial rotation towards the camera
-		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
-	}
+	} 
 }

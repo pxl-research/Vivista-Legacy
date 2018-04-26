@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class ImagePanel : MonoBehaviour
 {
@@ -79,6 +80,13 @@ public class ImagePanel : MonoBehaviour
 			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
 			downloading = false;
 		}
+
+		// NOTE(Kristof): Turning every frame only needs to happen in Editor
+		if (SceneManager.GetActiveScene().Equals(SceneManager.GetSceneByName("Editor")))
+		{
+			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
+		}
+
 	}
 
 	public void OnEnable()
