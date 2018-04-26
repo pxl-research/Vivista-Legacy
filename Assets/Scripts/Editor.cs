@@ -97,6 +97,7 @@ public class Editor : MonoBehaviour
 {
 	public EditorState editorState;
 
+	public GameObject TimeTooltipPrefab;
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
@@ -153,6 +154,7 @@ public class Editor : MonoBehaviour
 	private bool isResizingStart;
 	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimeline;
+	private TimeTooltip timeTooltip;
 
 	private Metadata meta;
 	private string userToken = "";
@@ -173,6 +175,10 @@ public class Editor : MonoBehaviour
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPointEditor>();
+
+		var tooltip = Instantiate(TimeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform);
+		timeTooltip = tooltip.GetComponent<TimeTooltip>();
+		timeTooltip.ResetPosition();
 
 		prevMousePosition = Input.mousePosition;
 
@@ -783,6 +789,7 @@ public class Editor : MonoBehaviour
 
 			if (Input.mousePosition.y < coords[1].y)
 			{
+				//NOTE(Simon): Zoom only when Ctrl is pressed. Else scroll list.
 				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
 				{
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
@@ -1114,15 +1121,22 @@ public class Editor : MonoBehaviour
 				{
 					isDraggingTimelineItem = false;
 					timelineItemBeingDragged = null;
+					timeTooltip.ResetPosition();
 				}
 				else
 				{
 					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x));
 					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x));
-					if (newStart > 0.0f && newEnd < timelineEndTime)
+					if (newStart > 0.0f || newEnd < timelineEndTime)
 					{
 						timelineItemBeingDragged.startTime = newStart;
 						timelineItemBeingDragged.endTime = newEnd;
+
+						var imageRect = timelineItemBeingDragged.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+						var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width / 2,
+													imageRect.position.y + imageRect.rect.height / 2);
+
+						timeTooltip.SetTime(newStart, newEnd, tooltipPos);
 					}
 					HighlightPoint(timelineItemBeingDragged);
 				}
@@ -1133,6 +1147,7 @@ public class Editor : MonoBehaviour
 				{
 					isResizingTimelineItem = false;
 					timelineItemBeingResized = null;
+					timeTooltip.ResetPosition();
 				}
 				else
 				{
@@ -1142,6 +1157,11 @@ public class Editor : MonoBehaviour
 						if (newStart < timelineItemBeingResized.endTime - 0.2f)
 						{
 							timelineItemBeingResized.startTime = newStart;
+							var imageRect = timelineItemBeingResized.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+							var tooltipPos = new Vector2(imageRect.position.x,
+													imageRect.position.y + imageRect.rect.height / 2);
+
+							timeTooltip.SetTime(newStart, tooltipPos);
 						}
 					}
 					else
@@ -1150,6 +1170,11 @@ public class Editor : MonoBehaviour
 						if (newEnd > timelineItemBeingResized.startTime + 0.2f)
 						{
 							timelineItemBeingResized.endTime = newEnd;
+							var imageRect = timelineItemBeingResized.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+							var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width,
+													imageRect.position.y + imageRect.rect.height / 2);
+
+							timeTooltip.SetTime(newEnd, tooltipPos);
 						}
 					}
 					HighlightPoint(timelineItemBeingResized);
