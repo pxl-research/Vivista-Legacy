@@ -190,13 +190,15 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		interactionPoints.Sort((x, y) => x.startTime != y.startTime
+		//TODO(Simon): this is a hack to fix a bug. Sort sorts in place. So the sorted list gets passed to all kinds of places where we need an unsorted list.
+		var sortedInteractionPoints = new List<InteractionPointEditor>(interactionPoints);
+		sortedInteractionPoints.Sort((x, y) => x.startTime != y.startTime
 			? x.startTime.CompareTo(y.startTime)
 			: x.endTime.CompareTo(y.endTime));
 		interactionPointCount = 0;
 
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
-		foreach (var point in interactionPoints)
+		foreach (var point in sortedInteractionPoints)
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
 			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
