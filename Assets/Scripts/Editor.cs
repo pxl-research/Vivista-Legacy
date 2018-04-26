@@ -208,7 +208,6 @@ public class Editor : MonoBehaviour
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
 			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
-
 		}
 
 		if (videoController.videoLoaded)
