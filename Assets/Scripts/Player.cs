@@ -730,7 +730,7 @@ public class Player : MonoBehaviour
 
 			RaycastHit hit;
 
-			if (Physics.Raycast(ray, out hit, 100))
+			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Default")))
 			{
 				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
