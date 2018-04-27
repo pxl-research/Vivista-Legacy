@@ -34,6 +34,7 @@ public class InteractionPointPlayer
 
 public class Player : MonoBehaviour
 {
+	public static PlayerState playerState;
 	public static List<Hittable> hittables;
 
 	public GameObject interactionPointPrefab;
@@ -41,21 +42,27 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
+	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
+	public GameObject projectorPrefab;
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
 
-	private PlayerState playerState;
 	private int interactionPointCount;
 
 	private List<InteractionPointPlayer> interactionPoints;
+	private List<GameObject> startPoints;
+	private List<GameObject> videoPositions;
 	private FileLoader fileLoader;
 	private VideoController videoController;
+	private List<GameObject> videoList;
 	private Image crosshair;
 	private Image crosshairTimer;
 
 	private GameObject indexPanel;
+	private Transform videoCanvas;
+	private GameObject projector;
 
 	private VRControllerState_t controllerLeftOldState;
 	private VRControllerState_t controllerRightOldState;
@@ -72,6 +79,12 @@ public class Player : MonoBehaviour
 	private bool interacting;
 	private float _interactionTimer;
 
+	private bool[] cameraRigMovable = new bool[2];
+
+	//NOTE(Kristof): Debug vars
+	private float denominator = 8;
+	private float debugAngleSize;
+
 	void Awake()
 	{
 		hittables = new List<Hittable>();
@@ -85,6 +98,7 @@ public class Player : MonoBehaviour
 		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
 
 		interactionPoints = new List<InteractionPointPlayer>();
+		startPoints = new List<GameObject>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
@@ -92,34 +106,46 @@ public class Player : MonoBehaviour
 		playerState = PlayerState.Opening;
 		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
+
+		//NOTE(Kristof): VR specific settings
+		if (XRSettings.enabled)
+		{
+			//NOTE(Kristof): Instantiate the projector
+			projector = Instantiate(projectorPrefab);
+			projector.transform.position = new Vector3(4.5f, 0, 0);
+			projector.transform.eulerAngles = new Vector3(0, 270, 0);
+			projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+			projector.GetComponent<AnimateProjector>().Subscribe(this);
+
+			//NOTE(Kristof): Hide the canvasses when in VR
+			Togglecanvasses();
+			StartCoroutine(InstantiateStartPointGroup());
+
+			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
+		}
 	}
 
 	void Update()
 	{
 		VRDevices.DetectDevices();
 
-		if (playerState == PlayerState.Watching)
+		//NOTE(Kristof): VR specific behaviour
 		{
-			if (Input.GetKeyDown(KeyCode.Space))
-			{
-				videoController.TogglePlay();
-			}
-
 			if (XRSettings.enabled)
 			{
-
-				//NOTE(Lander): enable the highlight in the tutorial mode, even if the controller is activated too late
-				if (startPointGroup.activeSelf)
-				{
-					VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, true);
-				}
 				videoController.transform.position = Camera.main.transform.position;
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+
+				//NOTE(Lander): enable the highlight in the tutorial mode
+				if (projector.GetComponent<AnimateProjector>().state || startPointGroup.activeSelf)
+				{
+					VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, true);
+				}
 
 				//NOTE(Kristof): Rotating the seekbar
 				{
 					//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
-					//var seekbarAngle = Canvass.seekbar.transform.eulerAngles.y;
 					var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
 
 					var fov = Camera.main.fieldOfView;
@@ -155,9 +181,10 @@ public class Player : MonoBehaviour
 						//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
 						var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
 						var x = 1.8f * Mathf.Cos(radianAngle);
+						var y = Camera.main.transform.position.y - 2f;
 						var z = 1.8f * Mathf.Sin(radianAngle);
 
-						Canvass.seekbar.transform.position = new Vector3(x, 0, z);
+						Canvass.seekbar.transform.position = new Vector3(x, y, z);
 						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
 					}
 				}
@@ -166,7 +193,10 @@ public class Player : MonoBehaviour
 			{
 				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
 			}
+		}
 
+		//NOTE(Kristof): Controller specific behaviour
+		{
 			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 			{
 				crosshair.enabled = false;
@@ -182,43 +212,65 @@ public class Player : MonoBehaviour
 			{
 				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
 			}
+		}
 
-			Ray ray;
-			//NOTE(Kristof): Deciding on which object the Ray will be based on
+		//TODO(Kristof): Remove debug lines
+		{
+			debugAngleSize = 270 / denominator;
+
+			DebugLine(0, Color.red);
+			DebugLine(-22.5f, Color.blue);
+			DebugLine(22.5f, Color.blue);
+
+			for (int i = 0; i <= denominator; i++)
 			{
-				Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
-				Ray controllerRay = new Ray();
+				DebugLine(45f + (i * debugAngleSize), Color.magenta);
+			}
+		}
 
-				const ulong ulTriggerValue = (ulong)1 << 33;
+		Ray ray;
+		//NOTE(Kristof): Deciding on which object the Ray will be based on
+		{
+			Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+			Ray controllerRay = new Ray();
 
-				if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
-				{
-					controllerRay = controllerLeft.GetComponent<Controller>().CastRay();
-				}
+			const ulong ulTriggerValue = (ulong)1 << 33;
 
-				if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
-				{
-					controllerRay = controllerRight.GetComponent<Controller>().CastRay();
-				}
+			if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
+			{
+				controllerRay = controllerLeft.GetComponent<Controller>().CastRay();
+			}
 
-				controllerLeftOldState = trackedControllerLeft.controllerState;
-				controllerRightOldState = trackedControllerRight.controllerState;
+			if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
+			{
+				controllerRay = controllerRight.GetComponent<Controller>().CastRay();
+			}
 
-				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
-				{
-					ray = controllerRay;
-				}
-				else
-				{
-					ray = cameraRay;
-				}
+			controllerLeftOldState = trackedControllerLeft.controllerState;
+			controllerRightOldState = trackedControllerRight.controllerState;
+
+			if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+			{
+				ray = controllerRay;
+			}
+			else
+			{
+				ray = cameraRay;
+			}
+		}
+
+		interacting = false;
+
+		if (playerState == PlayerState.Watching)
+		{
+			if (Input.GetKeyDown(KeyCode.Space))
+			{
+				videoController.TogglePlay();
 			}
 
 			//Note(Simon): Create a reversed raycast to find positions on the sphere with
 			ray.origin = ray.GetPoint(100);
 			ray.direction = -ray.direction;
-
-			interacting = false;
 
 			//Note(Simon): Interaction with points
 			{
@@ -245,7 +297,7 @@ public class Player : MonoBehaviour
 							{
 								videoController.TogglePlay();
 								startPointGroup.SetActive(false);
-								VRDevices.SetControllersTutorialMode(new GameObject[] { controllerLeft, controllerRight }, false);
+								VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, false);
 								interactionPoints.RemoveRange(0, 4);
 							}
 							//NOTE(Kristof): Interacting with InteractionPoints
@@ -275,7 +327,7 @@ public class Player : MonoBehaviour
 						else
 						{
 							interacting = true;
-							
+
 							if (_interactionTimer >= timeToInteract)
 							{
 								//NOTE(Kristof): Interacting with StartPoints
@@ -291,9 +343,12 @@ public class Player : MonoBehaviour
 									//NOTE(Kristof): Making a panel active
 									if (!point.panel.activeSelf)
 									{
-										_interactionTimer = -1;
+										if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
+										{
+											_interactionTimer = -1;
+											activePoints++;
+										}
 										point.panel.SetActive(true);
-										activePoints++;
 										videoController.Pause();
 									}
 									//NOTE(Kristof): Making a panel inactive
@@ -330,45 +385,85 @@ public class Player : MonoBehaviour
 					}
 				}
 			}
+		}
 
-			//NOTE(Kristof): Interaction with UI
+		if (playerState == PlayerState.Opening)
+		{
+			var panel = indexPanel.GetComponent<IndexPanel>();
+
+			if (panel.answered)
 			{
-				RaycastHit hit;
-				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("UI"));
-
-				//NOTE(Kristof): Looping over hittable UI scripts
-				foreach (var hittable in hittables)
+				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
+				if (OpenFile(metaFilename))
 				{
-					hittable.hitting = false;
-
-					if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+					Destroy(indexPanel);
+					playerState = PlayerState.Watching;
+					Canvass.modalBackground.SetActive(false);
+					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
-						//NOTE(Kristof): Interacting with controller
-						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+						EventManager.OnSpace();
+						videoPositions.Clear();
+					}
+				}
+				else
+				{
+					Debug.Log("Couldn't open savefile");
+				}
+			}
+		}
+
+		//NOTE(Kristof): Interaction with UI
+		{
+			RaycastHit hit;
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
+
+			//NOTE(Kristof): Looping over hittable UI scripts
+			var controllerList = new List<Controller>
+			{
+				controllerLeft.GetComponent<Controller>(),
+				controllerRight.GetComponent<Controller>()
+			};
+
+			foreach (var hittable in hittables)
+			{
+				if (hittable == null) continue;
+				hittable.hitting = false;
+				hittable.hovering = false;
+
+				//NOTE(Kristof): Checking for controller hover needs to happen independently of controller interactions
+				foreach (var con in controllerList)
+				{
+					if (con.uiHovering && con.hovered == hittable.gameObject)
+					{
+						hittable.hovering = true;
+					}
+				}
+
+				if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+				{
+					//NOTE(Kristof): Interacting with controller
+					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+					{
+						//NOTE(Kristof): Hovering is handled in Controller.cs
+						hittable.hitting = true;
+					}
+					//NOTE(Kristof): Interacting without controllers
+					else
+					{
+						interacting = true;
+						hittable.hovering = true;
+						if (_interactionTimer >= timeToInteract)
 						{
-							//NOTE(Kristof): Hovering is handled in Controller.cs
+							_interactionTimer = -1;
 							hittable.hitting = true;
 						}
-						//NOTE(Kristof): Interacting without controllers
-						else
-						{
-							interacting = true;
-							hittable.hovering = true;
-							if (_interactionTimer >= timeToInteract)
-							{
-								_interactionTimer = -1;
-								hittable.hitting = true;
-							}
-						}
-					}
-					//NOTE(Kristof): Controller hover is handled in Controller.cs
-					else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
-					{
-						hittable.hovering = false;
 					}
 				}
 			}
+		}
 
+		//NOTE(Kristof): Interaction interactionTimer and Crosshair behaviour
+		{
 			if (interacting)
 			{
 				_interactionTimer += Time.deltaTime;
@@ -383,22 +478,71 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		if (playerState == PlayerState.Opening)
+		//NOTE(Kristof): Turning CameraRig
 		{
-			var panel = indexPanel.GetComponent<IndexPanel>();
-			if (panel.answered)
+			var controllers = new[]
 			{
-				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
-				if (OpenFile(metaFilename))
+				controllerLeft.GetComponent<SteamVR_TrackedObject>(),
+				controllerRight.GetComponent<SteamVR_TrackedObject>()
+			};
+
+			for (var index = 0; index < controllers.Length; index++)
+			{
+				var controller = controllers[index];
+				if (controller.index > SteamVR_TrackedObject.EIndex.None)
 				{
-					Destroy(indexPanel);
-					playerState = PlayerState.Watching;
-					Canvass.modalBackground.SetActive(false);
+					var device = SteamVR_Controller.Input((int)controller.index);
+
+
+					switch (VRDevices.loadedControllerSet)
+					{
+						case VRDevices.LoadedControllerSet.Oculus:
+						{
+							var touchpad = device.GetAxis();
+
+							if (-0.7f < touchpad.x && touchpad.x < 0.7f)
+							{
+								cameraRigMovable[index] = true;
+							}
+							else if (touchpad.x > 0.7f && cameraRigMovable[index])
+							{
+								cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
+								cameraRigMovable[index] = false;
+							}
+							else if (touchpad.x < -0.7f && cameraRigMovable[index])
+							{
+								cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
+								cameraRigMovable[index] = false;
+							}
+
+							break;
+						}
+						case VRDevices.LoadedControllerSet.Vive:
+						{
+							var touchpad = device.GetAxis();
+							if  (device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad))
+							{
+								if (touchpad.x > 0.7f && cameraRigMovable[index])
+								{
+									cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
+									cameraRigMovable[index] = false;
+								}
+								else if (touchpad.x < -0.7f && cameraRigMovable[index])
+								{
+									cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
+									cameraRigMovable[index] = false;
+								}
+							}
+							else
+							{
+								cameraRigMovable[index] = true;	
+							}
+
+							break;
+						}
+					}
 				}
-				else
-				{
-					Debug.Log("Couldn't open savefile");
-				}
+
 			}
 		}
 	}
@@ -410,18 +554,9 @@ public class Player : MonoBehaviour
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 
-		for (var j = interactionPoints.Count - 1; j >= 0; j--)
-		{
-			RemoveInteractionPoint(interactionPoints[j]);
-		}
-
-		interactionPoints.Clear();
-
 		//NOTE(Kristof): Add the 4 interactionpoints used for the mini-tutorial and starting the video, then load the InteractionPoints
 		{
-			startPointGroup = Instantiate(startPointGroup);
-			var startPoints = new List<GameObject>();
-			startPoints.AddRange(GameObject.FindGameObjectsWithTag("StartPoint"));
+			startPointGroup.SetActive(true);
 
 			foreach (var startPoint in startPoints)
 			{
@@ -434,7 +569,6 @@ public class Player : MonoBehaviour
 				});
 
 				var content = startPoint.GetComponentInChildren<Text>();
-
 				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 				{
 					content.text = "Aim at the white point below and press the trigger";
@@ -526,6 +660,73 @@ public class Player : MonoBehaviour
 		}
 	}
 
+	private void Togglecanvasses()
+	{
+		var seekbarCollider = Canvass.seekbar.gameObject.GetComponent<BoxCollider>();
+
+		Canvass.main.enabled = !Canvass.main.enabled;
+		Canvass.seekbar.enabled = !Canvass.seekbar.enabled;
+		seekbarCollider.enabled = !seekbarCollider.enabled;
+	}
+
+	public void OnVideoBrowserHologramUp()
+	{
+		if (videoList == null)
+		{
+			StartCoroutine(LoadVideos());
+			projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
+		}
+	}
+
+	public void OnVideoBrowserAnimStop()
+	{
+		if (!projector.GetComponent<AnimateProjector>().state)
+		{
+			Togglecanvasses();
+			projector.transform.localScale = Vector3.zero;
+
+			for (var i = videoCanvas.childCount - 1; i >= 0; i--)
+			{
+				Destroy(videoCanvas.GetChild(i).gameObject);
+			}
+			videoList = null;
+		}
+	}
+
+	public void BackToBrowser()
+	{
+		Togglecanvasses();
+		EventManager.OnSpace();
+		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+		if (videoController.playing)
+		{
+			videoController.TogglePlay();
+		}
+		videoController.videoState = VideoController.VideoState.Intro;
+
+		for (var j = interactionPoints.Count - 1; j >= 0; j--)
+		{
+			if (!interactionPoints[j].isStartPoint)
+			{
+				RemoveInteractionPoint(interactionPoints[j]);
+			}
+		}
+		interactionPoints.Clear();
+		interactionPointCount = 0;
+
+		OpenFilePanel();
+	}
+
+	//TODO(Kristof): Remove this function
+	private void DebugLine(float angle, Color colour)
+	{
+		var debugAngle = -angle * Mathf.PI / 180;
+		var debugX = 5f * Mathf.Cos(debugAngle);
+		var debugZ = 5f * Mathf.Sin(debugAngle);
+		Debug.DrawLine(Vector3.zero, new Vector3(debugX, 0, debugZ), colour);
+	}
+
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
 	private IEnumerator UpdatePointPositions()
 	{
@@ -543,9 +744,17 @@ public class Player : MonoBehaviour
 				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
 			}
-
-			//pointslist.add(interactionPoint)
 		}
+	}
+
+	//NOTE(Kristof): We don't want to do this while loading the video, bad performance
+	private IEnumerator InstantiateStartPointGroup()
+	{
+		startPointGroup = Instantiate(startPointGroup);
+		//NOTE(Kristof): Wait a frame so the startPointGroup can instantiate properly
+		yield return null;
+		startPoints.AddRange(GameObject.FindGameObjectsWithTag("StartPoint"));
+		startPointGroup.SetActive(false);
 	}
 
 	private IEnumerator EnableVr()
@@ -572,5 +781,121 @@ public class Player : MonoBehaviour
 		{
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 		}
+	}
+
+	private IEnumerator LoadVideos()
+	{
+		var panel = indexPanel.GetComponentInChildren<IndexPanel>();
+		if (panel != null)
+		{
+			while (!panel.isFinishedLoadingVideos)
+			{
+				//NOTE(Kristof): Wait for IndexPanel to finish instantiating videos GameObjects
+				yield return null;
+			}
+
+			//NOTE(Kristof): ask the IndexPanel to pass the loaded videos
+			var videos = panel.LoadedVideos();
+			if (videos != null)
+			{
+				videoPositions = videoPositions ?? new List<GameObject>();
+				videoList = videos;
+
+				videoCanvas = projector.transform.root.Find("VideoCanvas").transform;
+				videoCanvas.gameObject.GetComponent<Canvas>().sortingLayerName = "UIPanels";
+				StartCoroutine(FadevideoCanvasIn(videoCanvas));
+
+				//TODO(Kristof): remove debug for
+				for (int i = 0; i < videoList.Count; i++)
+				//for (int i = 0; i <= denominator; i++)
+				{
+					//NOTE(Kristof): Determine the next angle to put a video
+					//NOTE 45f			offset serves to skip the dead zone
+					//NOTE (i) * 30f	place a video every 30 degrees 
+					//NOTE 90f			camera rig rotation offset
+					var nextAngle = 45f + ((i) * debugAngleSize) + 90f;
+					var angle = -nextAngle * Mathf.PI / 180;
+					var x = 9.8f * Mathf.Cos(angle);
+					var z = 9.8f * Mathf.Sin(angle);
+
+					//NOTE(Kristof): Parent object that sets location
+					if (videoPositions.Count < i + 1)
+					{
+						videoPositions.Add(new GameObject("videoPosition"));
+					}
+					videoPositions[i].transform.SetParent(videoCanvas);
+					videoPositions[i].transform.localScale = Vector3.one;
+					videoPositions[i].transform.localPosition = new Vector3(x, 0, z);
+					videoPositions[i].transform.LookAt(Camera.main.transform);
+					videoPositions[i].transform.localEulerAngles += new Vector3(-videoPositions[i].transform.localEulerAngles.x, 0, 0);
+
+					//NOTE(Kristof): Positioning the video relative to parent object
+					var trans = videoList[i].GetComponent<RectTransform>();
+					trans.SetParent(videoPositions[i].transform);
+					trans.anchorMin = Vector2.up;
+					trans.anchorMax = Vector2.up;
+					trans.pivot = new Vector2(0.5f, 0.5f);
+					trans.gameObject.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+					trans.localPosition = Vector3.zero;
+					trans.localEulerAngles = new Vector3(0, 180, 0);
+					trans.localScale = new Vector3(0.018f, 0.018f, 0.018f);
+				}
+			}
+		}
+		yield return null;
+	}
+
+	public IEnumerator PageSelector(int i)
+	{
+		switch (i)
+		{
+			case -1:
+				indexPanel.GetComponent<IndexPanel>().Previous();
+				break;
+			case 1:
+				indexPanel.GetComponent<IndexPanel>().Next();
+				break;
+		}
+
+		//NOTE(Kristof): Wait for IndexPanel to destroy IndexPanelVideos
+		yield return null;
+
+		for (var index = videoPositions.Count - 1; index >= 0; index--)
+		{
+			var pos = videoPositions[index];
+			if (pos.transform.childCount == 0)
+			{
+				Destroy(pos);
+				videoPositions.Remove(pos);
+			}
+		}
+		StartCoroutine(LoadVideos());
+		projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
+	}
+
+	public static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
+	{
+		var group = videoCanvas.GetComponent<CanvasGroup>();
+
+		for (float i = 0; i <= 1; i += Time.deltaTime * 1.5f)
+		{
+			group.alpha = i;
+			yield return null;
+		}
+		videoCanvas.root.Find("UICanvas").gameObject.SetActive(true);
+	}
+
+	public static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
+	{
+		videoCanvas.root.Find("UICanvas").gameObject.SetActive(false);
+		var group = videoCanvas.GetComponent<CanvasGroup>();
+
+		for (float i = 1; i >= 0; i -= Time.deltaTime * 1.5f)
+		{
+			group.alpha = i;
+			yield return null;
+		}
+		//NOTE(Kristof): Force Alpha to 0;
+		group.alpha = 0;
 	}
 }

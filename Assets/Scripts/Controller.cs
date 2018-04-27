@@ -1,74 +1,92 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Controller : MonoBehaviour
 {
 	public GameObject laser;
 	public GameObject model;
-	public Material highlightMaterial;
+	public GameObject controllerUI;
+	public GameObject hovered;
+	public GameObject cursor;
 
+	public bool uiHovering;
+
+	public Material highlightMaterial;
 	private MeshRenderer trigger;
 	private Material baseMaterial;
 
 	private SteamVR_TrackedController controller;
 
-	private static List<Controller> controllerList;
-	private bool uiHovering;
-
 	// Use this for initialization
 	void Start()
 	{
 		controller = GetComponent<SteamVR_TrackedController>();
-
-		controllerList = controllerList ?? new List<Controller>();
-		controllerList.Add(this);
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		if (controller.triggerPressed)
+		//NOTE(Lander):Difference rotation and position for Vive and Touch controllers
 		{
-			laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
-		}
-		else
-		{
-			laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
+			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
+			{
+				laser.transform.localPosition = new Vector3(0, 0, 0.1f);
+				laser.transform.localEulerAngles = new Vector3(90, 0, 0);
+			}
 		}
 
+		//NOTE(Kristof): Fatty laser when pressing trigger
+		{
+			if (controller.triggerPressed)
+			{
+				laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
+			}
+			else
+			{
+				laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
+			}
+		}
+
+		//NOTE(Kristof): Showing controllerUI when gripped 
+		{
+			controllerUI.SetActive(GetComponent<SteamVR_TrackedController>().gripped && Player.playerState == PlayerState.Watching);
+		}
 		var ray = CastRay();
 		RaycastHit hit;
-		Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Seekbar"));
 
-		//NOTE(Kristof): Shortening the laser when it hits the seekbar
-		if (hit.transform != null)
+		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
 		{
-			laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
-		}
-		else
-		{
-			laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
-		}
-		if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
-		{
-			laser.transform.localPosition = new Vector3(0, 0, 0.1f);
-			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
-		}
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
-		//NOTE(Kristof): Calling Hovering for hittable UI elements
-		Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("UI"));
-
-		foreach (var hittable in Player.hittables)
-		{
-			if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+			if (hit.transform != null)
 			{
 				uiHovering = true;
+				hovered = hit.transform.gameObject;
+				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
 			}
 			else
 			{
 				uiHovering = false;
+				hovered = null;
+				laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
 			}
-			HoveringOver(hittable);
+		}
+
+		//NOTE(Kristof): Moving cursor to hit location
+		{
+			cursor.transform.position = Vector3.zero;
+			cursor.SetActive(false);
+
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints") );
+			if (hit.transform != null)
+			{
+				var r = 0.02f * hit.distance;
+				if (r >= 0.04f)
+				{
+					cursor.SetActive(true);
+					cursor.transform.position = hit.point;
+					cursor.transform.localScale = new Vector3(r, r, r);
+				}
+			}
 		}
 	}
 
@@ -101,21 +119,5 @@ public class Controller : MonoBehaviour
 	public Ray CastRay()
 	{
 		return new Ray(laser.transform.position, laser.transform.up);
-	}
-
-	public static void HoveringOver(Hittable hittable)
-	{
-		foreach (var controller in controllerList)
-		{
-			if (controller.uiHovering)
-			{
-				hittable.hovering = true;
-				break;
-			}
-			else
-			{
-				hittable.hovering = false;
-			}
-		}
 	}
 }

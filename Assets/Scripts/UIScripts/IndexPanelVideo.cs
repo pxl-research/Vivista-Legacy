@@ -37,11 +37,6 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 
 		Refresh();
-
-		//NOTE(Simon): Index panel allows selection of videos in VR. Best way to do this in VR is through a ray-box collision check. This funciton resizes the box collider to match the video item size
-		var panelSize = GetComponent<RectTransform>().rect.size;
-		GetComponent<BoxCollider>().size = new Vector3(panelSize.x, panelSize.y, 0);
-		GetComponent<BoxCollider>().center = new Vector3(panelSize.x / 2, -(panelSize.y / 2), 0);
 	}
 
 	public void Refresh()
@@ -67,5 +62,25 @@ public class IndexPanelVideo : MonoBehaviour
 				thumbnailImage.color = Color.white;
 			}
 		}
+	}
+
+	public void OnHit()
+	{
+		var indexPanel = Canvass.main.GetComponentInChildren<IndexPanel>();
+		indexPanel.answered = true;
+		indexPanel.answerVideoId = uuid;
+
+		var canvas = transform.root.GetComponentInChildren<Canvas>().transform;
+		StartCoroutine(Player.FadevideoCanvasOut(canvas));
+	}
+
+	public void OnHoverStart()
+	{
+		GetComponent<Image>().color = new Color(0, 0, 0, 0.3f);
+	}
+
+	public void OnHoverExit()
+	{
+		GetComponent<Image>().color = new Color(0, 0, 0, 0f);
 	}
 }

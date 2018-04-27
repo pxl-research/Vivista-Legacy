@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 using Debug = UnityEngine.Debug;
 
@@ -14,7 +15,7 @@ public struct ScreenshotParams
 
 public class VideoController : MonoBehaviour
 {
-	private enum VideoState
+	public enum VideoState
 	{
 		Intro,
 		Watching
@@ -33,7 +34,7 @@ public class VideoController : MonoBehaviour
 
 	public ScreenshotParams screenshotParams;
 
-	private VideoState videoState;
+	public VideoState videoState;
 
 	//NOTE(Kristof): Keep the variable public so that other classes can use it instead of using the property
 	//NOTE(Kristof): Better way to do this?
@@ -54,14 +55,31 @@ public class VideoController : MonoBehaviour
 	void Start()
 	{
 		var players = GetComponents<VideoPlayer>();
+
 		if (players[0].playOnAwake)
 		{
-			screenshots = players[1];
+			//NOTE(Kristof): Player doesn't need a component for screenshots
+			if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Player"))
+			{
+				Destroy(players[1]);
+			}
+			else
+			{
+				screenshots = players[1];
+			}
 			video = players[0];
 		}
 		else
 		{
-			screenshots = players[0];
+			//NOTE(Kristof): Player doesn't need a component for screenshots
+			if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Player"))
+			{
+				Destroy(players[0]);
+			}
+			else
+			{
+				screenshots = players[0];
+			}
 			video = players[1];
 		}
 
@@ -154,7 +172,7 @@ public class VideoController : MonoBehaviour
 
 	public void TogglePlay()
 	{
-		videoState=VideoState.Watching;
+		videoState = VideoState.Watching;
 
 		if (!playing)
 		{
@@ -173,13 +191,16 @@ public class VideoController : MonoBehaviour
 	public void PlayFile(string filename)
 	{
 		video.url = filename;
-		screenshots.url = filename;
+		if (screenshots != null)
+		{
+			screenshots.url = filename;
+		}
 
 		video.EnableAudioTrack(0, true);
 		video.SetTargetAudioSource(0, audioSource);
 		video.controlledAudioTrackCount = 1;
 
-		//NOTE(Kristof): duct tape
+		//NOTE(Kristof): duct tape to play audio
 		video.enabled = false;
 		video.enabled = true;
 
@@ -202,8 +223,6 @@ public class VideoController : MonoBehaviour
 
 			videoLoaded = true;
 
-			//NOTE(Kristof):loading the video at video.Time = 0, or loading it at video.frame = 1, and then pausing it will show a black screen, this is unclear for the user.
-			video.frame = 2;
 			video.Pause();
 		};
 
@@ -228,9 +247,10 @@ public class VideoController : MonoBehaviour
 				//currentCamera = Instantiate(camera360);
 				//videoController.GetComponent<MeshFilter>().sharedMesh = Mesh360;
 
-				Destroy(GetComponent<BoxCollider>());
-				var coll = gameObject.AddComponent<SphereCollider>();
-				coll.radius = 90f;
+				//TODO(Simon): We're not doing flat videos anymore, so just make SphereCollider the default
+				//Destroy(GetComponent<BoxCollider>());
+				//var coll = gameObject.AddComponent<SphereCollider>();
+				//coll.radius = 90f;
 
 				var descriptor = baseRenderTexture.descriptor;
 				descriptor.sRGB = false;
@@ -242,7 +262,11 @@ public class VideoController : MonoBehaviour
 				video.targetTexture = renderTexture;
 
 				//TODO(Simon) Fix colors, looks way too dark
-				screenshots.targetTexture = new RenderTexture(descriptor);
+				//TODO(Simon): Only load screenshot stuff in editor.
+				if (screenshots != null)
+				{
+					screenshots.targetTexture = new RenderTexture(descriptor);
+				}
 
 				transform.localScale = Vector3.one;
 				transform.position = Vector3.zero;

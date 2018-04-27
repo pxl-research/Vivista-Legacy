@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 [Serializable]
 public class VideoResponseSerialize
@@ -31,7 +32,7 @@ public class VideoSerialize
 	public string description;
 }
 
-public class IndexPanel : MonoBehaviour 
+public class IndexPanel : MonoBehaviour
 {
 	private enum AgeOptions
 	{
@@ -64,6 +65,7 @@ public class IndexPanel : MonoBehaviour
 	public Button2 localButton;
 	public Button2 internetButton;
 	public bool isLocal;
+	public bool isFinishedLoadingVideos;
 
 	public Dropdown2 searchAge;
 
@@ -108,7 +110,7 @@ public class IndexPanel : MonoBehaviour
 				cleanName.Append(option[i]);
 			}
 
-			searchAge.options.Add(new Dropdown.OptionData {text = cleanName.ToString(), image = null});
+			searchAge.options.Add(new Dropdown.OptionData { text = cleanName.ToString(), image = null });
 		}
 
 		page = 1;
@@ -154,7 +156,11 @@ public class IndexPanel : MonoBehaviour
 				//NOTE(Simon): Check if hovering
 				hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
 
-				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
+				//TODO: Get this to work with Hittable
+				if (!XRSettings.enabled)
+				{
+					videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
+				}
 
 				if (hovering && Input.GetMouseButtonDown(0))
 				{
@@ -219,7 +225,7 @@ public class IndexPanel : MonoBehaviour
 					}
 				}
 			}
-		
+
 			previousPage.gameObject.SetActive(true);
 			nextPage.gameObject.SetActive(true);
 
@@ -238,7 +244,7 @@ public class IndexPanel : MonoBehaviour
 			foreach (var video in videos)
 			{
 				downloadedMessageTime += Time.deltaTime;
-				if (downloadedMessageTime > downloadedMessageRefreshTime)
+				if ((downloadedMessageTime > downloadedMessageRefreshTime) && isFinishedLoadingVideos)
 				{
 					video.GetComponent<IndexPanelVideo>().Refresh();
 					downloadedMessageTime = 0;
@@ -294,7 +300,7 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		var www = new WWW(url);
-		
+
 		yield return www;
 		videoContainer.SetActive(true);
 		spinner.enabled = false;
@@ -309,15 +315,15 @@ public class IndexPanel : MonoBehaviour
 
 		noVideos.enabled = loadedVideos.videos.Count == 0;
 
-		for(int i = offset; i < loadedVideos.videos.Count; i++)
+		for (int i = offset; i < loadedVideos.videos.Count; i++)
 		{
 			var video = loadedVideos.videos[i];
 			video.realTimestamp = DateTime.Parse(video.timestamp);
 			video.uuid = Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid));
 		}
-		
+
 		totalVideos = loadedVideos.totalcount;
-		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)loadedVideos.count));
+		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)videosPerPage));
 		page = loadedVideos.page;
 
 		//Note(Simon): Videos
@@ -361,9 +367,9 @@ public class IndexPanel : MonoBehaviour
 
 		loadedVideos.totalcount = localVideos.Length;
 
-		foreach (var v in localVideos)
+		for (var i = (page - 1) * videosPerPage; i < Mathf.Min(page * videosPerPage, localVideos.Length); i++)
 		{
-			var path = v.FullName;
+			var path = localVideos[i].FullName;
 
 			var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
 			var folderInfo = new DirectoryInfo(path);
@@ -374,7 +380,7 @@ public class IndexPanel : MonoBehaviour
 				description = data.meta.description,
 				downloadsize = SaveFile.DirectorySize(folderInfo),
 				realTimestamp = folderInfo.LastWriteTime,
-				uuid = v.Name,
+				uuid = localVideos[i].Name,
 			});
 		}
 
@@ -384,31 +390,17 @@ public class IndexPanel : MonoBehaviour
 		noVideos.enabled = loadedVideos.videos.Count == 0;
 
 		totalVideos = loadedVideos.totalcount;
-		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)loadedVideos.count));
-		page = loadedVideos.page;
+		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)videosPerPage));
 
 		//Note(Simon): Videos
 		{
-			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-			while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
-			{
-				var video = Instantiate(videoPrefab);
-				video.transform.SetParent(videoContainer.transform, false);
-				videos.Add(video);
-			}
-			while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
-			{
-				var video = videos[videos.Count - 1];
-				videos.RemoveAt(videos.Count - 1);
-				Destroy(video);
-			}
-
-			for (int i = 0; i < videosThisPage.Count; i++)
-			{
-				var v = videosThisPage[i];
-				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
-			}
+			StartCoroutine(BuildVideoGameObjects());
 		}
+	}
+
+	public List<GameObject> LoadedVideos()
+	{
+		return videos;
 	}
 
 	public void Previous()
@@ -474,7 +466,7 @@ public class IndexPanel : MonoBehaviour
 	{
 		isLocal = true;
 		localButton.GetComponent<Image>().color = new Color(1, 1, 1);
-		internetButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
+		internetButton.GetComponent<Image>().color = new Color(200f / 255, 200f / 255, 200f / 255);
 		Filters.SetActive(false);
 		LoadPage();
 	}
@@ -482,9 +474,38 @@ public class IndexPanel : MonoBehaviour
 	public void SetInternet()
 	{
 		isLocal = false;
-		localButton.GetComponent<Image>().color = new Color(200f/255, 200f/255, 200f/255);
+		localButton.GetComponent<Image>().color = new Color(200f / 255, 200f / 255, 200f / 255);
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		Filters.SetActive(true);
 		LoadPage();
+	}
+
+	private IEnumerator BuildVideoGameObjects()
+	{
+		isFinishedLoadingVideos = false;
+
+		var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
+		while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
+		{
+			var video = Instantiate(videoPrefab);
+			video.transform.SetParent(videoContainer.transform, false);
+			videos.Add(video);
+		}
+		while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
+		{
+			var video = videos[videos.Count - 1];
+			videos.RemoveAt(videos.Count - 1);
+			Destroy(video);
+		}
+
+		for (int i = 0; i < videosThisPage.Count; i++)
+		{
+			var v = videosThisPage[i];
+			videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
+			//NOTE(Kristof): Space out SetData over some time to prevent lag spike
+			yield return new WaitForSeconds(0.1f);
+		}
+
+		isFinishedLoadingVideos = true;
 	}
 }

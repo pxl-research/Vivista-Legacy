@@ -10,7 +10,7 @@ public class Hittable : MonoBehaviour
 
 	public bool hitting;
 	public bool hovering;
-	
+
 	private bool oldHitting;
 	private bool oldHovering;
 
@@ -41,7 +41,14 @@ public class Hittable : MonoBehaviour
 		{
 			onHoverEnd.Invoke();
 		}
+
 		oldHitting = hitting;
 		oldHovering = hovering;
+	}
+
+	void OnDestroy()
+	{
+		Player.hittables.Remove(this);
+		var length = Player.hittables.Count;
 	}
 }
