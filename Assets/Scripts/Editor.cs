@@ -686,9 +686,20 @@ public class Editor : MonoBehaviour
 			{
 				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
+				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "extra"));
 
 				if (OpenFile(metaPath))
 				{
+					try
+					{
+						if (!Directory.Exists(extraPath))
+						{
+							Directory.CreateDirectory(extraPath);
+						}
+					}catch(IOException e)
+					{
+						Debug.LogErrorFormat("Could not create an extra dir({1}): {0} ", e.Message, extraPath);
+					}
 					SetEditorActive(true);
 					Destroy(openPanel);
 					Canvass.modalBackground.SetActive(false);
@@ -709,11 +720,19 @@ public class Editor : MonoBehaviour
 			{
 				var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.metaFilename));
+				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "extra"));
 
 				File.Copy(panel.answerFilePath, videoPath);
 
 				if (OpenFile(metaPath))
 				{
+					try
+					{
+						Directory.CreateDirectory(extraPath);
+					}catch(IOException e)
+					{
+						Debug.LogErrorFormat("Could not create directory({0}): {1}", extraPath, e.Message);
+					}
 					Destroy(explorerPanel);
 					SetEditorActive(true);
 					Canvass.modalBackground.SetActive(false);
