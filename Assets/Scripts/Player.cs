@@ -124,6 +124,8 @@ public class Player : MonoBehaviour
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 		}
+
+		VideoControls.videoController = videoController;
 	}
 
 	void Update()
