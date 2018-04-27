@@ -415,7 +415,7 @@ public class Player : MonoBehaviour
 		//NOTE(Kristof): Interaction with UI
 		{
 			RaycastHit hit;
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI") + LayerMask.GetMask("WorldUI"));
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
 			//NOTE(Kristof): Looping over hittable UI scripts
 			var controllerList = new List<Controller>
@@ -494,31 +494,17 @@ public class Player : MonoBehaviour
 					var device = SteamVR_Controller.Input((int)controller.index);
 
 
-					if ((VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Oculus))
+					switch (VRDevices.loadedControllerSet)
 					{
-						var touchpad = device.GetAxis();
+						case VRDevices.LoadedControllerSet.Oculus:
+						{
+							var touchpad = device.GetAxis();
 
-						if (-0.7f < touchpad.x && touchpad.x < 0.7f)
-						{
-							cameraRigMovable[index] = true;
-						}
-						else if (touchpad.x > 0.7f && cameraRigMovable[index])
-						{
-							cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
-							cameraRigMovable[index] = false;
-						}
-						else if (touchpad.x < -0.7f && cameraRigMovable[index])
-						{
-							cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
-							cameraRigMovable[index] = false;
-						}
-					}
-					else if ((VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive))
-					{
-						var touchpad = device.GetAxis();
-						if  (device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad))
-						{
-							if (touchpad.x > 0.7f && cameraRigMovable[index])
+							if (-0.7f < touchpad.x && touchpad.x < 0.7f)
+							{
+								cameraRigMovable[index] = true;
+							}
+							else if (touchpad.x > 0.7f && cameraRigMovable[index])
 							{
 								cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
 								cameraRigMovable[index] = false;
@@ -528,10 +514,31 @@ public class Player : MonoBehaviour
 								cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
 								cameraRigMovable[index] = false;
 							}
+
+							break;
 						}
-						else
+						case VRDevices.LoadedControllerSet.Vive:
 						{
-							cameraRigMovable[index] = true;	
+							var touchpad = device.GetAxis();
+							if  (device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad))
+							{
+								if (touchpad.x > 0.7f && cameraRigMovable[index])
+								{
+									cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
+									cameraRigMovable[index] = false;
+								}
+								else if (touchpad.x < -0.7f && cameraRigMovable[index])
+								{
+									cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
+									cameraRigMovable[index] = false;
+								}
+							}
+							else
+							{
+								cameraRigMovable[index] = true;	
+							}
+
+							break;
 						}
 					}
 				}

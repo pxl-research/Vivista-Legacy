@@ -55,7 +55,7 @@ public class Controller : MonoBehaviour
 
 		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
 		{
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI") + LayerMask.GetMask("WorldUI"));
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
 			if (hit.transform != null)
 			{
@@ -76,7 +76,7 @@ public class Controller : MonoBehaviour
 			cursor.transform.position = Vector3.zero;
 			cursor.SetActive(false);
 
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI") + LayerMask.GetMask("WorldUI") + LayerMask.GetMask("interactionPoints"));
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints") );
 			if (hit.transform != null)
 			{
 				var r = 0.02f * hit.distance;
