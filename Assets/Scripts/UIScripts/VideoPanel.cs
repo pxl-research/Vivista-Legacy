@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -79,12 +80,10 @@ public class VideoPanel : MonoBehaviour
 
 	void Start()
 	{
+		//NOTE(Kristof): Initial rotation towards the camera 
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
+
 	}
-	//public void OnPrepared(VideoPlayer player)
-	//{
-	//	player.Play();
-	//}
 
 	// Update is called once per frame
 	void Update()
@@ -92,30 +91,14 @@ public class VideoPanel : MonoBehaviour
 		if (!videoSurface) return;
 		var texture = videoSurface.texture;
 
-		//NOTE(Simon): Title + Triangle + bottomMargin
-		const float extraHeight = 40 + 16 + 10;
-		//NOTE(Simon): LeftMargin + RightMargin;
-		const float extraWidth = 10 + 10;
-
-		float newWidth = (Screen.width / 2f);
-		float newHeight = (Screen.height / 2f);
-		float imageRatio = newWidth / newHeight;
-
-		//NOTE(Simon): Portrait
-		if (imageRatio <= 1)
-		{
-			float ratio = (texture.width + extraWidth) / newWidth;
-			newHeight = (texture.height + extraHeight) / ratio;
-		}
-		//NOTE(Simon): Landscape
-		else
-		{
-			float ratio = (texture.height + extraHeight) / newHeight;
-			newWidth = (texture.width + extraWidth) / ratio;
-		}
-
 		//canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
 		controllButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
+
+		// NOTE(Lander): Rotate the panels to the camera
+		if (SceneManager.GetActiveScene().Equals(SceneManager.GetSceneByName("Editor")))
+		{
+			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
+		}
 	}
 
 	public void TogglePlay()
@@ -139,6 +122,7 @@ public class VideoPanel : MonoBehaviour
 		canvas.GetComponent<RectTransform>().position = newPos;
 		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
+
 	private void OnDestroy()
 	{
 		// TODO(Lander): this can be empty in some cases.

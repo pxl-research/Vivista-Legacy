@@ -490,7 +490,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, pathWithExt, meta.guid.ToString(), true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename + extension;
@@ -686,7 +686,7 @@ public class Editor : MonoBehaviour
 			{
 				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
-				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "extra"));
+				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, "extra"));
 
 				if (OpenFile(metaPath))
 				{
