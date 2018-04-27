@@ -168,6 +168,7 @@ MonoBehaviour:
   iconPause: {fileID: 2800000, guid: 774f22a79df44f448a8a813691361142, type: 3}
   title: {fileID: 114587980109853026}
   url: 
+  audioSource: {fileID: 0}
 --- !u!114 &114167466339609494
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -651,7 +652,7 @@ VideoPlayer:
   m_AspectRatio: 3
   m_DataSource: 0
   m_PlaybackSpeed: 1
-  m_AudioOutputMode: 2
+  m_AudioOutputMode: 1
   m_TargetAudioSources: []
   m_DirectAudioVolumes: []
   m_Url: 
@@ -661,5 +662,5 @@ VideoPlayer:
   m_PlayOnAwake: 1
   m_SkipOnDrop: 1
   m_Looping: 1
-  m_WaitForFirstFrame: 1
+  m_WaitForFirstFrame: 0
   m_FrameReadyEventEnabled: 0

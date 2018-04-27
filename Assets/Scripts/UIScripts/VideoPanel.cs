@@ -19,31 +19,22 @@ public class VideoPanel : MonoBehaviour
 
 	private RawImage videoSurface;
 	private VideoPlayer videoPlayer;
+	private AudioSource audioSource;
 
 
 	public void Init(Vector3 position, string newTitle, string fullPath, string guid, bool prepareNow = false)
 	{
-		foreach (var img in GetComponentsInChildren<RawImage>())
-		{
-			Debug.Log(img);
-		}
 		videoPlayer = videoContainer.GetComponent<VideoPlayer>();
 		videoSurface = videoContainer.GetComponent<RawImage>();
 		videoRenderTexture = Instantiate(videoRenderTexture);
 		videoPlayer.targetTexture = videoRenderTexture;
 		videoSurface.texture = videoRenderTexture;
 		videoSurface.color = Color.white;
-		//controllButton = GetComponentsInChildren<RawImage>()[2].gameObject;
-
 
 		if (Player.hittables != null)
 		{
 			GetComponentInChildren<Hittable>().enabled = true;
 		}
-
-		// HACK(Lander): temporary fix for badly looping videos, despite loop being enabled.
-		//videoPlayer.loopPointReached += (obj) => { obj.time = 0; obj.Play(); };
-
 
 		var folder = Path.Combine(Application.persistentDataPath, guid);
 
@@ -68,13 +59,7 @@ public class VideoPanel : MonoBehaviour
 
 		}
 		videoPlayer.url = fullPath;
-		//videoPlayer.Prepare();
-		//videoPlayer.prepareCompleted += OnPrepared;
-		//videoPlayer.frame = 0; // NOTE(Lander): redundancy
-		//transform.parent.localScale = new Vector3(1,0.2f,0.2f);
 		transform.localPosition = position;
-		//Move
-		//gameObject.SetActive(true);
 		title.text = newTitle;
 	}
 
@@ -83,6 +68,16 @@ public class VideoPanel : MonoBehaviour
 		//NOTE(Kristof): Initial rotation towards the camera 
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 
+		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
+		audioSource.playOnAwake = false;
+
+		videoPlayer.EnableAudioTrack(0, true);
+		videoPlayer.SetTargetAudioSource(0, audioSource);
+		videoPlayer.controlledAudioTrackCount = 1;
+
+		//NOTE(Lander): duct tape
+		videoPlayer.enabled = false;
+		videoPlayer.enabled = true;
 	}
 
 	// Update is called once per frame
@@ -91,7 +86,6 @@ public class VideoPanel : MonoBehaviour
 		if (!videoSurface) return;
 		var texture = videoSurface.texture;
 
-		//canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
 		controllButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
 
 		// NOTE(Lander): Rotate the panels to the camera
@@ -107,8 +101,6 @@ public class VideoPanel : MonoBehaviour
 		(videoPlayer.isPlaying ? (Action)videoPlayer.Pause : videoPlayer.Play)();
 
 		controllButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
-		//Debug.LogFormat("Videopanel {0}, state: {1}", this.title, videoPlayer.isPlaying);
-
 	}
 
 	// NOTE(Lander): copied from image panel
