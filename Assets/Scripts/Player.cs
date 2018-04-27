@@ -691,7 +691,7 @@ public class Player : MonoBehaviour
 
 		OpenFilePanel();
 	}
-	
+
 	//TODO(Kristof): Remove this function
 	private void DebugLine(float angle, Color colour)
 	{
@@ -760,9 +760,14 @@ public class Player : MonoBehaviour
 	private IEnumerator LoadVideos()
 	{
 		var panel = indexPanel.GetComponentInChildren<IndexPanel>();
-
 		if (panel != null)
 		{
+			while (!panel.isFinishedLoadingVideos)
+			{
+				//NOTE(Kristof): Wait for IndexPanel to finish instantiating videos GameObjects
+				yield return null;
+			}
+
 			//NOTE(Kristof): ask the IndexPanel to pass the loaded videos
 			var videos = panel.LoadedVideos();
 			if (videos != null)
@@ -828,7 +833,7 @@ public class Player : MonoBehaviour
 
 		//NOTE(Kristof): Wait for IndexPanel to destroy IndexPanelVideos
 		yield return null;
-		
+
 		for (var index = videoPositions.Count - 1; index >= 0; index--)
 		{
 			var pos = videoPositions[index];

@@ -65,6 +65,7 @@ public class IndexPanel : MonoBehaviour
 	public Button2 localButton;
 	public Button2 internetButton;
 	public bool isLocal;
+	public bool isFinishedLoadingVideos;
 
 	public Dropdown2 searchAge;
 
@@ -243,7 +244,7 @@ public class IndexPanel : MonoBehaviour
 			foreach (var video in videos)
 			{
 				downloadedMessageTime += Time.deltaTime;
-				if (downloadedMessageTime > downloadedMessageRefreshTime)
+				if ((downloadedMessageTime > downloadedMessageRefreshTime) && isFinishedLoadingVideos)
 				{
 					video.GetComponent<IndexPanelVideo>().Refresh();
 					downloadedMessageTime = 0;
@@ -393,25 +394,7 @@ public class IndexPanel : MonoBehaviour
 
 		//Note(Simon): Videos
 		{
-			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-			while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
-			{
-				var video = Instantiate(videoPrefab);
-				video.transform.SetParent(videoContainer.transform, false);
-				videos.Add(video);
-			}
-			while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
-			{
-				var video = videos[videos.Count - 1];
-				videos.RemoveAt(videos.Count - 1);
-				Destroy(video);
-			}
-
-			for (int i = 0; i < videosThisPage.Count; i++)
-			{
-				var v = videosThisPage[i];
-				videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
-			}
+			StartCoroutine(BuildVideoGameObjects());
 		}
 	}
 
@@ -495,5 +478,34 @@ public class IndexPanel : MonoBehaviour
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		Filters.SetActive(true);
 		LoadPage();
+	}
+
+	private IEnumerator BuildVideoGameObjects()
+	{
+		isFinishedLoadingVideos = false;
+
+		var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
+		while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
+		{
+			var video = Instantiate(videoPrefab);
+			video.transform.SetParent(videoContainer.transform, false);
+			videos.Add(video);
+		}
+		while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
+		{
+			var video = videos[videos.Count - 1];
+			videos.RemoveAt(videos.Count - 1);
+			Destroy(video);
+		}
+
+		for (int i = 0; i < videosThisPage.Count; i++)
+		{
+			var v = videosThisPage[i];
+			videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
+			//NOTE(Kristof): Space out SetData over some time to prevent lag spike
+			yield return new WaitForSeconds(0.1f);
+		}
+
+		isFinishedLoadingVideos = true;
 	}
 }
