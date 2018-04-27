@@ -97,6 +97,7 @@ public class Editor : MonoBehaviour
 {
 	public EditorState editorState;
 
+	public GameObject TimeTooltipPrefab;
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
@@ -153,6 +154,7 @@ public class Editor : MonoBehaviour
 	private bool isResizingStart;
 	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimeline;
+	private TimeTooltip timeTooltip;
 
 	private Metadata meta;
 	private string userToken = "";
@@ -162,6 +164,7 @@ public class Editor : MonoBehaviour
 	public List<Color> timelineColors;
 	private int colorIndex;
 	private int interactionPointCount;
+	private InteractionPointEditor lastPlacedPoint;
 
 	void Awake()
 	{
@@ -173,6 +176,10 @@ public class Editor : MonoBehaviour
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPoints = new List<InteractionPointEditor>();
+
+		var tooltip = Instantiate(TimeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform);
+		timeTooltip = tooltip.GetComponent<TimeTooltip>();
+		timeTooltip.ResetPosition();
 
 		prevMousePosition = Input.mousePosition;
 
@@ -190,17 +197,18 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		interactionPoints.Sort((x, y) => x.startTime != y.startTime
+		//TODO(Simon): this is a hack to fix a bug. Sort sorts in place. So the sorted list gets passed to all kinds of places where we need an unsorted list.
+		var sortedInteractionPoints = new List<InteractionPointEditor>(interactionPoints);
+		sortedInteractionPoints.Sort((x, y) => x.startTime != y.startTime
 			? x.startTime.CompareTo(y.startTime)
 			: x.endTime.CompareTo(y.endTime));
 		interactionPointCount = 0;
 
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
-		foreach (var point in interactionPoints)
+		foreach (var point in sortedInteractionPoints)
 		{
 			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
 			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
-
 		}
 
 		if (videoController.videoLoaded)
@@ -291,6 +299,7 @@ public class Editor : MonoBehaviour
 					endTime = videoController.rawCurrentTime + (videoController.videoLength / 10),
 				};
 
+				lastPlacedPoint = point;
 				AddItemToTimeline(point, false);
 
 				interactionTypePicker = Instantiate(interactionTypePrefab);
@@ -323,9 +332,8 @@ public class Editor : MonoBehaviour
 				var picker = interactionTypePicker.GetComponent<InteractionTypePicker>();
 				if (picker.answered)
 				{
-					var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 					lastPlacedPoint.type = picker.answer;
-					var lastPlacedPointPos = interactionPoints[interactionPoints.Count - 1].point.transform.position;
+					var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 
 					switch (lastPlacedPoint.type)
 					{
@@ -360,8 +368,8 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
-				var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
 				RemoveItemFromTimeline(lastPlacedPoint);
+				lastPlacedPoint = null;
 				Destroy(interactionTypePicker);
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -382,8 +390,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
-			var lastPlacedPoint = interactionPoints[interactionPoints.Count - 1];
-			var lastPlacePointPos = lastPlacedPoint.point.transform.position;
+			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 			switch (lastPlacedPoint.type)
 			{
 				case InteractionType.Image:
@@ -403,7 +410,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(lastPlacePointPos, editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<ImagePanel>().Init(lastPlacedPointPos, editor.answerTitle, "file:///" + path, true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename;
@@ -421,7 +428,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(lastPlacePointPos, editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Init(lastPlacedPointPos, editor.answerTitle, editor.answerBody);
 						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
 						lastPlacedPoint.panel = panel;
@@ -441,6 +448,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
 			{
 				RemoveItemFromTimeline(lastPlacedPoint);
+				lastPlacedPoint = null;
 				Destroy(interactionEditor);
 			}
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -781,6 +789,7 @@ public class Editor : MonoBehaviour
 
 			if (Input.mousePosition.y < coords[1].y)
 			{
+				//NOTE(Simon): Zoom only when Ctrl is pressed. Else scroll list.
 				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
 				{
 					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
@@ -1112,15 +1121,22 @@ public class Editor : MonoBehaviour
 				{
 					isDraggingTimelineItem = false;
 					timelineItemBeingDragged = null;
+					timeTooltip.ResetPosition();
 				}
 				else
 				{
 					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x));
 					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x));
-					if (newStart > 0.0f && newEnd < timelineEndTime)
+					if (newStart > 0.0f || newEnd < timelineEndTime)
 					{
 						timelineItemBeingDragged.startTime = newStart;
 						timelineItemBeingDragged.endTime = newEnd;
+
+						var imageRect = timelineItemBeingDragged.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+						var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width / 2,
+													imageRect.position.y + imageRect.rect.height / 2);
+
+						timeTooltip.SetTime(newStart, newEnd, tooltipPos);
 					}
 					HighlightPoint(timelineItemBeingDragged);
 				}
@@ -1131,6 +1147,7 @@ public class Editor : MonoBehaviour
 				{
 					isResizingTimelineItem = false;
 					timelineItemBeingResized = null;
+					timeTooltip.ResetPosition();
 				}
 				else
 				{
@@ -1140,6 +1157,11 @@ public class Editor : MonoBehaviour
 						if (newStart < timelineItemBeingResized.endTime - 0.2f)
 						{
 							timelineItemBeingResized.startTime = newStart;
+							var imageRect = timelineItemBeingResized.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+							var tooltipPos = new Vector2(imageRect.position.x,
+													imageRect.position.y + imageRect.rect.height / 2);
+
+							timeTooltip.SetTime(newStart, tooltipPos);
 						}
 					}
 					else
@@ -1148,6 +1170,11 @@ public class Editor : MonoBehaviour
 						if (newEnd > timelineItemBeingResized.startTime + 0.2f)
 						{
 							timelineItemBeingResized.endTime = newEnd;
+							var imageRect = timelineItemBeingResized.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+							var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width,
+													imageRect.position.y + imageRect.rect.height / 2);
+
+							timeTooltip.SetTime(newEnd, tooltipPos);
 						}
 					}
 					HighlightPoint(timelineItemBeingResized);
