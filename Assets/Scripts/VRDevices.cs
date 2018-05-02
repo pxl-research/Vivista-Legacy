@@ -86,11 +86,11 @@ public static class VRDevices
 		{
 			if (enabled)
 			{
-				controller.GetComponent<Controller>().TriggerHighlight();
+				controller.GetComponent<Controller>().TutorialHighlight();
 			}
 			else
 			{
-				controller.GetComponent<Controller>().ResetTriggerMaterial();
+				controller.GetComponent<Controller>().ResetMaterial();
 			}
 		}
 	}

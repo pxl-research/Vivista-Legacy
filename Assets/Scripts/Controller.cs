@@ -10,8 +10,9 @@ public class Controller : MonoBehaviour
 
 	public bool uiHovering;
 
-	public Material highlightMaterial;
 	private MeshRenderer trigger;
+	private MeshRenderer thumbstick;
+	public Material highlightMaterial;
 	private Material baseMaterial;
 
 	private SteamVR_TrackedController controller;
@@ -90,7 +91,7 @@ public class Controller : MonoBehaviour
 		}
 	}
 
-	public void TriggerHighlight()
+	public void TutorialHighlight()
 	{
 		if (trigger == null)
 		{
@@ -106,13 +107,34 @@ public class Controller : MonoBehaviour
 			baseMaterial = trigger.material;
 			trigger.materials = new[] { baseMaterial, highlightMaterial };
 		}
+
+		//TODO(Kristof): Thumbstick is only used for the Ocoulus Touch controllers, The Vive controllers use trackpad. Needs to be added
+		if (thumbstick == null)
+		{
+			var thumbstickGo = model.transform.Find("thumbstick");
+			if (thumbstickGo != null)
+			{
+				thumbstick = thumbstickGo.gameObject.GetComponent<MeshRenderer>();
+			}
+		}
+
+		if (thumbstick != null)
+		{
+			baseMaterial = thumbstick.material;
+			thumbstick.materials = new[] { baseMaterial, highlightMaterial };
+		}
 	}
 
-	public void ResetTriggerMaterial()
+	public void ResetMaterial()
 	{
 		if (trigger != null)
 		{
 			trigger.materials = new[] { baseMaterial };
+		}
+
+		if (thumbstick != null)
+		{
+			thumbstick.materials = new[] { baseMaterial };
 		}
 	}
 

@@ -72,7 +72,7 @@ Material:
     - _ZWrite: 1
     - _node_6969: 0
     - g_flCornerAdjust: 0.5
-    - g_flOutlineWidth: 0.005
+    - g_flOutlineWidth: 0.0117
     m_Colors:
     - _Color: {r: 0.486632, g: 0.78411454, b: 0.8823653, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
@@ -81,4 +81,4 @@ Material:
     - _node_2507: {r: 0.6421389, g: 0.7807802, b: 0.78676474, a: 0}
     - _node_8174: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _node_8282: {r: 1, g: 1, b: 1, a: 1}
-    - g_vOutlineColor: {r: 0, g: 0.88023525, b: 0.9485294, a: 1}
+    - g_vOutlineColor: {r: 1, g: 0.6431373, b: 0, a: 1}
