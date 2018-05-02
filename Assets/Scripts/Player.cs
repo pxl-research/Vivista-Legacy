@@ -81,10 +81,6 @@ public class Player : MonoBehaviour
 
 	private bool[] cameraRigMovable = new bool[2];
 
-	//NOTE(Kristof): Debug vars
-	private float denominator = 8;
-	private float debugAngleSize;
-
 	void Awake()
 	{
 		hittables = new List<Hittable>();
@@ -124,6 +120,8 @@ public class Player : MonoBehaviour
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 		}
+
+		VideoControls.videoController = videoController;
 	}
 
 	void Update()
@@ -138,10 +136,7 @@ public class Player : MonoBehaviour
 				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 
 				//NOTE(Lander): enable the highlight in the tutorial mode
-				if (projector.GetComponent<AnimateProjector>().state || startPointGroup.activeSelf)
-				{
-					VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, true);
-				}
+				VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, videoController.videoState == VideoController.VideoState.Intro);
 
 				//NOTE(Kristof): Rotating the seekbar
 				{
@@ -192,6 +187,7 @@ public class Player : MonoBehaviour
 			else
 			{
 				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
+				Canvass.seekbar.gameObject.SetActive(false);
 			}
 		}
 
@@ -211,20 +207,6 @@ public class Player : MonoBehaviour
 			if (Input.mouseScrollDelta.y != 0)
 			{
 				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
-			}
-		}
-
-		//TODO(Kristof): Remove debug lines
-		{
-			debugAngleSize = 270 / denominator;
-
-			DebugLine(0, Color.red);
-			DebugLine(-22.5f, Color.blue);
-			DebugLine(22.5f, Color.blue);
-
-			for (int i = 0; i <= denominator; i++)
-			{
-				DebugLine(45f + (i * debugAngleSize), Color.magenta);
 			}
 		}
 
@@ -263,19 +245,20 @@ public class Player : MonoBehaviour
 
 		if (playerState == PlayerState.Watching)
 		{
-			if (Input.GetKeyDown(KeyCode.Space))
+			if (Input.GetKeyDown(KeyCode.Space) && VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
 			{
 				videoController.TogglePlay();
 			}
 
-			//Note(Simon): Create a reversed raycast to find positions on the sphere with
-			ray.origin = ray.GetPoint(100);
-			ray.direction = -ray.direction;
-
 			//Note(Simon): Interaction with points
 			{
+				var reversedRay = ray;
+				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
+				reversedRay.origin = ray.GetPoint(100);
+				reversedRay.direction = -ray.direction;
+
 				RaycastHit hit;
-				Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+				Physics.Raycast(reversedRay, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
 				for (var i = interactionPoints.Count - 1; i >= 0; i--)
@@ -295,9 +278,9 @@ public class Player : MonoBehaviour
 							//NOTE(Kristof): Interacting with StartPoints
 							if (point.isStartPoint)
 							{
-								videoController.TogglePlay();
+								videoController.videoState = VideoController.VideoState.Watching;
 								startPointGroup.SetActive(false);
-								VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, false);
+								Togglecanvasses();
 								interactionPoints.RemoveRange(0, 4);
 							}
 							//NOTE(Kristof): Interacting with InteractionPoints
@@ -317,7 +300,7 @@ public class Player : MonoBehaviour
 								videoController.Pause();
 
 								//NOTE(Kristof): Play the video when you deactivate the last point
-								if (activePoints == 0)
+								if (activePoints == 0 && !VideoControls.seekbarPaused)
 								{
 									videoController.TogglePlay();
 								}
@@ -333,9 +316,9 @@ public class Player : MonoBehaviour
 								//NOTE(Kristof): Interacting with StartPoints
 								if (point.isStartPoint)
 								{
-									videoController.TogglePlay();
+									videoController.videoState = VideoController.VideoState.Watching;
 									startPointGroup.SetActive(false);
-									VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, false);
+									Togglecanvasses();
 								}
 								//NOTE(Kristof): Interacting with InteractionPoints
 								else
@@ -361,7 +344,7 @@ public class Player : MonoBehaviour
 
 										_interactionTimer = -1;
 
-										if (activePoints == 0)
+										if (activePoints == 0 && !VideoControls.seekbarPaused)
 										{
 											videoController.TogglePlay();
 										}
@@ -373,14 +356,18 @@ public class Player : MonoBehaviour
 					//NOTE(Kristof): Gets executed for the point.panels that the user made active before but are not currently being interacted with (no hit)
 					else if (point.panel != null && point.panel.activeSelf)
 					{
-						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
+						//NOTE(Kristof): Disable all panels when using the Seekbar play button to resume play
+						if (videoController.playing)
 						{
-							//NOTE(Kristof): Video can resume if the user is not using VR
-							if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
-							{
-								point.panel.SetActive(false);
-								videoController.TogglePlay();
-							}
+							point.panel.SetActive(false);
+							activePoints--;
+						}
+
+						//NOTE(Kristof): Video can resume if the user is not using VR
+						if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+						{
+							point.panel.SetActive(false);
+							videoController.TogglePlay();
 						}
 					}
 				}
@@ -520,7 +507,7 @@ public class Player : MonoBehaviour
 						case VRDevices.LoadedControllerSet.Vive:
 						{
 							var touchpad = device.GetAxis();
-							if  (device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad))
+							if (device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad))
 							{
 								if (touchpad.x > 0.7f && cameraRigMovable[index])
 								{
@@ -535,7 +522,7 @@ public class Player : MonoBehaviour
 							}
 							else
 							{
-								cameraRigMovable[index] = true;	
+								cameraRigMovable[index] = true;
 							}
 
 							break;
@@ -682,7 +669,6 @@ public class Player : MonoBehaviour
 	{
 		if (!projector.GetComponent<AnimateProjector>().state)
 		{
-			Togglecanvasses();
 			projector.transform.localScale = Vector3.zero;
 
 			for (var i = videoCanvas.childCount - 1; i >= 0; i--)
@@ -695,7 +681,10 @@ public class Player : MonoBehaviour
 
 	public void BackToBrowser()
 	{
-		Togglecanvasses();
+		if (videoController.videoState > VideoController.VideoState.Intro)
+		{
+			Togglecanvasses();
+		}
 		EventManager.OnSpace();
 		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
@@ -716,15 +705,6 @@ public class Player : MonoBehaviour
 		interactionPointCount = 0;
 
 		OpenFilePanel();
-	}
-
-	//TODO(Kristof): Remove this function
-	private void DebugLine(float angle, Color colour)
-	{
-		var debugAngle = -angle * Mathf.PI / 180;
-		var debugX = 5f * Mathf.Cos(debugAngle);
-		var debugZ = 5f * Mathf.Sin(debugAngle);
-		Debug.DrawLine(Vector3.zero, new Vector3(debugX, 0, debugZ), colour);
 	}
 
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.
@@ -805,15 +785,13 @@ public class Player : MonoBehaviour
 				videoCanvas.gameObject.GetComponent<Canvas>().sortingLayerName = "UIPanels";
 				StartCoroutine(FadevideoCanvasIn(videoCanvas));
 
-				//TODO(Kristof): remove debug for
 				for (int i = 0; i < videoList.Count; i++)
-				//for (int i = 0; i <= denominator; i++)
 				{
 					//NOTE(Kristof): Determine the next angle to put a video
 					//NOTE 45f			offset serves to skip the dead zone
-					//NOTE (i) * 30f	place a video every 30 degrees 
+					//NOTE (i) * 33.75	place a video every 33.75 degrees 
 					//NOTE 90f			camera rig rotation offset
-					var nextAngle = 45f + ((i) * debugAngleSize) + 90f;
+					var nextAngle = 45f + ((i) * 33.75f) + 90f;
 					var angle = -nextAngle * Mathf.PI / 180;
 					var x = 9.8f * Mathf.Cos(angle);
 					var z = 9.8f * Mathf.Sin(angle);
