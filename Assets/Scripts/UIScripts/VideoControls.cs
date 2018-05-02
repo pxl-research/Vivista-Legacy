@@ -1,29 +1,35 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class VideoControls : Hittable {
+public class VideoControls : MonoBehaviour
+{
 
-	public float ammount;
+	public float amount;
 	public Texture iconPlay;
 	public Texture iconPause;
 	public static VideoController videoController;
-	
-	// Update is called once per frame
-	//void Update () {
-		// TODO(Lander): update icon depending on play state	
-	//}
 
-	public void Skip() 
+	// Update is called once per frame
+	void Update()
 	{
-		videoController.video.time += ammount;
+		GetComponent<BoxCollider>().enabled = transform.root.GetComponent<Canvas>().enabled;
+	}
+
+	public void Skip()
+	{
+		if (videoController.videoState > VideoController.VideoState.Intro)
+		{
+			videoController.video.time += amount;
+		}
 	}
 
 	public void Toggle()
 	{
-		videoController.TogglePlay();
-		GetComponent<RawImage>().texture = videoController.playing ? iconPause : iconPlay;
+		if (videoController.videoState > VideoController.VideoState.Intro)
+		{
+			videoController.TogglePlay();
+			GetComponent<RawImage>().texture = videoController.playing ? iconPause : iconPlay;
+		}
 	}
 
 	public void OnHoverStart()
@@ -35,6 +41,6 @@ public class VideoControls : Hittable {
 	public void OnHoverEnd()
 	{
 		// TODO(Lander): change background instead of foreground 
-		GetComponent<RawImage>().color = Color.black;
+		GetComponent<RawImage>().color = Color.white;
 	}
 }
