@@ -7,12 +7,19 @@ public class VideoControls : MonoBehaviour
 	public float amount;
 	public Texture iconPlay;
 	public Texture iconPause;
+
 	public static VideoController videoController;
+	public static bool seekbarPaused;
 
 	// Update is called once per frame
 	void Update()
 	{
 		GetComponent<BoxCollider>().enabled = transform.root.GetComponent<Canvas>().enabled;
+
+		if (gameObject.name.Equals("TogglePlay"))
+		{
+			GetComponent<RawImage>().texture = videoController.playing ? iconPause : iconPlay;
+		}
 	}
 
 	public void Skip()
@@ -28,7 +35,7 @@ public class VideoControls : MonoBehaviour
 		if (videoController.videoState > VideoController.VideoState.Intro)
 		{
 			videoController.TogglePlay();
-			GetComponent<RawImage>().texture = videoController.playing ? iconPause : iconPlay;
+			seekbarPaused = !videoController.playing;
 		}
 	}
 

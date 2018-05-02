@@ -81,10 +81,6 @@ public class Player : MonoBehaviour
 
 	private bool[] cameraRigMovable = new bool[2];
 
-	//NOTE(Kristof): Debug vars
-	private float denominator = 8;
-	private float debugAngleSize;
-
 	void Awake()
 	{
 		hittables = new List<Hittable>();
@@ -191,6 +187,7 @@ public class Player : MonoBehaviour
 			else
 			{
 				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
+				Canvass.seekbar.gameObject.SetActive(false);
 			}
 		}
 
@@ -303,7 +300,7 @@ public class Player : MonoBehaviour
 								videoController.Pause();
 
 								//NOTE(Kristof): Play the video when you deactivate the last point
-								if (activePoints == 0)
+								if (activePoints == 0 && !VideoControls.seekbarPaused)
 								{
 									videoController.TogglePlay();
 								}
@@ -347,7 +344,7 @@ public class Player : MonoBehaviour
 
 										_interactionTimer = -1;
 
-										if (activePoints == 0)
+										if (activePoints == 0 && !VideoControls.seekbarPaused)
 										{
 											videoController.TogglePlay();
 										}
@@ -359,14 +356,18 @@ public class Player : MonoBehaviour
 					//NOTE(Kristof): Gets executed for the point.panels that the user made active before but are not currently being interacted with (no hit)
 					else if (point.panel != null && point.panel.activeSelf)
 					{
-						if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
+						//NOTE(Kristof): Disable all panels when using the Seekbar play button to resume play
+						if (videoController.playing)
 						{
-							//NOTE(Kristof): Video can resume if the user is not using VR
-							if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
-							{
-								point.panel.SetActive(false);
-								videoController.TogglePlay();
-							}
+							point.panel.SetActive(false);
+							activePoints--;
+						}
+
+						//NOTE(Kristof): Video can resume if the user is not using VR
+						if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+						{
+							point.panel.SetActive(false);
+							videoController.TogglePlay();
 						}
 					}
 				}
@@ -788,9 +789,9 @@ public class Player : MonoBehaviour
 				{
 					//NOTE(Kristof): Determine the next angle to put a video
 					//NOTE 45f			offset serves to skip the dead zone
-					//NOTE (i) * 30f	place a video every 30 degrees 
+					//NOTE (i) * 33.75	place a video every 33.75 degrees 
 					//NOTE 90f			camera rig rotation offset
-					var nextAngle = 45f + ((i) * debugAngleSize) + 90f;
+					var nextAngle = 45f + ((i) * 33.75f) + 90f;
 					var angle = -nextAngle * Mathf.PI / 180;
 					var x = 9.8f * Mathf.Cos(angle);
 					var z = 9.8f * Mathf.Sin(angle);
