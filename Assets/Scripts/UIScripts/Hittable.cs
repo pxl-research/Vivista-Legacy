@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 
 public class Hittable : MonoBehaviour
@@ -48,7 +49,11 @@ public class Hittable : MonoBehaviour
 
 	void OnDestroy()
 	{
-		Player.hittables.Remove(this);
-		var length = Player.hittables.Count;
+		// NOTE(Lander): Remove the items only when used in Player 
+		if (Player.hittables != null)
+		{
+			Player.hittables.Remove(this);
+			var length = Player.hittables.Count;
+		}
 	}
 }

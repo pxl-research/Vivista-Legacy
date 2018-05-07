@@ -61,12 +61,6 @@ public class VideoPanel : MonoBehaviour
 		videoPlayer.url = fullPath;
 		transform.localPosition = position;
 		title.text = newTitle;
-	}
-
-	void Start()
-	{
-		//NOTE(Kristof): Initial rotation towards the camera 
-		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 
 		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
 		audioSource.playOnAwake = false;
@@ -78,6 +72,12 @@ public class VideoPanel : MonoBehaviour
 		//NOTE(Lander): duct tape
 		videoPlayer.enabled = false;
 		videoPlayer.enabled = true;
+	}
+
+	void Start()
+	{
+		//NOTE(Kristof): Initial rotation towards the camera 
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 	}
 
 	// Update is called once per frame
