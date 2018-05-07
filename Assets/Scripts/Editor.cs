@@ -428,7 +428,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = "extra" + meta.extraCounter++;
+						var filename = Path.Combine("extra", GenerateExtraGuid() );
 						var path = Path.Combine(folder, filename);
 
 						var tex = (Texture2D)editor.imagePreview.texture;
@@ -470,12 +470,13 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.Video:
 				{
+					// $L
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 						var extension = Path.GetExtension(editor.answerURL);
-						var filename = Path.Combine("extra", BitConverter.ToString(System.Security.Cryptography.SHA1.Create().ComputeHash(File.OpenRead(editor.answerURL))).ToLower().Replace("-", ""));
+						var filename = Path.Combine("extra", GenerateExtraGuid());
 						var pathWithExt = Path.Combine(folder, filename + extension);
 						var pathNoExt = Path.Combine(folder, filename);
 
@@ -580,8 +581,9 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
+						// $L
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = "extra" + meta.extraCounter++;
+						var filename = Path.Combine("extra", GenerateExtraGuid());
 						var path = Path.Combine(folder, filename);
 
 						var tex = (Texture2D)editor.imagePreview.texture;
@@ -625,9 +627,10 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					if (editor && editor.answered)
 					{
+						// $L
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 						var extension = Path.GetExtension(editor.answerURL);
-						var filename = Path.Combine("extra", BitConverter.ToString(System.Security.Cryptography.SHA1.Create().ComputeHash(File.OpenRead(editor.answerURL))).ToLower().Replace("-", ""));
+						var filename = Path.Combine("extra", GenerateExtraGuid());
 						var path = Path.Combine(folder, filename + extension);
 
 
@@ -1475,7 +1478,7 @@ public class Editor : MonoBehaviour
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
 				};
-				if (!File.Exists(point.filename) && point.type == InteractionType.Image)
+				if (!File.Exists(Path.Combine(path,point.filename)) && point.type == InteractionType.Image)
 				{
 					Debug.LogFormat("missing file: {0} ", point.filename);
 				}
@@ -1573,12 +1576,6 @@ public class Editor : MonoBehaviour
 						Debug.LogWarningFormat("File missing: {0}", url);
 						newInteractionPoint.panel = panel;
 						break;
-					}
-					int extraCount = Int32.Parse(url.Substring(url.LastIndexOf("extra") + "extra".Length));
-
-					if (extraCount > meta.extraCounter)
-					{
-						meta.extraCounter = extraCount;
 					}
 
 					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, "file:///" + url, false);
@@ -1823,5 +1820,10 @@ public class Editor : MonoBehaviour
 	private static long FileSize(string path)
 	{
 		return (int)new FileInfo(path).Length;
+	}
+
+	private string GenerateExtraGuid()
+	{
+		return Guid.NewGuid().ToString().Replace("-", "");
 	}
 }
