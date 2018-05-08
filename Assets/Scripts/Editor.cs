@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -195,6 +195,7 @@ public class Editor : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
+		VideoPanel.keepFileNames = true;
 	}
 
 	void Update()
@@ -428,7 +429,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = Path.Combine("extra", GenerateExtraGuid() );
+						var filename = Path.Combine("extra", GenerateExtraGuid());
 						var path = Path.Combine(folder, filename);
 
 						var tex = (Texture2D)editor.imagePreview.texture;
@@ -669,6 +670,7 @@ public class Editor : MonoBehaviour
 					return;
 				}
 				Toasts.AddToast(5, "File saved!");
+				//cleanExtraFiles();
 
 				SetEditorActive(true);
 				Destroy(filePanel);
@@ -699,7 +701,8 @@ public class Editor : MonoBehaviour
 						{
 							Directory.CreateDirectory(extraPath);
 						}
-					}catch(IOException e)
+					}
+					catch (IOException e)
 					{
 						Debug.LogErrorFormat("Could not create an extra dir({1}): {0} ", e.Message, extraPath);
 					}
@@ -732,7 +735,8 @@ public class Editor : MonoBehaviour
 					try
 					{
 						Directory.CreateDirectory(extraPath);
-					}catch(IOException e)
+					}
+					catch (IOException e)
 					{
 						Debug.LogErrorFormat("Could not create directory({0}): {1}", extraPath, e.Message);
 					}
@@ -861,7 +865,7 @@ public class Editor : MonoBehaviour
 		var newRow = Instantiate(timelineRow);
 		point.timelineRow = newRow;
 		newRow.transform.SetParent(timeline.transform);
-		
+
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
@@ -1478,7 +1482,7 @@ public class Editor : MonoBehaviour
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
 				};
-				if (!File.Exists(Path.Combine(path,point.filename)) && point.type == InteractionType.Image)
+				if (!File.Exists(Path.Combine(path, point.filename)) && point.type == InteractionType.Image)
 				{
 					Debug.LogFormat("missing file: {0} ", point.filename);
 				}
@@ -1521,6 +1525,7 @@ public class Editor : MonoBehaviour
 		var data = SaveFile.OpenFile(path);
 		meta = data.meta;
 		var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
+
 
 		if (!File.Exists(videoPath))
 		{
@@ -1825,5 +1830,50 @@ public class Editor : MonoBehaviour
 	private string GenerateExtraGuid()
 	{
 		return Guid.NewGuid().ToString().Replace("-", "");
+	}
+
+	private void OnDestroy()
+	{
+		if (editorState == EditorState.Active)
+		{
+			cleanExtraFiles();
+		}
+	}
+
+	private void cleanExtraFiles()
+	{
+		var files = Directory.GetFiles(Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "extra")));
+		for (int i = 0; i < files.Length; i++)
+		{
+			bool keep = false;
+			// HACK(Lander): This one
+			if (Path.GetExtension(files[i]) == ".mp4")
+			{
+				var extensionlessfile = Path.ChangeExtension(files[i], null);
+				File.Move(files[i], extensionlessfile);
+				files[i] = extensionlessfile;
+			}
+			foreach (var point in interactionPoints)
+			{
+				if (point.type == InteractionType.Video)
+				{
+					Destroy(point.panel);
+					break;
+				}
+
+				var fullpath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), point.filename));
+				if (fullpath == files[i])
+				{
+					keep = true;
+					break;
+				}
+			}
+
+			if (!keep)
+			{
+				Debug.LogFormat("Deleting (pretend): {0}", files[i]);
+				//File.Delete(extraFile);
+			}
+		}
 	}
 }

@@ -13,9 +13,11 @@ public class VideoPanel : MonoBehaviour
 	public Canvas canvas;
 	public Texture iconPlay;
 	public Texture iconPause;
-
 	public Text title;
+
+	public static bool keepFileNames;
 	public string url;
+
 
 	private RawImage videoSurface;
 	private VideoPlayer videoPlayer;
@@ -38,8 +40,13 @@ public class VideoPanel : MonoBehaviour
 
 		var folder = Path.Combine(Application.persistentDataPath, guid);
 
+		if (fullPath.Length == 0)
+			Debug.Log("Fullpath is set incorrectly!");
+
 		if (!File.Exists(fullPath))
 		{
+			Debug.LogWarningFormat("Could not find file: {0} ", fullPath);
+
 			var pathNoExtension = Path.Combine(Path.Combine(folder, "extra"), Path.GetFileNameWithoutExtension(fullPath));
 			if (!File.Exists(pathNoExtension))
 			{
@@ -49,15 +56,18 @@ public class VideoPanel : MonoBehaviour
 
 			try
 			{
+				Debug.LogFormat("Moving {0}, {1}", pathNoExtension, fullPath);
 				File.Move(pathNoExtension, fullPath);
 			}
 			catch (IOException e)
 			{
-				Debug.LogWarningFormat("Cannot add extension to file: {0}\n{2}\n{1}", pathNoExtension, e.Message, fullPath);
-				return;
+				Debug.LogErrorFormat("Cannot add extension to file: {0}\n{2}\n{1}", pathNoExtension, e.Message, fullPath);
+				//return;
 			}
 
+
 		}
+
 		videoPlayer.url = fullPath;
 		transform.localPosition = position;
 		title.text = newTitle;
@@ -117,7 +127,9 @@ public class VideoPanel : MonoBehaviour
 
 	private void OnDestroy()
 	{
-		// TODO(Lander): this can be empty in some cases.
+		// TODO(Lander): if we can't find the state of the current file, abort.
+		if (keepFileNames || !videoPlayer ) return;
+
 		var filename = videoPlayer.url;
 		if (File.Exists(filename) && Path.GetExtension(filename) != "")
 		{
