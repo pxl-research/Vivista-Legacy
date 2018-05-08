@@ -72,8 +72,19 @@ public class FilePanel : MonoBehaviour
 
 				try
 				{
-					string title = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta.title;
+					var meta = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta;
+					string title;
+					if (meta.version > VersionManager.VERSION)
+					{
+						title = string.Format("This project uses a version that's higher than the Editor's. Please update the Editor: {0}", directory.Name);
+					}
+					else
+					{
+						title = meta.title;
+					}
+
 					newFileItem = new FileItem { title = title, guid = directory.Name };
+
 				}
 				catch (Exception e)
 				{
@@ -160,12 +171,17 @@ public class FilePanel : MonoBehaviour
 
 			var meta = new Metadata
 			{
+				version = VersionManager.VERSION,
 				title = files[selectedIndex].title,
 				description = "",
 				guid = new Guid(files[selectedIndex].guid),
 			};
 
 			var sb = new StringBuilder();
+			sb.Append("version:")
+				.Append(meta.version)
+				.Append(",\n");
+
 			sb.Append("uuid:")
 				.Append(meta.guid)
 				.Append(",\n");

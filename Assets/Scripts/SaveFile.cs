@@ -109,8 +109,8 @@ public static class SaveFile
 	public static SaveFileData OpenFile(string path)
 	{
 		var str = GetSaveFileContents(path);
-		var versionManager = new VersionManager(str);
-		str = versionManager.CheckAndUpgradeVersion();
+
+		str = VersionManager.CheckAndUpgradeVersion(str);
 
 		var saveFileData = new SaveFileData();
 
@@ -141,7 +141,7 @@ public static class SaveFile
 			saveFileData.points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
 		}
 
-		if (versionManager.updated)
+		if (VersionManager.isUpdated)
 		{
 			try
 			{

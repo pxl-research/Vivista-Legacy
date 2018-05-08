@@ -18,7 +18,6 @@ public class InteractionPointPlayer
 	public GameObject point;
 	public GameObject panel;
 	public Vector3 position;
-	public Quaternion rotation;
 	public InteractionType type;
 	public string title;
 	public string body;
@@ -574,7 +573,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, Quaternion.identity);
+			var newPoint = Instantiate(interactionPointPrefab/*, point.position, Quaternion.identity*/);
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -597,14 +596,14 @@ public class Player : MonoBehaviour
 				case InteractionType.Text:
 				{
 					var panel = Instantiate(textPanelPrefab);
-					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					panel.GetComponent<TextPanel>().Init(/*point.position, */newInteractionPoint.title, newInteractionPoint.body);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+					panel.GetComponent<ImagePanel>().Init(/*point.position, */newInteractionPoint.title, newInteractionPoint.filename, false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -733,7 +732,15 @@ public class Player : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Default")))
 			{
 				var drawLocation = hit.point;
-				interactionPoint.point.transform.position = drawLocation;
+				var trans = interactionPoint.point.transform;
+
+				trans.position = drawLocation;
+				trans.LookAt(Camera.main.transform);
+				//NOTE(Kristof): Turn it around so it actually faces the camera
+				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
+
+				interactionPoint.position = drawLocation;
+				interactionPoint.panel.transform.position = drawLocation;
 			}
 		}
 	}

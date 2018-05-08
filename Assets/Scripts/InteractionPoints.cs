@@ -6,10 +6,10 @@ public class InteractionPoints : MonoBehaviour
 	{
 		if (UnityEngine.XR.XRSettings.enabled)
 		{
-			gameObject.transform.localScale = new Vector3(2.5f,2.5f,1);
+			gameObject.transform.localScale = new Vector3(2.5f,2.5f,2.5f);
 		} else
 		{
-			gameObject.transform.localScale = new Vector3(4, 4, 1);
+			gameObject.transform.localScale = new Vector3(5.5f, 5.5f, 5.5f);
 		}
 	}
 }

@@ -30,6 +30,8 @@ public class VideoSerialize
 	public string title;
 	public int length;
 	public string description;
+
+	public bool compatibleVersion = true;
 }
 
 public class IndexPanel : MonoBehaviour
@@ -288,15 +290,15 @@ public class IndexPanel : MonoBehaviour
 		var url = string.Format("{0}?count={1}&offset={2}", Web.indexUrl, videosPerPage, offset);
 		if (searchParamAgeDays > 0)
 		{
-			url += String.Format("&agedays={0}", searchParamAgeDays);
+			url += string.Format("&agedays={0}", searchParamAgeDays);
 		}
-		if (!String.IsNullOrEmpty(searchParamText))
+		if (!string.IsNullOrEmpty(searchParamText))
 		{
-			url += String.Format("&search={0}", searchParamText);
+			url += string.Format("&search={0}", searchParamText);
 		}
-		if (!String.IsNullOrEmpty(searchParamAuthor))
+		if (!string.IsNullOrEmpty(searchParamAuthor))
 		{
-			url += String.Format("&author={0}", searchParamAuthor);
+			url += string.Format("&author={0}", searchParamAuthor);
 		}
 
 		var www = new WWW(url);
@@ -381,6 +383,7 @@ public class IndexPanel : MonoBehaviour
 				downloadsize = SaveFile.DirectorySize(folderInfo),
 				realTimestamp = folderInfo.LastWriteTime,
 				uuid = localVideos[i].Name,
+				compatibleVersion = !(data.meta.version > VersionManager.VERSION)
 			});
 		}
 
