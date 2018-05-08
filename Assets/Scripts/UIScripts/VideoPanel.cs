@@ -40,23 +40,17 @@ public class VideoPanel : MonoBehaviour
 
 		var folder = Path.Combine(Application.persistentDataPath, guid);
 
-		if (fullPath.Length == 0)
-			Debug.Log("Fullpath is set incorrectly!");
-
 		if (!File.Exists(fullPath))
 		{
-			Debug.LogWarningFormat("Could not find file: {0} ", fullPath);
-
 			var pathNoExtension = Path.Combine(Path.Combine(folder, "extra"), Path.GetFileNameWithoutExtension(fullPath));
 			if (!File.Exists(pathNoExtension))
 			{
-				Debug.LogWarningFormat("Cannot find extension-less file: {1} {0}", pathNoExtension, File.Exists(pathNoExtension));
+				Debug.LogErrorFormat("Cannot find extension-less video file: {1} {0}", pathNoExtension, File.Exists(pathNoExtension));
 				return;
 			}
 
 			try
 			{
-				Debug.LogFormat("Moving {0}, {1}", pathNoExtension, fullPath);
 				File.Move(pathNoExtension, fullPath);
 			}
 			catch (IOException e)
@@ -136,19 +130,19 @@ public class VideoPanel : MonoBehaviour
 			var newfilename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename));
 			try
 			{
-				Debug.LogFormat("Moving {0} to {1}", filename, newfilename);
 				File.Move(filename, newfilename);
 			}
 			catch (IOException e)
 			{
 				try
 				{
+					// NOTE(Lander): This should be safe enough, but could use some more thorough testing.
 					Debug.LogFormat("File Already exists? deleting: {0}", newfilename);
 					File.Delete(filename);
 				}
 				catch (IOException e2)
 				{
-					Debug.LogErrorFormat("Something went wrong while moving the file. Stopping. \n{} ", e2.Message);
+					Debug.LogErrorFormat("Something went wrong while moving the file. Aborting. \n{0} ", e2.Message);
 				}
 			}
 		}
