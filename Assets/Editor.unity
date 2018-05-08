@@ -227,7 +227,7 @@ Prefab:
     - target: {fileID: 224241054576667174, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 2}
       propertyPath: m_AnchorMax.y
-      value: 0.84805316
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 224057706769774768, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 2}
@@ -1249,7 +1249,7 @@ Prefab:
     - target: {fileID: 224922285569534542, guid: a8ca42a5d03382b4e8c646309adefc2f,
         type: 2}
       propertyPath: m_SizeDelta.y
-      value: 480
+      value: 512
       objectReference: {fileID: 0}
     - target: {fileID: 224922285569534542, guid: a8ca42a5d03382b4e8c646309adefc2f,
         type: 2}
@@ -1280,36 +1280,6 @@ Prefab:
         type: 2}
       propertyPath: m_Pivot.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114043308801056078, guid: a8ca42a5d03382b4e8c646309adefc2f,
-        type: 2}
-      propertyPath: m_Spacing
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 224314923373052196, guid: a8ca42a5d03382b4e8c646309adefc2f,
-        type: 2}
-      propertyPath: m_AnchorMin.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 224314923373052196, guid: a8ca42a5d03382b4e8c646309adefc2f,
-        type: 2}
-      propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 224314923373052196, guid: a8ca42a5d03382b4e8c646309adefc2f,
-        type: 2}
-      propertyPath: m_AnchoredPosition.y
-      value: -7
-      objectReference: {fileID: 0}
-    - target: {fileID: 114043308801056078, guid: a8ca42a5d03382b4e8c646309adefc2f,
-        type: 2}
-      propertyPath: m_Padding.m_Left
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 224314923373052196, guid: a8ca42a5d03382b4e8c646309adefc2f,
-        type: 2}
-      propertyPath: m_AnchoredPosition.x
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a8ca42a5d03382b4e8c646309adefc2f, type: 2}
