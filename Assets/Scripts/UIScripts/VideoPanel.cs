@@ -24,7 +24,7 @@ public class VideoPanel : MonoBehaviour
 
 
 
-	public void Init(Vector3 position, string newTitle, string fullPath, string guid, bool prepareNow = false)
+	public void Init(string newTitle, string fullPath, string guid, bool prepareNow = false)
 	{
 		videoRenderTexture = Instantiate(videoRenderTexture);
 		videoPlayer.targetTexture = videoRenderTexture;
@@ -61,7 +61,6 @@ public class VideoPanel : MonoBehaviour
 		}
 
 		videoPlayer.url = fullPath;
-		transform.localPosition = position;
 		title.text = newTitle;
 
 		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
@@ -108,13 +107,9 @@ public class VideoPanel : MonoBehaviour
 	// NOTE(Lander): copied from image panel
 	public void Move(Vector3 position)
 	{
-		Vector3 newPos;
-
-		newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+		var newPos = position;
 		newPos.y += 0.015f;
-
-		canvas.GetComponent<RectTransform>().position = newPos;
-		canvas.transform.rotation = Camera.main.transform.rotation;
+		canvas.GetComponent<RectTransform>().position = position;
 	}
 
 	private void OnDestroy()

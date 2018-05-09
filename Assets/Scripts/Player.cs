@@ -596,21 +596,21 @@ public class Player : MonoBehaviour
 				case InteractionType.Text:
 				{
 					var panel = Instantiate(textPanelPrefab);
-					panel.GetComponent<TextPanel>().Init(/*point.position, */newInteractionPoint.title, newInteractionPoint.body);
+					panel.GetComponent<TextPanel>().Init(newInteractionPoint.title, newInteractionPoint.body);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(/*point.position, */newInteractionPoint.title, newInteractionPoint.filename, false);
+					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}

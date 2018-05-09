@@ -435,7 +435,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(/*lastPlacedPointPos, */editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, "file:///" + path, true);
 						panel.GetComponent<ImagePanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
@@ -454,7 +454,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(/*lastPlacedPointPos, */editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
 						panel.GetComponent<TextPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
@@ -488,7 +488,8 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init( editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename + extension;
@@ -594,7 +595,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(/*pointToEdit.point.transform.position, */editor.answerTitle, path, true);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, path, true);
 						panel.GetComponent<ImagePanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename;
@@ -612,7 +613,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(/*pointToEdit.point.transform.position, */editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
 						panel.GetComponent<TextPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
@@ -636,7 +637,8 @@ public class Editor : MonoBehaviour
 
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init( editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename + extension;
 						pointToEdit.panel = panel;
@@ -1574,7 +1576,7 @@ public class Editor : MonoBehaviour
 					var panel = Instantiate(videoPanelPrefab);
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
 
-					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, url, meta.guid.ToString(), false);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}

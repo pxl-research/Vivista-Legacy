@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEngine;
 
@@ -57,7 +58,7 @@ public class InteractionPointLatest
 public class VersionManager
 {
 	public static bool isUpdated;
-	public const int VERSION = 1;
+	public const int VERSION = 2;
 
 	public static string CheckAndUpgradeVersion(string jsonString)
 	{
@@ -137,6 +138,20 @@ public class VersionManager
 
 		//NOTE(Kristof: Increment version by one to version 1
 		meta.version++;
+		return true;
+	}
+
+	private static bool Upgrade1To2(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
+	{
+
+		if (meta.version != 1)
+		{
+			return false;
+		}
+
+		var path = Path.combine(meta.guid, SaveFile.extraPath);
+		Directory.CreateDirectory(path);
+
 		return true;
 	}
 
