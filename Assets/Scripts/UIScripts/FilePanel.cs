@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class FilePanel : MonoBehaviour 
+public class FilePanel : MonoBehaviour
 {
 	public class FileItem
 	{
@@ -85,13 +85,13 @@ public class FilePanel : MonoBehaviour
 				filenameListItem.transform.SetParent(fileList, false);
 				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
 				newFileItem.listItem = filenameListItem;
-				
+
 				files.Add(newFileItem);
 			}
 		}
 	}
 
-	void Update ()
+	void Update()
 	{
 		for (var i = 0; i < files.Count; i++)
 		{
@@ -131,7 +131,7 @@ public class FilePanel : MonoBehaviour
 
 	public void NewStart()
 	{
-		var newFileItem = new FileItem {title = "New File", guid = Guid.NewGuid().ToString()};
+		var newFileItem = new FileItem { title = "New File", guid = Guid.NewGuid().ToString() };
 		var filenameListItem = Instantiate(filenameItemPrefab);
 		filenameListItem.transform.SetParent(fileList, false);
 		filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
@@ -156,7 +156,8 @@ public class FilePanel : MonoBehaviour
 		{
 			Directory.CreateDirectory(path);
 			File.Create(Path.Combine(path, ".editable")).Close();
-			
+			Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
+
 			var meta = new Metadata
 			{
 				title = files[selectedIndex].title,
@@ -194,7 +195,7 @@ public class FilePanel : MonoBehaviour
 					metaFile.WriteLine(sb.ToString());
 				}
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				Debug.Log(e.ToString());
 			}
@@ -242,6 +243,8 @@ public class FilePanel : MonoBehaviour
 
 			var file = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
 			file.meta.title = newTitle;
+
+			Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
 
 			var sb = new StringBuilder();
 

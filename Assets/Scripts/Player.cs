@@ -42,6 +42,7 @@ public class Player : MonoBehaviour
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
+	public GameObject videoPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
 	public GameObject projectorPrefab;
@@ -581,12 +582,15 @@ public class Player : MonoBehaviour
 				endTime = point.endTime,
 				title = point.title,
 				body = point.body,
-				filename = "file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
+				filename = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
 				type = point.type,
 				point = newPoint,
 				returnRayOrigin = point.returnRayOrigin,
 				returnRayDirection = point.returnRayDirection
 			};
+
+			// NOTE(Lander): Add file protocol for images, ignore for the rest.
+			newInteractionPoint.filename = (newInteractionPoint.type == InteractionType.Image ? "file:///" : "") + newInteractionPoint.filename;
 
 			switch (newInteractionPoint.type)
 			{
@@ -601,6 +605,13 @@ public class Player : MonoBehaviour
 				{
 					var panel = Instantiate(imagePanelPrefab);
 					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Video:
+				{
+					var panel = Instantiate(videoPanelPrefab);
+					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -719,7 +730,7 @@ public class Player : MonoBehaviour
 
 			RaycastHit hit;
 
-			if (Physics.Raycast(ray, out hit, 100))
+			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Default")))
 			{
 				var drawLocation = hit.point;
 				interactionPoint.point.transform.position = drawLocation;
