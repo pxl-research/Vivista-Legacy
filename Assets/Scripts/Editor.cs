@@ -429,7 +429,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = Path.Combine("extra", GenerateExtraGuid());
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
 						var path = Path.Combine(folder, filename);
 
 						var tex = (Texture2D)editor.imagePreview.texture;
@@ -471,28 +471,26 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.Video:
 				{
-					// $L
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					if (editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 						var extension = Path.GetExtension(editor.answerURL);
-						var filename = Path.Combine("extra", GenerateExtraGuid());
-						var pathWithExt = Path.Combine(folder, filename + extension);
-						var pathNoExt = Path.Combine(folder, filename);
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+						var path = Path.Combine(folder, filename);
 
-						if (File.Exists(pathWithExt) && !File.Exists(pathNoExt))
+						if (File.Exists(path + extension) && !File.Exists(path))
 						{
-							File.Move(pathWithExt, pathNoExt);
+							File.Move(path + extension, path);
 						}
 
-						if (!File.Exists(pathNoExt))
+						if (!File.Exists(path))
 						{
-							File.Copy(editor.answerURL, pathNoExt);
+							File.Copy(editor.answerURL, path);
 						}
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, pathWithExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, path + extension, meta.guid.ToString(), true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename + extension;
@@ -582,9 +580,8 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
-						// $L
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = Path.Combine("extra", GenerateExtraGuid());
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
 						var path = Path.Combine(folder, filename);
 
 						var tex = (Texture2D)editor.imagePreview.texture;
@@ -628,10 +625,9 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					if (editor && editor.answered)
 					{
-						// $L
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 						var extension = Path.GetExtension(editor.answerURL);
-						var filename = Path.Combine("extra", GenerateExtraGuid());
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
 						var path = Path.Combine(folder, filename + extension);
 
 
@@ -691,21 +687,10 @@ public class Editor : MonoBehaviour
 			{
 				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
-				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, "extra"));
+				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.extraPath));
 
 				if (OpenFile(metaPath))
 				{
-					try
-					{
-						if (!Directory.Exists(extraPath))
-						{
-							Directory.CreateDirectory(extraPath);
-						}
-					}
-					catch (IOException e)
-					{
-						Debug.LogErrorFormat("Could not create an extra dir({1}): {0} ", e.Message, extraPath);
-					}
 					SetEditorActive(true);
 					Destroy(openPanel);
 					Canvass.modalBackground.SetActive(false);
@@ -726,20 +711,12 @@ public class Editor : MonoBehaviour
 			{
 				var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.metaFilename));
-				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "extra"));
+				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.extraPath));
 
 				File.Copy(panel.answerFilePath, videoPath);
 
 				if (OpenFile(metaPath))
 				{
-					try
-					{
-						Directory.CreateDirectory(extraPath);
-					}
-					catch (IOException e)
-					{
-						Debug.LogErrorFormat("Could not create directory({0}): {1}", extraPath, e.Message);
-					}
 					Destroy(explorerPanel);
 					SetEditorActive(true);
 					Canvass.modalBackground.SetActive(false);
@@ -1830,50 +1807,5 @@ public class Editor : MonoBehaviour
 	private string GenerateExtraGuid()
 	{
 		return Guid.NewGuid().ToString().Replace("-", "");
-	}
-
-	private void OnDestroy()
-	{
-		if (editorState == EditorState.Active)
-		{
-			cleanExtraFiles();
-		}
-	}
-
-	private void cleanExtraFiles()
-	{
-		var files = Directory.GetFiles(Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), "extra")));
-		for (int i = 0; i < files.Length; i++)
-		{
-			bool keep = false;
-			// HACK(Lander): This one
-			if (Path.GetExtension(files[i]) == ".mp4")
-			{
-				var extensionlessfile = Path.ChangeExtension(files[i], null);
-				File.Move(files[i], extensionlessfile);
-				files[i] = extensionlessfile;
-			}
-			foreach (var point in interactionPoints)
-			{
-				if (point.type == InteractionType.Video)
-				{
-					Destroy(point.panel);
-					break;
-				}
-
-				var fullpath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), point.filename));
-				if (fullpath == files[i])
-				{
-					keep = true;
-					break;
-				}
-			}
-
-			if (!keep)
-			{
-				Debug.LogFormat("Deleting (pretend): {0}", files[i]);
-				//File.Delete(extraFile);
-			}
-		}
 	}
 }

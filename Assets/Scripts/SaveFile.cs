@@ -8,6 +8,7 @@ public static class SaveFile
 	public static string metaFilename = "meta.json";
 	public static string videoFilename = "main.mp4";
 	public static string thumbFilename = "thumb.jpg";
+	public static string extraPath = "extra";
 
 	public static string GetSaveFileContents(string path)
 	{

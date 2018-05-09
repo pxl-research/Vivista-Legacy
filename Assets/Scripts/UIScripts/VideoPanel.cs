@@ -14,20 +14,18 @@ public class VideoPanel : MonoBehaviour
 	public Texture iconPlay;
 	public Texture iconPause;
 	public Text title;
+	public RawImage videoSurface;
+	public VideoPlayer videoPlayer;
+	public AudioSource audioSource;
 
 	public static bool keepFileNames;
 	public string url;
 
 
-	private RawImage videoSurface;
-	private VideoPlayer videoPlayer;
-	private AudioSource audioSource;
 
 
 	public void Init(Vector3 position, string newTitle, string fullPath, string guid, bool prepareNow = false)
 	{
-		videoPlayer = videoContainer.GetComponent<VideoPlayer>();
-		videoSurface = videoContainer.GetComponent<RawImage>();
 		videoRenderTexture = Instantiate(videoRenderTexture);
 		videoPlayer.targetTexture = videoRenderTexture;
 		videoSurface.texture = videoRenderTexture;
@@ -42,7 +40,7 @@ public class VideoPanel : MonoBehaviour
 
 		if (!File.Exists(fullPath))
 		{
-			var pathNoExtension = Path.Combine(Path.Combine(folder, "extra"), Path.GetFileNameWithoutExtension(fullPath));
+			var pathNoExtension = Path.Combine(Path.Combine(folder, SaveFile.extraPath), Path.GetFileNameWithoutExtension(fullPath));
 			if (!File.Exists(pathNoExtension))
 			{
 				Debug.LogErrorFormat("Cannot find extension-less video file: {1} {0}", pathNoExtension, File.Exists(pathNoExtension));
@@ -122,7 +120,7 @@ public class VideoPanel : MonoBehaviour
 	private void OnDestroy()
 	{
 		// TODO(Lander): if we can't find the state of the current file, abort.
-		if (keepFileNames || !videoPlayer ) return;
+		if (keepFileNames || !videoPlayer) return;
 
 		var filename = videoPlayer.url;
 		if (File.Exists(filename) && Path.GetExtension(filename) != "")
