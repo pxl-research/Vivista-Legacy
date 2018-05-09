@@ -250,12 +250,9 @@ public class Editor : MonoBehaviour
 			var ignoreRaycast = false;
 			if (Input.GetMouseButtonDown(0) && Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
 			{
-				foreach (var point in interactionPoints)
+				if (hit.transform.gameObject.GetComponentInParent<VideoPanel>())
 				{
-					if (point.type == InteractionType.Video)
-					{
-						point.panel.GetComponent<VideoPanel>().TogglePlay();
-					}
+					hit.transform.gameObject.GetComponentInParent<VideoPanel>().TogglePlay();
 				}
 				ignoreRaycast = true;
 			}
