@@ -250,9 +250,10 @@ public class Editor : MonoBehaviour
 			var ignoreRaycast = false;
 			if (Input.GetMouseButtonDown(0) && Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
 			{
-				if (hit.transform.gameObject.GetComponentInParent<VideoPanel>())
+				var panel = hit.transform.gameObject.GetComponentInParent<VideoPanel>();
+				if (panel)
 				{
-					hit.transform.gameObject.GetComponentInParent<VideoPanel>().TogglePlay();
+					panel.TogglePlay();
 				}
 				ignoreRaycast = true;
 			}
@@ -475,10 +476,11 @@ public class Editor : MonoBehaviour
 						var extension = Path.GetExtension(editor.answerURL);
 						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
 						var path = Path.Combine(folder, filename);
+						var pathExt = path + extension;
 
-						if (File.Exists(path + extension) && !File.Exists(path))
+						if (File.Exists(pathExt) && !File.Exists(path))
 						{
-							File.Move(path + extension, path);
+							File.Move(pathExt, path);
 						}
 
 						if (!File.Exists(path))
@@ -487,7 +489,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, path + extension, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, pathExt, meta.guid.ToString(), true);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename + extension;
