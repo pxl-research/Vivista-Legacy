@@ -96,7 +96,7 @@ public class VersionManager
 			metaCompat.description = result.value;
 
 			result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
-			metaCompat.perspective = (Perspective) Enum.Parse(typeof(Perspective), result.value);
+			metaCompat.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
 
 			result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
 			metaCompat.length = Convert.ToSingle(result.value);
@@ -202,8 +202,63 @@ public class VersionManager
 		{
 			sb.Append("[]]");
 		}
-		
+
 
 		return sb.ToString();
+	}
+
+	public static bool ValidateSaveFile(string json)
+	{
+		try
+		{
+			var result = new SaveFile.ParsedJsonLine();
+
+			//NOTE(Kristof): First check if the json contains a version
+			if (json.StartsWith("version:"))
+			{
+				result = SaveFile.JsonGetValueFromLine(json, result.endindex);
+				int version = Convert.ToInt32(result.value);
+			}
+
+			//NOTE(Kristof): Try parsing guid
+			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
+			Guid guid = new Guid(result.value);
+
+			//NOTE(Kristof): Try parsing title
+			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
+			string title = result.value;
+
+			//NOTE(Kristof): Try parsing description
+			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
+			string description = result.value;
+
+			//NOTE(Kristof): Try parsing perpective
+			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
+			Perspective perspective = (Perspective) Enum.Parse(typeof(Perspective), result.value);
+
+			//NOTE(Kristof): Try parsing length
+			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
+			float length = Convert.ToSingle(result.value);
+
+			//NOTE(Kristof): Try parsing InteractionPoints
+			List<string> points = SaveFile.ParseInteractionPoints(json, result.endindex);
+			if (points != null)
+			{
+				foreach (var obj in points)
+				{
+					JsonUtility.FromJson<InteractionpointSerializeCompat>(obj);
+				}
+			}
+			else
+			{
+				return false;
+			}
+
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
 	}
 }
