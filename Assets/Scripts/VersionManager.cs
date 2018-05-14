@@ -1,8 +1,11 @@
-﻿using System;
+﻿//#define DEBUG_VERSION
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
+
 
 [Serializable]
 public class MetaDataCompat
@@ -74,6 +77,11 @@ public class VersionManager
 		{
 			var result = SaveFile.JsonGetValueFromLine(jsonString, 0);
 			metaCompat.version = Convert.ToInt32(result.value);
+
+			if (metaCompat.version == VERSION)
+			{
+				return jsonString;
+			}
 		}
 
 		//NOTE(Kristof): Build objects from json
@@ -95,8 +103,11 @@ public class VersionManager
 			result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
 			metaCompat.description = result.value;
 
-			result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
-			metaCompat.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
+			if (metaCompat.version < 2)
+			{
+				result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
+				metaCompat.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
+			}
 
 			result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
 			metaCompat.length = Convert.ToSingle(result.value);
@@ -118,6 +129,7 @@ public class VersionManager
 	{
 		//NOTE(Kristof): Pass meta and points byref in case changes need to happen (meta.version gets upgraded every function if outdated)
 		var updated = Upgrade0To1(meta, points);
+		updated = Upgrade1To2(meta, points);
 
 		//NOTE(Kristof): Update json only if changes were made
 		if (updated)
@@ -128,6 +140,11 @@ public class VersionManager
 		return updated;
 	}
 
+	/// <summary>
+	/// This version adds a version at the start of main.json
+	/// 
+	/// Direction and rotation are no longer stored in main.json.
+	/// </summary>
 	private static bool Upgrade0To1(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
 	{
 		//NOTE(Kristof): Check if we're indeed dealing with a version 0 json
@@ -136,23 +153,61 @@ public class VersionManager
 			return false;
 		}
 
-		//NOTE(Kristof: Increment version by one to version 1
-		meta.version++;
-		return true;
-	}
+		//NOTE(Kristof): Set version to version 1
+		meta.version = 1;
 
+#if DEBUG_VERSION
+		return false;
+#else
+		return true;
+#endif
+	}
+	
+	/// <summary>
+	/// This version added VideoInteractions. 
+	/// 
+	/// It introduced an "extra" directory where all the extra files are stored by a GUID. 
+	/// Perspectives are no longer stored in main.json.
+	/// </summary>
 	private static bool Upgrade1To2(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
 	{
-
+		//NOTE(Kristof): Check if we're indeed dealing with a version 1 json
 		if (meta.version != 1)
 		{
 			return false;
 		}
 
-		var path = Path.combine(meta.guid, SaveFile.extraPath);
-		Directory.CreateDirectory(path);
+		//NOTE(Kristof): Set version to version 2
+		meta.version = 2;
 
+		//NOTE(Kristof): Create variables for directory paths
+		var projectDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var extraDir = Path.Combine(projectDir, SaveFile.extraPath);
+
+		Directory.CreateDirectory(extraDir);
+
+		//NOTE(Kristof): Iterate over all points and move extra files to the newly created "extra" directory. Files are renamed to a guid. 
+		foreach (var point in points)
+		{
+			if (!point.filename.Equals(""))
+			{
+				var newFilename = Path.Combine(SaveFile.extraPath, Editor.GenerateExtraGuid());
+				File.Move(Path.Combine(projectDir, point.filename), Path.Combine(projectDir, newFilename));
+				point.filename = newFilename;
+			}
+		}
+
+		//NOTE(Kristof): Clean up leftover files
+		foreach (var file in Directory.GetFiles(projectDir, "extra*"))
+		{
+			File.Delete(file);
+		}
+
+#if DEBUG_VERSION
+		return false;
+#else
 		return true;
+#endif
 	}
 
 	private static string WriteUpgraded(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
@@ -173,10 +228,6 @@ public class VersionManager
 
 		sb.Append("description:")
 			.Append(meta.description)
-			.Append(",\n");
-
-		sb.Append("perspective:")
-			.Append(meta.perspective)
 			.Append(",\n");
 
 		sb.Append("length:")
@@ -202,63 +253,7 @@ public class VersionManager
 		{
 			sb.Append("[]]");
 		}
-
-
+		
 		return sb.ToString();
-	}
-
-	public static bool ValidateSaveFile(string json)
-	{
-		try
-		{
-			var result = new SaveFile.ParsedJsonLine();
-
-			//NOTE(Kristof): First check if the json contains a version
-			if (json.StartsWith("version:"))
-			{
-				result = SaveFile.JsonGetValueFromLine(json, result.endindex);
-				int version = Convert.ToInt32(result.value);
-			}
-
-			//NOTE(Kristof): Try parsing guid
-			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
-			Guid guid = new Guid(result.value);
-
-			//NOTE(Kristof): Try parsing title
-			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
-			string title = result.value;
-
-			//NOTE(Kristof): Try parsing description
-			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
-			string description = result.value;
-
-			//NOTE(Kristof): Try parsing perpective
-			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
-			Perspective perspective = (Perspective) Enum.Parse(typeof(Perspective), result.value);
-
-			//NOTE(Kristof): Try parsing length
-			result = SaveFile.JsonGetValueFromLine(json, result.endindex);
-			float length = Convert.ToSingle(result.value);
-
-			//NOTE(Kristof): Try parsing InteractionPoints
-			List<string> points = SaveFile.ParseInteractionPoints(json, result.endindex);
-			if (points != null)
-			{
-				foreach (var obj in points)
-				{
-					JsonUtility.FromJson<InteractionpointSerializeCompat>(obj);
-				}
-			}
-			else
-			{
-				return false;
-			}
-
-			return true;
-		}
-		catch (Exception e)
-		{
-			return false;
-		}
 	}
 }

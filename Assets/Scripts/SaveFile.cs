@@ -129,9 +129,6 @@ public static class SaveFile
 		saveFileData.meta.description = result.value;
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.meta.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
-
-		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.length = Convert.ToSingle(result.value);
 
 		saveFileData.points = new List<InteractionpointSerialize>();

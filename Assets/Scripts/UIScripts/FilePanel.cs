@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class FilePanel : MonoBehaviour
@@ -69,14 +68,17 @@ public class FilePanel : MonoBehaviour
 			if (editable)
 			{
 				FileItem newFileItem;
+				var filenameListItem = Instantiate(filenameItemPrefab);
 
 				try
 				{
+
 					var meta = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta;
 					string title;
 					if (meta.version > VersionManager.VERSION)
 					{
 						title = string.Format("This project uses a version that's higher than the Editor's. Please update the Editor: {0}", directory.Name);
+						filenameListItem.GetComponentInChildren<Text>().color = Color.red;
 					}
 					else
 					{
@@ -92,7 +94,6 @@ public class FilePanel : MonoBehaviour
 					Debug.Log(e);
 				}
 
-				var filenameListItem = Instantiate(filenameItemPrefab);
 				filenameListItem.transform.SetParent(fileList, false);
 				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
 				newFileItem.listItem = filenameListItem;
@@ -115,7 +116,6 @@ public class FilePanel : MonoBehaviour
 			}
 			else
 			{
-				listItem.GetComponentInChildren<Text>().color = Color.black;
 				listItem.GetComponent<Image>().color = new Color(239 / 255f, 239 / 255f, 239 / 255f);
 			}
 

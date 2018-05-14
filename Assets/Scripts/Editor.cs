@@ -1803,6 +1803,11 @@ public class Editor : MonoBehaviour
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
 
+	public static string GenerateExtraGuid()
+	{
+		return Guid.NewGuid().ToString().Replace("-", "");
+	}
+
 	private static int FloorTime(double time)
 	{
 		int[] niceTimes = { 1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60 };
@@ -1837,10 +1842,5 @@ public class Editor : MonoBehaviour
 	private static long FileSize(string path)
 	{
 		return (int)new FileInfo(path).Length;
-	}
-
-	private string GenerateExtraGuid()
-	{
-		return Guid.NewGuid().ToString().Replace("-", "");
 	}
 }
