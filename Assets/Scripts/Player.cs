@@ -133,7 +133,7 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
 
 				//NOTE(Lander): enable the highlight in the tutorial mode
 				VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, videoController.videoState == VideoController.VideoState.Intro);
@@ -404,13 +404,13 @@ public class Player : MonoBehaviour
 			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
-			//NOTE(Kristof): Looping over hittable UI scripts
 			var controllerList = new List<Controller>
 			{
 				controllerLeft.GetComponent<Controller>(),
 				controllerRight.GetComponent<Controller>()
 			};
 
+			//NOTE(Kristof): Looping over hittable UI scripts
 			foreach (var hittable in hittables)
 			{
 				if (hittable == null) continue;
@@ -431,7 +431,6 @@ public class Player : MonoBehaviour
 					//NOTE(Kristof): Interacting with controller
 					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 					{
-						//NOTE(Kristof): Hovering is handled in Controller.cs
 						hittable.hitting = true;
 					}
 					//NOTE(Kristof): Interacting without controllers
@@ -479,7 +478,6 @@ public class Player : MonoBehaviour
 				if (controller.index > SteamVR_TrackedObject.EIndex.None)
 				{
 					var device = SteamVR_Controller.Input((int)controller.index);
-
 
 					switch (VRDevices.loadedControllerSet)
 					{

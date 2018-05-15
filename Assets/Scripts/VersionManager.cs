@@ -1,4 +1,4 @@
-﻿//#define DEBUG_VERSION
+﻿#define DEBUG_VERSION
 
 using System;
 using System.Collections.Generic;
@@ -141,9 +141,9 @@ public class VersionManager
 	}
 
 	/// <summary>
-	/// This version adds a version at the start of main.json
+	/// This version adds a version at the start of meta.json
 	/// 
-	/// Direction and rotation are no longer stored in main.json.
+	/// Direction and rotation are no longer stored in meta.json.
 	/// </summary>
 	private static bool Upgrade0To1(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
 	{
@@ -162,12 +162,12 @@ public class VersionManager
 		return true;
 #endif
 	}
-	
+
 	/// <summary>
 	/// This version added VideoInteractions. 
 	/// 
 	/// It introduced an "extra" directory where all the extra files are stored by a GUID. 
-	/// Perspectives are no longer stored in main.json.
+	/// Perspectives are no longer stored in meta.json.
 	/// </summary>
 	private static bool Upgrade1To2(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
 	{
@@ -179,7 +179,7 @@ public class VersionManager
 
 		//NOTE(Kristof): Set version to version 2
 		meta.version = 2;
-
+		
 		//NOTE(Kristof): Create variables for directory paths
 		var projectDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var extraDir = Path.Combine(projectDir, SaveFile.extraPath);
@@ -192,16 +192,21 @@ public class VersionManager
 			if (!point.filename.Equals(""))
 			{
 				var newFilename = Path.Combine(SaveFile.extraPath, Editor.GenerateExtraGuid());
-				File.Move(Path.Combine(projectDir, point.filename), Path.Combine(projectDir, newFilename));
 				point.filename = newFilename;
+#if !DEBUG_VERSION
+				File.Move(Path.Combine(projectDir, point.filename), Path.Combine(projectDir, newFilename));
+
+#endif
 			}
 		}
 
+#if !DEBUG_VERSION
 		//NOTE(Kristof): Clean up leftover files
 		foreach (var file in Directory.GetFiles(projectDir, "extra*"))
 		{
 			File.Delete(file);
 		}
+#endif
 
 #if DEBUG_VERSION
 		return false;

@@ -505,8 +505,11 @@ public class IndexPanel : MonoBehaviour
 		{
 			var v = videosThisPage[i];
 			videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
-			//NOTE(Kristof): Space out SetData over some time to prevent lag spike
-			yield return new WaitForSeconds(0.1f);
+			//NOTE(Kristof): Space out SetData over some time to prevent lag spike in VR
+			if (XRSettings.enabled)
+			{
+				yield return new WaitForSeconds(0.1f);
+			}
 		}
 
 		isFinishedLoadingVideos = true;
