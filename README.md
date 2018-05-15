@@ -1,4 +1,4 @@
-# 360Video
+![Logo.png](LogoGithub.png)
 
 This application allows you to train people by having them watch interactive 360° videos. In VR or on a regular computer screen. At this moment you can add interaction points with photos and text, but more are coming:
 - Photo albums
