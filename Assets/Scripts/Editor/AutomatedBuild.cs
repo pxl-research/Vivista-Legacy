@@ -1,27 +1,44 @@
 using UnityEditor;
-using UnityEngine;
 using System.Diagnostics;
 
-public class AutomatedBuild : MonoBehaviour
+
+public class AutomatedBuild : EditorWindow
 {
 
-	[MenuItem("Build/Win64 %&b")]
+	[MenuItem("Build/Win64 %&b", false, 1)]
 	static void BuildWin64()
 	{
-		//var args = System.Environment.GetCommandLineArgs();
+		AutomatedBuild window = (AutomatedBuild)EditorWindow.GetWindow(typeof(AutomatedBuild));
+		//window.Show();
+		
+
 		var branch = getBranch();
 		string path;
+		BuildPlayerOptions options;
+		string result;
 
-		path = "builds/" + branch + "/Player/";
-		var options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64 };
-		BuildPipeline.BuildPlayer(options);
 
 		path = "builds/" + branch + "/Editor/";
-		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64 };
-		BuildPipeline.BuildPlayer(options);
+		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
+		PlayerSettings.virtualRealitySupported = false;
+		result = BuildPipeline.BuildPlayer(options);
+
+		path = "builds/" + branch + "/Player/";
+		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
+		PlayerSettings.virtualRealitySupported = false;
+		result = BuildPipeline.BuildPlayer(options);
+
+		path = "builds/" + branch + "/Player-VR/";
+		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
+		PlayerSettings.virtualRealitySupported = true;
+		result = BuildPipeline.BuildPlayer(options);
+		
+
+		UnityEngine.Debug.Log("Build finished");
 
 		//TODO(Kristof): zip all in folder and copy zips one higher
 	}
+	
 
 	// TODO(Lander): Linux builds, needs testing
 	/*
@@ -33,6 +50,8 @@ public class AutomatedBuild : MonoBehaviour
 		BuildPipeline.BuildPlayer(options);
 	}
 	*/
+	
+	
 
 	static string getBranch()
 	{
