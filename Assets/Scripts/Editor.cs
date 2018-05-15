@@ -663,7 +663,29 @@ public class Editor : MonoBehaviour
 
 				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file. 
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
-				meta.guid = new Guid(panel.answerGuid);
+				var newGuid = new Guid(panel.answerGuid);
+
+				// NOTE(Lander): When the guid changes, overwrite extra and main.mp4
+				if (newGuid != meta.guid)
+				{
+					var oldDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+					var newDir = Path.Combine(Application.persistentDataPath, newGuid.ToString());
+
+					File.Copy(Path.Combine(oldDir, SaveFile.videoFilename), Path.Combine(newDir, SaveFile.videoFilename), true);
+					Directory.CreateDirectory(Path.Combine(newDir, SaveFile.extraPath));
+
+					foreach (var file in Directory.GetFiles(Path.Combine(newDir, SaveFile.extraPath)))
+					{
+						File.Delete(file);
+					}
+
+					foreach (var file in Directory.GetFiles(Path.Combine(oldDir, SaveFile.extraPath)))
+					{
+						var newFilename = Path.Combine(Path.Combine(newDir, SaveFile.extraPath), Path.GetFileName(file));
+						File.Copy(file, newFilename, true);
+					}
+				}
+				meta.guid = newGuid;
 				meta.title = panel.answerTitle;
 
 				if (!SaveToFile())
@@ -1440,10 +1462,6 @@ public class Editor : MonoBehaviour
 
 		sb.Append("description:")
 			.Append(meta.description)
-			.Append(",\n");
-
-		sb.Append("perspective:")
-			.Append(meta.perspective)
 			.Append(",\n");
 
 		sb.Append("length:")
