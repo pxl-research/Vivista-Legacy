@@ -80,7 +80,7 @@ public static class SaveFile
 	public static string GetPathForTitle(string title)
 	{
 		var dirs = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
-		
+
 		foreach (var dir in dirs)
 		{
 			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
@@ -110,14 +110,14 @@ public static class SaveFile
 	{
 		var str = GetSaveFileContents(path);
 
-		var level = 0;
-		var start = 0;
-		var count = 0;
-		var rising = true;
+		str = VersionManager.CheckAndUpgradeVersion(str);
 
 		var saveFileData = new SaveFileData();
 
 		var result = new ParsedJsonLine();
+
+		result = JsonGetValueFromLine(str, result.endindex);
+		saveFileData.meta.version = Convert.ToInt32(result.value);
 
 		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.guid = new Guid(result.value);
@@ -129,14 +129,42 @@ public static class SaveFile
 		saveFileData.meta.description = result.value;
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.meta.perspective = (Perspective)Enum.Parse(typeof(Perspective), result.value);
-		
-		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.length = Convert.ToSingle(result.value);
 
+		saveFileData.points = new List<InteractionpointSerialize>();
+
+		foreach (var obj in ParseInteractionPoints(str, result.endindex))
+		{
+			saveFileData.points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
+		}
+
+		if (VersionManager.isUpdated)
+		{
+			try
+			{
+				using (var file = File.CreateText(path))
+				{
+					file.Write(str);
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.Log(e.ToString());
+			}
+		}
+
+		return saveFileData;
+	}
+
+	public static List<string> ParseInteractionPoints(string str, int startIndex)
+	{
 		var stringObjects = new List<string>();
-			
-		for(var i = result.endindex; i < str.Length; i++)
+		var level = 0;
+		var start = 0;
+		var count = 0;
+		var rising = true;
+
+		for (var i = startIndex; i < str.Length; i++)
 		{
 			if (str[i] == '{')
 			{
@@ -168,18 +196,11 @@ public static class SaveFile
 			}
 		}
 
-		
-		saveFileData.points = new List<InteractionpointSerialize>();
-		
-		foreach (var obj in stringObjects)
-		{
-			saveFileData.points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
-		}
-
-		return saveFileData;
+		return stringObjects;
 	}
-	
-	public class ParsedJsonLine{
+
+	public class ParsedJsonLine
+	{
 		public string value;
 		public int endindex;
 	}
@@ -190,27 +211,27 @@ public static class SaveFile
 		var endValue = json.IndexOf('\n', startIndex) + 1;
 		return new ParsedJsonLine
 		{
-			value = json.Substring(startValue, (endValue- startValue) - 2),
+			value = json.Substring(startValue, (endValue - startValue) - 2),
 			endindex = endValue
 		};
 	}
 
 	public static long DirectorySize(DirectoryInfo directory)
 	{
-		long size = 0;    
+		long size = 0;
 		var files = directory.GetFiles();
 
-		foreach (var file in files) 
-		{      
-			size += file.Length;    
+		foreach (var file in files)
+		{
+			size += file.Length;
 		}
 
 		var subDirectories = directory.GetDirectories();
 
-		foreach (var sub in subDirectories) 
+		foreach (var sub in subDirectories)
 		{
-			size += DirectorySize(sub);   
+			size += DirectorySize(sub);
 		}
-		return size;  
+		return size;
 	}
 }

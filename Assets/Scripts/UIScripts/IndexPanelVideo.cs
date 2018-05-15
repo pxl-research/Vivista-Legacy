@@ -4,6 +4,8 @@ using UnityEngine.UI;
 
 public class IndexPanelVideo : MonoBehaviour
 {
+	public GameObject error;
+
 	public Text titleText;
 	public Text authorText;
 	public Text sizeText;
@@ -26,6 +28,21 @@ public class IndexPanelVideo : MonoBehaviour
 		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		uuid = video.uuid;
 		isLocal = local;
+
+		//TODO(Kristof): Prevent being able to open it without VR (will be fixed if we use raycasts from mouse instead of mouse events)
+		if (!video.compatibleVersion)
+		{
+			gameObject.GetComponent<Hittable>().enabled = false;
+			error.transform.parent.gameObject.SetActive(true);
+			error.GetComponent<Text>().text =
+				string.Format("This project uses a version that's higher than the player's. Please update the player. [{0}]",
+					uuid);
+		}
+		else
+		{
+			gameObject.GetComponent<Hittable>().enabled = true;
+			error.transform.parent.gameObject.SetActive(false);
+		}
 
 		if (isLocal)
 		{

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 
 public class ImagePanel : MonoBehaviour
 {
@@ -14,11 +15,10 @@ public class ImagePanel : MonoBehaviour
 	private bool neverOpened;
 	private WWW www;
 
-	public void Init(Vector3 position, string newTitle, string newImageURL, bool loadImageImmediately)
+	public void Init(string newTitle, string newImageURL, bool loadImageImmediately)
 	{
 		title.text = newTitle;
 		imageURL = newImageURL;
-		Move(position);
 		if (loadImageImmediately)
 		{
 			www = new WWW(imageURL);
@@ -33,19 +33,19 @@ public class ImagePanel : MonoBehaviour
 
 	public void Move(Vector3 position)
 	{
-		Vector3 newPos;
-
-		newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+		var newPos = position;
 		newPos.y += 0.015f;
-
-		canvas.GetComponent<RectTransform>().position = newPos;
-		canvas.transform.rotation = Camera.main.transform.rotation;
+		canvas.GetComponent<RectTransform>().position = position;
 	}
 
 	public void Start()
 	{
 		//NOTE(Kristof): Initial rotation towards the camera
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
+		if (!XRSettings.enabled)
+		{
+			canvas.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+		}
 	}
 
 	public void Update()

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class FilePanel : MonoBehaviour
@@ -69,11 +68,25 @@ public class FilePanel : MonoBehaviour
 			if (editable)
 			{
 				FileItem newFileItem;
+				var filenameListItem = Instantiate(filenameItemPrefab);
 
 				try
 				{
-					string title = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta.title;
+
+					var meta = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta;
+					string title;
+					if (meta.version > VersionManager.VERSION)
+					{
+						title = string.Format("This project uses a version that's higher than the Editor's. Please update the Editor: {0}", directory.Name);
+						filenameListItem.GetComponentInChildren<Text>().color = Color.red;
+					}
+					else
+					{
+						title = meta.title;
+					}
+
 					newFileItem = new FileItem { title = title, guid = directory.Name };
+
 				}
 				catch (Exception e)
 				{
@@ -81,7 +94,6 @@ public class FilePanel : MonoBehaviour
 					Debug.Log(e);
 				}
 
-				var filenameListItem = Instantiate(filenameItemPrefab);
 				filenameListItem.transform.SetParent(fileList, false);
 				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
 				newFileItem.listItem = filenameListItem;
@@ -104,7 +116,6 @@ public class FilePanel : MonoBehaviour
 			}
 			else
 			{
-				listItem.GetComponentInChildren<Text>().color = Color.black;
 				listItem.GetComponent<Image>().color = new Color(239 / 255f, 239 / 255f, 239 / 255f);
 			}
 
@@ -160,12 +171,17 @@ public class FilePanel : MonoBehaviour
 
 			var meta = new Metadata
 			{
+				version = VersionManager.VERSION,
 				title = files[selectedIndex].title,
 				description = "",
 				guid = new Guid(files[selectedIndex].guid),
 			};
 
 			var sb = new StringBuilder();
+			sb.Append("version:")
+				.Append(meta.version)
+				.Append(",\n");
+
 			sb.Append("uuid:")
 				.Append(meta.guid)
 				.Append(",\n");

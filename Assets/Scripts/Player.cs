@@ -18,7 +18,6 @@ public class InteractionPointPlayer
 	public GameObject point;
 	public GameObject panel;
 	public Vector3 position;
-	public Quaternion rotation;
 	public InteractionType type;
 	public string title;
 	public string body;
@@ -134,7 +133,7 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
 
 				//NOTE(Lander): enable the highlight in the tutorial mode
 				VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, videoController.videoState == VideoController.VideoState.Intro);
@@ -405,13 +404,13 @@ public class Player : MonoBehaviour
 			RaycastHit hit;
 			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
-			//NOTE(Kristof): Looping over hittable UI scripts
 			var controllerList = new List<Controller>
 			{
 				controllerLeft.GetComponent<Controller>(),
 				controllerRight.GetComponent<Controller>()
 			};
 
+			//NOTE(Kristof): Looping over hittable UI scripts
 			foreach (var hittable in hittables)
 			{
 				if (hittable == null) continue;
@@ -432,7 +431,6 @@ public class Player : MonoBehaviour
 					//NOTE(Kristof): Interacting with controller
 					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 					{
-						//NOTE(Kristof): Hovering is handled in Controller.cs
 						hittable.hitting = true;
 					}
 					//NOTE(Kristof): Interacting without controllers
@@ -480,7 +478,6 @@ public class Player : MonoBehaviour
 				if (controller.index > SteamVR_TrackedObject.EIndex.None)
 				{
 					var device = SteamVR_Controller.Input((int)controller.index);
-
 
 					switch (VRDevices.loadedControllerSet)
 					{
@@ -574,7 +571,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, Quaternion.identity);
+			var newPoint = Instantiate(interactionPointPrefab/*, point.position, Quaternion.identity*/);
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -597,21 +594,21 @@ public class Player : MonoBehaviour
 				case InteractionType.Text:
 				{
 					var panel = Instantiate(textPanelPrefab);
-					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					panel.GetComponent<TextPanel>().Init(newInteractionPoint.title, newInteractionPoint.body);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, false);
+					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -733,7 +730,15 @@ public class Player : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Default")))
 			{
 				var drawLocation = hit.point;
-				interactionPoint.point.transform.position = drawLocation;
+				var trans = interactionPoint.point.transform;
+
+				trans.position = drawLocation;
+				trans.LookAt(Camera.main.transform);
+				//NOTE(Kristof): Turn it around so it actually faces the camera
+				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
+
+				interactionPoint.position = drawLocation;
+				interactionPoint.panel.transform.position = drawLocation;
 			}
 		}
 	}

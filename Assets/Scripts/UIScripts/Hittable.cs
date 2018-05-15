@@ -53,7 +53,6 @@ public class Hittable : MonoBehaviour
 		if (Player.hittables != null)
 		{
 			Player.hittables.Remove(this);
-			var length = Player.hittables.Count;
 		}
 	}
 }

@@ -55,8 +55,6 @@ public class InteractionPointEditor
 
 public class InteractionpointSerialize
 {
-	public Vector3 position;
-	public Quaternion rotation;
 	public InteractionType type;
 	public string title;
 	public string body;
@@ -88,6 +86,7 @@ public struct Timing
 
 public struct Metadata
 {
+	public int version;
 	public string title;
 	public string description;
 	public Guid guid;
@@ -228,7 +227,6 @@ public class Editor : MonoBehaviour
 		ray.origin = ray.GetPoint(100);
 		ray.direction = -ray.direction;
 
-
 		if (editorState == EditorState.Inactive)
 		{
 			if (Input.GetKeyDown(KeyCode.F1))
@@ -276,7 +274,6 @@ public class Editor : MonoBehaviour
 				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
 			}
 
-
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
 				SetEditorActive(false);
@@ -295,11 +292,11 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.3f : 0.01f);
-
+				var drawLocation = hit.point;
 				interactionPointTemp.transform.position = drawLocation;
-				//NOTE(Simon): Rotate to match sphere's normal
-				interactionPointTemp.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+
+				interactionPointTemp.transform.LookAt(Camera.main.transform);
+				interactionPointTemp.transform.localEulerAngles = new Vector3(0, interactionPointTemp.transform.localEulerAngles.y + 180, 0);
 			}
 
 			if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -438,7 +435,8 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(lastPlacedPointPos, editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<ImagePanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename;
@@ -456,7 +454,8 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(lastPlacedPointPos, editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
 						lastPlacedPoint.panel = panel;
@@ -489,7 +488,8 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(lastPlacedPointPos, editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init( editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = filename + extension;
@@ -529,10 +529,11 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = Vector3.Lerp(hit.point, Camera.main.transform.position, !Camera.main.orthographic ? 0.4f : 0.01f);
-
+				var drawLocation = hit.point;
 				pointToMove.point.transform.position = drawLocation;
-				pointToMove.point.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+
+				pointToMove.point.transform.LookAt(Camera.main.transform);
+				pointToMove.point.transform.localEulerAngles = new Vector3(0, pointToMove.point.transform.localEulerAngles.y + 180, 0);
 
 				switch (pointToMove.type)
 				{
@@ -554,6 +555,9 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
+				pointToMove.returnRayOrigin = ray.origin;
+				pointToMove.returnRayDirection = ray.direction;
+
 				SetEditorActive(true);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 			}
@@ -591,7 +595,8 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, true);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, path, true);
+						panel.GetComponent<ImagePanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename;
 						pointToEdit.panel = panel;
@@ -608,7 +613,8 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
+						panel.GetComponent<TextPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
 						pointToEdit.panel = panel;
@@ -631,7 +637,8 @@ public class Editor : MonoBehaviour
 
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(pointToEdit.point.transform.position, editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init( editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename + extension;
 						pointToEdit.panel = panel;
@@ -656,7 +663,29 @@ public class Editor : MonoBehaviour
 
 				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file. 
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
-				meta.guid = new Guid(panel.answerGuid);
+				var newGuid = new Guid(panel.answerGuid);
+
+				// NOTE(Lander): When the guid changes, overwrite extra and main.mp4
+				if (newGuid != meta.guid)
+				{
+					var oldDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+					var newDir = Path.Combine(Application.persistentDataPath, newGuid.ToString());
+
+					File.Copy(Path.Combine(oldDir, SaveFile.videoFilename), Path.Combine(newDir, SaveFile.videoFilename), true);
+					Directory.CreateDirectory(Path.Combine(newDir, SaveFile.extraPath));
+
+					foreach (var file in Directory.GetFiles(Path.Combine(newDir, SaveFile.extraPath)))
+					{
+						File.Delete(file);
+					}
+
+					foreach (var file in Directory.GetFiles(Path.Combine(oldDir, SaveFile.extraPath)))
+					{
+						var newFilename = Path.Combine(Path.Combine(newDir, SaveFile.extraPath), Path.GetFileName(file));
+						File.Copy(file, newFilename, true);
+					}
+				}
+				meta.guid = newGuid;
 				meta.title = panel.answerTitle;
 
 				if (!SaveToFile())
@@ -1349,7 +1378,6 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-
 	public void InitUpload()
 	{
 		if (String.IsNullOrEmpty(userToken))
@@ -1420,6 +1448,10 @@ public class Editor : MonoBehaviour
 		var data = new SaveFile.SaveFileData();
 		data.meta = meta;
 
+		sb.Append("version:")
+			.Append(VersionManager.VERSION)
+			.Append(",\n");
+
 		sb.Append("uuid:")
 			.Append(meta.guid)
 			.Append(",\n");
@@ -1430,10 +1462,6 @@ public class Editor : MonoBehaviour
 
 		sb.Append("description:")
 			.Append(meta.description)
-			.Append(",\n");
-
-		sb.Append("perspective:")
-			.Append(meta.perspective)
 			.Append(",\n");
 
 		sb.Append("length:")
@@ -1447,8 +1475,6 @@ public class Editor : MonoBehaviour
 			{
 				var temp = new InteractionpointSerialize
 				{
-					position = point.point.transform.position,
-					rotation = point.point.transform.rotation,
 					type = point.type,
 					title = point.title,
 					body = point.body,
@@ -1522,7 +1548,7 @@ public class Editor : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab, point.position, point.rotation);
+			var newPoint = Instantiate(interactionPointPrefab);
 
 			var newInteractionPoint = new InteractionPointEditor
 			{
@@ -1543,7 +1569,7 @@ public class Editor : MonoBehaviour
 				case InteractionType.Text:
 				{
 					var panel = Instantiate(textPanelPrefab);
-					panel.GetComponent<TextPanel>().Init(point.position, newInteractionPoint.title, newInteractionPoint.body);
+					panel.GetComponent<TextPanel>().Init(newInteractionPoint.title, newInteractionPoint.body);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1559,7 +1585,7 @@ public class Editor : MonoBehaviour
 						break;
 					}
 
-					panel.GetComponent<ImagePanel>().Init(point.position, newInteractionPoint.title, "file:///" + url, false);
+					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, "file:///" + url, false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1568,7 +1594,7 @@ public class Editor : MonoBehaviour
 					var panel = Instantiate(videoPanelPrefab);
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
 
-					panel.GetComponent<VideoPanel>().Init(point.position, newInteractionPoint.title, url, meta.guid.ToString(), false);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString(), false);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1588,7 +1614,36 @@ public class Editor : MonoBehaviour
 			AddItemToTimeline(newInteractionPoint, true);
 		}
 
+		StartCoroutine(UpdatePointPositions());
+
 		return true;
+	}
+
+	private IEnumerator UpdatePointPositions()
+	{
+		//NOTE(Simon): wait one frame
+		yield return null;
+
+		foreach (var interactionPoint in interactionPoints)
+		{
+			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
+
+			RaycastHit hit;
+
+			if (Physics.Raycast(ray, out hit, 100))
+			{
+				var drawLocation = hit.point;
+				var trans = interactionPoint.point.transform;
+
+				trans.position = drawLocation;
+				trans.LookAt(Camera.main.transform);
+				//NOTE(Kristof): Turn it around so it actually faces the camera
+				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
+
+				interactionPoint.panel.transform.position = drawLocation;
+
+			}
+		}
 	}
 
 	private IEnumerator UploadFile()
@@ -1725,7 +1780,7 @@ public class Editor : MonoBehaviour
 		{
 			editorState = EditorState.Active;
 			Destroy(uploadPanel);
-			//TODO(Simn): temp fix. Make proper
+			//TODO(Simon): temp fix. Make proper
 			try
 			{
 				uploadStatus.request.Dispose();
@@ -1761,10 +1816,14 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-
 	private void ResetInteractionPointTemp()
 	{
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
+	}
+
+	public static string GenerateExtraGuid()
+	{
+		return Guid.NewGuid().ToString().Replace("-", "");
 	}
 
 	private static int FloorTime(double time)
@@ -1801,10 +1860,5 @@ public class Editor : MonoBehaviour
 	private static long FileSize(string path)
 	{
 		return (int)new FileInfo(path).Length;
-	}
-
-	private string GenerateExtraGuid()
-	{
-		return Guid.NewGuid().ToString().Replace("-", "");
 	}
 }
