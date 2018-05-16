@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.CodeDom;
+using UnityEngine;
 
 public class Controller : MonoBehaviour
 {
@@ -9,18 +11,21 @@ public class Controller : MonoBehaviour
 	public GameObject cursor;
 
 	public bool uiHovering;
+	public bool compassAttached;
 
 	private MeshRenderer trigger;
 	private MeshRenderer thumbstick;
 	public Material highlightMaterial;
 	private Material baseMaterial;
-
 	private SteamVR_TrackedController controller;
+
+	private bool gripDown;
 
 	// Use this for initialization
 	void Start()
 	{
 		controller = GetComponent<SteamVR_TrackedController>();
+		controller.Gripped += (o, e) => gripDown = !gripDown;
 	}
 
 	// Update is called once per frame
@@ -49,7 +54,33 @@ public class Controller : MonoBehaviour
 
 		//NOTE(Kristof): Showing controllerUI when gripped 
 		{
-			controllerUI.SetActive(GetComponent<SteamVR_TrackedController>().gripped && Player.playerState == PlayerState.Watching);
+			var compass = Seekbar.compass.transform;
+
+			var controllerUI = transform.Find("ControllerUI");
+			//controllerUI.SetActive(GetComponent<SteamVR_TrackedController>().gripped && Player.playerState == PlayerState.Watching);
+
+			if (compass && controllerUI)
+			{
+				if (gripDown && !compassAttached)
+				{
+					compass.parent = transform.Find("ControllerUI");
+					compass.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+					compass.localPosition = Vector3.zero;
+					compass.localEulerAngles = Vector3.zero;
+					compass.gameObject.SetActive(true);
+					compass.Find("CompassForeground").gameObject.SetActive(false);
+					compassAttached = true;
+					gripDown = false;
+				}
+				else if (gripDown && compassAttached)
+				{
+					
+					//Seekbar.ReattachCompass();
+					compass.gameObject.SetActive(false);
+					compassAttached = false;
+					gripDown = false;
+				}
+			}
 		}
 		var ray = CastRay();
 		RaycastHit hit;
@@ -77,7 +108,7 @@ public class Controller : MonoBehaviour
 			cursor.transform.position = Vector3.zero;
 			cursor.SetActive(false);
 
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints") );
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints"));
 			if (hit.transform != null)
 			{
 				var r = 0.02f * hit.distance;

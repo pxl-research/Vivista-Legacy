@@ -26,6 +26,8 @@ public class InteractionPointPlayer
 	public double endTime;
 	public float interactionTimer;
 	public bool isStartPoint = false;
+	public bool isTouched;
+	public Seekbar.Blip blip;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
@@ -46,6 +48,7 @@ public class Player : MonoBehaviour
 	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
 	public GameObject projectorPrefab;
+	public GameObject compassBlipPrefab;
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
@@ -77,6 +80,7 @@ public class Player : MonoBehaviour
 	private string openVideo;
 
 	private const float timeToInteract = 0.75f;
+	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
 	private bool interacting;
 	private float _interactionTimer;
 
@@ -261,6 +265,21 @@ public class Player : MonoBehaviour
 				RaycastHit hit;
 				Physics.Raycast(reversedRay, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
+				var left = controllerLeft.GetComponent<Controller>();
+				var right = controllerRight.GetComponent<Controller>();
+
+				float forwardAngle;
+				if (left || right)
+				{
+					forwardAngle = right.compassAttached
+						? right.transform.eulerAngles.y
+						: left.transform.eulerAngles.y;
+				}
+				else
+				{
+					forwardAngle = GameObject.Find("Seekbar Canvas").transform.localEulerAngles.y;
+				}
+
 				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
 				for (var i = interactionPoints.Count - 1; i >= 0; i--)
 				{
@@ -268,6 +287,40 @@ public class Player : MonoBehaviour
 
 					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
+
+					var textMesh = point.point.GetComponentInChildren<TextMesh>();
+
+					// Note(Lander): highlight the untouched interaction points
+					if (!point.isStartPoint && pointActive && !point.isTouched)
+					{
+						if (textMesh != null)
+							textMesh.color = Color.black;
+
+						var blipAngle = point.point.transform.eulerAngles.y;
+
+						// TODO(Lander): Rely on a start position of a video instead
+						var angle = (XRSettings.enabled ? forwardAngle : 90 )  - blipAngle;
+
+						if (point.blip == null)
+						{
+							point.blip = new Seekbar.Blip(-angle, Instantiate(compassBlipPrefab));
+						}
+						point.blip.blip.transform.localEulerAngles = new Vector3(0, 0, angle);
+					}
+					else
+					{
+						if (textMesh != null)
+							textMesh.color = Color.white;
+						if (point.blip != null)
+						{
+
+							point.blip.Dettach();
+							point.blip = null;
+						}
+					}
+					if(!point.isStartPoint && point.isTouched)
+						point.point.GetComponent<Renderer>().material.color = GRAY;
+
 
 					//NOTE(Lander): current point is hit with the raycast
 					if (hit.transform != null && hit.transform.gameObject == point.point)
@@ -292,6 +345,7 @@ public class Player : MonoBehaviour
 								if (point.panel.activeSelf)
 								{
 									activePoints++;
+									point.isTouched = true;
 								}
 								else
 								{
@@ -332,6 +386,7 @@ public class Player : MonoBehaviour
 											_interactionTimer = -1;
 											activePoints++;
 										}
+										point.isTouched = true;
 										point.panel.SetActive(true);
 										videoController.Pause();
 									}
@@ -551,7 +606,8 @@ public class Player : MonoBehaviour
 					point = startPoint,
 					isStartPoint = true,
 					startTime = -1,
-					endTime = -1
+					endTime = -1,
+					isTouched = false
 				});
 
 				var content = startPoint.GetComponentInChildren<Text>();

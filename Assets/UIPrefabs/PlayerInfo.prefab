@@ -230,6 +230,8 @@ MonoBehaviour:
   seekbar: {fileID: 224009011589476856}
   compassBackground: {fileID: 0}
   compassForeground: {fileID: 0}
+  compassBlip: {fileID: 1299797649068078, guid: 85abcd1e87adcb54f918debce01039cc,
+    type: 2}
   timeText: {fileID: 114568478522721584}
   hovering: 0
   minSeekbarHeight: 0.05
