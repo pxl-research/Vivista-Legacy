@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -32,7 +33,8 @@ public enum InteractionType
 	None,
 	Text,
 	Image,
-	Video
+	Video,
+	MultipleChoice
 }
 
 [Serializable]
@@ -117,6 +119,8 @@ public class Editor : MonoBehaviour
 	public GameObject imagePanelEditorPrefab;
 	public GameObject videoPanelPrefab;
 	public GameObject videoPanelEditorPrefab;
+	public GameObject multipleChoicePanelPrefab;
+	public GameObject multipleChoicePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
@@ -375,6 +379,13 @@ public class Editor : MonoBehaviour
 
 							break;
 						}
+						case InteractionType.MultipleChoice:
+						{
+							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab);
+							interactionEditor.GetComponent<MultipleChoiceEditor>().Init(lastPlacedPointPos, "", new string[]{});
+
+							break;
+						}
 						default:
 						{
 							Assert.IsTrue(true, "FFS, you shoulda added it here");
@@ -498,9 +509,11 @@ public class Editor : MonoBehaviour
 						Destroy(interactionEditor);
 						editorState = EditorState.Active;
 						lastPlacedPoint.filled = true;
-
 					}
-
+					break;
+				}
+				case InteractionType.MultipleChoice:
+				{
 					break;
 				}
 				default:

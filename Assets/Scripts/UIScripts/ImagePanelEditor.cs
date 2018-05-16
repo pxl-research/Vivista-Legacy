@@ -102,16 +102,8 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 		else
 		{
-			if (!Camera.main.orthographic)
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-				newPos.y -= 1f;
-			}
-			else
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-				newPos.y += 0.015f;
-			}
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+			newPos.y -= 3f;
 		}
 
 		canvas.GetComponent<RectTransform>().position = newPos;

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class TextPanelEditor : MonoBehaviour 
+public class TextPanelEditor : MonoBehaviour
 {
 	public Canvas canvas;
 	public RectTransform resizePanel;
@@ -19,7 +19,7 @@ public class TextPanelEditor : MonoBehaviour
 		body.text = initialBody;
 		Move(position, exactPos);
 	}
-	
+
 	public void Move(Vector3 position, bool exactPos = false)
 	{
 		Vector3 newPos;
@@ -30,27 +30,19 @@ public class TextPanelEditor : MonoBehaviour
 		}
 		else
 		{
-			if (!Camera.main.orthographic)
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-				newPos.y += 2f;
-			}
-			else
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-				newPos.y += 0.015f;
-			}
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+			newPos.y += 6.5f;
 		}
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 
-	void Update () 
+	void Update()
 	{
 		var titleRect = title.GetComponent<RectTransform>();
 		var newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
 		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
-	
+
 		var bodyRect = body.GetComponent<RectTransform>();
 		newHeight = UIHelper.CalculateTextFieldHeight(body, 100);
 		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, newHeight);

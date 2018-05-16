@@ -45,6 +45,7 @@ public class VideoPanelEditor : MonoBehaviour {
 		}
 		else
 		{
+			//TODO(Kristof): Can this be deleted?
 			//var titleRect = title.GetComponent<RectTransform>();
 			//float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
 			//titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
@@ -84,7 +85,7 @@ public class VideoPanelEditor : MonoBehaviour {
 		else
 		{
 			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-			newPos.y -= 1f;
+			newPos.y += 1f;
 
 		}
 
