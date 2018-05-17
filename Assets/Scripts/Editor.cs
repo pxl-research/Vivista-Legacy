@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -249,6 +248,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Active)
 		{
+			//TODO(Kristof): Can this be moved to VideoPanel?
 			var ignoreRaycast = false;
 			if (Input.GetMouseButtonDown(0) && Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
 			{
@@ -288,8 +288,6 @@ public class Editor : MonoBehaviour
 			{
 				videoController.TogglePlay();
 			}
-
-
 		}
 
 		if (editorState == EditorState.PlacingInteractionPoint && !EventSystem.current.IsPointerOverGameObject())
@@ -382,7 +380,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.MultipleChoice:
 						{
 							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab);
-							interactionEditor.GetComponent<MultipleChoiceEditor>().Init(lastPlacedPointPos, "", new string[]{});
+							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(lastPlacedPointPos, "", new [] { "0" });
 
 							break;
 						}
@@ -499,7 +497,7 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init( editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, pathExt, meta.guid.ToString(), true);
 						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
@@ -514,6 +512,27 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoice:
 				{
+					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
+					if (editor.answered)
+					{
+						var panel = Instantiate(multipleChoicePanelPrefab);
+						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						lastPlacedPoint.body = editor.answerCorrect + "\f";
+						foreach (var answer in editor.answerAnswers)
+						{
+							lastPlacedPoint.body += answer + '\f';
+						}
+						lastPlacedPoint.body = lastPlacedPoint.body.TrimEnd('\f');
+						lastPlacedPoint.panel = panel;
+
+						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
+						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, lastPlacedPoint.body.Split('\f'));
+						panel.GetComponent<MultipleChoicePanel>().Move(lastPlacedPointPos);
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						lastPlacedPoint.filled = true;
+					}
 					break;
 				}
 				default:
@@ -558,6 +577,9 @@ public class Editor : MonoBehaviour
 						break;
 					case InteractionType.Video:
 						pointToMove.panel.GetComponent<VideoPanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.MultipleChoice:
+						pointToMove.panel.GetComponent<MultipleChoicePanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.None:
 						break;
@@ -650,7 +672,7 @@ public class Editor : MonoBehaviour
 
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init( editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, path, meta.guid.ToString(), true);
 						panel.GetComponent<VideoPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename + extension;
@@ -660,7 +682,32 @@ public class Editor : MonoBehaviour
 						editorState = EditorState.Active;
 						pointToEdit.filled = true;
 					}
+					break;
+				}
+				case InteractionType.MultipleChoice:
+				{
+					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
+					if (editor.answered)
+					{
+						var panel = Instantiate(multipleChoicePanelPrefab);
+						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
+						pointToEdit.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						pointToEdit.body = editor.answerCorrect + "\f";
+						foreach (var answer in editor.answerAnswers)
+						{
+							pointToEdit.body += answer + "\f";
+						}
+						pointToEdit.body = pointToEdit.body.TrimEnd('\f');
+						pointToEdit.panel = panel;
 
+						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
+						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
+						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
 					break;
 				}
 				default:
@@ -1146,6 +1193,13 @@ public class Editor : MonoBehaviour
 																				panel.GetComponent<VideoPanel>().url,
 																				true);
 						break;
+					case InteractionType.MultipleChoice:
+						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab);
+						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(panel.transform.position,
+																						panel.GetComponent<MultipleChoicePanel>().question.text,
+																						panel.GetComponent<MultipleChoicePanel>().GetBodyStringArray(),
+																						true);
+						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1497,10 +1551,6 @@ public class Editor : MonoBehaviour
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
 				};
-				if (!File.Exists(Path.Combine(path, point.filename)) && point.type == InteractionType.Image)
-				{
-					Debug.LogFormat("missing file: {0} ", point.filename);
-				}
 
 				sb.Append(JsonUtility.ToJson(temp, true));
 				sb.Append(",");
@@ -1592,7 +1642,6 @@ public class Editor : MonoBehaviour
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
 					if (!File.Exists(url))
 					{
-
 						Debug.LogWarningFormat("File missing: {0}", url);
 						newInteractionPoint.panel = panel;
 						break;
@@ -1608,6 +1657,13 @@ public class Editor : MonoBehaviour
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
 
 					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString(), false);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.MultipleChoice:
+				{
+					var panel = Instantiate(multipleChoicePanelPrefab);
+					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1654,7 +1710,6 @@ public class Editor : MonoBehaviour
 				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
 
 				interactionPoint.panel.transform.position = drawLocation;
-
 			}
 		}
 	}

@@ -12,6 +12,25 @@ public class TextPanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public string answerBody;
+	
+	void Update()
+	{
+		var titleRect = title.GetComponent<RectTransform>();
+		var newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
+		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+
+		var bodyRect = body.GetComponent<RectTransform>();
+		newHeight = UIHelper.CalculateTextFieldHeight(body, 100);
+		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, newHeight);
+
+		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
+			title.GetComponent<RectTransform>().sizeDelta.y
+			+ body.GetComponent<RectTransform>().sizeDelta.y
+			//Padding, spacing, button, fudge factor
+			+ 20 + 20 + 30 + 20);
+
+		canvas.transform.rotation = Camera.main.transform.rotation;
+	}
 
 	public void Init(Vector3 position, string initialTitle, string initialBody, bool exactPos = false)
 	{
@@ -34,26 +53,6 @@ public class TextPanelEditor : MonoBehaviour
 			newPos.y += 6.5f;
 		}
 		canvas.GetComponent<RectTransform>().position = newPos;
-	}
-
-
-	void Update()
-	{
-		var titleRect = title.GetComponent<RectTransform>();
-		var newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
-		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
-
-		var bodyRect = body.GetComponent<RectTransform>();
-		newHeight = UIHelper.CalculateTextFieldHeight(body, 100);
-		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, newHeight);
-
-		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
-			title.GetComponent<RectTransform>().sizeDelta.y
-			+ body.GetComponent<RectTransform>().sizeDelta.y
-			//Padding, spacing, button, fudge factor
-			+ 20 + 20 + 30 + 20);
-
-		canvas.transform.rotation = Camera.main.transform.rotation;
 	}
 
 	public void Answer()

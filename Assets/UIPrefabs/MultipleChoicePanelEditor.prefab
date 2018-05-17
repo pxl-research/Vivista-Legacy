@@ -180,6 +180,7 @@ GameObject:
   - component: {fileID: 222293073665235358}
   - component: {fileID: 114582458957030642}
   - component: {fileID: 114070919336790372}
+  - component: {fileID: 114521922146092032}
   m_Layer: 5
   m_Name: LayoutPanel
   m_TagString: Untagged
@@ -211,7 +212,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1561534131967462}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 1741964061, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
@@ -456,6 +457,10 @@ MonoBehaviour:
   - {fileID: 0}
   addAnswer: {fileID: 114519569735518056}
   done: {fileID: 114931311556187620}
+  answered: 0
+  answerQuestion: 
+  answerAnswers: []
+  answerCorrect: 0
 --- !u!114 &114515419425198478
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -535,6 +540,18 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
+--- !u!114 &114521922146092032
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1970012580371816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1184210157, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AllowSwitchOff: 0
 --- !u!114 &114582458957030642
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -755,7 +772,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 114461006918833054}
         m_MethodName: Answer
         m_Mode: 1
         m_Arguments:

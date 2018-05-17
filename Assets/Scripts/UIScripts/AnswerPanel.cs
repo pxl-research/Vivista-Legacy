@@ -1,18 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class AnswerPanel : MonoBehaviour
 {
-	private MultipleChoiceEditor multipleChoiceEditor;
+	private MultipleChoicePanelEditor multipleChoicePanelEditor;
 
 	void Start()
 	{
-		multipleChoiceEditor = transform.root.gameObject.GetComponent<MultipleChoiceEditor>();
+		multipleChoicePanelEditor = transform.root.gameObject.GetComponent<MultipleChoicePanelEditor>();
+		transform.GetComponentInChildren<Toggle>().group = transform.parent.GetComponent<ToggleGroup>();
 	}
 
 	public void RemoveSelfFromAnswers()
 	{
-		multipleChoiceEditor.RemoveQuestion(gameObject);
+		multipleChoicePanelEditor.RemoveQuestion(gameObject);
 	}
 }

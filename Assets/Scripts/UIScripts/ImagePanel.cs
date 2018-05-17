@@ -15,30 +15,7 @@ public class ImagePanel : MonoBehaviour
 	private bool neverOpened;
 	private WWW www;
 
-	public void Init(string newTitle, string newImageURL, bool loadImageImmediately)
-	{
-		title.text = newTitle;
-		imageURL = newImageURL;
-		if (loadImageImmediately)
-		{
-			www = new WWW(imageURL);
-			neverOpened = false;
-			downloading = true;
-		}
-		else
-		{
-			neverOpened = true;
-		}
-	}
-
-	public void Move(Vector3 position)
-	{
-		var newPos = position;
-		newPos.y += 0.015f;
-		canvas.GetComponent<RectTransform>().position = position;
-	}
-
-	public void Start()
+	void Start()
 	{
 		//NOTE(Kristof): Initial rotation towards the camera
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
@@ -48,7 +25,7 @@ public class ImagePanel : MonoBehaviour
 		}
 	}
 
-	public void Update()
+	void Update()
 	{
 		if (downloading && www.isDone)
 		{
@@ -86,10 +63,9 @@ public class ImagePanel : MonoBehaviour
 		{
 			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
 		}
-
 	}
 
-	public void OnEnable()
+	void OnEnable()
 	{
 		if (neverOpened)
 		{
@@ -97,5 +73,28 @@ public class ImagePanel : MonoBehaviour
 			neverOpened = false;
 			downloading = true;
 		}
+	}
+
+	public void Init(string newTitle, string newImageURL, bool loadImageImmediately)
+	{
+		title.text = newTitle;
+		imageURL = newImageURL;
+		if (loadImageImmediately)
+		{
+			www = new WWW(imageURL);
+			neverOpened = false;
+			downloading = true;
+		}
+		else
+		{
+			neverOpened = true;
+		}
+	}
+
+	public void Move(Vector3 position)
+	{
+		var newPos = position;
+		newPos.y += 0.015f;
+		canvas.GetComponent<RectTransform>().position = position;
 	}
 }

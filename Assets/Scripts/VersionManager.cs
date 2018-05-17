@@ -1,4 +1,4 @@
-﻿#define DEBUG_VERSION
+﻿//#define DEBUG_VERSION
 
 using System;
 using System.Collections.Generic;
@@ -192,11 +192,10 @@ public class VersionManager
 			if (!point.filename.Equals(""))
 			{
 				var newFilename = Path.Combine(SaveFile.extraPath, Editor.GenerateExtraGuid());
-				point.filename = newFilename;
 #if !DEBUG_VERSION
 				File.Move(Path.Combine(projectDir, point.filename), Path.Combine(projectDir, newFilename));
-
 #endif
+				point.filename = newFilename;
 			}
 		}
 

@@ -42,6 +42,7 @@ public class Player : MonoBehaviour
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject videoPanelPrefab;
+	public GameObject multipleChoicePrefab;
 	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
 	public GameObject projectorPrefab;
@@ -133,7 +134,7 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
+				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 
 				//NOTE(Lander): enable the highlight in the tutorial mode
 				VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, videoController.videoState == VideoController.VideoState.Intro);
@@ -609,6 +610,13 @@ public class Player : MonoBehaviour
 				{
 					var panel = Instantiate(videoPanelPrefab);
 					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.MultipleChoice:
+				{
+					var panel = Instantiate(multipleChoicePrefab);
+					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
 				}

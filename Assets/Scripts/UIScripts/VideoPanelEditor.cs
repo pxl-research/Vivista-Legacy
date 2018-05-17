@@ -21,13 +21,6 @@ public class VideoPanelEditor : MonoBehaviour {
 	private bool fileOpening;
 
 	//public void Init(Vector3 position, bool exactPost = false)
-	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
-	{
-		Move(position, exactPos);
-		title.text = initialTitle;
-		url.text = initialUrl;
-	}
-
 	// Use this for initialization
 	void Start () {
 		transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
@@ -43,13 +36,32 @@ public class VideoPanelEditor : MonoBehaviour {
 				Destroy(explorerPanel.gameObject);
 			}
 		}
+	}
+
+	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
+	{
+		Move(position, exactPos);
+		title.text = initialTitle;
+		url.text = initialUrl;
+	}
+
+	// NOTE(Lander): Copied from imagePanelEditor.cs
+	public void Move(Vector3 position, bool exactPos = false)
+	{
+		Vector3 newPos;
+
+		if (exactPos)
+		{
+			newPos = position;
+		}
 		else
 		{
-			//TODO(Kristof): Can this be deleted?
-			//var titleRect = title.GetComponent<RectTransform>();
-			//float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
-			//titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
+			newPos.y += 1f;
+
 		}
+
+		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Answer()
@@ -69,26 +81,5 @@ public class VideoPanelEditor : MonoBehaviour {
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
 
 		fileOpening = true;
-	}
-
-
-
-	// NOTE(Lander): Copied from imagePanelEditor.cs
-	public void Move(Vector3 position, bool exactPos = false)
-	{
-		Vector3 newPos;
-
-		if (exactPos)
-		{
-			newPos = position;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-			newPos.y += 1f;
-
-		}
-
-		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 }

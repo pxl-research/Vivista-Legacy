@@ -1,6 +1,6 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class Hittable : MonoBehaviour
 {
@@ -18,7 +18,10 @@ public class Hittable : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		Player.hittables.Add(this);
+		if (SceneManager.GetActiveScene().name.Equals("Player"))
+		{
+			Player.hittables.Add(this);
+		}
 	}
 
 	void Update()
