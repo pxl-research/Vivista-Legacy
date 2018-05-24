@@ -27,7 +27,7 @@ public class InteractionPointPlayer
 	public float interactionTimer;
 	public bool isStartPoint = false;
 	public bool isTouched;
-	public Seekbar.Blip blip;
+	public GameObject blip;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
@@ -299,13 +299,13 @@ public class Player : MonoBehaviour
 						var blipAngle = point.point.transform.eulerAngles.y;
 
 						// TODO(Lander): Rely on a start position of a video instead
-						var angle = (XRSettings.enabled ? forwardAngle : 90 )  - blipAngle;
+						var angle = (XRSettings.enabled ? forwardAngle : 90) - blipAngle;
 
 						if (point.blip == null)
 						{
-							point.blip = new Seekbar.Blip(-angle, Instantiate(compassBlipPrefab));
+							point.blip = Seekbar.CreateBlip(-angle, Instantiate(compassBlipPrefab));
 						}
-						point.blip.blip.transform.localEulerAngles = new Vector3(0, 0, angle);
+						point.blip.transform.localEulerAngles = new Vector3(0, 0, angle);
 					}
 					else
 					{
@@ -314,11 +314,11 @@ public class Player : MonoBehaviour
 						if (point.blip != null)
 						{
 
-							point.blip.Dettach();
+							Destroy(point.blip);
 							point.blip = null;
 						}
 					}
-					if(!point.isStartPoint && point.isTouched)
+					if (!point.isStartPoint && point.isTouched)
 						point.point.GetComponent<Renderer>().material.color = GRAY;
 
 

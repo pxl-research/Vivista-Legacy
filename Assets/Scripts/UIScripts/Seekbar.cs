@@ -8,30 +8,6 @@ using UnityEngine.XR;
 
 public class Seekbar : MonoBehaviour, IPointerDownHandler
 {
-	public class Blip
-	{
-		public GameObject blip;
-
-		public static List<Blip> blips;
-
-		public Blip(float rotation, GameObject blip)
-		{
-			this.blip = blip;
-			blips.Add(this);
-
-			blip.transform.SetParent(GameObject.Find("CompassBackground").transform);
-			blip.transform.localEulerAngles = new Vector3(0, 0, rotation);
-			blip.transform.localScale = Vector3.one;
-			blip.transform.localPosition = Vector3.zero;
-			blip.transform.GetComponent<RectTransform>().anchoredPosition = Vector3.zero;
-		}
-
-		public void Dettach()
-		{
-			Destroy(blip);
-			blips.Remove(this);
-		}
-	}
 
 	public VideoController controller;
 	public RectTransform seekbarBackground;
@@ -53,14 +29,12 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 	public void Start()
 	{
-		Blip.blips = new List<Blip>();
 		curSeekbarHeight = maxSeekbarHeight;
 		startRotation = 0;
 		if (UnityEngine.XR.XRSettings.enabled)
 			ReattachCompass();
 		compass = compassBackground;
 	}
-
 
 	public static void ReattachCompass()
 	{
@@ -129,5 +103,15 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		var fractionalTime = pos / max;
 
 		controller.Seek(fractionalTime);
+	}
+
+	public static GameObject CreateBlip(float rotation, GameObject blip)
+	{
+		blip.transform.SetParent(GameObject.Find("CompassBackground").transform);
+		blip.transform.localEulerAngles = new Vector3(0, 0, rotation);
+		blip.transform.localScale = Vector3.one;
+		blip.transform.localPosition = Vector3.zero;
+		blip.transform.GetComponent<RectTransform>().anchoredPosition = Vector3.zero;
+		return blip;
 	}
 }
