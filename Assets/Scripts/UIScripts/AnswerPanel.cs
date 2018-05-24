@@ -9,10 +9,6 @@ public class AnswerPanel : MonoBehaviour
 	{
 		multipleChoicePanelEditor = transform.root.gameObject.GetComponent<MultipleChoicePanelEditor>();
 		transform.GetComponentInChildren<Toggle>().group = transform.parent.GetComponent<ToggleGroup>();
-	}
-
-	public void RemoveSelfFromAnswers()
-	{
-		multipleChoicePanelEditor.RemoveQuestion(gameObject);
+		transform.GetComponentInChildren<Button>().onClick.AddListener(delegate { multipleChoicePanelEditor.RemoveQuestion(gameObject);});
 	}
 }

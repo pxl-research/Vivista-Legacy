@@ -169,7 +169,7 @@ public class MultipleChoicePanel : MonoBehaviour
 		toggle.transform.GetComponentInChildren<Image>().color = Color.white;
 	}
 
-	public string[] GetBodyStringArray()
+	public string[] GetBody()
 	{
 		var returnAnswers = new string[answers.Length + 1];
 

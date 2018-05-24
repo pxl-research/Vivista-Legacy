@@ -517,6 +517,7 @@ public class Editor : MonoBehaviour
 					{
 						var panel = Instantiate(multipleChoicePanelPrefab);
 						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
 						foreach (var answer in editor.answerAnswers)
 						{
@@ -692,6 +693,7 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(multipleChoicePanelPrefab);
 						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
 						foreach (var answer in editor.answerAnswers)
 						{
@@ -1197,7 +1199,7 @@ public class Editor : MonoBehaviour
 						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab);
 						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(panel.transform.position,
 																						panel.GetComponent<MultipleChoicePanel>().question.text,
-																						panel.GetComponent<MultipleChoicePanel>().GetBodyStringArray(),
+																						panel.GetComponent<MultipleChoicePanel>().GetBody(),
 																						true);
 						break;
 					default:
