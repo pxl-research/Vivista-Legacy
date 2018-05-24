@@ -1,4 +1,4 @@
-﻿#define DEBUG_VERSION
+﻿//#define DEBUG_VERSION
 
 using System;
 using System.Collections.Generic;
@@ -61,7 +61,7 @@ public class InteractionPointLatest
 public class VersionManager
 {
 	public static bool isUpdated;
-	public const int VERSION = 2;
+	public const int VERSION = 3;
 
 	public static string CheckAndUpgradeVersion(string jsonString)
 	{
@@ -130,6 +130,7 @@ public class VersionManager
 		//NOTE(Kristof): Pass meta and points byref in case changes need to happen (meta.version gets upgraded every function if outdated)
 		var updated = Upgrade0To1(meta, points);
 		updated = Upgrade1To2(meta, points);
+		updated = Upgrade2To3(meta, points);
 
 		//NOTE(Kristof): Update json only if changes were made
 		if (updated)
@@ -183,20 +184,26 @@ public class VersionManager
 		//NOTE(Kristof): Create variables for directory paths
 		var projectDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var extraDir = Path.Combine(projectDir, SaveFile.extraPath);
+		//NOTE(Kristof): Dictionary is used to keep track of duplicate references to extras in the json 
+		var newExtraDictionary = new Dictionary<string,string>();
 
 		Directory.CreateDirectory(extraDir);
 
 		//NOTE(Kristof): Iterate over all points and move extra files to the newly created "extra" directory. Files are renamed to a guid. 
 		foreach (var point in points)
 		{
-			if (!point.filename.Equals(""))
+			if (newExtraDictionary.ContainsKey(point.filename))
+			{
+				point.filename = newExtraDictionary[point.filename];
+			}
+			else if (!point.filename.Equals(""))
 			{
 				var newFilename = Path.Combine(SaveFile.extraPath, Editor.GenerateExtraGuid());
-				point.filename = newFilename;
+				newExtraDictionary.Add(point.filename, newFilename);
 #if !DEBUG_VERSION
 				File.Move(Path.Combine(projectDir, point.filename), Path.Combine(projectDir, newFilename));
-
 #endif
+				point.filename = newFilename;
 			}
 		}
 
@@ -207,6 +214,27 @@ public class VersionManager
 			File.Delete(file);
 		}
 #endif
+
+#if DEBUG_VERSION
+		return false;
+#else
+		return true;
+#endif
+	}
+
+	/// <summary>
+	/// This version adds Multiplechoice Interaction
+	/// </summary>
+	private static bool Upgrade2To3(MetaDataCompat meta, List<InteractionpointSerializeCompat> points)
+	{
+		//NOTE(Kristof): Check if we're indeed dealing with a version 0 json
+		if (meta.version != 2)
+		{
+			return false;
+		}
+
+		//NOTE(Kristof): Set version to version 1
+		meta.version = 3;
 
 #if DEBUG_VERSION
 		return false;

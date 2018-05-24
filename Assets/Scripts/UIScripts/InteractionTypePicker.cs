@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class InteractionTypePicker : MonoBehaviour 
+public class InteractionTypePicker : MonoBehaviour
 {
 	public bool answered = false;
 	public InteractionType answer;
@@ -20,7 +20,7 @@ public class InteractionTypePicker : MonoBehaviour
 			newPos = Vector3.Lerp(newPos, Camera.main.transform.position, 0.001f);
 			newPos.y += 0.015f;
 		}
-		
+
 		canvas = GetComponent<Canvas>();
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
@@ -33,18 +33,24 @@ public class InteractionTypePicker : MonoBehaviour
 	public void AnswerImage()
 	{
 		answered = true;
-		answer =  InteractionType.Image;
+		answer = InteractionType.Image;
 	}
 
 	public void AnswerText()
 	{
 		answered = true;
-		answer =  InteractionType.Text;
+		answer = InteractionType.Text;
 	}
 
 	public void AnswerVideo()
 	{
 		answered = true;
 		answer = InteractionType.Video;
+	}
+
+	public void AnswerMultipleChoice()
+	{
+		answered = true;
+		answer = InteractionType.MultipleChoice;
 	}
 }

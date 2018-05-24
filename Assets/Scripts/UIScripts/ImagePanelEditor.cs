@@ -22,18 +22,7 @@ public class ImagePanelEditor : MonoBehaviour
 	private WWW www;
 	private bool fileOpening;
 	private ExplorerPanel explorerPanel;
-
-	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
-	{
-		title.text = initialTitle;
-		if (initialUrl.StartsWith(@"file:///"))
-		{
-			initialUrl = initialUrl.Substring(8);
-		}
-		url.text = initialUrl;
-		Move(position, exactPos);
-	}
-
+	
 	void Update()
 	{
 		var titleRect = title.GetComponent<RectTransform>();
@@ -85,11 +74,15 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 	}
 
-	public void Answer()
+	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
 	{
-		answered = true;
-		answerTitle = title.text;
-		//NOTE(Simon): AnswerURL already up to date
+		title.text = initialTitle;
+		if (initialUrl.StartsWith(@"file:///"))
+		{
+			initialUrl = initialUrl.Substring(8);
+		}
+		url.text = initialUrl;
+		Move(position, exactPos);
 	}
 
 	public void Move(Vector3 position, bool exactPos = false)
@@ -102,16 +95,8 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 		else
 		{
-			if (!Camera.main.orthographic)
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-				newPos.y -= 1f;
-			}
-			else
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-				newPos.y += 0.015f;
-			}
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+			newPos.y -= 3f;
 		}
 
 		canvas.GetComponent<RectTransform>().position = newPos;
@@ -126,5 +111,12 @@ public class ImagePanelEditor : MonoBehaviour
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
 
 		fileOpening = true;
+	}
+
+	public void Answer()
+	{
+		answered = true;
+		answerTitle = title.text;
+		//NOTE(Simon): AnswerURL already up to date
 	}
 }

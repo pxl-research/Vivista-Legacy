@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class TextPanelEditor : MonoBehaviour 
+public class TextPanelEditor : MonoBehaviour
 {
 	public Canvas canvas;
 	public RectTransform resizePanel;
@@ -12,45 +12,13 @@ public class TextPanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public string answerBody;
-
-	public void Init(Vector3 position, string initialTitle, string initialBody, bool exactPos = false)
-	{
-		title.text = initialTitle;
-		body.text = initialBody;
-		Move(position, exactPos);
-	}
 	
-	public void Move(Vector3 position, bool exactPos = false)
-	{
-		Vector3 newPos;
-
-		if (exactPos)
-		{
-			newPos = position;
-		}
-		else
-		{
-			if (!Camera.main.orthographic)
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-				newPos.y += 2f;
-			}
-			else
-			{
-				newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-				newPos.y += 0.015f;
-			}
-		}
-		canvas.GetComponent<RectTransform>().position = newPos;
-	}
-
-
-	void Update () 
+	void Update()
 	{
 		var titleRect = title.GetComponent<RectTransform>();
 		var newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
 		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
-	
+
 		var bodyRect = body.GetComponent<RectTransform>();
 		newHeight = UIHelper.CalculateTextFieldHeight(body, 100);
 		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, newHeight);
@@ -62,6 +30,29 @@ public class TextPanelEditor : MonoBehaviour
 			+ 20 + 20 + 30 + 20);
 
 		canvas.transform.rotation = Camera.main.transform.rotation;
+	}
+
+	public void Init(Vector3 position, string initialTitle, string initialBody, bool exactPos = false)
+	{
+		title.text = initialTitle;
+		body.text = initialBody;
+		Move(position, exactPos);
+	}
+
+	public void Move(Vector3 position, bool exactPos = false)
+	{
+		Vector3 newPos;
+
+		if (exactPos)
+		{
+			newPos = position;
+		}
+		else
+		{
+			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
+			newPos.y += 6.5f;
+		}
+		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Answer()
