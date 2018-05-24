@@ -1,6 +1,4 @@
-﻿using System;
-using System.CodeDom;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Controller : MonoBehaviour
 {
@@ -9,13 +7,13 @@ public class Controller : MonoBehaviour
 	public GameObject controllerUI;
 	public GameObject hovered;
 	public GameObject cursor;
+	public Material highlightMaterial;
 
 	public bool uiHovering;
 	public bool compassAttached;
 
 	private MeshRenderer trigger;
 	private MeshRenderer thumbstick;
-	public Material highlightMaterial;
 	private Material baseMaterial;
 	private SteamVR_TrackedController controller;
 
@@ -25,8 +23,9 @@ public class Controller : MonoBehaviour
 	void Start()
 	{
 		controller = GetComponent<SteamVR_TrackedController>();
-		controller.Gripped += (o, e) => gripDown = !gripDown;
+		controller.Gripped += OnGripped;
 	}
+
 
 	// Update is called once per frame
 	void Update()
@@ -56,26 +55,21 @@ public class Controller : MonoBehaviour
 		{
 			var compass = Seekbar.compass.transform;
 
-			var controllerUI = transform.Find("ControllerUI");
-			//controllerUI.SetActive(GetComponent<SteamVR_TrackedController>().gripped && Player.playerState == PlayerState.Watching);
-
 			if (compass && controllerUI)
 			{
 				if (gripDown && !compassAttached)
 				{
-					compass.parent = transform.Find("ControllerUI");
+					compass.parent = controllerUI.transform;
 					compass.localScale = new Vector3(0.001f, 0.001f, 0.001f);
 					compass.localPosition = Vector3.zero;
 					compass.localEulerAngles = Vector3.zero;
 					compass.gameObject.SetActive(true);
-					compass.Find("CompassForeground").gameObject.SetActive(false);
+					compass.GetChild(0).gameObject.SetActive(false);
 					compassAttached = true;
 					gripDown = false;
 				}
 				else if (gripDown && compassAttached)
 				{
-					
-					//Seekbar.ReattachCompass();
 					compass.gameObject.SetActive(false);
 					compassAttached = false;
 					gripDown = false;
@@ -172,5 +166,10 @@ public class Controller : MonoBehaviour
 	public Ray CastRay()
 	{
 		return new Ray(laser.transform.position, laser.transform.up);
+	}
+
+	private void OnGripped(object sender, ClickedEventArgs args)
+	{
+		gripDown = !gripDown;
 	}
 }

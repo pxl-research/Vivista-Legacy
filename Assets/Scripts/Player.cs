@@ -63,6 +63,7 @@ public class Player : MonoBehaviour
 	private List<GameObject> videoList;
 	private Image crosshair;
 	private Image crosshairTimer;
+	private Text blipCounter;
 
 	private GameObject indexPanel;
 	private Transform videoCanvas;
@@ -78,6 +79,7 @@ public class Player : MonoBehaviour
 	private bool isOutofView;
 	private int activePoints;
 	private string openVideo;
+	private int remainingPoints;
 
 	private const float timeToInteract = 0.75f;
 	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
@@ -127,6 +129,8 @@ public class Player : MonoBehaviour
 		}
 
 		VideoControls.videoController = videoController;
+
+		blipCounter = Seekbar.compass.GetComponentInChildren<Text>();
 	}
 
 	void Update()
@@ -277,7 +281,7 @@ public class Player : MonoBehaviour
 				}
 				else
 				{
-					forwardAngle = GameObject.Find("Seekbar Canvas").transform.localEulerAngles.y;
+					forwardAngle = Seekbar.compass.transform.parent.localEulerAngles.y;
 				}
 
 				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
@@ -294,7 +298,9 @@ public class Player : MonoBehaviour
 					if (!point.isStartPoint && pointActive && !point.isTouched)
 					{
 						if (textMesh != null)
+						{
 							textMesh.color = Color.black;
+						}
 
 						var blipAngle = point.point.transform.eulerAngles.y;
 
@@ -304,23 +310,31 @@ public class Player : MonoBehaviour
 						if (point.blip == null)
 						{
 							point.blip = Seekbar.CreateBlip(-angle, Instantiate(compassBlipPrefab));
+							remainingPoints++;
 						}
 						point.blip.transform.localEulerAngles = new Vector3(0, 0, angle);
 					}
 					else
 					{
 						if (textMesh != null)
+						{
 							textMesh.color = Color.white;
+						}
 						if (point.blip != null)
 						{
-
 							Destroy(point.blip);
 							point.blip = null;
+							remainingPoints--;
 						}
 					}
-					if (!point.isStartPoint && point.isTouched)
-						point.point.GetComponent<Renderer>().material.color = GRAY;
 
+					if (!point.isStartPoint && point.isTouched)
+					{
+						point.point.GetComponent<Renderer>().material.color = GRAY;
+					}
+					blipCounter.text = remainingPoints != 0 
+						? remainingPoints.ToString() 
+						: "";
 
 					//NOTE(Lander): current point is hit with the raycast
 					if (hit.transform != null && hit.transform.gameObject == point.point)

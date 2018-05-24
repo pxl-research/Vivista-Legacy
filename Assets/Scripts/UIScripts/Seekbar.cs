@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -32,7 +31,9 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		curSeekbarHeight = maxSeekbarHeight;
 		startRotation = 0;
 		if (UnityEngine.XR.XRSettings.enabled)
+		{
 			ReattachCompass();
+		}
 		compass = compassBackground;
 	}
 
@@ -89,7 +90,10 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 		// TODO(Lander): Actually make use of the start position, and no hardcoded values
 		var rotation = (XRSettings.enabled ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
-		if (SceneManager.GetActiveScene().name.Equals("Player") && compass.transform.parent != Canvass.seekbar) rotation -= 90;
+		if (SceneManager.GetActiveScene().name.Equals("Player") && compass.transform.parent != Canvass.seekbar)
+		{
+			rotation -= 90;
+		}
 
 		compassForeground.transform.localEulerAngles = new Vector3(0, 0, -(rotation));
 
@@ -107,7 +111,7 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 	public static GameObject CreateBlip(float rotation, GameObject blip)
 	{
-		blip.transform.SetParent(GameObject.Find("CompassBackground").transform);
+		blip.transform.SetParent(Seekbar.compass.transform);
 		blip.transform.localEulerAngles = new Vector3(0, 0, rotation);
 		blip.transform.localScale = Vector3.one;
 		blip.transform.localPosition = Vector3.zero;
