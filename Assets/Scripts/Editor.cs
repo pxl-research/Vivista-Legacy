@@ -726,7 +726,7 @@ public class Editor : MonoBehaviour
 				var newGuid = new Guid(panel.answerGuid);
 
 				// NOTE(Lander): When the guid changes, overwrite extra and main.mp4
-				if (newGuid != meta.guid)
+				if (newGuid != meta.guid && meta.guid != Guid.Empty ) 
 				{
 					var oldDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 					var newDir = Path.Combine(Application.persistentDataPath, newGuid.ToString());

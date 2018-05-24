@@ -61,7 +61,7 @@ public class MultipleChoicePanel : MonoBehaviour
 					}
 				}
 
-				if (Physics.Raycast(ray, out hit, 90, LayerMask.GetMask("UI")))
+				if (Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
 				{
 					var toggle = hit.transform.GetComponent<Toggle>();
 					if (toggle)
