@@ -7,21 +7,25 @@ public class Controller : MonoBehaviour
 	public GameObject controllerUI;
 	public GameObject hovered;
 	public GameObject cursor;
+	public Material highlightMaterial;
 
 	public bool uiHovering;
+	public bool compassAttached;
 
 	private MeshRenderer trigger;
 	private MeshRenderer thumbstick;
-	public Material highlightMaterial;
 	private Material baseMaterial;
-
 	private SteamVR_TrackedController controller;
+
+	private bool gripDown;
 
 	// Use this for initialization
 	void Start()
 	{
 		controller = GetComponent<SteamVR_TrackedController>();
+		controller.Gripped += OnGripped;
 	}
+
 
 	// Update is called once per frame
 	void Update()
@@ -49,7 +53,28 @@ public class Controller : MonoBehaviour
 
 		//NOTE(Kristof): Showing controllerUI when gripped 
 		{
-			controllerUI.SetActive(GetComponent<SteamVR_TrackedController>().gripped && Player.playerState == PlayerState.Watching);
+			var compass = Seekbar.compass.transform;
+
+			if (compass && controllerUI)
+			{
+				if (gripDown && !compassAttached)
+				{
+					compass.parent = controllerUI.transform;
+					compass.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+					compass.localPosition = Vector3.zero;
+					compass.localEulerAngles = Vector3.zero;
+					compass.gameObject.SetActive(true);
+					compass.GetChild(0).gameObject.SetActive(false);
+					compassAttached = true;
+					gripDown = false;
+				}
+				else if (gripDown && compassAttached)
+				{
+					compass.gameObject.SetActive(false);
+					compassAttached = false;
+					gripDown = false;
+				}
+			}
 		}
 		var ray = CastRay();
 		RaycastHit hit;
@@ -77,7 +102,7 @@ public class Controller : MonoBehaviour
 			cursor.transform.position = Vector3.zero;
 			cursor.SetActive(false);
 
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints") );
+			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints"));
 			if (hit.transform != null)
 			{
 				var r = 0.02f * hit.distance;
@@ -141,5 +166,10 @@ public class Controller : MonoBehaviour
 	public Ray CastRay()
 	{
 		return new Ray(laser.transform.position, laser.transform.up);
+	}
+
+	private void OnGripped(object sender, ClickedEventArgs args)
+	{
+		gripDown = !gripDown;
 	}
 }

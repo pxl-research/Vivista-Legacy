@@ -84,8 +84,11 @@ public class IndexPanelVideo : MonoBehaviour
 	public void OnHit()
 	{
 		var indexPanel = Canvass.main.GetComponentInChildren<IndexPanel>();
-		indexPanel.answered = true;
-		indexPanel.answerVideoId = uuid;
+		if (indexPanel != null)
+		{
+			indexPanel.answered = true;
+			indexPanel.answerVideoId = uuid;
+		}
 
 		var canvas = transform.root.GetComponentInChildren<Canvas>().transform;
 		StartCoroutine(Player.FadevideoCanvasOut(canvas));
