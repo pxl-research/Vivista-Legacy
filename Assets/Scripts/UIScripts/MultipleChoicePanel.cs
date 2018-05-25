@@ -21,7 +21,10 @@ public class MultipleChoicePanel : MonoBehaviour
 	private Button checkAnswerButton;
 	private int selectedIndex;
 
-	private Color orangeColour = new Color(1, 0.8f, 0.42f);
+	private readonly Color orangeColour = new Color(1, 0.8f, 0.42f);
+	private readonly Color lightGreyColour = new Color(0.78f, 0.78f, 0.78f);
+	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
+	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
 	// Use this for initialization
 	void Start()
@@ -61,7 +64,7 @@ public class MultipleChoicePanel : MonoBehaviour
 					}
 				}
 
-				if (Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
+				if (Physics.Raycast(ray, out hit, 150, LayerMask.GetMask("UI")))
 				{
 					var toggle = hit.transform.GetComponent<Toggle>();
 					if (toggle)
@@ -115,13 +118,17 @@ public class MultipleChoicePanel : MonoBehaviour
 			answerPanel.sizeDelta += new Vector2(0, answerHeight);
 
 			var col = toggle.AddComponent<BoxCollider>();
-			col.size = toggle.GetComponent<RectTransform>().sizeDelta;
-			if (!XRSettings.enabled)
+			if (XRSettings.enabled)
 			{
-				//NOTE(Kristof): The collider needs a Z value to work properly with Raycasts from moouse
-				col.size = new Vector3(col.size.x, col.size.y, 100);
+				col.size = new Vector2(50, 50);
+				col.center = new Vector3(35, 0, -1);
 			}
-			col.center = new Vector3(col.size.x / 2, 0, 0);
+			else
+			{
+				col.size = toggle.GetComponent<RectTransform>().sizeDelta;
+				col.center = new Vector3(col.size.x / 2, 0, 0);
+			}
+
 		}
 
 		var button = Instantiate(answerCheckButtonPrefab, answerPanel);
@@ -130,7 +137,6 @@ public class MultipleChoicePanel : MonoBehaviour
 		button.GetComponent<Hittable>().onHit.AddListener(delegate { CheckAnswerHittable(checkAnswerButton); });
 
 		answerPanel.sizeDelta += new Vector2(0, button.GetComponent<RectTransform>().sizeDelta.y + 10);
-		answerPanel.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperCenter;
 		canvasTectTransform.sizeDelta = new Vector2(canvasTectTransform.sizeDelta.x, questionHeight * 0.7f + answerPanel.sizeDelta.y + 10);
 	}
 
@@ -147,7 +153,10 @@ public class MultipleChoicePanel : MonoBehaviour
 		{
 			checkAnswerButton.interactable = toggleGroup.AnyTogglesOn();
 		}
-		toggle.GetComponentInChildren<Image>().color = toggle.GetComponent<Toggle>().isOn ? orangeColour : Color.white;
+		//NOTE(Kristof): background image and checkmark image
+		var childImages = toggle.transform.GetComponentsInChildren<Image>();
+		childImages[0].color = toggle.GetComponent<Toggle>().isOn ? orangeColour : Color.white;
+		childImages[1].color = toggle.GetComponent<Toggle>().isOn ? Color.white : lightGreyColour;
 	}
 
 	public void ToggleValueChangedHittable(GameObject toggle)
@@ -160,13 +169,19 @@ public class MultipleChoicePanel : MonoBehaviour
 	public void ToggleHoverStart(GameObject toggle)
 	{
 		if (!toggle.GetComponent<Toggle>().interactable) return;
-		toggle.transform.GetComponentInChildren<Image>().color = orangeColour;
+		//NOTE(Kristof): background image and checkmark image
+		var childImages = toggle.transform.GetComponentsInChildren<Image>();
+		childImages[0].color = orangeColour;
+		childImages[1].color = Color.white;
 	}
 
 	public void ToggleHoverEnd(GameObject toggle)
 	{
 		if (!toggle.GetComponent<Toggle>().interactable || toggle.GetComponent<Toggle>().isOn) return;
-		toggle.transform.GetComponentInChildren<Image>().color = Color.white;
+		//NOTE(Kristof): background image and checkmark image
+		var childImages = toggle.transform.GetComponentsInChildren<Image>();
+		childImages[0].color = Color.white;
+		childImages[1].color = lightGreyColour;
 	}
 
 	public string[] GetBody()
@@ -194,17 +209,17 @@ public class MultipleChoicePanel : MonoBehaviour
 			if (index == correctAnswer)
 			{
 				//NOTE(Kristof): Green colour
-				toggles[index].transform.GetComponentInChildren<Image>().color = new Color(0.19f, 0.39f, 0.15f);
+				toggles[index].transform.GetComponentInChildren<Image>().color = greenColour;
 				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = Color.white;
 				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = Color.white;
 			}
 			else
 			{
 				//NOTE(Kristof): Grey colour
-				toggles[index].transform.GetComponentInChildren<Image>().color = new Color(0.78f, 0.78f, 0.78f);
+				toggles[index].transform.GetComponentInChildren<Image>().color = lightGreyColour;
 				//NOTE(Kristof): Darker grey colour
-				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = new Color(0.48f, 0.48f, 0.48f);
-				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = new Color(0.48f, 0.48f, 0.48f);
+				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = darkGreyColour;
+				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = darkGreyColour;
 			}
 		}
 
@@ -214,6 +229,11 @@ public class MultipleChoicePanel : MonoBehaviour
 			{
 				txt.color = Color.red;
 			}
+			toggles[selectedIndex].transform.GetComponentsInChildren<Image>()[1].color = Color.red;
+		}
+		else
+		{
+			toggles[selectedIndex].transform.GetComponentsInChildren<Image>()[1].color = greenColour;
 		}
 
 		checkAnswerButton.interactable = false;

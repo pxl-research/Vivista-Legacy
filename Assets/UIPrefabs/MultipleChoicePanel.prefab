@@ -153,7 +153,7 @@ MonoBehaviour:
     m_Right: 10
     m_Top: 10
     m_Bottom: 10
-  m_ChildAlignment: 0
+  m_ChildAlignment: 1
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
@@ -172,6 +172,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   question: {fileID: 114725149438295840}
   answers: []
+  correctAnswer: 0
   canvas: {fileID: 223651274930340976}
   answerPanel: {fileID: 224620793713276950}
   answerTogglePrefab: {fileID: 1895423656925944, guid: e345a930e554c394b8eda0ce1bab8d73,
