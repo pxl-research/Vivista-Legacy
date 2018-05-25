@@ -114,15 +114,28 @@ public class Player : MonoBehaviour
 		if (XRSettings.enabled)
 		{
 			//NOTE(Kristof): Instantiate the projector
-			projector = Instantiate(projectorPrefab);
-			projector.transform.position = new Vector3(4.5f, 0, 0);
-			projector.transform.eulerAngles = new Vector3(0, 270, 0);
-			projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+			{
+				projector = Instantiate(projectorPrefab);
+				projector.transform.position = new Vector3(4.5f, 0, 0);
+				projector.transform.eulerAngles = new Vector3(0, 270, 0);
+				projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
-			projector.GetComponent<AnimateProjector>().Subscribe(this);
+				projector.GetComponent<AnimateProjector>().Subscribe(this);
+			}
 
-			//NOTE(Kristof): Hide the canvasses when in VR
+			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after tutorial mode)
 			Togglecanvasses();
+
+			//NOTE(Kristof): Moving crosshair to crosshair canvas to display it in worldspace
+			{
+				var ch = Canvass.main.transform.Find("Crosshair");
+				ch.parent = Canvass.crosshair.transform;
+				ch.localPosition = Vector3.zero;
+				ch.localEulerAngles = Vector3.zero;
+				ch.localScale = Vector3.one;
+				ch.gameObject.layer = LayerMask.NameToLayer("WorldUI");
+			}
+
 			StartCoroutine(InstantiateStartPointGroup());
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
@@ -142,7 +155,6 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
-				Canvass.main.renderMode = RenderMode.ScreenSpaceCamera;
 
 				//NOTE(Lander): enable the highlight in the tutorial mode
 				VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, videoController.videoState == VideoController.VideoState.Intro);
@@ -192,11 +204,18 @@ public class Player : MonoBehaviour
 						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
 					}
 				}
+
+				//NOTE(Kristof): Rotating the Crosshair canvas
+				{
+					Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+					Canvass.crosshair.transform.position = cameraRay.GetPoint(90);
+					Canvass.crosshair.transform.LookAt(Camera.main.transform);
+				}
 			}
 			else
 			{
-				Canvass.main.renderMode = RenderMode.ScreenSpaceOverlay;
 				Canvass.seekbar.gameObject.SetActive(false);
+				Canvass.crosshair.gameObject.SetActive(false);
 			}
 		}
 

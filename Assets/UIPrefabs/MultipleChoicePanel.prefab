@@ -153,7 +153,7 @@ MonoBehaviour:
     m_Right: 10
     m_Top: 10
     m_Bottom: 10
-  m_ChildAlignment: 0
+  m_ChildAlignment: 1
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
@@ -172,12 +172,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   question: {fileID: 114725149438295840}
   answers: []
+  correctAnswer: 0
   canvas: {fileID: 223651274930340976}
   answerPanel: {fileID: 224620793713276950}
   answerTogglePrefab: {fileID: 1895423656925944, guid: e345a930e554c394b8eda0ce1bab8d73,
     type: 2}
   answerCheckButtonPrefab: {fileID: 1309263382649292, guid: f384f30236bdfdd459b8dff861c47388,
     type: 2}
+  crossImage: {fileID: 21300000, guid: 741e6d3a4a96b8c44a0c6c455b5a7f02, type: 3}
 --- !u!114 &114576200445424338
 MonoBehaviour:
   m_ObjectHideFlags: 1
