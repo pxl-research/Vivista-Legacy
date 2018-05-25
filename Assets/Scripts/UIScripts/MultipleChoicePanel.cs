@@ -17,6 +17,8 @@ public class MultipleChoicePanel : MonoBehaviour
 	public GameObject answerTogglePrefab;
 	public GameObject answerCheckButtonPrefab;
 
+	public Sprite crossImage;
+
 	private ToggleGroup toggleGroup;
 	private Button checkAnswerButton;
 	private int selectedIndex;
@@ -83,6 +85,14 @@ public class MultipleChoicePanel : MonoBehaviour
 				}
 			}
 		}
+
+		//NOTE(Kristof): Disable colliders on elements that aren't interactable
+
+		foreach (var toggle in answerPanel.GetComponentsInChildren<Toggle>())
+		{
+			toggle.GetComponent<BoxCollider>().enabled = toggle.interactable;
+		}
+		checkAnswerButton.GetComponent<BoxCollider>().enabled = checkAnswerButton.interactable;
 	}
 
 	public void Init(string newQuestion, string[] newAnswers)
@@ -208,16 +218,14 @@ public class MultipleChoicePanel : MonoBehaviour
 			toggles[index].interactable = false;
 			if (index == correctAnswer)
 			{
-				//NOTE(Kristof): Green colour
 				toggles[index].transform.GetComponentInChildren<Image>().color = greenColour;
 				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = Color.white;
 				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = Color.white;
 			}
 			else
 			{
-				//NOTE(Kristof): Grey colour
-				toggles[index].transform.GetComponentInChildren<Image>().color = lightGreyColour;
-				//NOTE(Kristof): Darker grey colour
+				toggles[index].transform.GetComponentsInChildren<Image>()[0].color = lightGreyColour;
+				toggles[index].transform.GetComponentsInChildren<Image>()[1].sprite = crossImage;
 				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = darkGreyColour;
 				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = darkGreyColour;
 			}

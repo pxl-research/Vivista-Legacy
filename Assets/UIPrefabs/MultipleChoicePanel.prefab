@@ -179,6 +179,7 @@ MonoBehaviour:
     type: 2}
   answerCheckButtonPrefab: {fileID: 1309263382649292, guid: f384f30236bdfdd459b8dff861c47388,
     type: 2}
+  crossImage: {fileID: 21300000, guid: 741e6d3a4a96b8c44a0c6c455b5a7f02, type: 3}
 --- !u!114 &114576200445424338
 MonoBehaviour:
   m_ObjectHideFlags: 1
