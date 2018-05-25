@@ -36,6 +36,7 @@ public class FileLoader : MonoBehaviour
 
 		if (UnityEngine.XR.XRSettings.enabled)
 		{
+			//TODO(Kristof): This should all probably be done somewhere else
 			playerInfo.GetComponent<RectTransform>().SetParent(Canvass.seekbar.transform, false);
 			var t = playerInfo.GetComponent<RectTransform>();
 			t.anchorMin = new Vector2(0, 0);

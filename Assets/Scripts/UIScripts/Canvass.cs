@@ -14,6 +14,12 @@ public class Canvass : MonoBehaviour
 	}
 	private static Canvas _seekBarCanvas;
 
+	public static Canvas crosshair
+	{
+		get { return _crosshairCanvas ?? (_crosshairCanvas = GameObject.Find("Crosshair Canvas").GetComponent<Canvas>()); }
+	}
+	private static Canvas _crosshairCanvas;
+
 	public static GameObject modalBackground
 	{
 		get { return _modalBackground  ?? (_modalBackground = main.transform.Find("ModalBackground").gameObject); }
