@@ -292,15 +292,18 @@ public class Player : MonoBehaviour
 				var right = controllerRight.GetComponent<Controller>();
 
 				float forwardAngle;
-				if (left || right)
+				//Note(lander): Turn the blips with the correct angle.
 				{
-					forwardAngle = right.compassAttached
-						? right.transform.eulerAngles.y
-						: left.transform.eulerAngles.y;
-				}
-				else
-				{
-					forwardAngle = Seekbar.compass.transform.parent.localEulerAngles.y;
+					if (left || right)
+					{
+						forwardAngle = right.compassAttached
+							? right.transform.eulerAngles.y
+							: left.transform.eulerAngles.y;
+					}
+					else
+					{
+						forwardAngle = Seekbar.compass.transform.parent.localEulerAngles.y;
+					}
 				}
 
 				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
@@ -351,8 +354,8 @@ public class Player : MonoBehaviour
 					{
 						point.point.GetComponent<Renderer>().material.color = GRAY;
 					}
-					blipCounter.text = remainingPoints != 0 
-						? remainingPoints.ToString() 
+					blipCounter.text = remainingPoints != 0
+						? remainingPoints.ToString()
 						: "";
 
 					//NOTE(Lander): current point is hit with the raycast
