@@ -223,6 +223,7 @@ public class VideoController : MonoBehaviour
 
 			videoLoaded = true;
 
+			video.frame = 2;
 			video.Pause();
 		};
 
