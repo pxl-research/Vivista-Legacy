@@ -52,6 +52,8 @@ public class VideoController : MonoBehaviour
 		}
 	}
 
+	public static bool autoResume;
+
 	void Start()
 	{
 		var players = GetComponents<VideoPlayer>();

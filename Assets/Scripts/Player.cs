@@ -391,7 +391,7 @@ public class Player : MonoBehaviour
 								videoController.Pause();
 
 								//NOTE(Kristof): Play the video when you deactivate the last point
-								if (activePoints == 0 && !VideoControls.seekbarPaused)
+								if (activePoints == 0 && VideoController.autoResume)
 								{
 									videoController.TogglePlay();
 								}
@@ -436,7 +436,7 @@ public class Player : MonoBehaviour
 
 										_interactionTimer = -1;
 
-										if (activePoints == 0 && !VideoControls.seekbarPaused)
+										if (activePoints == 0 && VideoController.autoResume)
 										{
 											videoController.TogglePlay();
 										}

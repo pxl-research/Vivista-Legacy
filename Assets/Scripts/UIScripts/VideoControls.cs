@@ -9,7 +9,6 @@ public class VideoControls : MonoBehaviour
 	public Texture iconPause;
 
 	public static VideoController videoController;
-	public static bool seekbarPaused;
 
 	// Update is called once per frame
 	void Update()
@@ -35,7 +34,7 @@ public class VideoControls : MonoBehaviour
 		if (videoController.videoState > VideoController.VideoState.Intro)
 		{
 			videoController.TogglePlay();
-			seekbarPaused = !videoController.playing;
+			VideoController.autoResume = videoController.playing;
 		}
 	}
 
