@@ -82,11 +82,12 @@ public class Player : MonoBehaviour
 	private int remainingPoints;
 
 	private const float timeToInteract = 0.75f;
-	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
 	private bool interacting;
 	private float _interactionTimer;
 
 	private bool[] cameraRigMovable = new bool[2];
+
+	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
 
 	void Awake()
 	{
@@ -402,7 +403,7 @@ public class Player : MonoBehaviour
 						{
 							interacting = true;
 
-							if (_interactionTimer >= timeToInteract)
+							if (timeToInteract < _interactionTimer)
 							{
 								//NOTE(Kristof): Interacting with StartPoints
 								if (point.isStartPoint)
@@ -421,6 +422,11 @@ public class Player : MonoBehaviour
 										{
 											_interactionTimer = -1;
 											activePoints++;
+										}
+										else
+										{
+											//NOTE(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away)
+											_interactionTimer = timeToInteract * 2;
 										}
 										point.isTouched = true;
 										point.panel.SetActive(true);
@@ -619,7 +625,6 @@ public class Player : MonoBehaviour
 						}
 					}
 				}
-
 			}
 		}
 	}
