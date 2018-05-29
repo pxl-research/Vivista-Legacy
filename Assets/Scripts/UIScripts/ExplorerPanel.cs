@@ -25,7 +25,9 @@ public class ExplorerPanel : MonoBehaviour
 
 	public bool answered;
 	public string answerFilePath;
+	public List<string> answerFilePaths;
 	public string searchPattern;
+	public bool canSelectMultiple;
 
 	public InputField currentPath;
 	public Button upButton;
@@ -49,7 +51,6 @@ public class ExplorerPanel : MonoBehaviour
 	private bool sortByDate;
 	private bool sortByName = true;
 	private bool sortAscending = true;
-	private bool canSelectMultiple;
 
 	private float timeSinceLastClick;
 	private int lastClickIndex;
@@ -78,6 +79,8 @@ public class ExplorerPanel : MonoBehaviour
 							{
 								if (entry.entryType == EntryType.Directory)
 								{
+									currentSelectionList.Clear();
+									filenameField.text = "";
 									OnDirectoryClick(entry.fullPath);
 									break;
 								}
@@ -90,6 +93,8 @@ public class ExplorerPanel : MonoBehaviour
 
 								if (entry.entryType == EntryType.Drive)
 								{
+									currentSelectionList.Clear();
+									filenameField.text = "";
 									DriveClick(entry.fullPath);
 									break;
 								}
@@ -105,15 +110,38 @@ public class ExplorerPanel : MonoBehaviour
 									if (!canSelectMultiple || (canSelectMultiple && !controlHeld))
 									{
 										currentSelectionList.Clear();
+										currentSelectionList.Add(entry);
 										filenameField.text = entry.name;
 									}
+									//NOTE(Kristof): Multiple file selection
 									else
 									{
-										//TODO(Kristof): add seperator + check if already in list
-										filenameField.text += entry.name;
+										if (!currentSelectionList.Contains(entry))
+										{
+											if (currentSelectionList.Count == 1)
+											{
+												filenameField.text = string.Format("\"{0}\" ", currentSelectionList[0].name);
+											}
+											currentSelectionList.Add(entry);
+											filenameField.text += string.Format("\"{0}\" ", entry.name);
+										}
+										else
+										{
+											currentSelectionList.Remove(entry);
+											filenameField.text = "";
+											if (currentSelectionList.Count == 1)
+											{
+												filenameField.text = string.Format("{0}", currentSelectionList[0].name);
+											}
+											else
+											{
+												foreach (var selection in currentSelectionList)
+												{
+													filenameField.text += string.Format("\"{0}\" ", selection.name);
+												}
+											}
+										}
 									}
-
-									currentSelectionList.Add(entry);
 									entry.filenameIconItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
 								}
 							}
@@ -157,6 +185,9 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		try
 		{
+			currentSelectionList.Clear();
+			filenameField.text = "";
+
 			currentDirectory = Directory.GetParent(currentDirectory).ToString();
 			UpdateDir();
 		}
@@ -209,7 +240,6 @@ public class ExplorerPanel : MonoBehaviour
 			sortByName = false;
 
 		}
-
 		UpdateDir();
 	}
 
@@ -377,24 +407,54 @@ public class ExplorerPanel : MonoBehaviour
 		upButton.enabled = true;
 	}
 
-	private void Answer(String path)
+	private void Answer(string path)
 	{
 		answered = true;
 		answerFilePath = path;
+		answerFilePaths = null;
+	}
+
+	private void Answer(List<string> paths)
+	{
+		answered = true;
+		answerFilePath = paths[0];
+		answerFilePaths = paths;
 	}
 
 	public void OpenButtonClicked()
 	{
 		if (filenameField.text != "")
 		{
-			var fullName = currentPath.text + "\\" + filenameField.text;
-			if (File.Exists(fullName))
+			if (canSelectMultiple)
 			{
-				Answer(fullName);
+				var pathList = new List<string>();
+				foreach (var file in currentSelectionList)
+				{
+					var fullName = currentPath.text + "\\" + file.name;
+					if (File.Exists(fullName))
+					{
+						pathList.Add(fullName);
+					}
+					else
+					{
+						//TODO(Kristof): Proper error handling
+						Debug.LogError("file does not exist!");
+					}
+				}
+
+				Answer(pathList);
 			}
 			else
 			{
-				Debug.LogError("file does not exist!");
+				var fullName = currentPath.text + "\\" + filenameField.text;
+				if (File.Exists(fullName))
+				{
+					Answer(fullName);
+				}
+				else
+				{
+					Debug.LogError("file does not exist!");
+				}
 			}
 		}
 	}

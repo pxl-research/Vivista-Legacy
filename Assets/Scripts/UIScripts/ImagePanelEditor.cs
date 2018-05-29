@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,7 @@ public class ImagePanelEditor : MonoBehaviour
 	public RectTransform resizePanel;
 	public InputField title;
 	public InputField url;
+	public List<InputField> urls;
 	public Button done;
 	public RawImage imagePreview;
 	public ExplorerPanel explorerPanelPrefab;
@@ -68,7 +70,21 @@ public class ImagePanelEditor : MonoBehaviour
 		{
 			if (explorerPanel != null && explorerPanel.answered)
 			{
-				url.text = explorerPanel.answerFilePath;
+				//NOTE(Kristof): Single image selected
+				if (explorerPanel.canSelectMultiple)
+				{
+					url.text = explorerPanel.answerFilePath;
+				}
+				//NOTE(Kristof): Multiple image selected
+				else
+				{
+					foreach (var path in explorerPanel.answerFilePaths)
+					{
+						//var input = inputFieldPrefab();
+						//urls.Add(input);
+
+					}
+				}
 				Destroy(explorerPanel.gameObject);
 			}
 		}
