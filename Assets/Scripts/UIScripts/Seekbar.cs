@@ -26,15 +26,18 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 	public static GameObject compass;
 
+	void Awake()
+	{
+		compass = compassBackground;
+	}
 	public void Start()
 	{
 		curSeekbarHeight = maxSeekbarHeight;
 		startRotation = 0;
-		if (UnityEngine.XR.XRSettings.enabled)
+		if (XRSettings.enabled)
 		{
 			ReattachCompass();
 		}
-		compass = compassBackground;
 	}
 
 	public static void ReattachCompass()
