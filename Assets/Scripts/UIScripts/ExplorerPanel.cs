@@ -34,12 +34,14 @@ public class ExplorerPanel : MonoBehaviour
 	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
 	public Button sortDateButton;
 	public Button sortNameButton;
-	public InputField FilenameField;
+	public InputField filenameField;
 	public Button OpenButton;
 	public Text title;
 
 	private FileInfo[] files;
 	private DirectoryInfo[] directories;
+	private List<ExplorerEntry> currentSelectionList = new List<ExplorerEntry>();
+
 	private string[] drives;
 
 	private string currentDirectory;
@@ -47,6 +49,7 @@ public class ExplorerPanel : MonoBehaviour
 	private bool sortByDate;
 	private bool sortByName = true;
 	private bool sortAscending = true;
+	private bool canSelectMultiple;
 
 	private float timeSinceLastClick;
 	private int lastClickIndex;
@@ -63,7 +66,6 @@ public class ExplorerPanel : MonoBehaviour
 				var entry = explorer[i];
 				if (entry.filenameIconItem != null)
 				{
-					entry.filenameIconItem.GetComponent<Image>().color = new Color(255, 255, 255);
 
 					if (RectTransformUtility.RectangleContainsScreenPoint(entry.filenameIconItem.GetComponent<RectTransform>(), Input.mousePosition))
 					{
@@ -71,7 +73,8 @@ public class ExplorerPanel : MonoBehaviour
 
 						if (Input.GetMouseButtonDown(0))
 						{
-							if (lastClickIndex == i && timeSinceLastClick < 0.5f)
+							//NOTE(Kristof): Handling double click
+							if (timeSinceLastClick < 0.5f && lastClickIndex == i)
 							{
 								if (entry.entryType == EntryType.Directory)
 								{
@@ -91,10 +94,37 @@ public class ExplorerPanel : MonoBehaviour
 									break;
 								}
 							}
+							//NOTE(Kristof): Handling single click
+							else
+							{
+								var controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
 
+								if (entry.entryType == EntryType.File)
+								{
+									//NOTE(Kristof): Single file selection
+									if (!canSelectMultiple || (canSelectMultiple && !controlHeld))
+									{
+										currentSelectionList.Clear();
+										filenameField.text = entry.name;
+									}
+									else
+									{
+										//TODO(Kristof): add seperator + check if already in list
+										filenameField.text += entry.name;
+									}
+
+									currentSelectionList.Add(entry);
+									entry.filenameIconItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
+								}
+							}
 							timeSinceLastClick = 0;
 							lastClickIndex = i;
 						}
+					}
+					//NOTE(Kristof): Resetting colour
+					if (!currentSelectionList.Contains(entry))
+					{
+						entry.filenameIconItem.GetComponent<Image>().color = new Color(255, 255, 255);
 					}
 				}
 			}
@@ -108,7 +138,7 @@ public class ExplorerPanel : MonoBehaviour
 	/// <param name="startDirectory"></param>
 	/// <param name="searchPattern">Separate filename patterns with ';' </param>
 	/// <param name="title"></param>
-	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file")
+	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file", bool canSelectMultiple = false)
 	{
 		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
 
@@ -117,6 +147,7 @@ public class ExplorerPanel : MonoBehaviour
 		this.searchPattern = searchPattern;
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 		this.title.text = title;
+		this.canSelectMultiple = canSelectMultiple;
 
 		UpdateDir();
 
@@ -354,9 +385,9 @@ public class ExplorerPanel : MonoBehaviour
 
 	public void OpenButtonClicked()
 	{
-		if (FilenameField.text != "")
+		if (filenameField.text != "")
 		{
-			var fullName = currentPath.text + "\\" + FilenameField.text;
+			var fullName = currentPath.text + "\\" + filenameField.text;
 			if (File.Exists(fullName))
 			{
 				Answer(fullName);

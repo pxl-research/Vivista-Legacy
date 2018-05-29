@@ -1484,7 +1484,7 @@ MonoBehaviour:
   iconArrowUp: {fileID: 21300000, guid: 5ed567ab10a00504ea6b8b103f757a48, type: 3}
   sortDateButton: {fileID: 114719158747510456}
   sortNameButton: {fileID: 114662052288850076}
-  FilenameField: {fileID: 114169401102271664}
+  filenameField: {fileID: 114169401102271664}
   OpenButton: {fileID: 114963364660668486}
   title: {fileID: 114501290723418172}
 --- !u!114 &114891725456978826

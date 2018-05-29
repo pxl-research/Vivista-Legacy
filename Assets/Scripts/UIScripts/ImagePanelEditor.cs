@@ -108,7 +108,7 @@ public class ImagePanelEditor : MonoBehaviour
 
 		explorerPanel = Instantiate(explorerPanelPrefab);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
-		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
+		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", true);
 
 		fileOpening = true;
 	}
