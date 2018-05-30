@@ -39,6 +39,7 @@ public class ExplorerPanel : MonoBehaviour
 	public InputField filenameField;
 	public Button OpenButton;
 	public Text title;
+	public Text multipleFileTooltip;
 
 	private FileInfo[] files;
 	private DirectoryInfo[] directories;
@@ -74,8 +75,10 @@ public class ExplorerPanel : MonoBehaviour
 
 						if (Input.GetMouseButtonDown(0))
 						{
+							var controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+
 							//NOTE(Kristof): Handling double click
-							if (timeSinceLastClick < 0.5f && lastClickIndex == i)
+							if (timeSinceLastClick < 0.5f && lastClickIndex == i && !controlHeld)
 							{
 								if (entry.entryType == EntryType.Directory)
 								{
@@ -102,12 +105,10 @@ public class ExplorerPanel : MonoBehaviour
 							//NOTE(Kristof): Handling single click
 							else
 							{
-								var controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-
 								if (entry.entryType == EntryType.File)
 								{
 									//NOTE(Kristof): Single file selection
-									if (!canSelectMultiple || (canSelectMultiple && !controlHeld))
+									if (!canSelectMultiple || (canSelectMultiple && !controlHeld) || (canSelectMultiple && controlHeld && currentSelectionList.Count == 0))
 									{
 										currentSelectionList.Clear();
 										currentSelectionList.Add(entry);
@@ -176,6 +177,13 @@ public class ExplorerPanel : MonoBehaviour
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 		this.title.text = title;
 		this.canSelectMultiple = canSelectMultiple;
+
+		if (this.canSelectMultiple)
+		{
+			transform.GetComponentInChildren<RectTransform>().sizeDelta = new Vector2(700, 515);
+			directoryContent.GetComponentInChildren<RectTransform>().offsetMin = new Vector2(10, 65);
+			multipleFileTooltip.gameObject.SetActive(true);
+		}
 
 		UpdateDir();
 

@@ -3,8 +3,17 @@ guid: 80f7bcc0e000f1745978a20168135a1a
 timeCreated: 1490271380
 licenseType: Free
 MonoImporter:
+  externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - canvas: {instanceID: 0}
+  - resizePanel: {instanceID: 0}
+  - title: {instanceID: 0}
+  - url: {instanceID: 0}
+  - done: {instanceID: 0}
+  - imagePreview: {instanceID: 0}
+  - explorerPanelPrefab: {instanceID: 0}
+  - imageAlbumEntryPrefab: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

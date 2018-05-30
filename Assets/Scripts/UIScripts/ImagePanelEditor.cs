@@ -6,6 +6,14 @@ using UnityEngine.UI;
 
 public class ImagePanelEditor : MonoBehaviour
 {
+	private enum ImageEditorState
+	{
+		Opening,
+		SingleImage,
+		Album
+	}
+
+	public RectTransform layoutPanel;
 	public Canvas canvas;
 	public RectTransform resizePanel;
 	public InputField title;
@@ -14,6 +22,7 @@ public class ImagePanelEditor : MonoBehaviour
 	public Button done;
 	public RawImage imagePreview;
 	public ExplorerPanel explorerPanelPrefab;
+	public GameObject imageAlbumEntryPrefab;
 
 	public bool answered;
 	public string answerTitle;
@@ -24,69 +33,96 @@ public class ImagePanelEditor : MonoBehaviour
 	private WWW www;
 	private bool fileOpening;
 	private ExplorerPanel explorerPanel;
-	
+	private ImageEditorState imageEditorState;
+
 	void Update()
 	{
-		var titleRect = title.GetComponent<RectTransform>();
-		float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
-		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
-
-		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
-			title.GetComponent<RectTransform>().sizeDelta.y
-			+ url.GetComponent<RectTransform>().sizeDelta.y
-			+ imagePreview.rectTransform.sizeDelta.y
-			//Padding, spacing, button, fudge factor
-			+ 20 + 30 + 30 + 20);
-
-		canvas.transform.rotation = Camera.main.transform.rotation;
-
-		if (url.text != prevURL && !String.IsNullOrEmpty(url.text))
-		{
-			answerURL = url.text;
-			prevURL = url.text;
-
-			if (!Regex.IsMatch(answerURL, "http://|https://"))
-			{
-				answerURL = "file:///" + url.text;
-			}
-
-			www = new WWW(answerURL);
-			downloading = true;
-		}
-
-		if (downloading && www.isDone)
-		{
-			var texture = www.texture;
-			imagePreview.texture = texture;
-			float width = imagePreview.rectTransform.sizeDelta.x;
-			float ratio = texture.width / width;
-			float height = texture.height / ratio;
-			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
-
-			downloading = false;
-		}
-
-		if (fileOpening)
+		if (imageEditorState == ImageEditorState.Opening)
 		{
 			if (explorerPanel != null && explorerPanel.answered)
 			{
-				//NOTE(Kristof): Single image selected
-				if (explorerPanel.canSelectMultiple)
+				//NOTE(Kristof): Single image
+				if (explorerPanel.answerFilePaths == null)
 				{
 					url.text = explorerPanel.answerFilePath;
+					imageEditorState = ImageEditorState.SingleImage;
 				}
-				//NOTE(Kristof): Multiple image selected
+				//NOTE(Kristof): Multiple images
 				else
 				{
+					imagePreview.gameObject.SetActive(false);
+
 					foreach (var path in explorerPanel.answerFilePaths)
 					{
-						//var input = inputFieldPrefab();
-						//urls.Add(input);
-
+						var input = Instantiate(imageAlbumEntryPrefab, layoutPanel).GetComponentInChildren<InputField>();
+						input.transform.parent.SetSiblingIndex(urls.Count + 1);
+						input.text = path;
+						urls.Add(input);
 					}
+
+					imageEditorState = ImageEditorState.Album;
 				}
 				Destroy(explorerPanel.gameObject);
 			}
+		}
+
+		if (imageEditorState == ImageEditorState.SingleImage)
+		{
+			var titleRect = title.GetComponent<RectTransform>();
+			float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
+			titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+
+			resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
+				title.GetComponent<RectTransform>().sizeDelta.y
+				+ url.GetComponent<RectTransform>().sizeDelta.y
+				+ imagePreview.rectTransform.sizeDelta.y
+				//Padding, spacing, button, fudge factor
+				+ 20 + 30 + 30 + 20);
+
+			canvas.transform.rotation = Camera.main.transform.rotation;
+
+			if (url.text != prevURL && !String.IsNullOrEmpty(url.text))
+			{
+				answerURL = url.text;
+				prevURL = url.text;
+
+				if (!Regex.IsMatch(answerURL, "http://|https://"))
+				{
+					answerURL = "file:///" + url.text;
+				}
+
+				www = new WWW(answerURL);
+				downloading = true;
+			}
+
+			if (downloading && www.isDone)
+			{
+				var texture = www.texture;
+				imagePreview.texture = texture;
+				float width = imagePreview.rectTransform.sizeDelta.x;
+				float ratio = texture.width / width;
+				float height = texture.height / ratio;
+				imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
+
+				downloading = false;
+			}
+		}
+
+		if (imageEditorState == ImageEditorState.Album)
+		{
+			var titleRect = title.GetComponent<RectTransform>();
+			float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
+			titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+
+			var amountEntries = layoutPanel.GetComponentsInChildren<InputField>().Length;
+
+			resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
+				title.GetComponent<RectTransform>().sizeDelta.y
+				//Growing for each entry 
+				+ 40 * amountEntries
+				+ url.GetComponent<RectTransform>().sizeDelta.y
+				//Fudge factor
+				+ 10);
 		}
 	}
 
@@ -99,6 +135,8 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 		url.text = initialUrl;
 		Move(position, exactPos);
+
+		imageEditorState = ImageEditorState.SingleImage;
 	}
 
 	public void Move(Vector3 position, bool exactPos = false)
@@ -126,7 +164,7 @@ public class ImagePanelEditor : MonoBehaviour
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", true);
 
-		fileOpening = true;
+		imageEditorState = ImageEditorState.Opening;
 	}
 
 	public void Answer()

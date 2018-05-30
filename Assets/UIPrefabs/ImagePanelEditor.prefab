@@ -843,13 +843,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80f7bcc0e000f1745978a20168135a1a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  layoutPanel: {fileID: 224068749338269354}
   canvas: {fileID: 223534710295657670}
   resizePanel: {fileID: 224113369156349742}
   title: {fileID: 114723758016004056}
   url: {fileID: 114281726030516760}
+  urls: []
   done: {fileID: 114784032326119256}
   imagePreview: {fileID: 114466767973747876}
   explorerPanelPrefab: {fileID: 114736433206684330, guid: c3751d423a86941178b17285cd8bac54,
+    type: 2}
+  imageAlbumEntryPrefab: {fileID: 1504475459060794, guid: a85efb6e2e11f7a46a7646a592e66eb0,
     type: 2}
   answered: 0
   answerTitle: 
