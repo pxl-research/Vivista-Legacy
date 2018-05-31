@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,8 @@ public class ImagePanelEditor : MonoBehaviour
 	private enum ImageEditorState
 	{
 		Opening,
+		ExpandingAlbum,
+		EditingEntry,
 		SingleImage,
 		Album
 	}
@@ -34,6 +37,7 @@ public class ImagePanelEditor : MonoBehaviour
 	private bool fileOpening;
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
+	private int entryToEdit;
 
 	void Update()
 	{
@@ -54,14 +58,42 @@ public class ImagePanelEditor : MonoBehaviour
 
 					foreach (var path in explorerPanel.answerFilePaths)
 					{
-						var input = Instantiate(imageAlbumEntryPrefab, layoutPanel).GetComponentInChildren<InputField>();
-						input.transform.parent.SetSiblingIndex(urls.Count + 1);
-						input.text = path;
-						urls.Add(input);
+						CreateNewEntry(path);
 					}
 
+					UpdateAlbumSortButtons();
 					imageEditorState = ImageEditorState.Album;
 				}
+				Destroy(explorerPanel.gameObject);
+			}
+		}
+
+		if (imageEditorState == ImageEditorState.ExpandingAlbum)
+		{
+			if (explorerPanel != null && explorerPanel.answered)
+			{
+				List<string> answerPaths;
+				answerPaths = explorerPanel.answerFilePaths ?? new List<string> { explorerPanel.answerFilePath };
+
+				foreach (var path in answerPaths)
+				{
+					CreateNewEntry(path);
+				}
+
+				UpdateAlbumSortButtons();
+				imageEditorState = ImageEditorState.Album;
+
+				Destroy(explorerPanel.gameObject);
+			}
+		}
+
+		if (imageEditorState == ImageEditorState.EditingEntry)
+		{
+			if (explorerPanel != null && explorerPanel.answered)
+			{
+				urls[entryToEdit].text = explorerPanel.answerFilePath;
+				imageEditorState = ImageEditorState.Album;
+
 				Destroy(explorerPanel.gameObject);
 			}
 		}
@@ -164,7 +196,27 @@ public class ImagePanelEditor : MonoBehaviour
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", true);
 
-		imageEditorState = ImageEditorState.Opening;
+		if (imageEditorState == ImageEditorState.SingleImage)
+		{
+			imageEditorState = ImageEditorState.Opening;
+		}
+		else if (imageEditorState == ImageEditorState.Album)
+		{
+			imageEditorState = ImageEditorState.ExpandingAlbum;
+		}
+	}
+
+	public void EditAlbumEntry(GameObject go)
+	{
+		var searchPattern = "*.jpg;*.jpeg;*.bmp;*.png";
+
+		entryToEdit = go.transform.GetSiblingIndex() - 1;
+
+		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel.transform.SetParent(Canvass.main.transform, false);
+		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
+
+		imageEditorState = ImageEditorState.EditingEntry;
 	}
 
 	public void Answer()
@@ -172,5 +224,68 @@ public class ImagePanelEditor : MonoBehaviour
 		answered = true;
 		answerTitle = title.text;
 		//NOTE(Simon): AnswerURL already up to date
+	}
+
+	public void MoveUpAlbumImage(GameObject go)
+	{
+		var trans = go.transform;
+		var index = trans.GetSiblingIndex();
+		trans.SetSiblingIndex(index - 1);
+		SwapElementsInList(index - 1, false);
+	}
+	public void MoveDownAlbumImage(GameObject go)
+	{
+		var trans = go.transform;
+		var index = trans.GetSiblingIndex();
+		trans.SetSiblingIndex(index + 1);
+		SwapElementsInList(index - 1, true);
+	}
+
+	private void SwapElementsInList(int index, bool increaseIndex)
+	{
+		int newIndex;
+		if (increaseIndex)
+		{
+			newIndex = index + 1;
+		}
+		else
+		{
+			newIndex = index - 1;
+		}
+
+		var temp = urls[newIndex];
+
+		urls[newIndex] = urls[index];
+		urls[index] = temp;
+
+		UpdateAlbumSortButtons();
+	}
+
+	private void UpdateAlbumSortButtons()
+	{
+		foreach (var url in urls)
+		{
+			url.transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.interactable = true;
+			url.transform.parent.GetComponent<ImageAlbumEntry>().moveDownButton.interactable = true;
+		}
+
+		//NOTE(Kristof): Disabling re-order buttons when entries reach either end of the list
+		urls[0].transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.interactable = false;
+		urls[0].transform.parent.GetComponent<ImageAlbumEntry>().moveDownButton.interactable = true;
+		urls.Last().transform.parent.GetComponent<ImageAlbumEntry>().moveDownButton.interactable = false;
+		urls.Last().transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.interactable = true;
+	}
+
+	private void CreateNewEntry(string path)
+	{
+		var input = Instantiate(imageAlbumEntryPrefab, layoutPanel).GetComponentInChildren<InputField>();
+		input.transform.parent.SetSiblingIndex(urls.Count + 1);
+		input.text = path;
+
+		input.transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.onClick.AddListener(delegate { MoveUpAlbumImage(input.transform.parent.gameObject); });
+		input.transform.parent.GetComponent<ImageAlbumEntry>().moveDownButton.onClick.AddListener(delegate { MoveDownAlbumImage(input.transform.parent.gameObject); });
+		input.transform.parent.GetComponent<ImageAlbumEntry>().editButton.onClick.AddListener(delegate { EditAlbumEntry(input.transform.parent.gameObject); });
+
+		urls.Add(input);
 	}
 }

@@ -433,7 +433,7 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		if (filenameField.text != "")
 		{
-			if (canSelectMultiple)
+			if (canSelectMultiple && currentSelectionList.Count > 1)
 			{
 				var pathList = new List<string>();
 				foreach (var file in currentSelectionList)
