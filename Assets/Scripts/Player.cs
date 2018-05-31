@@ -425,7 +425,7 @@ public class Player : MonoBehaviour
 										}
 										else
 										{
-											//NOTE(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away)
+											//HACK(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away) 
 											_interactionTimer = timeToInteract * 2;
 										}
 										point.isTouched = true;
@@ -434,7 +434,8 @@ public class Player : MonoBehaviour
 									}
 									//NOTE(Kristof): Making a panel inactive
 									//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
-									//NOTE will always be between timeToInteract and timeToInteract + deltaTime
+									//NOTE will be between timeToInteract and timeToInteract + deltaTime
+									//NOTE(Kristof): This condition will occasionally cause bugs (see HACK above)
 									else if (timeToInteract < _interactionTimer && _interactionTimer < timeToInteract + Time.deltaTime)
 									{
 										point.panel.SetActive(false);
