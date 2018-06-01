@@ -5,6 +5,20 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// WORKING BEHAVIOUR:
+/// Single Images should still work as usual
+/// Loading lists of paths from the ExplorerPanel (use CTRL click)
+/// Load more images (both single and multiple) into an existing list
+/// Re-ordering images with up and down arrow
+/// Editing single entry in album list
+///
+/// TODO:
+/// Delete image from list
+/// Figure out how previewing the album will work (if at all)
+/// Showing album after creation
+/// 
+/// </summary>
 public class ImagePanelEditor : MonoBehaviour
 {
 	private enum ImageEditorState
@@ -46,6 +60,8 @@ public class ImagePanelEditor : MonoBehaviour
 			if (explorerPanel != null && explorerPanel.answered)
 			{
 				//NOTE(Kristof): Single image
+				//NOTE(Kristof): Doing this check by using explorerPanel.canSelectMultiple won't work as this boolean is only used to tell the ExplorerPanel if the user is allowed to select multiple Images.
+				//Note(Cont.): It doesn't guarantee more than one image is actually selected.
 				if (explorerPanel.answerFilePaths == null)
 				{
 					url.text = explorerPanel.answerFilePath;
@@ -195,7 +211,7 @@ public class ImagePanelEditor : MonoBehaviour
 		explorerPanel = Instantiate(explorerPanelPrefab);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", true);
-
+		
 		if (imageEditorState == ImageEditorState.SingleImage)
 		{
 			imageEditorState = ImageEditorState.Opening;
@@ -226,14 +242,18 @@ public class ImagePanelEditor : MonoBehaviour
 		//NOTE(Simon): AnswerURL already up to date
 	}
 
-	public void MoveUpAlbumImage(GameObject go)
+	/// <summary>
+	/// MoveUp and MoveDown are used to re-order the GameOhjects. The first sibling is the title InPutfield so the first AlbumEntry has siblingindex 1
+	/// </summary>
+	public void MoveUpAlbumEntry(GameObject go)
 	{
 		var trans = go.transform;
 		var index = trans.GetSiblingIndex();
 		trans.SetSiblingIndex(index - 1);
 		SwapElementsInList(index - 1, false);
 	}
-	public void MoveDownAlbumImage(GameObject go)
+
+	public void MoveDownAlbumEntry(GameObject go)
 	{
 		var trans = go.transform;
 		var index = trans.GetSiblingIndex();
@@ -241,6 +261,9 @@ public class ImagePanelEditor : MonoBehaviour
 		SwapElementsInList(index - 1, true);
 	}
 
+	/// <summary>
+	/// Ass opposed to the AlbumEntry indexing (where the sibling with index 0 is the title) The List is zero-based. Keep this in mind when calling this function based on SiblingIndex
+	/// </summary>
 	private void SwapElementsInList(int index, bool increaseIndex)
 	{
 		int newIndex;
@@ -260,7 +283,7 @@ public class ImagePanelEditor : MonoBehaviour
 
 		UpdateAlbumSortButtons();
 	}
-
+	
 	private void UpdateAlbumSortButtons()
 	{
 		foreach (var url in urls)
@@ -276,14 +299,17 @@ public class ImagePanelEditor : MonoBehaviour
 		urls.Last().transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.interactable = true;
 	}
 
+	/// <summary>
+	/// This function is only used for albums
+	/// </summary>
 	private void CreateNewEntry(string path)
 	{
 		var input = Instantiate(imageAlbumEntryPrefab, layoutPanel).GetComponentInChildren<InputField>();
 		input.transform.parent.SetSiblingIndex(urls.Count + 1);
 		input.text = path;
 
-		input.transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.onClick.AddListener(delegate { MoveUpAlbumImage(input.transform.parent.gameObject); });
-		input.transform.parent.GetComponent<ImageAlbumEntry>().moveDownButton.onClick.AddListener(delegate { MoveDownAlbumImage(input.transform.parent.gameObject); });
+		input.transform.parent.GetComponent<ImageAlbumEntry>().moveUpButton.onClick.AddListener(delegate { MoveUpAlbumEntry(input.transform.parent.gameObject); });
+		input.transform.parent.GetComponent<ImageAlbumEntry>().moveDownButton.onClick.AddListener(delegate { MoveDownAlbumEntry(input.transform.parent.gameObject); });
 		input.transform.parent.GetComponent<ImageAlbumEntry>().editButton.onClick.AddListener(delegate { EditAlbumEntry(input.transform.parent.gameObject); });
 
 		urls.Add(input);

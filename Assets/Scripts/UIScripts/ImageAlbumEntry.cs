@@ -1,8 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// This class simply keeps a reference to all the UI-components in the prefab
+/// </summary>
 public class ImageAlbumEntry : MonoBehaviour
 {
 	public InputField imagePathInput;
