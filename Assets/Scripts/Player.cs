@@ -83,7 +83,7 @@ public class Player : MonoBehaviour
 
 	private const float timeToInteract = 0.75f;
 	private bool interacting;
-	private const float interactionTimer;
+	private float interactionTimer;
 
 	private bool[] cameraRigMovable = new bool[2];
 
