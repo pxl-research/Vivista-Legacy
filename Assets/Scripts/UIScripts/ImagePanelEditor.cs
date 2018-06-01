@@ -14,6 +14,7 @@ using UnityEngine.UI;
 /// Editing single entry in album list
 ///
 /// TODO:
+/// Switching between single image and album mode when adding or deleting more images
 /// Delete image from list
 /// Figure out how previewing the album will work (if at all)
 /// Showing album after creation
