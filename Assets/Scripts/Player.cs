@@ -83,7 +83,7 @@ public class Player : MonoBehaviour
 
 	private const float timeToInteract = 0.75f;
 	private bool interacting;
-	private float _interactionTimer;
+	private const float interactionTimer;
 
 	private bool[] cameraRigMovable = new bool[2];
 
@@ -403,7 +403,7 @@ public class Player : MonoBehaviour
 						{
 							interacting = true;
 
-							if (timeToInteract < _interactionTimer)
+							if (timeToInteract < interactionTimer)
 							{
 								//NOTE(Kristof): Interacting with StartPoints
 								if (point.isStartPoint)
@@ -420,13 +420,13 @@ public class Player : MonoBehaviour
 									{
 										if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 										{
-											_interactionTimer = -1;
+											interactionTimer = -1;
 											activePoints++;
 										}
 										else
 										{
 											//HACK(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away) 
-											_interactionTimer = timeToInteract * 2;
+											interactionTimer = timeToInteract * 2;
 										}
 										point.isTouched = true;
 										point.panel.SetActive(true);
@@ -436,12 +436,12 @@ public class Player : MonoBehaviour
 									//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
 									//NOTE will be between timeToInteract and timeToInteract + deltaTime
 									//NOTE(Kristof): This condition will occasionally cause bugs (see HACK above)
-									else if (timeToInteract < _interactionTimer && _interactionTimer < timeToInteract + Time.deltaTime)
+									else if (timeToInteract < interactionTimer && interactionTimer < timeToInteract + Time.deltaTime)
 									{
 										point.panel.SetActive(false);
 										activePoints--;
 
-										_interactionTimer = -1;
+										interactionTimer = -1;
 
 										if (activePoints == 0 && VideoController.autoResume)
 										{
@@ -537,9 +537,9 @@ public class Player : MonoBehaviour
 					{
 						interacting = true;
 						hittable.hovering = true;
-						if (_interactionTimer >= timeToInteract)
+						if (interactionTimer >= timeToInteract)
 						{
-							_interactionTimer = -1;
+							interactionTimer = -1;
 							hittable.hitting = true;
 						}
 					}
@@ -551,13 +551,13 @@ public class Player : MonoBehaviour
 		{
 			if (interacting)
 			{
-				_interactionTimer += Time.deltaTime;
-				crosshairTimer.fillAmount = _interactionTimer / timeToInteract;
-				crosshair.fillAmount = 1 - (_interactionTimer / timeToInteract);
+				interactionTimer += Time.deltaTime;
+				crosshairTimer.fillAmount = interactionTimer / timeToInteract;
+				crosshair.fillAmount = 1 - (interactionTimer / timeToInteract);
 			}
 			else
 			{
-				_interactionTimer = 0;
+				interactionTimer = 0;
 				crosshairTimer.fillAmount = 0;
 				crosshair.fillAmount = 1;
 			}
