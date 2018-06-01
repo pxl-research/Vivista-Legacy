@@ -52,6 +52,8 @@ public class VideoController : MonoBehaviour
 		}
 	}
 
+	public static bool autoResume;
+
 	void Start()
 	{
 		var players = GetComponents<VideoPlayer>();
@@ -223,6 +225,7 @@ public class VideoController : MonoBehaviour
 
 			videoLoaded = true;
 
+			video.frame = 2;
 			video.Pause();
 		};
 

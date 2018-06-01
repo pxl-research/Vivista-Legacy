@@ -82,11 +82,12 @@ public class Player : MonoBehaviour
 	private int remainingPoints;
 
 	private const float timeToInteract = 0.75f;
-	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
 	private bool interacting;
-	private float _interactionTimer;
+	private const float interactionTimer;
 
 	private bool[] cameraRigMovable = new bool[2];
+
+	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
 
 	void Awake()
 	{
@@ -292,15 +293,18 @@ public class Player : MonoBehaviour
 				var right = controllerRight.GetComponent<Controller>();
 
 				float forwardAngle;
-				if (left || right)
+				//Note(lander): Turn the blips with the correct angle.
 				{
-					forwardAngle = right.compassAttached
-						? right.transform.eulerAngles.y
-						: left.transform.eulerAngles.y;
-				}
-				else
-				{
-					forwardAngle = Seekbar.compass.transform.parent.localEulerAngles.y;
+					if (left || right)
+					{
+						forwardAngle = right.compassAttached
+							? right.transform.eulerAngles.y
+							: left.transform.eulerAngles.y;
+					}
+					else
+					{
+						forwardAngle = Seekbar.compass.transform.parent.localEulerAngles.y;
+					}
 				}
 
 				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
@@ -351,8 +355,8 @@ public class Player : MonoBehaviour
 					{
 						point.point.GetComponent<Renderer>().material.color = GRAY;
 					}
-					blipCounter.text = remainingPoints != 0 
-						? remainingPoints.ToString() 
+					blipCounter.text = remainingPoints != 0
+						? remainingPoints.ToString()
 						: "";
 
 					//NOTE(Lander): current point is hit with the raycast
@@ -388,7 +392,7 @@ public class Player : MonoBehaviour
 								videoController.Pause();
 
 								//NOTE(Kristof): Play the video when you deactivate the last point
-								if (activePoints == 0 && !VideoControls.seekbarPaused)
+								if (activePoints == 0 && VideoController.autoResume)
 								{
 									videoController.TogglePlay();
 								}
@@ -399,7 +403,7 @@ public class Player : MonoBehaviour
 						{
 							interacting = true;
 
-							if (_interactionTimer >= timeToInteract)
+							if (timeToInteract < interactionTimer)
 							{
 								//NOTE(Kristof): Interacting with StartPoints
 								if (point.isStartPoint)
@@ -416,8 +420,13 @@ public class Player : MonoBehaviour
 									{
 										if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 										{
-											_interactionTimer = -1;
+											interactionTimer = -1;
 											activePoints++;
+										}
+										else
+										{
+											//HACK(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away) 
+											interactionTimer = timeToInteract * 2;
 										}
 										point.isTouched = true;
 										point.panel.SetActive(true);
@@ -425,15 +434,16 @@ public class Player : MonoBehaviour
 									}
 									//NOTE(Kristof): Making a panel inactive
 									//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
-									//NOTE will always be between timeToInteract and timeToInteract + deltaTime
-									else if (timeToInteract < _interactionTimer && _interactionTimer < timeToInteract + Time.deltaTime)
+									//NOTE will be between timeToInteract and timeToInteract + deltaTime
+									//NOTE(Kristof): This condition will occasionally cause bugs (see HACK above)
+									else if (timeToInteract < interactionTimer && interactionTimer < timeToInteract + Time.deltaTime)
 									{
 										point.panel.SetActive(false);
 										activePoints--;
 
-										_interactionTimer = -1;
+										interactionTimer = -1;
 
-										if (activePoints == 0 && !VideoControls.seekbarPaused)
+										if (activePoints == 0 && VideoController.autoResume)
 										{
 											videoController.TogglePlay();
 										}
@@ -527,9 +537,9 @@ public class Player : MonoBehaviour
 					{
 						interacting = true;
 						hittable.hovering = true;
-						if (_interactionTimer >= timeToInteract)
+						if (interactionTimer >= timeToInteract)
 						{
-							_interactionTimer = -1;
+							interactionTimer = -1;
 							hittable.hitting = true;
 						}
 					}
@@ -541,13 +551,13 @@ public class Player : MonoBehaviour
 		{
 			if (interacting)
 			{
-				_interactionTimer += Time.deltaTime;
-				crosshairTimer.fillAmount = _interactionTimer / timeToInteract;
-				crosshair.fillAmount = 1 - (_interactionTimer / timeToInteract);
+				interactionTimer += Time.deltaTime;
+				crosshairTimer.fillAmount = interactionTimer / timeToInteract;
+				crosshair.fillAmount = 1 - (interactionTimer / timeToInteract);
 			}
 			else
 			{
-				_interactionTimer = 0;
+				interactionTimer = 0;
 				crosshairTimer.fillAmount = 0;
 				crosshair.fillAmount = 1;
 			}
@@ -616,7 +626,6 @@ public class Player : MonoBehaviour
 						}
 					}
 				}
-
 			}
 		}
 	}
