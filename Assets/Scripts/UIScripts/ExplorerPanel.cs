@@ -38,7 +38,6 @@ public class ExplorerPanel : MonoBehaviour
 	public Button OpenButton;
 	public Text title;
 
-	private FileInfo[] files;
 	private DirectoryInfo[] directories;
 	private string[] drives;
 
@@ -51,16 +50,16 @@ public class ExplorerPanel : MonoBehaviour
 	private float timeSinceLastClick;
 	private int lastClickIndex;
 
-	private List<ExplorerEntry> explorer;
+	private List<ExplorerEntry> entries;
 
 	public void Update()
 	{
 		if (RectTransformUtility.RectangleContainsScreenPoint(directoryContent.GetComponent<RectTransform>(), Input.mousePosition))
 		{
 			//TODO(Simon): Figure out current scroll position, and only check x items before and after position
-			for (int i = 0; i < explorer.Count; i++)
+			for (int i = 0; i < entries.Count; i++)
 			{
-				var entry = explorer[i];
+				var entry = entries[i];
 				if (entry.filenameIconItem != null)
 				{
 					entry.filenameIconItem.GetComponent<Image>().color = new Color(255, 255, 255);
@@ -119,28 +118,23 @@ public class ExplorerPanel : MonoBehaviour
 		this.title.text = title;
 
 		UpdateDir();
-
 	}
 
 	public void DirUp()
 	{
-		try
+		var parent = Directory.GetParent(currentDirectory);
+		//TODO(Simon): Test with other OSes
+		if (parent == null)
 		{
-			currentDirectory = Directory.GetParent(currentDirectory).ToString();
-			UpdateDir();
-		}
-		catch (Exception)
-		{
-			if (osType == "Win32NT") // Is that the only string for Windows?
+			if (osType == "Win32NT")
 			{
-				Debug.Log("Attempting to change disk");
 				SelectDisk();
 			}
-			else
-			{
-				Debug.LogError("This is the root of the disk");
-			}
+			return;
 		}
+
+		currentDirectory = parent.ToString();
+		UpdateDir();
 	}
 
 	public void OnSortNameClick()
@@ -176,7 +170,6 @@ public class ExplorerPanel : MonoBehaviour
 			sortAscending = true;
 			sortByDate = true;
 			sortByName = false;
-
 		}
 
 		UpdateDir();
@@ -205,44 +198,32 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		var dirinfo = new DirectoryInfo(currentDirectory);
 		var filteredFiles = new List<FileInfo>();
+		var patterns = searchPattern.Split(';');
 
-		foreach (var pattern in searchPattern.Split(';'))
+		foreach (string p in patterns)
 		{
-			foreach (var file in dirinfo.GetFiles(pattern))
+			var infos = dirinfo.GetFiles(p);
+
+			for (int j = 0; j < infos.Length; j++)
 			{
-				filteredFiles.Add(file);
+				filteredFiles.Add(infos[j]);
 			}
 		}
-		files = filteredFiles.ToArray();
+
 		directories = dirinfo.GetDirectories();
 		currentPath.text = currentDirectory;
 
+		int direction = sortAscending ? 1 : -1;
+
 		if (sortByName)
 		{
-			if (sortAscending)
-			{
-				Array.Sort(directories, (x, y) => x.Name.CompareTo(y.Name));
-				Array.Sort(files, (x, y) => x.Name.CompareTo(y.Name));
-			}
-			else
-			{
-				Array.Sort(directories, (x, y) => -x.Name.CompareTo(y.Name));
-				Array.Sort(files, (x, y) => -x.Name.CompareTo(y.Name));
-			}
+			Array.Sort(directories, (x, y) => direction * String.Compare(x.Name, y.Name, StringComparison.Ordinal));
+			filteredFiles.Sort((x, y) => direction * String.Compare(x.Name, y.Name, StringComparison.Ordinal));
 		}
-
 		if (sortByDate)
 		{
-			if (sortAscending)
-			{
-				Array.Sort(directories, (x, y) => x.LastWriteTime.CompareTo(y.LastWriteTime));
-				Array.Sort(files, (x, y) => x.LastWriteTime.CompareTo(y.LastWriteTime));
-			}
-			else
-			{
-				Array.Sort(directories, (x, y) => -x.LastWriteTime.CompareTo(y.LastWriteTime));
-				Array.Sort(files, (x, y) => -x.LastWriteTime.CompareTo(y.LastWriteTime));
-			}
+			Array.Sort(directories, (x, y) => direction * x.LastWriteTime.CompareTo(y.LastWriteTime));
+			filteredFiles.Sort((x, y) => direction * x.LastWriteTime.CompareTo(y.LastWriteTime));
 		}
 
 		ClearItems();
@@ -258,10 +239,10 @@ public class ExplorerPanel : MonoBehaviour
 				entryType = EntryType.Directory
 			};
 
-			explorer.Add(entry);
+			entries.Add(entry);
 		}
 
-		foreach (var file in files)
+		foreach (var file in filteredFiles)
 		{
 			var entry = new ExplorerEntry
 			{
@@ -272,7 +253,7 @@ public class ExplorerPanel : MonoBehaviour
 				entryType = EntryType.File
 			};
 
-			explorer.Add(entry);
+			entries.Add(entry);
 		}
 
 		FillItems();
@@ -280,29 +261,31 @@ public class ExplorerPanel : MonoBehaviour
 
 	private void ClearItems()
 	{
-		if (explorer != null)
+		if (entries != null)
 		{
-			foreach (var item in explorer)
+			foreach (var item in entries)
 			{
 				Destroy(item.filenameIconItem);
 			}
 
-			explorer.Clear();
+			entries.Clear();
 		}
-		explorer = new List<ExplorerEntry>();
+		else
+		{
+			entries = new List<ExplorerEntry>();
+		}
 	}
 
 	private void FillItems()
 	{
-		foreach (var entry in explorer)
+		foreach (var entry in entries)
 		{
 			var filenameIconItem = Instantiate(filenameIconItemPrefab);
 			filenameIconItem.transform.SetParent(directoryContent.content, false);
 			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
-
 			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.entryType == EntryType.Drive ? "" : entry.date.ToString();
-
 			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
+
 			entry.filenameIconItem = filenameIconItem;
 		}
 
@@ -326,27 +309,27 @@ public class ExplorerPanel : MonoBehaviour
 
 		currentPath.text = "Select Drive";
 
-		foreach (var drive in drives)
+		foreach (string drive in drives)
 		{
-			var entry = new ExplorerEntry();
-			entry.fullPath = drive;
-			entry.name = drive;
-			entry.sprite = iconDrive;
-			explorer.Add(entry);
-			entry.entryType = EntryType.Drive;
+			entries.Add(new ExplorerEntry
+			{
+				fullPath = drive,
+				name = drive,
+				sprite = iconDrive,
+				entryType = EntryType.Drive
+			});
 		}
 		FillItems();
 	}
 
 	private void DriveClick(string path)
 	{
-		ClearItems();
 		currentDirectory = path;
 		UpdateDir();
 		upButton.enabled = true;
 	}
 
-	private void Answer(String path)
+	private void Answer(string path)
 	{
 		answered = true;
 		answerFilePath = path;
@@ -356,7 +339,7 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		if (FilenameField.text != "")
 		{
-			var fullName = currentPath.text + "\\" + FilenameField.text;
+			string fullName = currentPath.text + "\\" + FilenameField.text;
 			if (File.Exists(fullName))
 			{
 				Answer(fullName);
