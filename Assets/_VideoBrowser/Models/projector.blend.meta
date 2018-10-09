@@ -1,9 +1,7 @@
 fileFormatVersion: 2
 guid: 824c536bbd2b09c459bea2a362460d9c
-timeCreated: 1521018194
-licenseType: Free
 ModelImporter:
-  serializedVersion: 22
+  serializedVersion: 23
   fileIDToRecycleName:
     100000: arm_lowwer_l
     100002: arm_lowwer_r_001
@@ -15,6 +13,17 @@ ModelImporter:
     100014: //RootNode
     100016: root
     100018: Torus
+    100020: Armature_001
+    100022: Armature_002
+    100024: Armature_003
+    100026: Bone
+    100028: Bone_0
+    100030: Bone_1
+    100032: Bone_end
+    100034: Hologram
+    100036: Pedistal
+    100038: Projector
+    100040: Sphere
     400000: arm_lowwer_l
     400002: arm_lowwer_r_001
     400004: arm_upper_l
@@ -25,22 +34,49 @@ ModelImporter:
     400014: //RootNode
     400016: root
     400018: Torus
+    400020: Armature_001
+    400022: Armature_002
+    400024: Armature_003
+    400026: Bone
+    400028: Bone_0
+    400030: Bone_1
+    400032: Bone_end
+    400034: Hologram
+    400036: Pedistal
+    400038: Projector
+    400040: Sphere
     2300000: Cube_001
     3300000: Cube_001
     4300000: Torus
     4300002: Cube_001
     4300004: Cube
+    4300006: Sphere
+    4300008: Pedistal
+    4300010: Projector
+    4300012: Hologram
     7400000: Default Take
     7400002: ArmatureAction
+    7400004: Armature_002_Armature_ArmatureAction_Armature_ArmatureAction
+    7400006: Armature_002_Armature_Fade_Armature_Fade
     9500000: //RootNode
     13700000: Cube
     13700002: Torus
+    13700004: Hologram
+    13700006: Pedistal
+    13700008: Projector
+    13700010: Sphere
+    2186277476908879412: ImportLogs
   externalObjects:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Material
     second: {fileID: 2100000, guid: d530ebe9abc7ced478dd26b528c7924a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Projector
+    second: {fileID: 2100000, guid: 33cd113457999ce42ae493ebfe69ae96, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -64,6 +100,7 @@ ModelImporter:
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
+    importConstraints: 0
     animationCompression: 1
     animationRotationError: 0.5
     animationPositionError: 0.5
@@ -88,11 +125,15 @@ ModelImporter:
     optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 1
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0

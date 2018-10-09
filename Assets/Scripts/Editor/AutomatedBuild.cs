@@ -15,23 +15,22 @@ public class AutomatedBuild : EditorWindow
 		var branch = getBranch();
 		string path;
 		BuildPlayerOptions options;
-		string result;
 
 
 		path = "builds/" + branch + "/Editor/";
 		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
 		PlayerSettings.virtualRealitySupported = false;
-		result = BuildPipeline.BuildPlayer(options);
+		BuildPipeline.BuildPlayer(options);
 
 		path = "builds/" + branch + "/Player/";
 		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
 		PlayerSettings.virtualRealitySupported = false;
-		result = BuildPipeline.BuildPlayer(options);
+		BuildPipeline.BuildPlayer(options);
 
 		path = "builds/" + branch + "/Player-VR/";
 		options = new BuildPlayerOptions { scenes = new string[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
 		PlayerSettings.virtualRealitySupported = true;
-		result = BuildPipeline.BuildPlayer(options);
+		BuildPipeline.BuildPlayer(options);
 		
 
 		UnityEngine.Debug.Log("Build finished");
