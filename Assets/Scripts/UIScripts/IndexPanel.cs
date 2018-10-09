@@ -51,8 +51,10 @@ public class IndexPanel : MonoBehaviour
 	public GameObject pageLabelPrefab;
 	public GameObject videoPrefab;
 	public GameObject detailPanelPrefab;
+	public GameObject importPanelPrefab;
 
 	public GameObject detailPanel;
+	public GameObject importPanel;
 	public GameObject pageLabelContainer;
 	public GameObject videoContainer;
 	public List<GameObject> pageLabels;
@@ -62,7 +64,7 @@ public class IndexPanel : MonoBehaviour
 	public Image spinner;
 	public Text noVideos;
 	public GameObject serverConnectionError;
-	public GameObject Filters;
+	public GameObject filters;
 
 	public Button2 localButton;
 	public Button2 internetButton;
@@ -84,6 +86,8 @@ public class IndexPanel : MonoBehaviour
 	private int searchParamAgeDays;
 	private string searchParamText;
 	private string searchParamAuthor;
+
+	private bool importing;
 
 	private VideoResponseSerialize loadedVideos;
 	private VideoSerialize detailVideo;
@@ -138,40 +142,36 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		//Note(Simon): Spinner
+		//Note(Simon): Spinner animation
+		if (spinner.enabled)
 		{
-			if (spinner.enabled)
-			{
-				spinner.rectTransform.Rotate(0, 0, -0.5f);
-			}
+			spinner.rectTransform.Rotate(0, 0, -0.5f);
 		}
 
 		//Note(Simon): Video Hovering & clicking
+		for (int i = 0; i < videos.Count; i++)
 		{
-			for (int i = 0; i < videos.Count; i++)
+			var rect = new Vector3[4];
+			videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
+
+			bool hovering = false;
+
+			//NOTE(Simon): Check if hovering
+			hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
+
+			//TODO: Get this to work with Hittable
+			if (!XRSettings.enabled)
 			{
-				var rect = new Vector3[4];
-				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
+				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
+			}
 
-				bool hovering = false;
+			if (hovering && Input.GetMouseButtonDown(0))
+			{
+				detailVideo = loadedVideos.videos[i];
+				detailPanel = Instantiate(detailPanelPrefab);
+				detailPanel.transform.SetParent(Canvass.main.transform, false);
 
-				//NOTE(Simon): Check if hovering
-				hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
-
-				//TODO: Get this to work with Hittable
-				if (!XRSettings.enabled)
-				{
-					videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
-				}
-
-				if (hovering && Input.GetMouseButtonDown(0))
-				{
-					detailVideo = loadedVideos.videos[i];
-					detailPanel = Instantiate(detailPanelPrefab);
-					detailPanel.transform.SetParent(Canvass.main.transform, false);
-
-					detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal);
-				}
+				detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal);
 			}
 		}
 
@@ -242,15 +242,23 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		//NOTE(Simon): "Downloaded" message display
+		foreach (var video in videos)
 		{
-			foreach (var video in videos)
+			downloadedMessageTime += Time.deltaTime;
+			if ((downloadedMessageTime > downloadedMessageRefreshTime) && isFinishedLoadingVideos)
 			{
-				downloadedMessageTime += Time.deltaTime;
-				if ((downloadedMessageTime > downloadedMessageRefreshTime) && isFinishedLoadingVideos)
-				{
-					video.GetComponent<IndexPanelVideo>().Refresh();
-					downloadedMessageTime = 0;
-				}
+				video.GetComponent<IndexPanelVideo>().Refresh();
+				downloadedMessageTime = 0;
+			}
+		}
+
+		//NOTE(Simon): Wait for message from import screen
+		if (importing)
+		{
+			var panel = importPanel.GetComponent<ImportPanel>();
+			if (panel.answered)
+			{
+				LoadPage();
 			}
 		}
 
@@ -470,7 +478,7 @@ public class IndexPanel : MonoBehaviour
 		isLocal = true;
 		localButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		internetButton.GetComponent<Image>().color = new Color(200f / 255, 200f / 255, 200f / 255);
-		Filters.SetActive(false);
+		filters.SetActive(false);
 		LoadPage();
 	}
 
@@ -479,8 +487,15 @@ public class IndexPanel : MonoBehaviour
 		isLocal = false;
 		localButton.GetComponent<Image>().color = new Color(200f / 255, 200f / 255, 200f / 255);
 		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
-		Filters.SetActive(true);
+		filters.SetActive(true);
 		LoadPage();
+	}
+
+	public void StartImportVideo()
+	{
+		importing = true;
+
+		importPanel = Instantiate(importPanelPrefab, Canvass.main.transform, false);
 	}
 
 	private IEnumerator BuildVideoGameObjects()

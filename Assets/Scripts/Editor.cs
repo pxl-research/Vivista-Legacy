@@ -146,7 +146,6 @@ public class Editor : MonoBehaviour
 	private float timelineWindowStartTime;
 	private float timelineWindowEndTime;
 	private float timelineEndTime;
-	private int timelineTickSize;
 	private float timelineZoomTarget = 1;
 	private float timelineZoom = 1;
 	private float timelineOffset;
@@ -723,12 +722,12 @@ public class Editor : MonoBehaviour
 			{
 				var panel = filePanel.GetComponent<FilePanel>();
 
-				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file. 
+				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file.
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
 				var newGuid = new Guid(panel.answerGuid);
 
 				// NOTE(Lander): When the guid changes, overwrite extra and main.mp4
-				if (newGuid != meta.guid && meta.guid != Guid.Empty ) 
+				if (newGuid != meta.guid && meta.guid != Guid.Empty )
 				{
 					var oldDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 					var newDir = Path.Combine(Application.persistentDataPath, newGuid.ToString());
@@ -1034,7 +1033,7 @@ public class Editor : MonoBehaviour
 			var realNumLabels = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerroundNum : upperroundNum;
 			realNumLabels += 1;
 
-			timelineTickSize = closestRounding;
+			var timelineTickSize = closestRounding;
 
 			while (headerLabels.Count < realNumLabels)
 			{
