@@ -52,9 +52,11 @@ public class IndexPanel : MonoBehaviour
 	public GameObject videoPrefab;
 	public GameObject detailPanelPrefab;
 	public GameObject importPanelPrefab;
+	public GameObject explorerPanelPrefab;
 
 	public GameObject detailPanel;
 	public GameObject importPanel;
+	public GameObject explorerPanel;
 	public GameObject pageLabelContainer;
 	public GameObject videoContainer;
 	public List<GameObject> pageLabels;
@@ -88,6 +90,7 @@ public class IndexPanel : MonoBehaviour
 	private string searchParamAuthor;
 
 	private bool importing;
+	private bool copying;
 
 	private VideoResponseSerialize loadedVideos;
 	private VideoSerialize detailVideo;
@@ -252,13 +255,37 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		//NOTE(Simon): Wait for message from import screen
+		//NOTE(Simon): Wait for path from explorer panel
 		if (importing)
 		{
-			var panel = importPanel.GetComponent<ImportPanel>();
+			var panel = explorerPanel.GetComponent<ExplorerPanel>();
+
 			if (panel.answered)
 			{
+				string answer = panel.answerPath;
+
+				importPanel = Instantiate(importPanelPrefab, Canvass.main.transform, false);
+				importPanel.GetComponent<ImportPanel>().Init(answer);
+				
+				copying = true;
+				importing = false;
+				Destroy(explorerPanel);
+			}
+		}
+
+		//NOTE(Simon): Wait until to-be-imported video is copied
+		if (copying)
+		{
+			var panel = importPanel.GetComponent<ImportPanel>();
+
+			if (panel.answered)
+			{
+				//NOTE(Simon): Show window by making scale 1 again
+				transform.localScale = new Vector3(1, 1, 1);
+
 				LoadPage();
+				copying = false;
+				Destroy(importPanel);
 			}
 		}
 
@@ -495,7 +522,10 @@ public class IndexPanel : MonoBehaviour
 	{
 		importing = true;
 
-		importPanel = Instantiate(importPanelPrefab, Canvass.main.transform, false);
+		explorerPanel = Instantiate(explorerPanelPrefab, Canvass.main.transform, false);
+		explorerPanel.GetComponent<ExplorerPanel>().Init("%HOMEPATH%\\Downloads", "*.zip", "Select the zip-file you downloaded earlier");
+		//NOTE(Simon): Hide window by making scale 0
+		transform.localScale = new Vector3(0, 0, 0);
 	}
 
 	private IEnumerator BuildVideoGameObjects()

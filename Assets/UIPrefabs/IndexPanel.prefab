@@ -2167,7 +2167,10 @@ MonoBehaviour:
     type: 2}
   detailPanelPrefab: {fileID: 1077033308970900, guid: 64b28e41d25fb084b93325c5dbc6b35e,
     type: 2}
-  importPanelPrefab: {fileID: 0}
+  importPanelPrefab: {fileID: 1318431034318530, guid: ab1e51d6045d291478d98eb7f5074836,
+    type: 2}
+  explorerPanelPrefab: {fileID: 1997951646464328, guid: c3751d423a86941178b17285cd8bac54,
+    type: 2}
   detailPanel: {fileID: 0}
   importPanel: {fileID: 0}
   pageLabelContainer: {fileID: 1081546806700426}

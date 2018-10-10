@@ -32,7 +32,7 @@ public class VideoPanelEditor : MonoBehaviour {
 		{
 			if (explorerPanel != null && explorerPanel.answered)
 			{
-				url.text = explorerPanel.answerFilePath;
+				url.text = explorerPanel.answerPath;
 				Destroy(explorerPanel.gameObject);
 			}
 		}
