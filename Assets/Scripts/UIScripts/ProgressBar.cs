@@ -6,7 +6,7 @@ public class ProgressBar : MonoBehaviour
 	public Text progressPercent;
 	public RectTransform progressbarContainer;
 	public RectTransform progressbar;
-	public float progressbarWidth;
+	private float progressbarWidth;
 
 	public void Start()
 	{

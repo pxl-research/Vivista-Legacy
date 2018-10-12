@@ -20,11 +20,18 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		File,
 		Directory,
-		Drive,
+		Drive
+	}
+
+	public enum SelectionMode
+	{
+		File,
+		Directory,
+		Both
 	}
 
 	public bool answered;
-	public string answerFilePath;
+	public string answerPath;
 	public string searchPattern;
 
 	public InputField currentPath;
@@ -34,9 +41,11 @@ public class ExplorerPanel : MonoBehaviour
 	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
 	public Button sortDateButton;
 	public Button sortNameButton;
-	public InputField FilenameField;
+	public InputField filenameField;
 	public Button OpenButton;
 	public Text title;
+
+	private SelectionMode selectionMode;
 
 	private DirectoryInfo[] directories;
 	private string[] drives;
@@ -70,23 +79,40 @@ public class ExplorerPanel : MonoBehaviour
 
 						if (Input.GetMouseButtonDown(0))
 						{
-							if (lastClickIndex == i && timeSinceLastClick < 0.5f)
+							bool doubleclick = lastClickIndex == i && timeSinceLastClick < 0.5f;
+
+							switch (entry.entryType)
 							{
-								if (entry.entryType == EntryType.Directory)
+								case EntryType.Directory:
 								{
-									OnDirectoryClick(entry.fullPath);
+									if (selectionMode == SelectionMode.Directory || selectionMode == SelectionMode.Both)
+									{
+										filenameField.text = entry.name;
+									}
+									if (doubleclick)
+									{
+										OnDirectoryClick(entry.fullPath);
+									}
 									break;
 								}
-
-								if (entry.entryType == EntryType.File)
+								case EntryType.File:
 								{
-									Answer(entry.fullPath);
+									if (selectionMode == SelectionMode.File || selectionMode == SelectionMode.Both)
+									{
+										filenameField.text = entry.name;
+									}
+									if (doubleclick)
+									{
+										Answer(entry.fullPath);
+									}
 									break;
 								}
-
-								if (entry.entryType == EntryType.Drive)
+								case EntryType.Drive:
 								{
-									DriveClick(entry.fullPath);
+									if (doubleclick)
+									{
+										DriveClick(entry.fullPath);
+									}
 									break;
 								}
 							}
@@ -101,21 +127,19 @@ public class ExplorerPanel : MonoBehaviour
 
 		timeSinceLastClick += Time.deltaTime;
 	}
-	/// <summary>
-	/// Initialiase the explorepanel
-	/// </summary>
-	/// <param name="startDirectory"></param>
-	/// <param name="searchPattern">Separate filename patterns with ';' </param>
-	/// <param name="title"></param>
-	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file")
+
+	//NOTE(Simon): search pattern should be in default wildcard style: e.g. "*.zip" for zipfiles, "a.*" for all filetypes with name "a"
+	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file", SelectionMode mode = SelectionMode.File)
 	{
-		currentDirectory = startDirectory != "" ? startDirectory : Directory.GetCurrentDirectory();
+		currentDirectory = startDirectory == "" ? Directory.GetCurrentDirectory() : startDirectory;
+		currentDirectory = new DirectoryInfo(Environment.ExpandEnvironmentVariables(currentDirectory)).FullName;
 
 		answered = false;
 		osType = Environment.OSVersion.Platform.ToString();
 		this.searchPattern = searchPattern;
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 		this.title.text = title;
+		selectionMode = mode;
 
 		UpdateDir();
 	}
@@ -174,40 +198,17 @@ public class ExplorerPanel : MonoBehaviour
 
 		UpdateDir();
 	}
-
-	public void OnPathSubmit(InputField inputField)
-	{
-		string path = inputField.text;
-		if (Directory.Exists(path))
-		{
-			currentDirectory = path;
-			UpdateDir();
-			currentPath.GetComponentInChildren<Text>().color = Color.black;
-		}
-		else if (File.Exists(path))
-		{
-			Answer(path);
-		}
-		else
-		{
-			currentPath.GetComponentInChildren<Text>().color = Color.red;
-		}
-	}
-
+	
 	private void UpdateDir()
 	{
 		var dirinfo = new DirectoryInfo(currentDirectory);
 		var filteredFiles = new List<FileInfo>();
 		var patterns = searchPattern.Split(';');
+		filenameField.text = "";
 
 		foreach (string p in patterns)
 		{
-			var infos = dirinfo.GetFiles(p);
-
-			for (int j = 0; j < infos.Length; j++)
-			{
-				filteredFiles.Add(infos[j]);
-			}
+			filteredFiles.AddRange(dirinfo.GetFiles(p));
 		}
 
 		directories = dirinfo.GetDirectories();
@@ -283,7 +284,7 @@ public class ExplorerPanel : MonoBehaviour
 			var filenameIconItem = Instantiate(filenameIconItemPrefab);
 			filenameIconItem.transform.SetParent(directoryContent.content, false);
 			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
-			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.entryType == EntryType.Drive ? "" : entry.date.ToString();
+			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.entryType == EntryType.Drive ? "" : entry.date.ToString("dd/MM/yyyy");
 			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
 
 			entry.filenameIconItem = filenameIconItem;
@@ -332,21 +333,48 @@ public class ExplorerPanel : MonoBehaviour
 	private void Answer(string path)
 	{
 		answered = true;
-		answerFilePath = path;
+		answerPath = path;
 	}
 
 	public void OpenButtonClicked()
 	{
-		if (FilenameField.text != "")
+		if (filenameField.text == "")
 		{
-			string fullName = currentPath.text + "\\" + FilenameField.text;
+			return;
+		}
+
+		//TODO(Simon): Check if filename actually matches wildcard pattern. User could manually type in a name that does not match wildcard
+
+		string fullName = currentPath.text + "\\" + filenameField.text;
+
+		if (selectionMode == SelectionMode.File)
+		{
 			if (File.Exists(fullName))
 			{
 				Answer(fullName);
 			}
-			else
+			if (Directory.Exists(fullName))
 			{
-				Debug.LogError("file does not exist!");
+				currentDirectory = fullName;
+				UpdateDir();
+			}
+		}
+		else if (selectionMode == SelectionMode.Directory)
+		{
+			if (Directory.Exists(fullName))
+			{
+				Answer(fullName);
+			}
+		}
+		else if (selectionMode == SelectionMode.Both)
+		{
+			if (File.Exists(fullName))
+			{
+				Answer(fullName);
+			}
+			if (Directory.Exists(fullName))
+			{
+				Answer(fullName);
 			}
 		}
 	}

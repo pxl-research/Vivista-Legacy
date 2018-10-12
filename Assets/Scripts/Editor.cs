@@ -802,7 +802,7 @@ public class Editor : MonoBehaviour
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.metaFilename));
 				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.extraPath));
 
-				File.Copy(panel.answerFilePath, videoPath);
+				File.Copy(panel.answerPath, videoPath);
 
 				if (OpenFile(metaPath))
 				{
