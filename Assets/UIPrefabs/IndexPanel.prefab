@@ -2173,6 +2173,7 @@ MonoBehaviour:
     type: 2}
   detailPanel: {fileID: 0}
   importPanel: {fileID: 0}
+  explorerPanel: {fileID: 0}
   pageLabelContainer: {fileID: 1081546806700426}
   videoContainer: {fileID: 1422200165704646}
   pageLabels: []
@@ -2182,7 +2183,7 @@ MonoBehaviour:
   spinner: {fileID: 114078340667181608}
   noVideos: {fileID: 114400342272599986}
   serverConnectionError: {fileID: 1922417829072846}
-  filters: {fileID: 0}
+  filters: {fileID: 1495414012127968}
   localButton: {fileID: 114869393231368226}
   internetButton: {fileID: 114357759697313138}
   isLocal: 0
