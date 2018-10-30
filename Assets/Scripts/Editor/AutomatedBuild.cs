@@ -4,7 +4,6 @@ using System.Diagnostics;
 
 public class AutomatedBuild : EditorWindow
 {
-
 	[MenuItem("Build/Win64 %&b", false, 1)]
 	public static void BuildWin64()
 	{
@@ -13,17 +12,12 @@ public class AutomatedBuild : EditorWindow
 
 
 		string path = "builds/" + branch + "/Editor/";
-		options = new BuildPlayerOptions { scenes = new[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
+		options = new BuildPlayerOptions { scenes = new[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64 };
 		PlayerSettings.virtualRealitySupported = false;
 		BuildPipeline.BuildPlayer(options);
 
 		path = "builds/" + branch + "/Player/";
-		options = new BuildPlayerOptions { scenes = new[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
-		PlayerSettings.virtualRealitySupported = false;
-		BuildPipeline.BuildPlayer(options);
-
-		path = "builds/" + branch + "/Player-VR/";
-		options = new BuildPlayerOptions { scenes = new[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development };
+		options = new BuildPlayerOptions { scenes = new[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64};
 		PlayerSettings.virtualRealitySupported = true;
 		BuildPipeline.BuildPlayer(options);
 
