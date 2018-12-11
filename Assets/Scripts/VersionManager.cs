@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -110,7 +111,7 @@ public class VersionManager
 			}
 
 			result = SaveFile.JsonGetValueFromLine(jsonString, result.endindex);
-			metaCompat.length = Convert.ToSingle(result.value);
+			metaCompat.length = Convert.ToSingle(result.value, CultureInfo.InvariantCulture);
 
 			foreach (var obj in SaveFile.ParseInteractionPoints(jsonString, result.endindex))
 			{

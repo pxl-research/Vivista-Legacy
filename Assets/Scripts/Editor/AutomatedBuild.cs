@@ -9,15 +9,20 @@ public class AutomatedBuild : EditorWindow
 	{
 		string branch = GetBranch();
 		BuildPlayerOptions options;
-
+		
 
 		string path = "builds/" + branch + "/Editor/";
-		options = new BuildPlayerOptions { scenes = new[] { "Assets/Editor.unity" }, locationPathName = path + "360Editor.exe", target = BuildTarget.StandaloneWindows64 };
+		options = new BuildPlayerOptions { scenes = new[] { "Assets/Editor.unity" }, locationPathName = path + "VivistaEditor.exe", target = BuildTarget.StandaloneWindows64, options = 0};
 		PlayerSettings.virtualRealitySupported = false;
+		PlayerSettings.fullScreenMode = UnityEngine.FullScreenMode.Windowed;
+		PlayerSettings.defaultIsNativeResolution = true;
+		PlayerSettings.displayResolutionDialog = ResolutionDialogSetting.Enabled;
+		PlayerSettings.usePlayerLog = true;
+		PlayerSettings.resizableWindow = true;
 		BuildPipeline.BuildPlayer(options);
 
 		path = "builds/" + branch + "/Player/";
-		options = new BuildPlayerOptions { scenes = new[] { "Assets/Player.unity" }, locationPathName = path + "360Player.exe", target = BuildTarget.StandaloneWindows64};
+		options = new BuildPlayerOptions { scenes = new[] { "Assets/Player.unity" }, locationPathName = path + "VivistaPlayer.exe", target = BuildTarget.StandaloneWindows64, options = 0 };
 		PlayerSettings.virtualRealitySupported = true;
 		BuildPipeline.BuildPlayer(options);
 

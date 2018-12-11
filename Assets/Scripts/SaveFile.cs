@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 
@@ -117,7 +118,7 @@ public static class SaveFile
 		var result = new ParsedJsonLine();
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.meta.version = Convert.ToInt32(result.value);
+		saveFileData.meta.version = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
 
 		result = JsonGetValueFromLine(str, result.endindex);
 		saveFileData.meta.guid = new Guid(result.value);
@@ -129,7 +130,7 @@ public static class SaveFile
 		saveFileData.meta.description = result.value;
 
 		result = JsonGetValueFromLine(str, result.endindex);
-		saveFileData.meta.length = Convert.ToSingle(result.value);
+		saveFileData.meta.length = Convert.ToSingle(result.value, CultureInfo.InvariantCulture);
 
 		saveFileData.points = new List<InteractionpointSerialize>();
 

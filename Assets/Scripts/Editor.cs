@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1533,7 +1534,7 @@ public class Editor : MonoBehaviour
 			.Append(",\n");
 
 		sb.Append("length:")
-			.Append((float)videoController.videoLength)
+			.Append(videoController.videoLength.ToString(CultureInfo.InvariantCulture))
 			.Append(",\n");
 
 		sb.Append("[");
