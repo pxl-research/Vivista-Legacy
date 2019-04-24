@@ -867,14 +867,7 @@ public class Player : MonoBehaviour
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
 		yield return null;
 
-		if (XRSettings.loadedDeviceName.Equals("Oculus"))
-		{
-			VRDevices.loadedSdk = VRDevices.LoadedSdk.Oculus;
-			Instantiate(localAvatarPrefab);
-			localAvatarPrefab.GetComponent<OvrAvatar>().StartWithControllers = true;
-			XRSettings.enabled = true;
-		}
-		else if (XRSettings.loadedDeviceName.Equals("OpenVR"))
+		if (XRSettings.loadedDeviceName.Equals("OpenVR"))
 		{
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
 			XRSettings.enabled = true;
