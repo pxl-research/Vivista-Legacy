@@ -26,7 +26,7 @@ public class IndexPanelVideo : MonoBehaviour
 		sizeText.text = MathHelper.FormatBytes(video.downloadsize);
 		lengthText.text = MathHelper.FormatSeconds(video.length);
 		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
-		uuid = video.uuid;
+		uuid = video.id;
 		isLocal = local;
 
 		//TODO(Kristof): Prevent being able to open it without VR (will be fixed if we use raycasts from mouse instead of mouse events)
@@ -34,9 +34,7 @@ public class IndexPanelVideo : MonoBehaviour
 		{
 			gameObject.GetComponent<Hittable>().enabled = false;
 			error.transform.parent.gameObject.SetActive(true);
-			error.GetComponent<Text>().text =
-				string.Format("This project uses a version that's higher than the player's. Please update the player. [{0}]",
-					uuid);
+			error.GetComponent<Text>().text = string.Format("This project uses a version that's higher than the player's. Please update the player. [{0}]", uuid);
 		}
 		else
 		{
@@ -46,7 +44,7 @@ public class IndexPanelVideo : MonoBehaviour
 
 		if (isLocal)
 		{
-			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.uuid, SaveFile.thumbFilename)));
+			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename)));
 		}
 		else
 		{

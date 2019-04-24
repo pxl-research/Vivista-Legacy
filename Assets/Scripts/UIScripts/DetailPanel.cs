@@ -68,11 +68,11 @@ public class DetailPanel : MonoBehaviour
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
 		if (isLocal)
 		{
-			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.uuid, SaveFile.thumbFilename)));
+			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename)));
 		}
 		else
 		{
-			imageDownload = new WWW(Web.thumbnailUrl + "/" + video.uuid);
+			imageDownload = new WWW(Web.thumbnailUrl + "/" + video.id);
 		}
 
 		Refresh();
@@ -80,7 +80,7 @@ public class DetailPanel : MonoBehaviour
 	
 	public void Refresh()
 	{
-		bool downloaded = Directory.Exists(Path.Combine(Application.persistentDataPath, video.uuid));
+		bool downloaded = Directory.Exists(Path.Combine(Application.persistentDataPath, video.id));
 		downloadButton.gameObject.SetActive(!downloaded);
 		playButton.gameObject.SetActive(downloaded);
 		deleteButton.gameObject.SetActive(downloaded);
@@ -95,13 +95,13 @@ public class DetailPanel : MonoBehaviour
 	public void Play()
 	{
 		answered = true;
-		answerVideoId = video.uuid;
+		answerVideoId = video.id;
 		indexPanel.SetActive(true);
 	}
 
 	public void Delete()
 	{
-		string path = Path.Combine(Application.persistentDataPath, video.uuid);
+		string path = Path.Combine(Application.persistentDataPath, video.id);
 		bool downloaded = Directory.Exists(path);
 		if (downloaded)
 		{

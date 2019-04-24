@@ -16,6 +16,7 @@ public class Download
 	public bool failed;
 	public DownloadPanel panel;
 	public Queue<DownloadItem> filesToDownload;
+	public DownloadItem currentlyDownloading;
 }
 
 public class DownloadItem
@@ -33,11 +34,12 @@ public class VideoDownloadManager : MonoBehaviour
 		get { return _main ?? (_main = GameObject.Find("VideoDownloadManager").GetComponent<VideoDownloadManager>()); }
 	}
 
-	private static System.Random rand = new System.Random();
 	private static VideoDownloadManager _main;
 	private Dictionary<string, Download> queued;
-	//Can't call Application.persistentDataPath from another thread, so cache it
+	//NOTE(Simon): Can't call Application.persistentDataPath from another thread, so cache it
 	private string dataPath;
+	//NOTE(Simon): Used to temporarily cache elemenets to be removed from queued. Can't remove from Dictionary while looping.
+	private List<string> indexesToRemove = new List<string>();
 
 	void Start()
 	{
@@ -47,7 +49,7 @@ public class VideoDownloadManager : MonoBehaviour
 
 	void Update()
 	{
-		foreach (var kvp in Main.queued)
+		foreach (var kvp in queued)
 		{
 			var download = kvp.Value;
 			download.panel.UpdatePanel(download.progress);
@@ -56,24 +58,36 @@ public class VideoDownloadManager : MonoBehaviour
 			{
 				download.panel.Fail();
 			}
-
-			if (download.panel.ShouldRetry)
+			else if (download.panel.ShouldRetry)
 			{
-				download.client.DownloadFileAsync(new Uri(kvp.Key), Path.Combine(Application.persistentDataPath, download.video.uuid), kvp.Key);
+				download.client.DownloadFileAsync(new Uri(download.currentlyDownloading.url), download.currentlyDownloading.path, kvp.Key);
 				download.failed = false;
 				download.panel.Reset();
 			}
-
-			if (download.panel.ShouldCancel)
+			else if (download.panel.ShouldCancel)
 			{
 				download.client.CancelAsync();
 			}
+			else if (download.progress >= 1f)
+			{
+				StartCoroutine(download.panel.Done());
+				indexesToRemove.Add(kvp.Key);
+			}
+		}
+
+		if (indexesToRemove.Count > 0)
+		{
+			foreach (string index in indexesToRemove)
+			{
+				queued.Remove(index);
+			}
+			indexesToRemove.Clear();
 		}
 	}
 
 	public void AddDownload(VideoSerialize video)
 	{
-		if (!queued.ContainsKey(video.uuid))
+		if (!queued.ContainsKey(video.id))
 		{
 			var client = new WebClient();
 
@@ -87,10 +101,10 @@ public class VideoDownloadManager : MonoBehaviour
 			};
 			
 			download.panel.SetTitle(video.title);
-			queued.Add(video.uuid, download);
+			queued.Add(video.id, download);
 
 			client.DownloadStringCompleted += OnExtraListDownloaded;
-			client.DownloadStringAsync(new Uri(Web.extrasURL + "?videoid=" + video.uuid), video.uuid);
+			client.DownloadStringAsync(new Uri(Web.extrasURL + "?videoid=" + video.id), video.id);
 		}
 	}
 
@@ -100,7 +114,7 @@ public class VideoDownloadManager : MonoBehaviour
 		var download = queued[uuid];
 		download.client.DownloadStringCompleted -= OnExtraListDownloaded;
 
-		int[] files = JsonHelper.ToArray<int>(e.Result);
+		string[] files = JsonHelper.ToArray<string>(e.Result);
 
 		string directory = Path.Combine(dataPath, uuid);
 		if (!Directory.Exists(directory))
@@ -108,27 +122,34 @@ public class VideoDownloadManager : MonoBehaviour
 			Directory.CreateDirectory(directory);
 		}
 
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + uuid + RandomUrlParam(), path = Path.Combine(directory, SaveFile.metaFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "/" + uuid + RandomUrlParam(), path = Path.Combine(directory, SaveFile.videoFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + uuid + RandomUrlParam(), path = Path.Combine(directory, SaveFile.thumbFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.metaFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "?videoid=" + uuid, path = Path.Combine(directory, SaveFile.videoFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.thumbFilename)});
 
-		foreach (int file in files)
+		foreach (string file in files)
 		{
-			download.filesToDownload.Enqueue(new DownloadItem 
+			Guid guid;
+			if (Guid.TryParse(file, out guid))
 			{
-				url = String.Format("{0}/{1}?index={2}{3}", Web.extraURL, uuid, file, RandomUrlParam()), 
-				path = Path.Combine(directory, "extra" + file)
-			});
+				download.filesToDownload.Enqueue(new DownloadItem
+				{
+					url = String.Format("{0}/?videoid={1}&extraid={2}", Web.extraURL, uuid, file),
+					path = Path.Combine(directory, "extra" + file)
+				});
+			}
 		}
 
 		download.client.DownloadFileCompleted += OnFileDownloaded;
+		//download.client.DownloadProgressChanged += OnProgress;
 		var item = download.filesToDownload.Dequeue();
+		download.currentlyDownloading = item;
 		download.client.DownloadFileAsync(new Uri(item.url), item.path, uuid);
 	}
 
 	private void OnFileDownloaded(object sender, AsyncCompletedEventArgs e)
 	{
 		var uuid = (string)e.UserState;
+
 		if (e.Error != null)
 		{
 			Debug.Log(e.Error);
@@ -139,6 +160,7 @@ public class VideoDownloadManager : MonoBehaviour
 		else if (queued[uuid].filesToDownload.Count > 0)
 		{
 			var item = queued[uuid].filesToDownload.Dequeue();
+			queued[uuid].currentlyDownloading = item;
 			queued[uuid].client.DownloadFileAsync(new Uri(item.url), item.path, uuid);
 		}
 		else
@@ -154,10 +176,5 @@ public class VideoDownloadManager : MonoBehaviour
 		queued[uuid].totalBytes = e.TotalBytesToReceive;
 		queued[uuid].bytesDownloaded = e.BytesReceived;
 		queued[uuid].progress = e.ProgressPercentage / 100f;
-	}
-
-	private string RandomUrlParam()
-	{
-		return "?p=" + (int)(rand.NextDouble() * Int32.MaxValue);
 	}
 }

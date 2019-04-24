@@ -1743,6 +1743,7 @@ public class Editor : MonoBehaviour
 		var videoData = new byte[vidSize];
 		var thumbData = new byte[thumbSize];
 
+		//TODO(Simon): This reads the full file into memory. BAD
 		using (var thumbStream = File.OpenRead(thumbPath))
 		using (var videoStream = File.OpenRead(videoPath))
 		{

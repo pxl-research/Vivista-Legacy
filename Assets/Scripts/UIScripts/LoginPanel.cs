@@ -72,9 +72,8 @@ public class LoginPanel : MonoBehaviour
 		form.AddField("password", password);
 		//form.headers.Add("Content-Type", "application/x-www-form-urlencoded");
 
-		using (var www = new WWW("http://localhost/login", form))
+		using (var www = new WWW(Web.loginUrl, form))
 		{
-
 			while (!www.isDone) { }
 
 			var status = www.StatusCode();
@@ -133,7 +132,7 @@ public class LoginPanel : MonoBehaviour
 		form.AddField("username", username);
 		form.AddField("password", password);
 
-		using (var www = new WWW("http://localhost/register", form))
+		using (var www = new WWW(Web.registerUrl, form))
 		{
 			while (!www.isDone) { }
 

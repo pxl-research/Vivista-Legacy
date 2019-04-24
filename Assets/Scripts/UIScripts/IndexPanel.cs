@@ -19,7 +19,7 @@ public class VideoResponseSerialize
 [Serializable]
 public class VideoSerialize
 {
-	public string uuid;
+	public string id;
 	public int userid;
 	public string username;
 	public string timestamp;
@@ -356,7 +356,6 @@ public class IndexPanel : MonoBehaviour
 		{
 			var video = loadedVideos.videos[i];
 			video.realTimestamp = DateTime.Parse(video.timestamp);
-			video.uuid = Encoding.UTF8.GetString(Convert.FromBase64String(video.uuid));
 		}
 
 		totalVideos = loadedVideos.totalcount;
@@ -417,7 +416,7 @@ public class IndexPanel : MonoBehaviour
 				description = data.meta.description,
 				downloadsize = SaveFile.DirectorySize(folderInfo),
 				realTimestamp = folderInfo.LastWriteTime,
-				uuid = localVideos[i].Name,
+				id = localVideos[i].Name,
 				compatibleVersion = !(data.meta.version > VersionManager.VERSION)
 			});
 		}

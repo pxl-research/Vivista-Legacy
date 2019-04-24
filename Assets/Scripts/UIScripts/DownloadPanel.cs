@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class DownloadPanel : MonoBehaviour 
@@ -33,6 +34,12 @@ public class DownloadPanel : MonoBehaviour
 	public void Cancel()
 	{
 		ShouldCancel = true;
+	}
+
+	public IEnumerator Done()
+	{
+		yield return new WaitForSecondsRealtime(5.0f);
+		Destroy(gameObject);
 	}
 
 	public void Reset()
