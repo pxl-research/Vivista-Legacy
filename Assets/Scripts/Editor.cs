@@ -1802,12 +1802,13 @@ public class Editor : MonoBehaviour
 
 		var form = new WWWForm();
 		form.AddField("token", userToken);
-		form.AddField("uuid", meta.guid.ToString());
-		form.AddField("indices", String.Join(",", extras.Select(x => x.Substring(5)).ToArray()));
-
+		form.AddField("videoguid", meta.guid.ToString());
+		var guids = String.Join(",", extras.Select(x => x.Substring(x.LastIndexOf('\\') + 1)).ToArray());
+		form.AddField("extraguids", guids);
 
 		foreach (var extra in extras)
 		{
+			var filename = extra.Substring(extra.LastIndexOf('\\') + 1);
 			var extraPath = Path.Combine(path, extra);
 			var extraSize = (int)FileSize(extraPath);
 			var extraData = new byte[extraSize];
@@ -1826,10 +1827,10 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			form.AddBinaryData(extra, extraData, extra, "multipart/form-data");
+			form.AddBinaryData(filename, extraData, filename, "multipart/form-data");
 		}
 
-		uploadStatus.request = UnityWebRequest.Post(Web.extrasURL + "/" + meta.guid, form);
+		uploadStatus.request = UnityWebRequest.Post(Web.extrasURL, form);
 
 		yield return uploadStatus.request.SendWebRequest();
 

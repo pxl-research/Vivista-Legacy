@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -110,17 +110,16 @@ public class VideoDownloadManager : MonoBehaviour
 
 	private void OnExtraListDownloaded(object sender, DownloadStringCompletedEventArgs e)
 	{
-		var uuid = (string)e.UserState;
+		string uuid = (string)e.UserState;
 		var download = queued[uuid];
 		download.client.DownloadStringCompleted -= OnExtraListDownloaded;
 
-		string[] files = JsonHelper.ToArray<string>(e.Result);
+		var files = JsonHelper.ToArray<string>(e.Result);
 
 		string directory = Path.Combine(dataPath, uuid);
-		if (!Directory.Exists(directory))
-		{
-			Directory.CreateDirectory(directory);
-		}
+		string extraDirectory = Path.Combine(directory, "extra");
+		//NOTE(Simon): Creates all folders in path
+		Directory.CreateDirectory(extraDirectory);
 
 		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + uuid, path = Path.Combine(directory, SaveFile.metaFilename)});
 		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "?videoid=" + uuid, path = Path.Combine(directory, SaveFile.videoFilename)});
@@ -134,7 +133,7 @@ public class VideoDownloadManager : MonoBehaviour
 				download.filesToDownload.Enqueue(new DownloadItem
 				{
 					url = String.Format("{0}/?videoid={1}&extraid={2}", Web.extraURL, uuid, file),
-					path = Path.Combine(directory, "extra" + file)
+					path = Path.Combine(directory, "extra\\" + file)
 				});
 			}
 		}
