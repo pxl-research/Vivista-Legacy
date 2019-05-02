@@ -1,7 +1,14 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
+
+public class LoginDetails
+{
+	public string username;
+	public string password;
+}
 
 public class LoginPanel : MonoBehaviour 
 {
@@ -26,14 +33,13 @@ public class LoginPanel : MonoBehaviour
 	{
 		loginDataPath = Path.Combine(Application.persistentDataPath, "save.dat");
 
-		if (File.Exists(loginDataPath))
+		var loginDetails = GetSavedLogin();
+
+		if (loginDetails != null)
 		{
-			using (var file = File.OpenText(loginDataPath))
-			{
-				loginUsername.text = file.ReadLine();
-				loginPassword.text = file.ReadLine();
-				loginRemember.isOn = true;
-			}
+			loginUsername.text = loginDetails.username;
+			loginPassword.text = loginDetails.password;
+			loginRemember.isOn = true;
 		}
 	}
 
@@ -67,37 +73,23 @@ public class LoginPanel : MonoBehaviour
 			File.Delete(loginDataPath);
 		}
 
-		var form = new WWWForm();
-		form.AddField("username", username);
-		form.AddField("password", password);
-		//form.headers.Add("Content-Type", "application/x-www-form-urlencoded");
+		var response = SendLoginRequest(username, password);
 
-		using (var www = new WWW(Web.loginUrl, form))
+		if (response.Item1 == 401)
 		{
-			while (!www.isDone) { }
-
-			var status = www.StatusCode();
-			if (status == 401)
-			{
-				loginError.text = "Username does not exist, or password is wrong";
-				return;
-			}
-			if (status != 200)
-			{
-				loginError.text = "An error happened in the server. Please try again later";
-				return;
-			}
-			if (!String.IsNullOrEmpty(www.error))
-			{
-				loginError.text = www.error;
-				return;
-			}
-
-			answered = true;
-			answerToken = www.text;
-
-			Toasts.AddToast(5, "Logged in");
+			loginError.text = "Username does not exist, or password is wrong";
+			return;
 		}
+		if (response.Item1 != 200)
+		{
+			loginError.text = "An error happened in the server. Please try again later";
+			return;
+		}
+
+		answered = true;
+		answerToken = response.Item2;
+
+		Toasts.AddToast(5, "Logged in");
 	}
 
 	public void Register() 
@@ -158,6 +150,38 @@ public class LoginPanel : MonoBehaviour
 
 			Toasts.AddToast(5, "Registered succesfully");
 			Toasts.AddToast(5, "Logged in");
+		}
+	}
+
+	public static LoginDetails GetSavedLogin()
+	{
+		var details = new LoginDetails();
+		var loginDataPath = Path.Combine(Application.persistentDataPath, "save.dat");
+
+		if (File.Exists(loginDataPath))
+		{
+			using (var file = File.OpenText(loginDataPath))
+			{
+				details.username = file.ReadLine();
+				details.password = file.ReadLine();
+			}
+		}
+		else
+		{
+			return null;
+		}
+
+		return details;
+	}
+
+	//NOTE(Simon): Returns HTTP response code . 200 is good, anything else is bad
+	public static Tuple<int, string> SendLoginRequest(string username, string password)
+	{
+		using (var www = new UnityWebRequest($"{Web.loginUrl}?username={username}&password={password}", "POST", new DownloadHandlerBuffer(), null))
+		{
+			var request = www.SendWebRequest();
+			while (!request.isDone) { }
+			return new Tuple<int, string>((int)www.responseCode, www.downloadHandler.text);
 		}
 	}
 }

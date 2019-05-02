@@ -198,6 +198,17 @@ public class Editor : MonoBehaviour
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.videoController.GetComponent<VideoController>();
 		VideoPanel.keepFileNames = true;
+
+		//NOTE(Simon): Login if details were remembered
+		{
+			var details = LoginPanel.GetSavedLogin();
+			var response = LoginPanel.SendLoginRequest(details.username, details.password);
+			if (response.Item1 == 200)
+			{
+				userToken = response.Item2;
+				Toasts.AddToast(5, "Logged in");
+			}
+		}
 	}
 
 	void Update()
@@ -828,7 +839,6 @@ public class Editor : MonoBehaviour
 			if (loginPanel.GetComponent<LoginPanel>().answered)
 			{
 				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
-				Debug.Log("usertoken: " + userToken);
 				Destroy(loginPanel);
 				Canvass.modalBackground.SetActive(false);
 				editorState = EditorState.Active;
@@ -840,7 +850,6 @@ public class Editor : MonoBehaviour
 			if (loginPanel != null && loginPanel.GetComponent<LoginPanel>().answered)
 			{
 				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
-				Debug.Log("usertoken: " + userToken);
 				Destroy(loginPanel);
 				InitSavePanel();
 			}
