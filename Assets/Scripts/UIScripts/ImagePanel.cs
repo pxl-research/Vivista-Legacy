@@ -1,19 +1,22 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using UnityEngine.XR;
 
 public class ImagePanel : MonoBehaviour
 {
 	public Text title;
-	public RawImage image;
-	public string imageURL;
+	public List<string> imageURLs;
 	public Canvas canvas;
-	public GameObject interactionPoint;
+	public ScrollRect imageScrollRect;
+	public RectTransform imagePanel;
+	public List<ImagePanelImage> images;
+	public Button prevButton;
+	public Button nextButton;
 
-	private bool downloading;
-	private bool neverOpened;
-	private WWW www;
+	private int imageIndex;
+
+	public GameObject imagePanelImagePrefab;
 
 	void Start()
 	{
@@ -27,68 +30,77 @@ public class ImagePanel : MonoBehaviour
 
 	void Update()
 	{
-		if (downloading && www.isDone)
-		{
-			var texture = www.texture;
-			image.texture = texture;
-
-			//NOTE(Simon): Title + Triangle + bottomMargin
-			const float extraHeight = 40 + 16 + 10;
-			//NOTE(Simon): LeftMargin + RightMargin;
-			const float extraWidth = 10 + 10;
-
-			float newWidth = (Screen.width / 2f);
-			float newHeight = (Screen.height / 2f);
-			float imageRatio = newWidth / newHeight;
-
-			//NOTE(Simon): Portrait
-			if (imageRatio <= 1)
-			{
-				float ratio = (texture.width + extraWidth) / newWidth;
-				newHeight = (texture.height + extraHeight) / ratio;
-			}
-			//NOTE(Simon): Landscape
-			else
-			{
-				float ratio = (texture.height + extraHeight) / newHeight;
-				newWidth = (texture.width + extraWidth) / ratio;
-			}
-
-			canvas.GetComponent<RectTransform>().sizeDelta = new Vector2(newWidth, newHeight);
-			downloading = false;
-		}
-
-		// NOTE(Kristof): Turning every frame only needs to happen in Editor
-		if (SceneManager.GetActiveScene().Equals(SceneManager.GetSceneByName("Editor")))
-		{
-			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
-		}
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
 	}
 
 	void OnEnable()
 	{
-		if (neverOpened)
-		{
-			www = new WWW(imageURL);
-			neverOpened = false;
-			downloading = true;
-		}
+		imageIndex = 0;
 	}
 
-	public void Init(string newTitle, string newImageURL, bool loadImageImmediately)
+	public void Init(string newTitle, List<string> urls)
 	{
 		title.text = newTitle;
-		imageURL = newImageURL;
-		if (loadImageImmediately)
+		imageURLs = urls;
+		foreach (var url in imageURLs)
 		{
-			www = new WWW(imageURL);
-			neverOpened = false;
-			downloading = true;
+			AddNewImage(url);
 		}
-		else
+		if (images.Count > 0)
 		{
-			neverOpened = true;
+			images[0].LoadImage();
 		}
+		imageIndex = 0;
+		EnableButtons();
+
+		//NOTE(Simon): resize title to fit all text
+		var titleRect = title.GetComponent<RectTransform>();
+		float newHeight = UIHelper.CalculateTextFieldHeight(title.text, title.font, title.fontSize, titleRect.sizeDelta.x, 30);
+		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+	}
+
+	private void AddNewImage(string url)
+	{
+		var newImage = Instantiate(imagePanelImagePrefab, imagePanel, false);
+		var script = newImage.GetComponent<ImagePanelImage>();
+		script.SetURL(url);
+		images.Add(script);
+	}
+
+	public void NextImage()
+	{
+		if (imageIndex < images.Count - 1)
+		{
+			imageIndex++;
+		}
+		images[imageIndex].LoadImage();
+		ScrollTo(images[imageIndex].GetComponent<RectTransform>());
+	}
+	
+	public void PrevImage()
+	{
+		if (imageIndex > 0)
+		{
+			imageIndex--;
+		}
+		images[imageIndex].LoadImage();
+		ScrollTo(images[imageIndex].GetComponent<RectTransform>());
+	}
+
+	private void ScrollTo(RectTransform target)
+	{
+		Canvas.ForceUpdateCanvases();
+
+		imagePanel.anchoredPosition =
+			(Vector2)imageScrollRect.transform.InverseTransformPoint(imagePanel.position)
+			- (Vector2)imageScrollRect.transform.InverseTransformPoint(target.position);
+		EnableButtons();
+	}
+
+	private void EnableButtons()
+	{
+		prevButton.gameObject.SetActive(imageIndex != 0);
+		nextButton.gameObject.SetActive(imageIndex != images.Count - 1);
 	}
 
 	public void Move(Vector3 position)

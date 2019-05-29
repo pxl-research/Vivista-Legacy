@@ -1,88 +1,74 @@
 ﻿using System;
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ImagePanelEditor : MonoBehaviour
 {
+	private enum ImageEditorState
+	{
+		Opening,
+		Showing
+	}
+
 	public Canvas canvas;
-	public RectTransform resizePanel;
 	public InputField title;
-	public InputField url;
-	public Button done;
-	public RawImage imagePreview;
 	public ExplorerPanel explorerPanelPrefab;
+	public GameObject imageAlbumEntryPrefab;
+	public RectTransform imageAlbumList;
+
+	public List<ImageAlbumEntry> entries;
 
 	public bool answered;
 	public string answerTitle;
-	public string answerURL;
+	public List<string> answerURLs;
 
-	private string prevURL = "";
-	private bool downloading = false;
-	private WWW www;
-	private bool fileOpening;
 	private ExplorerPanel explorerPanel;
-	
+	private ImageEditorState imageEditorState;
+
 	void Update()
 	{
-		var titleRect = title.GetComponent<RectTransform>();
-		float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
-		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
-
-		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
-			title.GetComponent<RectTransform>().sizeDelta.y
-			+ url.GetComponent<RectTransform>().sizeDelta.y
-			+ imagePreview.rectTransform.sizeDelta.y
-			//Padding, spacing, button, fudge factor
-			+ 20 + 30 + 30 + 20);
-
-		canvas.transform.rotation = Camera.main.transform.rotation;
-
-		if (url.text != prevURL && !String.IsNullOrEmpty(url.text))
-		{
-			answerURL = url.text;
-			prevURL = url.text;
-
-			if (!Regex.IsMatch(answerURL, "http://|https://"))
-			{
-				answerURL = "file:///" + url.text;
-			}
-
-			www = new WWW(answerURL);
-			downloading = true;
-		}
-
-		if (downloading && www.isDone)
-		{
-			var texture = www.texture;
-			imagePreview.texture = texture;
-			float width = imagePreview.rectTransform.sizeDelta.x;
-			float ratio = texture.width / width;
-			float height = texture.height / ratio;
-			imagePreview.rectTransform.sizeDelta = new Vector2(width, height);
-
-			downloading = false;
-		}
-
-		if (fileOpening)
+		if (imageEditorState == ImageEditorState.Opening)
 		{
 			if (explorerPanel != null && explorerPanel.answered)
 			{
-				url.text = explorerPanel.answerPath;
+				foreach (string path in explorerPanel.answerPaths)
+				{
+					CreateNewEntry(path);
+				}
+
+				UpdateAlbumSortButtons();
+				imageEditorState = ImageEditorState.Showing;
+
 				Destroy(explorerPanel.gameObject);
 			}
 		}
+
+		if (imageEditorState == ImageEditorState.Showing)
+		{
+			var titleRect = title.GetComponent<RectTransform>();
+			float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
+			titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+		}
+		
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
 	}
 
-	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
+	public void Init(Vector3 position, string initialTitle, List<string> initialURLs, bool exactPos = false)
 	{
 		title.text = initialTitle;
-		if (initialUrl.StartsWith(@"file:///"))
+		if (initialURLs != null)
 		{
-			initialUrl = initialUrl.Substring(8);
+			foreach (string initialURL in initialURLs)
+			{
+				CreateNewEntry(initialURL);
+			}
 		}
-		url.text = initialUrl;
+
+		UpdateAlbumSortButtons();
 		Move(position, exactPos);
+
+		imageEditorState = ImageEditorState.Showing;
 	}
 
 	public void Move(Vector3 position, bool exactPos = false)
@@ -108,15 +94,81 @@ public class ImagePanelEditor : MonoBehaviour
 
 		explorerPanel = Instantiate(explorerPanelPrefab);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
-		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
+		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", ExplorerPanel.SelectionMode.File, true);
 
-		fileOpening = true;
+		imageEditorState = ImageEditorState.Opening;
 	}
 
 	public void Answer()
 	{
 		answered = true;
 		answerTitle = title.text;
-		//NOTE(Simon): AnswerURL already up to date
+		answerURLs = new List<string>();
+		foreach (var entry in entries)
+		{
+			answerURLs.Add(entry.url.text);
+		}
+	}
+
+	public Texture TextureForIndex(int index)
+	{
+		return entries[index].preview.texture;
+	}
+
+	public void DeleteAlbumEntry(GameObject go)
+	{
+		var entry = go.GetComponent<ImageAlbumEntry>();
+		entries.Remove(entry);
+		Destroy(go);
+		UpdateAlbumSortButtons();
+	}
+
+	public void MoveLeftAlbumEntry(GameObject go)
+	{
+		var trans = go.transform;
+		var index = trans.GetSiblingIndex();
+		trans.SetSiblingIndex(index - 1);
+		SwapElementsInList(index - 1, index);
+	}
+
+	public void MoveRightAlbumEntry(GameObject go)
+	{
+		var trans = go.transform;
+		var index = trans.GetSiblingIndex();
+		trans.SetSiblingIndex(index + 1);
+		SwapElementsInList(index + 1, index);
+	}
+
+	private void SwapElementsInList(int index1, int index2)
+	{
+		var temp = entries[index1];
+		entries[index1] = entries[index2];
+		entries[index2] = temp;
+
+		UpdateAlbumSortButtons();
+	}
+
+	private void UpdateAlbumSortButtons()
+	{
+		if (entries.Count > 0)
+		{
+			for (int i = 0; i < entries.Count; i++)
+			{
+				entries[i].moveLeftButton.interactable = i != 0;
+				entries[i].moveRightButton.interactable = i != entries.Count - 1;
+			}
+		}
+	}
+
+	private void CreateNewEntry(string path)
+	{
+		var albumEntry = Instantiate(imageAlbumEntryPrefab, imageAlbumList).GetComponent<ImageAlbumEntry>();
+		albumEntry.SetURL(path);
+
+		albumEntry.moveLeftButton.onClick.AddListener(() => MoveLeftAlbumEntry(albumEntry.gameObject));
+		albumEntry.moveRightButton.onClick.AddListener(() => MoveRightAlbumEntry(albumEntry.gameObject));
+		albumEntry.deleteButton.onClick.AddListener(() => DeleteAlbumEntry(albumEntry.gameObject));
+
+		entries.Add(albumEntry);
 	}
 }

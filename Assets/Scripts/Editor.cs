@@ -173,6 +173,7 @@ public class Editor : MonoBehaviour
 	private int interactionPointCount;
 	private InteractionPointEditor lastPlacedPoint;
 
+
 	void Awake()
 	{
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
@@ -371,7 +372,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.Image:
 						{
 							interactionEditor = Instantiate(imagePanelEditorPrefab);
-							interactionEditor.GetComponent<ImagePanelEditor>().Init(lastPlacedPointPos, "", "");
+							interactionEditor.GetComponent<ImagePanelEditor>().Init(lastPlacedPointPos, "", null);
 							break;
 						}
 						case InteractionType.Text:
@@ -443,23 +444,33 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
+						var newPaths = new List<string>();
+						var newFileNames = new List<string>();
+						var oldPaths = editor.answerURLs;
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-						var path = Path.Combine(folder, filename);
 
-						var tex = (Texture2D)editor.imagePreview.texture;
-						var data = tex.EncodeToJPG(75);
-						using (var image = File.Create(path))
+						for (int i = 0; i < oldPaths.Count; i++)
 						{
-							image.Write(data, 0, data.Length);
+							var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+							var path = Path.Combine(folder, filename);
+
+							newFileNames.Add(filename);
+							newPaths.Add(path);
+
+							var tex = (Texture2D)editor.TextureForIndex(i);
+							var data = tex.EncodeToJPG(75);
+							using (var image = File.Create(path))
+							{
+								image.Write(data, 0, data.Length);
+							}
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, "file:///" + path, true);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newPaths);
 						panel.GetComponent<ImagePanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = filename;
+						lastPlacedPoint.filename = String.Join("\f", newFileNames);
 						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
@@ -630,22 +641,32 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
+						var newPaths = new List<string>();
+						var newFileNames = new List<string>();
+						var oldPaths = editor.answerURLs;
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-						var path = Path.Combine(folder, filename);
 
-						var tex = (Texture2D)editor.imagePreview.texture;
-						var data = tex.EncodeToJPG(75);
-						using (var image = File.Create(path))
+						for (int i = 0; i < oldPaths.Count; i++)
 						{
-							image.Write(data, 0, data.Length);
+							var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+							var path = Path.Combine(folder, filename);
+
+							newFileNames.Add(filename);
+							newPaths.Add(path);
+
+							var tex = (Texture2D)editor.TextureForIndex(i);
+							var data = tex.EncodeToJPG(75);
+							using (var image = File.Create(path))
+							{
+								image.Write(data, 0, data.Length);
+							}
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, path, true);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newPaths);
 						panel.GetComponent<ImagePanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = filename;
+						pointToEdit.filename = String.Join("\f", newFileNames);
 						pointToEdit.panel = panel;
 
 						Destroy(interactionEditor);
@@ -788,7 +809,6 @@ public class Editor : MonoBehaviour
 			{
 				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
-				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.extraPath));
 
 				if (OpenFile(metaPath))
 				{
@@ -812,7 +832,6 @@ public class Editor : MonoBehaviour
 			{
 				var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.metaFilename));
-				var extraPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.extraPath));
 
 				File.Copy(panel.answerPath, videoPath);
 
@@ -1181,6 +1200,7 @@ public class Editor : MonoBehaviour
 				pointToEdit = point;
 				var panel = pointToEdit.panel;
 
+				//TODO(Simon): Switch to getting info from interactionPoints instead of panels
 				switch (pointToEdit.type)
 				{
 					case InteractionType.Text:
@@ -1194,7 +1214,7 @@ public class Editor : MonoBehaviour
 						interactionEditor = Instantiate(imagePanelEditorPrefab);
 						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.transform.position,
 																				panel.GetComponent<ImagePanel>().title.text,
-																				panel.GetComponent<ImagePanel>().imageURL,
+																				panel.GetComponent<ImagePanel>().imageURLs,
 																				true);
 						break;
 					case InteractionType.Video:
@@ -1650,15 +1670,19 @@ public class Editor : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
-					if (!File.Exists(url))
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var urls = new List<string>();
+					foreach (var file in filenames)
 					{
-						Debug.LogWarningFormat("File missing: {0}", url);
-						newInteractionPoint.panel = panel;
-						break;
+						string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), file));
+						if (!File.Exists(url))
+						{
+							Debug.LogWarningFormat("File missing: {0}", url);
+						}
+						urls.Add(url);
 					}
 
-					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, "file:///" + url, false);
+					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, urls);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1667,7 +1691,7 @@ public class Editor : MonoBehaviour
 					var panel = Instantiate(videoPanelPrefab);
 					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
 
-					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString(), false);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString());
 					newInteractionPoint.panel = panel;
 					break;
 				}

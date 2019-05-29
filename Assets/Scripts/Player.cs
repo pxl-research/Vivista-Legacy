@@ -685,9 +685,6 @@ public class Player : MonoBehaviour
 				returnRayDirection = point.returnRayDirection
 			};
 
-			// NOTE(Lander): Add file protocol for images, ignore for the rest.
-			newInteractionPoint.filename = (newInteractionPoint.type == InteractionType.Image ? "file:///" : "") + newInteractionPoint.filename;
-
 			switch (newInteractionPoint.type)
 			{
 				case InteractionType.Text:
@@ -700,7 +697,18 @@ public class Player : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
-					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, false);
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var urls = new List<string>();
+					foreach (var file in filenames)
+					{
+						string url = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), file));
+						if (!File.Exists(url))
+						{
+							Debug.LogWarningFormat("File missing: {0}", url);
+						}
+						urls.Add(url);
+					}
+					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, urls);
 					newInteractionPoint.panel = panel;
 					break;
 				}

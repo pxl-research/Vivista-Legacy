@@ -51,9 +51,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224941113087651396}
-  - component: {fileID: 114120546753966940}
   - component: {fileID: 222271072506417192}
   - component: {fileID: 114160362598338278}
+  - component: {fileID: 114097871234986074}
   m_Layer: 5
   m_Name: Viewport
   m_TagString: Untagged
@@ -553,7 +553,7 @@ MonoBehaviour:
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
---- !u!114 &114120546753966940
+--- !u!114 &114097871234986074
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -561,10 +561,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1086425740812032}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1200242548, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: -146154839, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ShowMaskGraphic: 0
 --- !u!114 &114160362598338278
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1052,7 +1051,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0.8196079, b: 0.98823535, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -1373,7 +1372,7 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 4
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
@@ -1471,8 +1470,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   answered: 0
-  answerFilePath: 
+  answerPath: 
+  answerPaths: []
   searchPattern: 
+  multiSelect: 0
   currentPath: {fileID: 114464950717016572}
   upButton: {fileID: 114229869532063982}
   directoryContent: {fileID: 114227798301933418}
@@ -1485,8 +1486,8 @@ MonoBehaviour:
   sortDateButton: {fileID: 114719158747510456}
   sortNameButton: {fileID: 114662052288850076}
   filenameField: {fileID: 114169401102271664}
-  OpenButton: {fileID: 114963364660668486}
   title: {fileID: 114501290723418172}
+  multipleFileTooltip: {fileID: 0}
 --- !u!114 &114891725456978826
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2038,7 +2039,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 62, y: -39}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 700, y: 500}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224875203713604960

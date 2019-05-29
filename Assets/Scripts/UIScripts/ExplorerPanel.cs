@@ -1,7 +1,10 @@
 ﻿using System.IO;
 using System.Collections.Generic;
 using System;
+using System.Text;
 using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class ExplorerPanel : MonoBehaviour
@@ -10,9 +13,10 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		public string fullPath;
 		public string name;
+		public bool selected;
 		public DateTime date;
 		public Sprite sprite;
-		public GameObject filenameIconItem;
+		public GameObject explorerPanelItem;
 		public EntryType entryType;
 	}
 
@@ -26,121 +30,85 @@ public class ExplorerPanel : MonoBehaviour
 	public enum SelectionMode
 	{
 		File,
-		Directory,
-		Both
+		Directory
 	}
 
 	public bool answered;
 	public string answerPath;
-	public string searchPattern;
+	public List<string> answerPaths;
+	private string searchPattern;
+	private bool multiSelect;
+	private SelectionMode selectionMode;
 
 	public InputField currentPath;
 	public Button upButton;
 	public ScrollRect directoryContent;
 	public GameObject filenameIconItemPrefab;
-	public Sprite iconDirectory, iconFile, iconDrive, iconArrowUp;
 	public Button sortDateButton;
 	public Button sortNameButton;
 	public InputField filenameField;
-	public Button OpenButton;
 	public Text title;
 
-	private SelectionMode selectionMode;
+	public Sprite iconDirectory, iconFile, iconDrive;
 
-	private DirectoryInfo[] directories;
-	private string[] drives;
+	private List<ExplorerEntry> selectedFiles = new List<ExplorerEntry>();
 
+	private static string osType;
 	private string currentDirectory;
-	private string osType;
+	private List<ExplorerEntry> entries;
 	private bool sortByDate;
 	private bool sortByName = true;
 	private bool sortAscending = true;
 
-	private float timeSinceLastClick;
+	private float lastClickTime;
 	private int lastClickIndex;
+	private GameObject lastHoverObject;
 
-	private List<ExplorerEntry> entries;
+	private Queue<GameObject> inactiveExplorerPanelItems;
 
-	public void Update()
+	private static Color normalColor = Color.white;
+	private static Color selectedColor = new Color(210 / 255f, 210 / 255f, 210 / 255f);
+	private static Color highlightColor = new Color(225 / 255f, 225 / 255f, 225 / 255f);
+
+	private string cookiePath;
+
+	//TODO(Simon): Show disks on side (on windows)
+
+	//NOTE(Simon): search pattern should be in default windows wildcard style: e.g. "*.zip" for zipfiles, "a.*" for all filetypes with name "a"
+	//NOTE(Simon): If you provide "" as startDirectory, startDirectory will default to the last location from where a file was selected
+	public void Init(string startDirectory = "C:\\", string searchPattern = "*", string title = "Select file", SelectionMode mode = SelectionMode.File, bool multiSelect = false)
 	{
-		if (RectTransformUtility.RectangleContainsScreenPoint(directoryContent.GetComponent<RectTransform>(), Input.mousePosition))
+		cookiePath = Path.Combine(Application.persistentDataPath, ".explorer");
+
+		startDirectory = Environment.ExpandEnvironmentVariables(startDirectory);
+		if (startDirectory == "")
 		{
-			//TODO(Simon): Figure out current scroll position, and only check x items before and after position
-			for (int i = 0; i < entries.Count; i++)
+			if (File.Exists(cookiePath))
 			{
-				var entry = entries[i];
-				if (entry.filenameIconItem != null)
-				{
-					entry.filenameIconItem.GetComponent<Image>().color = new Color(255, 255, 255);
-
-					if (RectTransformUtility.RectangleContainsScreenPoint(entry.filenameIconItem.GetComponent<RectTransform>(), Input.mousePosition))
-					{
-						entry.filenameIconItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
-
-						if (Input.GetMouseButtonDown(0))
-						{
-							bool doubleclick = lastClickIndex == i && timeSinceLastClick < 0.5f;
-
-							switch (entry.entryType)
-							{
-								case EntryType.Directory:
-								{
-									if (selectionMode == SelectionMode.Directory || selectionMode == SelectionMode.Both)
-									{
-										filenameField.text = entry.name;
-									}
-									if (doubleclick)
-									{
-										OnDirectoryClick(entry.fullPath);
-									}
-									break;
-								}
-								case EntryType.File:
-								{
-									if (selectionMode == SelectionMode.File || selectionMode == SelectionMode.Both)
-									{
-										filenameField.text = entry.name;
-									}
-									if (doubleclick)
-									{
-										Answer(entry.fullPath);
-									}
-									break;
-								}
-								case EntryType.Drive:
-								{
-									if (doubleclick)
-									{
-										DriveClick(entry.fullPath);
-									}
-									break;
-								}
-							}
-
-							timeSinceLastClick = 0;
-							lastClickIndex = i;
-						}
-					}
-				}
+				startDirectory = File.ReadAllText(cookiePath);
+			}
+			
+			//TODO(SImon): Is this bugged? Debugger does weird stuff after stepping over this line.
+			if (!Directory.Exists(startDirectory))
+			{
+				startDirectory = "C:\\";
 			}
 		}
 
-		timeSinceLastClick += Time.deltaTime;
-	}
+		currentDirectory = new DirectoryInfo(startDirectory).FullName;
 
-	//NOTE(Simon): search pattern should be in default wildcard style: e.g. "*.zip" for zipfiles, "a.*" for all filetypes with name "a"
-	public void Init(string startDirectory = "", string searchPattern = "*", string title = "Select file", SelectionMode mode = SelectionMode.File)
-	{
-		currentDirectory = startDirectory == "" ? Directory.GetCurrentDirectory() : startDirectory;
-		currentDirectory = new DirectoryInfo(Environment.ExpandEnvironmentVariables(currentDirectory)).FullName;
+		entries = new List<ExplorerEntry>();
+		inactiveExplorerPanelItems = new Queue<GameObject>();
+
+		selectionMode = mode;
+		this.searchPattern = searchPattern;
+		this.title.text = title;
+		this.multiSelect = multiSelect;
 
 		answered = false;
 		osType = Environment.OSVersion.Platform.ToString();
-		this.searchPattern = searchPattern;
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
-		this.title.text = title;
-		selectionMode = mode;
-
+		
 		UpdateDir();
 	}
 
@@ -195,7 +163,6 @@ public class ExplorerPanel : MonoBehaviour
 			sortByDate = true;
 			sortByName = false;
 		}
-
 		UpdateDir();
 	}
 	
@@ -211,7 +178,7 @@ public class ExplorerPanel : MonoBehaviour
 			filteredFiles.AddRange(dirinfo.GetFiles(p));
 		}
 
-		directories = dirinfo.GetDirectories();
+		var directories = dirinfo.GetDirectories();
 		currentPath.text = currentDirectory;
 
 		int direction = sortAscending ? 1 : -1;
@@ -227,6 +194,7 @@ public class ExplorerPanel : MonoBehaviour
 			filteredFiles.Sort((x, y) => direction * x.LastWriteTime.CompareTo(y.LastWriteTime));
 		}
 
+		//TODO(Simn): Recycle gameobjects
 		ClearItems();
 
 		foreach (var directory in directories)
@@ -262,32 +230,53 @@ public class ExplorerPanel : MonoBehaviour
 
 	private void ClearItems()
 	{
-		if (entries != null)
+		foreach (var item in entries)
 		{
-			foreach (var item in entries)
-			{
-				Destroy(item.filenameIconItem);
-			}
+			inactiveExplorerPanelItems.Enqueue(item.explorerPanelItem);
+			item.explorerPanelItem.SetActive(false);
+		}
 
-			entries.Clear();
-		}
-		else
-		{
-			entries = new List<ExplorerEntry>();
-		}
+		entries.Clear();
 	}
 
 	private void FillItems()
 	{
-		foreach (var entry in entries)
+		for (int i = 0; i < entries.Count; i++)
 		{
-			var filenameIconItem = Instantiate(filenameIconItemPrefab);
-			filenameIconItem.transform.SetParent(directoryContent.content, false);
-			filenameIconItem.GetComponentsInChildren<Text>()[0].text = entry.name;
-			filenameIconItem.GetComponentsInChildren<Text>()[1].text = entry.entryType == EntryType.Drive ? "" : entry.date.ToString("dd/MM/yyyy");
-			filenameIconItem.GetComponentsInChildren<Image>()[1].sprite = entry.sprite;
+			GameObject explorerPanelItem = null;
+			if (inactiveExplorerPanelItems.Count > 0)
+			{
+				explorerPanelItem = inactiveExplorerPanelItems.Dequeue();
+				explorerPanelItem.SetActive(true);
+			}
 
-			entry.filenameIconItem = filenameIconItem;
+			if (explorerPanelItem == null)
+			{
+				explorerPanelItem = Instantiate(filenameIconItemPrefab);
+
+				var trigger = explorerPanelItem.GetComponent<EventTrigger>();
+
+				var enterTrigger = new EventTrigger.Entry {eventID = EventTriggerType.PointerEnter};
+				enterTrigger.callback.AddListener(OnItemEnter);
+
+				var exitTrigger = new EventTrigger.Entry {eventID = EventTriggerType.PointerExit};
+				exitTrigger.callback.AddListener(OnItemExit);
+
+				var clickTrigger = new EventTrigger.Entry {eventID = EventTriggerType.PointerClick};
+				clickTrigger.callback.AddListener(OnItemClick);
+
+				trigger.triggers.Add(enterTrigger);
+				trigger.triggers.Add(exitTrigger);
+				trigger.triggers.Add(clickTrigger);
+			}
+
+			explorerPanelItem.transform.SetParent(directoryContent.content, false);
+			explorerPanelItem.transform.SetAsLastSibling();
+			explorerPanelItem.GetComponentsInChildren<Text>()[0].text = entries[i].name;
+			explorerPanelItem.GetComponentsInChildren<Text>()[1].text = entries[i].entryType == EntryType.Drive ? "" : entries[i].date.ToString("dd/MM/yyyy");
+			explorerPanelItem.GetComponentsInChildren<Image>()[1].sprite = entries[i].sprite;
+
+			entries[i].explorerPanelItem = explorerPanelItem;
 		}
 
 		// scroll to top
@@ -304,12 +293,12 @@ public class ExplorerPanel : MonoBehaviour
 	private void SelectDisk()
 	{
 		upButton.enabled = false;
-		ClearItems();
 
-		drives = Directory.GetLogicalDrives();
+		var drives = Directory.GetLogicalDrives();
 
 		currentPath.text = "Select Drive";
 
+		ClearItems();
 		foreach (string drive in drives)
 		{
 			entries.Add(new ExplorerEntry
@@ -330,52 +319,186 @@ public class ExplorerPanel : MonoBehaviour
 		upButton.enabled = true;
 	}
 
-	private void Answer(string path)
+	private void Answer()
 	{
+		var pathList = new List<string>();
+		foreach (var file in selectedFiles)
+		{
+			pathList.Add(file.fullPath);
+		}
+
 		answered = true;
-		answerPath = path;
+		answerPath = pathList[0];
+		answerPaths = pathList;
+		File.WriteAllText(cookiePath, currentDirectory);
 	}
 
 	public void OpenButtonClicked()
 	{
-		if (filenameField.text == "")
+		if (selectedFiles.Count > 0)
 		{
-			return;
+			bool error = false;
+			foreach (var file in selectedFiles)
+			{
+				if (selectionMode == SelectionMode.File)
+				{
+					if (!File.Exists(file.fullPath))
+					{
+						error = true;
+					}
+				}
+				else if (selectionMode == SelectionMode.Directory)
+				{
+					if (!Directory.Exists(file.fullPath))
+					{
+						error = true;
+					}
+				}
+			}
+
+			if (!error)
+			{
+				Answer();
+			}
+			else
+			{
+				Debug.Log("File or Directory does not exist");
+			}
+		}
+	}
+
+	//NOTE(Simon): If this ever stops working, be sure to disable raycasting on child objects
+	public void OnItemEnter(BaseEventData data)
+	{
+		var go = ((PointerEventData)data).pointerEnter;
+		int index = EntryIndexForGO(go);
+		var entry = entries[index];
+
+		if (!entry.selected)
+		{
+			entry.explorerPanelItem.GetComponent<Image>().color = highlightColor;
+		}
+		lastHoverObject = go;
+	}
+
+	//NOTE(Simon): If this ever stops working, be sure to disable raycasting on child objects
+	public void OnItemExit(BaseEventData data)
+	{
+		int index = EntryIndexForGO(lastHoverObject);
+		var entry = entries[index];
+
+		if (!entry.selected)
+		{
+			entry.explorerPanelItem.GetComponent<Image>().color = Color.white;
+		}
+	}
+
+	//NOTE(Simon): If this ever stops working, be sure to disable raycasting on child objects
+	public void OnItemClick(BaseEventData data)
+	{
+		var go = ((PointerEventData)data).pointerEnter;
+		int index = EntryIndexForGO(go);
+		var entry = entries[index];
+
+		var controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+		var shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift);
+		bool doubleclick = lastClickIndex == index && (Time.unscaledTime - lastClickTime) < 0.5f;
+
+		if (doubleclick)
+		{
+			if (entry.entryType == EntryType.File && selectionMode == SelectionMode.File)
+			{
+				Answer();
+			}
+			else if (entry.entryType == EntryType.Directory)
+			{
+				OnDirectoryClick(entry.fullPath);
+			}
+			else if (entry.entryType == EntryType.Drive)
+			{
+				DriveClick(entry.fullPath);
+			}
+		}
+		else if (multiSelect && controlHeld)
+		{
+			if (selectedFiles.Contains(entry))
+			{
+				entry.selected = false;
+				entry.explorerPanelItem.GetComponent<Image>().color = normalColor;
+				selectedFiles.Remove(entry);
+			}
+			else
+			{
+				entry.selected = true;
+				entry.explorerPanelItem.GetComponent<Image>().color = selectedColor;
+				selectedFiles.Add(entry);
+			}
+		}
+		else if (multiSelect && shiftHeld)
+		{
+			int minIndex = Mathf.Min(lastClickIndex, index);
+			int maxIndex = Mathf.Max(lastClickIndex, index);
+			int count = maxIndex - minIndex + 1;
+			foreach (var file in selectedFiles)
+			{
+				file.selected = false;
+				file.explorerPanelItem.GetComponent<Image>().color = normalColor;
+			}
+			selectedFiles.Clear();
+			selectedFiles.AddRange(entries.GetRange(minIndex, count));
+			foreach (var file in selectedFiles)
+			{
+				file.selected = true;
+				file.explorerPanelItem.GetComponent<Image>().color = selectedColor;
+			}
+		}
+		//NOTE(Simon): Plain single click
+		else
+		{
+			foreach (var file in selectedFiles)
+			{
+				file.selected = false;
+				file.explorerPanelItem.GetComponent<Image>().color = normalColor;
+			}
+
+			selectedFiles.Clear();
+
+			if (entry.entryType == EntryType.File && selectionMode == SelectionMode.File
+				|| entry.entryType == EntryType.Directory && selectionMode == SelectionMode.Directory)
+			{
+				entry.selected = true;
+				selectedFiles.Add(entry);
+				entry.explorerPanelItem.GetComponent<Image>().color = selectedColor;
+			}
 		}
 
-		//TODO(Simon): Check if filename actually matches wildcard pattern. User could manually type in a name that does not match wildcard
+		var fileNames = new StringBuilder();
+		int i = 0;
+		while (i < selectedFiles.Count && fileNames.Length + selectedFiles[i].name.Length < 16382)
+		{
+			var file = selectedFiles[i];
+			fileNames.Append("\"");
+			fileNames.Append(file.name);
+			fileNames.Append("\" ");
+			i++;
+		}
 
-		string fullName = currentPath.text + "\\" + filenameField.text;
+		filenameField.text = fileNames.ToString();
 
-		if (selectionMode == SelectionMode.File)
+		lastClickTime = Time.unscaledTime;
+		lastClickIndex = index;
+	}
+
+	int EntryIndexForGO(GameObject go)
+	{
+		for (int i = 0; i < entries.Count; i++)
 		{
-			if (File.Exists(fullName))
+			if (entries[i].explorerPanelItem == go)
 			{
-				Answer(fullName);
-			}
-			if (Directory.Exists(fullName))
-			{
-				currentDirectory = fullName;
-				UpdateDir();
+				return i;
 			}
 		}
-		else if (selectionMode == SelectionMode.Directory)
-		{
-			if (Directory.Exists(fullName))
-			{
-				Answer(fullName);
-			}
-		}
-		else if (selectionMode == SelectionMode.Both)
-		{
-			if (File.Exists(fullName))
-			{
-				Answer(fullName);
-			}
-			if (Directory.Exists(fullName))
-			{
-				Answer(fullName);
-			}
-		}
+		Assert.IsTrue(true, "Should not be able to get here");
+		return -1;
 	}
 }
