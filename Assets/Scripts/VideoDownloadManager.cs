@@ -134,7 +134,7 @@ public class VideoDownloadManager : MonoBehaviour
 			{
 				download.filesToDownload.Enqueue(new DownloadItem
 				{
-					url = String.Format("{0}/?videoid={1}&extraid={2}", Web.extraURL, videoGuid, file),
+					url = $"{Web.extraURL}/?videoid={videoGuid}&extraid={file}",
 					path = Path.Combine(directory, "extra\\" + file)
 				});
 			}

@@ -105,7 +105,7 @@ public class Player : MonoBehaviour
 		startPoints = new List<GameObject>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
-		videoController = fileLoader.videoController.GetComponent<VideoController>();
+		videoController = fileLoader.controller;
 		OpenFilePanel();
 		playerState = PlayerState.Opening;
 		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
@@ -260,14 +260,7 @@ public class Player : MonoBehaviour
 			controllerLeftOldState = trackedControllerLeft.controllerState;
 			controllerRightOldState = trackedControllerRight.controllerState;
 
-			if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
-			{
-				ray = controllerRay;
-			}
-			else
-			{
-				ray = cameraRay;
-			}
+			ray = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : cameraRay;
 		}
 
 		interacting = false;
@@ -715,7 +708,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString(), false);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString());
 					newInteractionPoint.panel = panel;
 					break;
 				}

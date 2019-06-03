@@ -122,7 +122,7 @@ public class MultipleChoicePanel : MonoBehaviour
 			var answerHeight =
 				UIHelper.CalculateTextFieldHeight(textComponents[0].text, textComponents[0].font, textComponents[0].fontSize, 400, 0);
 			textComponents[0].text = answer;
-			textComponents[1].text = String.Format("{0})", index + 1);
+			textComponents[1].text = $"{index + 1})";
 
 			toggle.GetComponent<RectTransform>().sizeDelta += new Vector2(0, answerHeight);
 			answerPanel.sizeDelta += new Vector2(0, answerHeight);

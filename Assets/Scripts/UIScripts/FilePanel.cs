@@ -77,7 +77,7 @@ public class FilePanel : MonoBehaviour
 					string title;
 					if (meta.version > VersionManager.VERSION)
 					{
-						title = string.Format("This project uses a version that's higher than the Editor's. Please update the Editor: {0}", directory.Name);
+						title = $"This project uses a version that's higher than the Editor's. Please update the Editor: {directory.Name}";
 						filenameListItem.GetComponentInChildren<Text>().color = Color.red;
 					}
 					else

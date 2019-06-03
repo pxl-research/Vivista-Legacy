@@ -37,6 +37,13 @@ public enum InteractionType
 	MultipleChoice
 }
 
+public enum Perspective
+{
+	Perspective360,
+	Perspective180,
+	PerspectiveFlat
+}
+
 [Serializable]
 public class InteractionPointEditor
 {
@@ -111,8 +118,6 @@ public class Editor : MonoBehaviour
 	public GameObject interactionTypePrefab;
 
 	public GameObject filePanelPrefab;
-	public GameObject newPanelPrefab;
-	public GameObject perspectivePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject textPanelEditorPrefab;
 	public GameObject imagePanelPrefab;
@@ -128,7 +133,6 @@ public class Editor : MonoBehaviour
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
 	private GameObject filePanel;
-	private GameObject perspectivePanel;
 	private GameObject openPanel;
 	private GameObject uploadPanel;
 	private GameObject loginPanel;
@@ -197,7 +201,7 @@ public class Editor : MonoBehaviour
 		InitOpenFilePanel();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
-		videoController = fileLoader.videoController.GetComponent<VideoController>();
+		videoController = fileLoader.controller;
 		VideoPanel.keepFileNames = true;
 
 		//NOTE(Simon): Login if details were remembered

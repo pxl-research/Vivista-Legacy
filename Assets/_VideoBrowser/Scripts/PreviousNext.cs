@@ -4,13 +4,6 @@ public class PreviousNext : MonoBehaviour
 {
 	public void OnHit()
 	{
-		if (gameObject.name.Equals("Previous"))
-		{
-			StartCoroutine(transform.root.GetComponent<AnimateProjector>().player.PageSelector(-1));
-		}
-		else
-		{
-			StartCoroutine(transform.root.GetComponent<AnimateProjector>().player.PageSelector(+1));
-		}
+		StartCoroutine(transform.root.GetComponent<AnimateProjector>().player.PageSelector(gameObject.name.Equals("Previous")  ? -1 : 1));
 	}
 }

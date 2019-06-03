@@ -78,11 +78,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
-	public void AddQuestion(string answer)
-	{
-		AddQuestion(answer, answerCount == answerCorrect);
-	}
-
 	public void AddQuestion(string answer, bool isCorrect = false)
 	{
 		var answerPanel = Instantiate(answerPanelPrefab, layoutPanelTransform);

@@ -55,7 +55,7 @@ public class VideoPanel : MonoBehaviour
 			{
 				File.Move(filename, newfilename);
 			}
-			catch (IOException e)
+			catch (IOException)
 			{
 				try
 				{

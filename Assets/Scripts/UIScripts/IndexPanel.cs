@@ -157,7 +157,7 @@ public class IndexPanel : MonoBehaviour
 			var rect = new Vector3[4];
 			videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
 
-			bool hovering = false;
+			bool hovering;
 
 			//NOTE(Simon): Check if hovering
 			hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
@@ -322,18 +322,18 @@ public class IndexPanel : MonoBehaviour
 
 		var offset = (page - 1) * videosPerPage;
 
-		var url = string.Format("{0}?count={1}&offset={2}", Web.indexUrl, videosPerPage, offset);
+		var url = $"{Web.indexUrl}?count={videosPerPage}&offset={offset}";
 		if (searchParamAgeDays > 0)
 		{
-			url += string.Format("&agedays={0}", searchParamAgeDays);
+			url += $"&agedays={searchParamAgeDays}";
 		}
 		if (!string.IsNullOrEmpty(searchParamText))
 		{
-			url += string.Format("&search={0}", searchParamText);
+			url += $"&search={searchParamText}";
 		}
 		if (!string.IsNullOrEmpty(searchParamAuthor))
 		{
-			url += string.Format("&author={0}", searchParamAuthor);
+			url += $"&author={searchParamAuthor}";
 		}
 
 		var www = new WWW(url);

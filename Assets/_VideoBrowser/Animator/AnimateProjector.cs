@@ -39,14 +39,7 @@ public class AnimateProjector : MonoBehaviour
 
 	public void MenuAnimation()
 	{
-		if (state)
-		{
-			projector.SetTrigger("Down");
-		}
-		else
-		{
-			projector.SetTrigger("Up");
-		}
+		projector.SetTrigger(state ? "Down" : "Up");
 		state = !state;
 	}
 

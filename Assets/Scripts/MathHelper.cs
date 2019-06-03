@@ -54,27 +54,27 @@ public static class MathHelper
 		var elapsed = DateTime.Now - timestamp;
 		if (elapsed.Days > 365)
 		{
-			return String.Format("{0} years ago", elapsed.Days / 365);
+			return $"{elapsed.Days / 365} years ago";
 		}
 		if (elapsed.Days > 31)
 		{
-			return String.Format("{0} months ago", elapsed.Days / 31);
+			return $"{elapsed.Days / 31} months ago";
 		}
 		if (elapsed.Days > 7)
 		{
-			return String.Format("{0} weeks ago", elapsed.Days / 7);
+			return $"{elapsed.Days / 7} weeks ago";
 		}
 		if (elapsed.Days > 1)
 		{
-			return String.Format("{0} days ago", elapsed.Days);
+			return $"{elapsed.Days} days ago";
 		}
 		if (elapsed.Hours > 1)
 		{
-			return String.Format("{0} hours ago", elapsed.Hours);
+			return $"{elapsed.Hours} hours ago";
 		}
 		if (elapsed.Minutes > 1)
 		{
-			return String.Format("{0} minutes ago", elapsed.Minutes);
+			return $"{elapsed.Minutes} minutes ago";
 		}
 	
 		return "Just now";
@@ -85,7 +85,7 @@ public static class MathHelper
  		var names = new[] {"B", "kB", "MB", "GB"};
 		var magnitude = (int)Mathf.Max(0, Mathf.Floor(Mathf.Log(bytes, 1024)));
 		var calculated = bytes / Mathf.Pow(1024f, magnitude);
-		var result = String.Format("{0:0.##} {1}", calculated, names[magnitude]);
+		var result = $"{calculated:0.##} {names[magnitude]}";
 		return result;
 	}
 }

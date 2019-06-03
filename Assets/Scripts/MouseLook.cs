@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.VR;
 
 public class MouseLook : MonoBehaviour 
 {
@@ -79,6 +78,7 @@ public class MouseLook : MonoBehaviour
 		{
 			angle -= 360F;
 		}
-		 return Mathf.Clamp (angle, min, max);
+
+		return Mathf.Clamp (angle, min, max);
 	}
 }

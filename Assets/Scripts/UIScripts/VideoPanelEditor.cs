@@ -1,11 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class VideoPanelEditor : MonoBehaviour {
 
 	public Button done;
-	public RawImage imagePreview;
 	public ExplorerPanel explorerPanelPrefab;
 	public Canvas canvas;
 
@@ -20,14 +18,13 @@ public class VideoPanelEditor : MonoBehaviour {
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
-	//public void Init(Vector3 position, bool exactPost = false)
-	// Use this for initialization
-	void Start () {
+	void Start () 
+	{
 		transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 	}
 
-	// Update is called once per frame
-	void Update () {
+	void Update () 
+	{
 		if (fileOpening)
 		{
 			if (explorerPanel != null && explorerPanel.answered)

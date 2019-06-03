@@ -39,7 +39,7 @@ public class UploadPanel : MonoBehaviour
 			progressBar.SetProgress(totalUploaded / (float)status.totalSize);
 
 			//TODO(Simon): Show kB and GB when appropriate
-			progressMB.text = String.Format("{0:F2}/{1:F2}MB", totalUploaded / megabyte, status.totalSize / megabyte);
+			progressMB.text = $"{totalUploaded / megabyte:F2}/{status.totalSize / megabyte:F2}MB";
 
 			time += Time.deltaTime;
 		}
@@ -49,8 +49,8 @@ public class UploadPanel : MonoBehaviour
 			if (!float.IsInfinity(timeRemaining) && !float.IsNaN(timeRemaining))
 			{
 				time %= timeBetweenUpdates;
-				progressTime.text = String.Format("{0:F0} seconds remaining", timeRemaining);
-				progressSpeed.text = String.Format("{0:F2}MB/s", speed / megabyte);
+				progressTime.text = $"{timeRemaining:F0} seconds remaining";
+				progressSpeed.text = $"{speed / megabyte:F2}MB/s";
 			}
 			else
 			{

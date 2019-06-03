@@ -34,7 +34,7 @@ public class SavePanel : MonoBehaviour
 
 		foreach(var title in titles)
 		{
-			if (String.Compare(title.Key, titleInput.text, true) == 0)
+			if (String.Compare(title.Key, titleInput.text, StringComparison.Ordinal) == 0)
 			{
 				fileExists = true;
 				answerGuid = title.Value;

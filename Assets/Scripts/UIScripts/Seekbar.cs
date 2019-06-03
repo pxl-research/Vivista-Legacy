@@ -1,11 +1,10 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR;
 
-public class Seekbar : MonoBehaviour, IPointerDownHandler
+public class Seekbar : MonoBehaviour, IPointerUpHandler
 {
 
 	public VideoController controller;
@@ -22,7 +21,9 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 	public float maxSeekbarHeight = 0.25f;
 	public float seekbarAnimationDuration = 0.2f;
 	public float startRotation;
-	public double lastSmoothTime;
+	public float lastSmoothTime;
+
+	public float timeSinceLastTextUpdate = 0;
 
 	public static GameObject compass;
 
@@ -62,13 +63,13 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 		seekbarBackground.GetComponent<RectTransform>().GetWorldCorners(seekbarCoords);
 
 		hovering = Input.mousePosition.y < infoPanelCoords[1].y;
-		var onSeekbar = Input.mousePosition.y > seekbarCoords[0].y && Input.mousePosition.y < seekbarCoords[1].y;
+		bool onSeekbar = Input.mousePosition.y > seekbarCoords[0].y && Input.mousePosition.y < seekbarCoords[1].y;
 
-		var newHeight = hovering
+		float newHeight = hovering
 			? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
 			: curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
 
-		var smoothedTime = Mathf.Lerp((float)lastSmoothTime, (float)controller.currentFractionalTime, 0.33f);
+		float smoothedTime = Mathf.Lerp(lastSmoothTime, (float)controller.currentFractionalTime, 0.33f);
 
 		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
 		seekbar.anchorMax = new Vector2(smoothedTime, seekbar.anchorMax.y);
@@ -78,21 +79,21 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 		if (onSeekbar)
 		{
-			var pos = Input.mousePosition.x;
-			var max = GetComponent<RectTransform>().rect.width;
+			float pos = Input.mousePosition.x;
+			float max = GetComponent<RectTransform>().rect.width;
 
-			var time = pos / max;
+			float timeAtMouse = pos / max;
 
-			timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.TimeForFraction(time)), MathHelper.FormatSeconds(controller.videoLength));
+			timeText.text = $" {MathHelper.FormatSeconds(controller.TimeForFraction(timeAtMouse))} / {MathHelper.FormatSeconds(controller.videoLength)}";
 		}
-		else
+		else if (timeSinceLastTextUpdate > 0.5)
 		{
-			//TODO(Simon): Maybe make this run less often because it generates garbage
-			timeText.text = String.Format(" {0} / {1}", MathHelper.FormatSeconds(controller.rawCurrentTime), MathHelper.FormatSeconds(controller.videoLength));
+			timeText.text = $" {MathHelper.FormatSeconds(controller.rawCurrentTime)} / {MathHelper.FormatSeconds(controller.videoLength)}";
+			timeSinceLastTextUpdate = 0;
 		}
 
 		// TODO(Lander): Actually make use of the start position, and no hardcoded values
-		var rotation = (XRSettings.enabled ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
+		float rotation = (XRSettings.enabled ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
 		if (SceneManager.GetActiveScene().name.Equals("Player") && compass.transform.parent != Canvass.seekbar)
 		{
 			rotation -= 90;
@@ -100,9 +101,10 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 		compassForeground.transform.localEulerAngles = new Vector3(0, 0, -(rotation));
 
+		timeSinceLastTextUpdate += Time.deltaTime;
 	}
 
-	public void OnPointerDown(PointerEventData e)
+	public void OnPointerUp(PointerEventData e)
 	{
 		var pos = e.pressPosition.x;
 		var max = GetComponent<RectTransform>().rect.width;
@@ -114,7 +116,7 @@ public class Seekbar : MonoBehaviour, IPointerDownHandler
 
 	public static GameObject CreateBlip(float rotation, GameObject blip)
 	{
-		blip.transform.SetParent(Seekbar.compass.transform);
+		blip.transform.SetParent(compass.transform);
 		blip.transform.localEulerAngles = new Vector3(0, 0, rotation);
 		blip.transform.localScale = Vector3.one;
 		blip.transform.localPosition = Vector3.zero;

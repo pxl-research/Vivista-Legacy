@@ -34,7 +34,7 @@ public class IndexPanelVideo : MonoBehaviour
 		{
 			gameObject.GetComponent<Hittable>().enabled = false;
 			error.transform.parent.gameObject.SetActive(true);
-			error.GetComponent<Text>().text = string.Format("This project uses a version that's higher than the player's. Please update the player. [{0}]", uuid);
+			error.GetComponent<Text>().text = $"This project uses a version that's higher than the player's. Please update the player. [{uuid}]";
 		}
 		else
 		{
