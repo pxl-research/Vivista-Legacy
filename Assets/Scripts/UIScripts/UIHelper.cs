@@ -3,11 +3,14 @@ using UnityEngine.UI;
 
 class UIHelper
 {
-	public static float CalculateTextFieldHeight(InputField element, float minHeight)
+	public static float CalculateInputFieldHeight(InputField element, float minLines)
 	{
-		var maxWidth = element.transform.Find("Text").GetComponent<RectTransform>().rect.width;
+		var elementRect = element.GetComponent<RectTransform>();
 
-		return CalculateTextFieldHeight(element.text, element.textComponent.font, element.textComponent.fontSize, maxWidth, minHeight);
+		var outerHeight = elementRect.rect.height;
+		var innerHeight = element.textComponent.GetComponent<RectTransform>().rect.height;
+
+		return Mathf.Max(LayoutUtility.GetPreferredHeight(elementRect) + (outerHeight - innerHeight), minLines * element.textComponent.font.lineHeight);
 	}
 
 	public static float CalculateTextFieldHeight(string text, Font font, int fontSize, float maxWidth, float minHeight)
@@ -39,11 +42,11 @@ class UIHelper
 				{
 					var lines = Mathf.Floor(currentWidth / maxWidth);
 					currentWidth = size.x % maxWidth;
-					currentHeight += (int)(lines * style.lineHeight * 0.9f);
+					currentHeight += (int)(lines * style.lineHeight);// * 0.9f);
 				}
 			}
 
-			currentHeight += (int)(style.lineHeight * 0.9f);
+			currentHeight += (int)(style.lineHeight);// * 0.9f);
 		}
 
 		return Mathf.Max(currentHeight, minHeight);

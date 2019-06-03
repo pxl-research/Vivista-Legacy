@@ -369,34 +369,33 @@ public class Editor : MonoBehaviour
 				if (picker.answered)
 				{
 					lastPlacedPoint.type = picker.answer;
-					var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
-
+					
 					switch (lastPlacedPoint.type)
 					{
 						case InteractionType.Image:
 						{
-							interactionEditor = Instantiate(imagePanelEditorPrefab);
-							interactionEditor.GetComponent<ImagePanelEditor>().Init(lastPlacedPointPos, "", null);
+							interactionEditor = Instantiate(imagePanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<ImagePanelEditor>().Init("", null);
 							break;
 						}
 						case InteractionType.Text:
 						{
-							interactionEditor = Instantiate(textPanelEditorPrefab);
-							interactionEditor.GetComponent<TextPanelEditor>().Init(lastPlacedPointPos, "", "");
+							interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<TextPanelEditor>().Init("", "");
 
 							break;
 						}
 						case InteractionType.Video:
 						{
-							interactionEditor = Instantiate(videoPanelEditorPrefab);
-							interactionEditor.GetComponent<VideoPanelEditor>().Init(lastPlacedPointPos, "", "");
+							interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<VideoPanelEditor>().Init("", "");
 
 							break;
 						}
 						case InteractionType.MultipleChoice:
 						{
-							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab);
-							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(lastPlacedPointPos, "", new [] { "0" });
+							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init("", new [] { "0" });
 
 							break;
 						}
@@ -1208,32 +1207,24 @@ public class Editor : MonoBehaviour
 				switch (pointToEdit.type)
 				{
 					case InteractionType.Text:
-						interactionEditor = Instantiate(textPanelEditorPrefab);
-						interactionEditor.GetComponent<TextPanelEditor>().Init(panel.transform.position,
-																				panel.GetComponent<TextPanel>().title.text,
-																				panel.GetComponent<TextPanel>().body.text,
-																				true);
+						interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<TextPanelEditor>().Init(panel.GetComponent<TextPanel>().title.text,
+																				panel.GetComponent<TextPanel>().body.text);
 						break;
 					case InteractionType.Image:
-						interactionEditor = Instantiate(imagePanelEditorPrefab);
-						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.transform.position,
-																				panel.GetComponent<ImagePanel>().title.text,
-																				panel.GetComponent<ImagePanel>().imageURLs,
-																				true);
+						interactionEditor = Instantiate(imagePanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.GetComponent<ImagePanel>().title.text,
+																				panel.GetComponent<ImagePanel>().imageURLs);
 						break;
 					case InteractionType.Video:
-						interactionEditor = Instantiate(videoPanelEditorPrefab);
-						interactionEditor.GetComponent<VideoPanelEditor>().Init(panel.transform.position,
-																				panel.GetComponent<VideoPanel>().title.text,
-																				panel.GetComponent<VideoPanel>().url,
-																				true);
+						interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<VideoPanelEditor>().Init(panel.GetComponent<VideoPanel>().title.text,
+																				panel.GetComponent<VideoPanel>().url);
 						break;
 					case InteractionType.MultipleChoice:
-						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab);
-						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(panel.transform.position,
-																						panel.GetComponent<MultipleChoicePanel>().question.text,
-																						panel.GetComponent<MultipleChoicePanel>().GetBody(),
-																						true);
+						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(panel.GetComponent<MultipleChoicePanel>().question.text,
+																						panel.GetComponent<MultipleChoicePanel>().GetBody());
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();

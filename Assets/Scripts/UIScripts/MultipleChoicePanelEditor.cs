@@ -12,6 +12,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public Transform layoutPanelTransform;
 	public InputField question;
 	public GameObject answerPanelPrefab;
+	public RectTransform answerWrapper;
 	public List<InputField> answerList;
 	public Button addAnswer;
 	public Button done;
@@ -25,14 +26,12 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	private const int MAXANSWERS = 6;
 	private const int firstAnswerPanelIndex = 1;
 
-	// Update is called once per frame
 	void Update()
 	{
-		canvas.transform.rotation = Camera.main.transform.rotation;
 		done.interactable = !(question.text.Length < 1);
 	}
 
-	public void Init(Vector3 position, string initialTitle, string[] initialAnswers = null, bool exactPos = false)
+	public void Init(string initialTitle, string[] initialAnswers = null)
 	{
 		answerList = new List<InputField>();
 		answerList.Clear();
@@ -51,56 +50,41 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 		question.text = initialTitle;
 		InitAnswers(answers);
-		Move(position, exactPos);
 	}
 
 	private void InitAnswers(string[] initialAnswers)
 	{
 		foreach (var answer in initialAnswers)
 		{
-			AddQuestion(answer, answerCount == answerCorrect);
+			AddAnswer(answer, answerCount == answerCorrect);
 		}
 	}
 
-	public void Move(Vector3 position, bool exactPos)
+	public void AddAnswer()
 	{
-		Vector3 newPos;
-
-		if (exactPos)
-		{
-			newPos = position;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-			newPos.y += 9.5f;
-		}
-		canvas.GetComponent<RectTransform>().position = newPos;
+		AddAnswer("");
 	}
 
-	public void AddQuestion(string answer, bool isCorrect = false)
+	public void AddAnswer(string answer, bool isCorrect = false)
 	{
-		var answerPanel = Instantiate(answerPanelPrefab, layoutPanelTransform);
-
+		var answerPanel = Instantiate(answerPanelPrefab, answerWrapper).GetComponent<AnswerPanel>();
+		answerPanel.editor = this;
 		answerPanel.GetComponentInChildren<Toggle>().isOn = isCorrect;
 
 		var answerInput = answerPanel.transform.GetComponentInChildren<InputField>();
 		answerInput.text = answer;
 		answerList.Add(answerInput);
 
-		answerPanel.transform.SetSiblingIndex(firstAnswerPanelIndex + answerCount);
+		answerPanel.transform.SetAsLastSibling();
 		answerCount++;
 
 		if (answerCount == MAXANSWERS)
 		{
 			addAnswer.interactable = false;
 		}
-
-		resizePanelRectTransform.sizeDelta += new Vector2(0, 45);
-		transform.position += new Vector3(0, 5.6f, 0);
 	}
 
-	public void RemoveQuestion(GameObject answerPanel)
+	public void RemoveAnswer(GameObject answerPanel)
 	{
 		answerList.Remove(answerPanel.transform.GetComponentInChildren<InputField>());
 		Destroy(answerPanel);
@@ -110,10 +94,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		{
 			addAnswer.interactable = true;
 		}
-
-		resizePanelRectTransform.sizeDelta += new Vector2(0, -45);
-		transform.position += new Vector3(0, -5.6f, 0);
-
 	}
 
 	public void Answer()
@@ -127,8 +107,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		{
 			answerAnswers[index] = answerList[index].text;
 		}
-		var toggle = layoutPanelTransform.GetComponent<ToggleGroup>().ActiveToggles().ElementAt(0);
-		answerCorrect = toggle.transform.parent.GetSiblingIndex() - firstAnswerPanelIndex;
+		var toggle = layoutPanelTransform.GetComponent<ToggleGroup>().ActiveToggles().First();
+		answerCorrect = toggle.transform.parent.GetSiblingIndex();
 	}
-
 }

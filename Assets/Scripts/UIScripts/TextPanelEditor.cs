@@ -13,46 +13,28 @@ public class TextPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public string answerBody;
 	
-	void Update()
+	void Start()
 	{
-		var titleRect = title.GetComponent<RectTransform>();
-		var newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
-		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
-
-		var bodyRect = body.GetComponent<RectTransform>();
-		newHeight = UIHelper.CalculateTextFieldHeight(body, 100);
-		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, newHeight);
-
-		resizePanel.sizeDelta = new Vector2(resizePanel.sizeDelta.x,
-			title.GetComponent<RectTransform>().sizeDelta.y
-			+ body.GetComponent<RectTransform>().sizeDelta.y
-			//Padding, spacing, button, fudge factor
-			+ 20 + 20 + 30 + 20);
-
-		canvas.transform.rotation = Camera.main.transform.rotation;
+		ResizeToFit();
+		title.onValueChanged.RemoveAllListeners();
+		title.onValueChanged.AddListener(delegate { OnInputChanged(); });
+		body.onValueChanged.RemoveAllListeners();
+		body.onValueChanged.AddListener(delegate { OnInputChanged(); });
 	}
 
-	public void Init(Vector3 position, string initialTitle, string initialBody, bool exactPos = false)
+	void ResizeToFit()
+	{
+		var titleRect = title.GetComponent<RectTransform>();
+		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, UIHelper.CalculateInputFieldHeight(title, 3));
+
+		var bodyRect = body.GetComponent<RectTransform>();
+		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, UIHelper.CalculateInputFieldHeight(body, 10));
+	}
+
+	public void Init(string initialTitle, string initialBody)
 	{
 		title.text = initialTitle;
 		body.text = initialBody;
-		Move(position, exactPos);
-	}
-
-	public void Move(Vector3 position, bool exactPos = false)
-	{
-		Vector3 newPos;
-
-		if (exactPos)
-		{
-			newPos = position;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-			newPos.y += 6.5f;
-		}
-		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Answer()
@@ -60,5 +42,10 @@ public class TextPanelEditor : MonoBehaviour
 		answered = true;
 		answerTitle = title.text;
 		answerBody = body.text;
+	}
+
+	public void OnInputChanged()
+	{
+		ResizeToFit();
 	}
 }

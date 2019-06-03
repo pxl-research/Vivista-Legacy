@@ -46,14 +46,12 @@ public class ImagePanelEditor : MonoBehaviour
 		if (imageEditorState == ImageEditorState.Showing)
 		{
 			var titleRect = title.GetComponent<RectTransform>();
-			float newHeight = UIHelper.CalculateTextFieldHeight(title, 30);
+			float newHeight = UIHelper.CalculateInputFieldHeight(title, 3);
 			titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
 		}
-		
-		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
 	}
 
-	public void Init(Vector3 position, string initialTitle, List<string> initialURLs, bool exactPos = false)
+	public void Init(string initialTitle, List<string> initialURLs)
 	{
 		title.text = initialTitle;
 		if (initialURLs != null)
@@ -65,26 +63,7 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 
 		UpdateAlbumSortButtons();
-		Move(position, exactPos);
-
 		imageEditorState = ImageEditorState.Showing;
-	}
-
-	public void Move(Vector3 position, bool exactPos = false)
-	{
-		Vector3 newPos;
-
-		if (exactPos)
-		{
-			newPos = position;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.001f);
-			newPos.y -= 3f;
-		}
-
-		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Browse()

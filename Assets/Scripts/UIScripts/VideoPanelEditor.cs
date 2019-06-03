@@ -18,11 +18,6 @@ public class VideoPanelEditor : MonoBehaviour {
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
-	void Start () 
-	{
-		transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
-	}
-
 	void Update () 
 	{
 		if (fileOpening)
@@ -35,30 +30,10 @@ public class VideoPanelEditor : MonoBehaviour {
 		}
 	}
 
-	public void Init(Vector3 position, string initialTitle, string initialUrl, bool exactPos = false)
+	public void Init(string initialTitle, string initialUrl)
 	{
-		Move(position, exactPos);
 		title.text = initialTitle;
 		url.text = initialUrl;
-	}
-
-	// NOTE(Lander): Copied from imagePanelEditor.cs
-	public void Move(Vector3 position, bool exactPos = false)
-	{
-		Vector3 newPos;
-
-		if (exactPos)
-		{
-			newPos = position;
-		}
-		else
-		{
-			newPos = Vector3.Lerp(position, Camera.main.transform.position, 0.3f);
-			newPos.y += 1f;
-
-		}
-
-		canvas.GetComponent<RectTransform>().position = newPos;
 	}
 
 	public void Answer()
