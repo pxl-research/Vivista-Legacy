@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.20837422, g: 0.20837422, b: 0.20837422, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -624,20 +624,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoMesh: {fileID: 1655578236565294, guid: ceec2879ae954d042b7e989d3792c51b, type: 2}
-  image360: {fileID: 1553436805378266, guid: 0997967058c583d4ba14862468514e8e, type: 2}
-  image180: {fileID: 1850175668281850, guid: 774acdd0fde0ffd489885a01a42422d4, type: 2}
-  imageFlat: {fileID: 1201244075872278, guid: b073ce4f911ae754c88bbc73299f0f85, type: 2}
-  Mesh360: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 3}
-  Mesh180: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 3}
-  MeshFlat: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 3}
-  Material360: {fileID: 0}
-  Material180: {fileID: 0}
-  MaterialFlat: {fileID: 2100000, guid: cce7b8adc16893c4f9e9d3b5a15fa4da, type: 2}
-  currentCamera: {fileID: 0}
-  videoController: {fileID: 0}
   playerInfo: {fileID: 2025297004}
-  fileType: 0
-  currentPerspective: 0
+  controller: {fileID: 0}
 --- !u!4 &164997910
 Transform:
   m_ObjectHideFlags: 0
@@ -1377,10 +1365,6 @@ MonoBehaviour:
   interactionTypePrefab: {fileID: 1814512052045966, guid: 0544ab251798224459926a98a7465706,
     type: 2}
   filePanelPrefab: {fileID: 1468846993820600, guid: e9605cc224446ba428e1e03756bc7d4f,
-    type: 2}
-  newPanelPrefab: {fileID: 1165978024308522, guid: f93deae8425057946b7405933f376d51,
-    type: 2}
-  perspectivePanelPrefab: {fileID: 1549091466425554, guid: 41e511164fe942849abf672efca68f32,
     type: 2}
   textPanelPrefab: {fileID: 1668577469885678, guid: 68aee9630d16f3847ae9673fad651082,
     type: 2}
