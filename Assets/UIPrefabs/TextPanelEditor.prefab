@@ -163,6 +163,7 @@ GameObject:
   - component: {fileID: 222499793727114440}
   - component: {fileID: 114078660082614756}
   - component: {fileID: 114216136615769980}
+  - component: {fileID: 114596911723382214}
   m_Layer: 5
   m_Name: ResizePanel
   m_TagString: Untagged
@@ -329,7 +330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
-  m_VerticalFit: 0
+  m_VerticalFit: 2
 --- !u!114 &114228893405795592
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -538,6 +539,28 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
+--- !u!114 &114596911723382214
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1642405337286582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1297475563, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 0
 --- !u!114 &114701543547297432
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -751,8 +774,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c2ed9afa56be6b4c8cf6c79868d8d09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  canvas: {fileID: 223921760671969982}
-  resizePanel: {fileID: 224069598426735326}
   title: {fileID: 114346141344958244}
   body: {fileID: 114819425056952008}
   done: {fileID: 114809802351649614}

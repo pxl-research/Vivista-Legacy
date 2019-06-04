@@ -9,16 +9,16 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 	public VideoController controller;
 	public RectTransform seekbarBackground;
-	public RectTransform seekbar;
+	public RectTransform seekbarPreview;
+	public RectTransform seekbarCurrent;
 	public GameObject compassBackground;
 	public GameObject compassForeground;
-	public GameObject compassBlip;
 	public Text timeText;
 
 	public bool hovering = false;
 	public float minSeekbarHeight = 0.1f;
 	public float curSeekbarHeight;
-	public float maxSeekbarHeight = 0.25f;
+	public float maxSeekbarHeight = 0.33f;
 	public float seekbarAnimationDuration = 0.2f;
 	public float startRotation;
 	public float lastSmoothTime;
@@ -57,33 +57,26 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 	public void Update()
 	{
-		var infoPanelCoords = new Vector3[4];
-		var seekbarCoords = new Vector3[4];
-		seekbarBackground.parent.GetComponent<RectTransform>().GetWorldCorners(infoPanelCoords);
-		seekbarBackground.GetComponent<RectTransform>().GetWorldCorners(seekbarCoords);
+		Vector2 mousePos = Input.mousePosition;
+		float maxMousePos = GetComponent<RectTransform>().rect.width;
+		float timeAtMouse = mousePos.x / maxMousePos;
 
-		hovering = Input.mousePosition.y < infoPanelCoords[1].y;
-		bool onSeekbar = Input.mousePosition.y > seekbarCoords[0].y && Input.mousePosition.y < seekbarCoords[1].y;
+		hovering = RectTransformUtility.RectangleContainsScreenPoint(seekbarBackground.parent.GetComponent<RectTransform>(), mousePos);
+		bool onSeekbar = RectTransformUtility.RectangleContainsScreenPoint(seekbarBackground, mousePos);
 
 		float newHeight = hovering
 			? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
 			: curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
 
-		float smoothedTime = Mathf.Lerp(lastSmoothTime, (float)controller.currentFractionalTime, 0.33f);
+		float smoothedTime = Mathf.Lerp(lastSmoothTime, (float)controller.currentFractionalTime, 0.5f);
 
 		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
-		seekbar.anchorMax = new Vector2(smoothedTime, seekbar.anchorMax.y);
+		seekbarCurrent.anchorMax = new Vector2(smoothedTime, seekbarCurrent.anchorMax.y);
 		seekbarBackground.anchorMax = new Vector2(seekbarBackground.anchorMax.x, curSeekbarHeight);
-
-		lastSmoothTime = float.IsNaN(smoothedTime) ? 0 : smoothedTime;
+		seekbarPreview.anchorMax = new Vector2(onSeekbar ? timeAtMouse : 0, seekbarPreview.anchorMax.y);
 
 		if (onSeekbar)
 		{
-			float pos = Input.mousePosition.x;
-			float max = GetComponent<RectTransform>().rect.width;
-
-			float timeAtMouse = pos / max;
-
 			timeText.text = $" {MathHelper.FormatSeconds(controller.TimeForFraction(timeAtMouse))} / {MathHelper.FormatSeconds(controller.videoLength)}";
 		}
 		else if (timeSinceLastTextUpdate > 0.5)
@@ -102,6 +95,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		compassForeground.transform.localEulerAngles = new Vector3(0, 0, -(rotation));
 
 		timeSinceLastTextUpdate += Time.deltaTime;
+		lastSmoothTime = float.IsNaN(smoothedTime) ? 0 : smoothedTime;
 	}
 
 	public void OnPointerUp(PointerEventData e)
