@@ -7,8 +7,6 @@ using UnityEngine.UI;
 public class MultipleChoicePanelEditor : MonoBehaviour
 {
 
-	public Canvas canvas;
-	public RectTransform resizePanelRectTransform;
 	public Transform layoutPanelTransform;
 	public InputField question;
 	public GameObject answerPanelPrefab;
@@ -24,7 +22,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	private int answerCount;
 	private const int MAXANSWERS = 6;
-	private const int firstAnswerPanelIndex = 1;
 
 	void Update()
 	{

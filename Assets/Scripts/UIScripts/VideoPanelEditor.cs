@@ -5,7 +5,6 @@ public class VideoPanelEditor : MonoBehaviour {
 
 	public Button done;
 	public ExplorerPanel explorerPanelPrefab;
-	public Canvas canvas;
 
 	public InputField url;
 	public InputField title;

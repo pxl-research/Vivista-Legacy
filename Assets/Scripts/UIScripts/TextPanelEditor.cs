@@ -3,8 +3,6 @@ using UnityEngine.UI;
 
 public class TextPanelEditor : MonoBehaviour
 {
-	public Canvas canvas;
-	public RectTransform resizePanel;
 	public InputField title;
 	public InputField body;
 	public Button done;

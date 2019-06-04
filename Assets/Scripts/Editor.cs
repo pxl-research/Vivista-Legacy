@@ -338,8 +338,7 @@ public class Editor : MonoBehaviour
 				lastPlacedPoint = point;
 				AddItemToTimeline(point, false);
 
-				interactionTypePicker = Instantiate(interactionTypePrefab);
-				interactionTypePicker.GetComponent<InteractionTypePicker>().Init(newPoint.transform.position);
+				interactionTypePicker = Instantiate(interactionTypePrefab, Canvass.main.transform, false);
 
 				editorState = EditorState.PickingInteractionType;
 				ResetInteractionPointTemp();

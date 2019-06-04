@@ -10,7 +10,6 @@ public class ImagePanelEditor : MonoBehaviour
 		Showing
 	}
 
-	public Canvas canvas;
 	public InputField title;
 	public ExplorerPanel explorerPanelPrefab;
 	public GameObject imageAlbumEntryPrefab;
