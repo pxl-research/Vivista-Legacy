@@ -194,7 +194,6 @@ public class ExplorerPanel : MonoBehaviour
 			filteredFiles.Sort((x, y) => direction * x.LastWriteTime.CompareTo(y.LastWriteTime));
 		}
 
-		//TODO(Simn): Recycle gameobjects
 		ClearItems();
 
 		foreach (var directory in directories)

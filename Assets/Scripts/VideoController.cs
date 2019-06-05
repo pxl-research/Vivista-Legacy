@@ -247,14 +247,6 @@ public class VideoController : MonoBehaviour
 		{
 			case Perspective.Perspective360:
 			{
-				//currentCamera = Instantiate(camera360);
-				//videoController.GetComponent<MeshFilter>().sharedMesh = Mesh360;
-
-				//TODO(Simon): We're not doing flat videos anymore, so just make SphereCollider the default
-				//Destroy(GetComponent<BoxCollider>());
-				//var coll = gameObject.AddComponent<SphereCollider>();
-				//coll.radius = 90f;
-
 				var descriptor = baseRenderTexture.descriptor;
 				descriptor.sRGB = false;
 				descriptor.width = width;

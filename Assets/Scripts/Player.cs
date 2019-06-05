@@ -745,7 +745,6 @@ public class Player : MonoBehaviour
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
 		//NOTE(Simon): Add a number to interaction points
-		//TODO(Simon): Make sure these are numbered chronologically
 		point.point.transform.GetChild(0).gameObject.SetActive(true);
 		point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		point.panel.SetActive(false);
