@@ -19,7 +19,7 @@ public class UILineRenderer : Graphic
 
 	void Update()
 	{
-		if (lines != null)
+		if (lines != null && lines.Count > 0)
 		{
 			lines.Clear();
 			SetAllDirty();

@@ -153,9 +153,9 @@ public class Editor : MonoBehaviour
 	private float timelineEndTime;
 	private float timelineZoomTarget = 1;
 	private float timelineZoom = 1;
-	private float timelineOffset;
-	private float timelineWidth;
-	private float timelineXOffset;
+	private float timelineOffsetTime;
+	private float timelineOffsetPixels;
+	private float timelineWidthPixels;
 
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
@@ -1036,7 +1036,7 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Reset offset when fully zoomed out.
 		if (timelineZoom >= 1)
 		{
-			timelineOffset = 0;
+			timelineOffsetTime = 0;
 		}
 
 		float zoomedLength;
@@ -1044,27 +1044,25 @@ public class Editor : MonoBehaviour
 		{
 			zoomedLength = (timelineEndTime - timelineStartTime) * timelineZoom;
 
-			var windowMiddle = (timelineEndTime - timelineOffset) / 2;
-			timelineWindowStartTime = Mathf.Lerp(timelineStartTime, windowMiddle, 1 - timelineZoom);
-			timelineWindowEndTime = Mathf.Lerp(timelineEndTime, windowMiddle, 1 - timelineZoom);
+			var windowMiddle = (timelineEndTime - timelineOffsetTime) / 2;
+			timelineWindowStartTime = windowMiddle - zoomedLength / 2;
+			timelineWindowEndTime = windowMiddle + zoomedLength / 2;
 
-			timelineXOffset = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
-			timelineWidth = timelineContainer.GetComponent<RectTransform>().rect.width - timelineXOffset;
+			timelineOffsetPixels = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
+			timelineWidthPixels = timelineContainer.GetComponent<RectTransform>().rect.width - timelineOffsetPixels;
 		}
 
 		//NOTE(Simon): Timeline labels
 		{
-			var maxNumLabels = Mathf.Floor(timelineWidth / 100);
-			var lowerround = FloorTime(zoomedLength / maxNumLabels);
-			var upperround = CeilTime(zoomedLength / maxNumLabels);
+			var maxNumLabels = Mathf.Floor(timelineWidthPixels / 100);
+			var lowerNiceTime = LowerNiceTime(zoomedLength / maxNumLabels);
+			var upperNiceTime = UpperNiceTime(zoomedLength / maxNumLabels);
 
-			var lowerroundNum = Mathf.FloorToInt(zoomedLength / lowerround);
-			var upperroundNum = Mathf.FloorToInt(zoomedLength / upperround);
-			var closestRounding = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerround : upperround;
-			var realNumLabels = (maxNumLabels - lowerroundNum) > (upperroundNum - maxNumLabels) ? lowerroundNum : upperroundNum;
-			realNumLabels += 1;
-
-			var timelineTickSize = closestRounding;
+			var lowerNumLabels = Mathf.FloorToInt(zoomedLength / lowerNiceTime);
+			var upperNumLabels = Mathf.FloorToInt(zoomedLength / upperNiceTime);
+			var closestNiceTime = (maxNumLabels - lowerNumLabels) > (upperNumLabels - maxNumLabels) ? lowerNiceTime : upperNiceTime;
+			var realNumLabels = (maxNumLabels - lowerNumLabels) > (upperNumLabels - maxNumLabels) ? lowerNumLabels : upperNumLabels;
+			realNumLabels += 2;
 
 			while (headerLabels.Count < realNumLabels)
 			{
@@ -1077,22 +1075,18 @@ public class Editor : MonoBehaviour
 				headerLabels.RemoveAt(headerLabels.Count - 1);
 			}
 
-			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / timelineTickSize);
+			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / closestNiceTime);
 
 			for (int i = 0; i < realNumLabels; i++)
 			{
-				var time = (i + numTicksOffScreen) * timelineTickSize;
+				var time = (i + numTicksOffScreen) * closestNiceTime;
 				if (time >= 0 && time <= timelineEndTime)
 				{
 					headerLabels[i].enabled = true;
-					var timePx = TimeToPx(time);
 					headerLabels[i].text = MathHelper.FormatSeconds(time);
-					headerLabels[i].rectTransform.position = new Vector2(timePx, headerLabels[i].rectTransform.position.y);
-					UILineRenderer.DrawLine(
-						new Vector2(timePx, 0),
-						new Vector2(timePx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
-						1,
-						new Color(0, 0, 0, 47f / 255));
+					headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
+
+					DrawLineAtTime(time, 1, new Color(0, 0, 0, 47f / 255));
 				}
 				else
 				{
@@ -1256,27 +1250,18 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		//Note(Simon): Render various stuff, such as indicator lines for begin and end of video, and lines for the timestamps.
+		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and lines for the timestamps.
 		{
+			DrawLineAtTime(videoController.rawCurrentTime, 3 ,new Color(0, 0, 0, 100f / 255));
+
 			if (timelineZoom < 1)
 			{
-				var startx = TimeToPx(0);
-				var endx = TimeToPx(timelineEndTime);
-				UILineRenderer.DrawLine(
-					new Vector2(startx, 0),
-					new Vector2(startx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
-					2,
-					new Color(0, 0, 0, 47f / 255));
-				UILineRenderer.DrawLine(
-					new Vector2(endx, 0),
-					new Vector2(endx, timelineContainer.GetComponent<RectTransform>().sizeDelta.y - timelineHeader.GetComponent<RectTransform>().sizeDelta.y - 5),
-					2,
-					new Color(0, 0, 0, 47f / 255));
+				DrawLineAtTime(0, 2, new Color(0, 0, 0, 47f / 255));
+				DrawLineAtTime(timelineEndTime, 2, new Color(0, 0, 0, 47f / 255));
 			}
-
 		}
 
-		//Note(Simon): Resizing and moving of timeline items. Also Cursors
+		//Note(Simon): Cursors, resizing and moving of timeline items
 		{
 			Texture2D desiredCursor = null;
 			foreach (var point in interactionPoints)
@@ -1335,7 +1320,8 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.Auto);
+			//TODO(Simon): Software cursors make the lag from double buffering less obvious. But is there a better way?
+			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.ForceSoftware);
 
 			if (isDraggingTimelineItem)
 			{
@@ -1440,25 +1426,40 @@ public class Editor : MonoBehaviour
 
 	public float TimeToPx(double time)
 	{
+		//NOTE(Simon): If time is outside currently displayed range, return a pixel _far_ outside the window
 		if (time < timelineWindowStartTime || time > timelineWindowEndTime)
 		{
 			return -1000;
 		}
 		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
-		return (float)(timelineXOffset + (fraction * timelineWidth));
+		return (float)(timelineOffsetPixels + (fraction * timelineWidthPixels));
+	}
+
+	public void DrawLineAtTime(double time, float thickness, Color color)
+	{
+		var timePx = TimeToPx(time);
+
+		float containerHeight = timelineContainer.GetComponent<RectTransform>().sizeDelta.y;
+		float headerHeight = Mathf.Max(0, timelineHeader.GetComponent<RectTransform>().sizeDelta.y - timeline.GetComponent<RectTransform>().localPosition.y);
+
+		UILineRenderer.DrawLine(
+			new Vector2(timePx, 0),
+			new Vector2(timePx, containerHeight - headerHeight),
+			thickness,
+			color);
 	}
 
 	public float PxToAbsTime(double px)
 	{
-		var realPx = px - timelineXOffset;
-		var fraction = realPx / timelineWidth;
+		var realPx = px - timelineOffsetPixels;
+		var fraction = realPx / timelineWidthPixels;
 		var time = fraction * (timelineWindowEndTime - timelineWindowStartTime) + timelineWindowStartTime;
 		return (float)time;
 	}
 
 	public float PxToRelativeTime(float px)
 	{
-		return px * ((timelineWindowEndTime - timelineWindowStartTime) / timelineWidth);
+		return px / timelineWidthPixels * (timelineWindowEndTime - timelineWindowStartTime);
 	}
 
 	public void OnDrag(BaseEventData e)
@@ -1466,7 +1467,7 @@ public class Editor : MonoBehaviour
 		if (Input.GetMouseButton(1))
 		{
 			var pointerEvent = (PointerEventData)e;
-			timelineOffset += PxToRelativeTime(pointerEvent.delta.x * 5);
+			timelineOffsetTime += PxToRelativeTime(pointerEvent.delta.x) * 2;
 		}
 	}
 
@@ -1925,7 +1926,7 @@ public class Editor : MonoBehaviour
 		return Guid.NewGuid().ToString().Replace("-", "");
 	}
 
-	private static int FloorTime(double time)
+	private static int LowerNiceTime(double time)
 	{
 		int[] niceTimes = { 1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60 };
 		var result = niceTimes[0];
@@ -1941,7 +1942,7 @@ public class Editor : MonoBehaviour
 		return result;
 	}
 
-	private static int CeilTime(double time)
+	private static int UpperNiceTime(double time)
 	{
 		int[] niceTimes = { 1, 2, 5, 10, 15, 30, 60, 2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60, 60 * 60, 2 * 60 * 60 };
 
