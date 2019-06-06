@@ -114,6 +114,7 @@ public class Editor : MonoBehaviour
 	private List<InteractionPointEditor> interactionPoints;
 	private InteractionPointEditor pointToMove;
 	private InteractionPointEditor pointToEdit;
+	private InteractionPointEditor lastPlacedPoint;
 
 	public GameObject interactionTypePrefab;
 
@@ -138,10 +139,10 @@ public class Editor : MonoBehaviour
 	private GameObject loginPanel;
 	private GameObject explorerPanel;
 
-	public GameObject timelineContainer;
-	public GameObject timeline;
-	public GameObject timelineHeader;
-	public GameObject timelineRow;
+	public RectTransform timelineContainer;
+	public RectTransform timeline;
+	public RectTransform timelineHeader;
+	public GameObject timelineRowPrefab;
 	public Text labelPrefab;
 
 	private List<Text> headerLabels = new List<Text>();
@@ -159,11 +160,11 @@ public class Editor : MonoBehaviour
 
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
-	private bool isDraggingTimelineItem;
 	private InteractionPointEditor timelineItemBeingDragged;
+	private bool isDraggingTimelineItem;
+	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimelineItem;
 	private bool isResizingStart;
-	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimeline;
 	private TimeTooltip timeTooltip;
 
@@ -175,7 +176,6 @@ public class Editor : MonoBehaviour
 	public List<Color> timelineColors;
 	private int colorIndex;
 	private int interactionPointCount;
-	private InteractionPointEditor lastPlacedPoint;
 
 
 	void Awake()
@@ -948,20 +948,20 @@ public class Editor : MonoBehaviour
 		if (active)
 		{
 			editorState = EditorState.Active;
-			timelineContainer.SetActive(true);
+			timelineContainer.gameObject.SetActive(true);
 		}
 		else
 		{
 			editorState = EditorState.Inactive;
-			timelineContainer.SetActive(false);
+			timelineContainer.gameObject.SetActive(false);
 		}
 	}
 
 	void AddItemToTimeline(InteractionPointEditor point, bool hidden)
 	{
-		var newRow = Instantiate(timelineRow);
+		var newRow = Instantiate(timelineRowPrefab);
 		point.timelineRow = newRow;
-		newRow.transform.SetParent(timeline.transform);
+		newRow.transform.SetParent(timeline);
 
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
@@ -999,10 +999,7 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Zoom timeline
 		{
-			var coords = new Vector3[4];
-			timelineContainer.GetComponentInChildren<RectTransform>().GetWorldCorners(coords);
-
-			if (Input.mousePosition.y < coords[1].y)
+			if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 			{
 				//NOTE(Simon): Zoom only when Ctrl is pressed. Else scroll list.
 				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
@@ -1049,7 +1046,7 @@ public class Editor : MonoBehaviour
 			timelineWindowEndTime = windowMiddle + zoomedLength / 2;
 
 			timelineOffsetPixels = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
-			timelineWidthPixels = timelineContainer.GetComponent<RectTransform>().rect.width - timelineOffsetPixels;
+			timelineWidthPixels = timelineContainer.rect.width - timelineOffsetPixels;
 		}
 
 		//NOTE(Simon): Timeline labels
@@ -1132,7 +1129,7 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Highlight interactionPoint and show preview when hovering over timelineRow
-		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
+		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 		{
 			foreach (var point in interactionPoints)
 			{
@@ -1250,10 +1247,20 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and lines for the timestamps.
+		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and separator lines.
 		{
+			//NOTE(Simon): current time indicator
 			DrawLineAtTime(videoController.rawCurrentTime, 3 ,new Color(0, 0, 0, 100f / 255));
-
+			
+			//NOTE(Simon): Top line. Only draw when inside timeline.
+			var offset = new Vector3(0, -3);
+			if (timeline.localPosition.y < timelineHeader.rect.height - offset.y)
+			{
+				var headerCoords = new Vector3[4];
+				timelineHeader.GetWorldCorners(headerCoords);
+				UILineRenderer.DrawLine(headerCoords[0] + offset, headerCoords[3] + offset, 1, new Color(0, 0, 0, 47f / 255));
+			}
+			//NOTE(Simon): Start and end
 			if (timelineZoom < 1)
 			{
 				DrawLineAtTime(0, 2, new Color(0, 0, 0, 47f / 255));
@@ -1275,7 +1282,7 @@ public class Editor : MonoBehaviour
 				var rightAreaX = imageRect.rect.width - 5;
 
 				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
-					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
+					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 				{
 					if (isDraggingTimelineItem)
 					{
@@ -1297,7 +1304,7 @@ public class Editor : MonoBehaviour
 
 				if (!isDraggingTimelineItem && !isResizingTimelineItem
 					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
-					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer.GetComponent<RectTransform>(), Input.mousePosition))
+					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 				{
 					if (rectPixel.x < leftAreaX)
 					{
@@ -1399,12 +1406,12 @@ public class Editor : MonoBehaviour
 					isResizingTimeline = false;
 					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
 				}
-				timelineContainer.GetComponent<RectTransform>().sizeDelta += mouseDelta;
+				timelineContainer.sizeDelta += mouseDelta;
 			}
 			else
 			{
 				var coords = new Vector3[4];
-				timelineContainer.GetComponent<RectTransform>().GetWorldCorners(coords);
+				timelineContainer.GetWorldCorners(coords);
 
 				if (Input.mousePosition.y > coords[1].y - 2
 					&& Input.mousePosition.y < coords[1].y + 2)
@@ -1439,8 +1446,8 @@ public class Editor : MonoBehaviour
 	{
 		var timePx = TimeToPx(time);
 
-		float containerHeight = timelineContainer.GetComponent<RectTransform>().sizeDelta.y;
-		float headerHeight = Mathf.Max(0, timelineHeader.GetComponent<RectTransform>().sizeDelta.y - timeline.GetComponent<RectTransform>().localPosition.y);
+		float containerHeight = timelineContainer.sizeDelta.y;
+		float headerHeight = Mathf.Max(0, timelineHeader.sizeDelta.y - timeline.localPosition.y);
 
 		UILineRenderer.DrawLine(
 			new Vector2(timePx, 0),
