@@ -24,3 +24,5 @@ sysinfo.txt
 
 *.mp4
 *.mp4.meta
+
+*.VC.db
