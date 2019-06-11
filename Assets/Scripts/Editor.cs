@@ -2108,6 +2108,6 @@ public class Editor : MonoBehaviour
 
 	private static long FileSize(string path)
 	{
-		return (int)new FileInfo(path).Length;
+		return new FileInfo(path).Length;
 	}
 }
