@@ -1,4 +1,5 @@
-﻿Shader "Flipping Normals" 
+﻿
+Shader "Flipping Normals" 
 {
 	Properties
 	{
@@ -17,7 +18,7 @@
 		#pragma surface surf NoLighting novertexlights noforwardadd alpha:fade
 
 		sampler2D _MainTex;
-		float offset;
+		float offsetDegrees;
 		static const float2 invAtan = float2(0.1591, 0.3183);
 			
 		struct Input {
@@ -26,10 +27,9 @@
 		
 		float2 SampleSphericalMap(float3 dir)
 		{
-			offset = 0.25;
 			float2 uv = float2(atan2(dir.x, dir.z), asin(dir.y));
 			uv *= invAtan;
-			uv += float2(1 + offset, 0.5);
+			uv += float2(1 + ((360 - offsetDegrees) / 360), 0.5);
 			uv.x = fmod(uv.x, 1);
 			return uv;
 		}
