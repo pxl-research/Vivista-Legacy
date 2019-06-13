@@ -2,7 +2,7 @@
 {
 	Properties
 	{
-		_MainTex ("Base (RGB)", 2D) = "white" {}
+		_MainTex ("Base (RGBA)", 2D) = "white" {}
 	}
 	   
 	SubShader
@@ -14,34 +14,44 @@
 
 		CGPROGRAM
 
-		#pragma surface surf Lambert vertex:vert alpha:fade
+		#pragma surface surf NoLighting novertexlights noforwardadd alpha:fade
+
 		sampler2D _MainTex;
+		float offset;
+		static const float2 invAtan = float2(0.1591, 0.3183);
 			
 		struct Input {
-			float4 pos : POSITION;
-			float2 uv_MainTex;
-			float4 color : COLOR;
+			float3 worldNormal;
 		};
-			
-		void vert(inout appdata_full v) {
-			//v.normal.xyz = v.normal * -1;
+		
+		float2 SampleSphericalMap(float3 dir)
+		{
+			offset = 0.25;
+			float2 uv = float2(atan2(dir.x, dir.z), asin(dir.y));
+			uv *= invAtan;
+			uv += float2(1 + offset, 0.5);
+			uv.x = fmod(uv.x, 1);
+			return uv;
 		}
-			
+
 		void surf (Input i, inout SurfaceOutput o) 
 		{
-			//float3 dir = normalize(i.pos);
-			//float2 longlat = float2(atan2(dir.x, dir.z) + UNITY_PI, acos(-dir.y));
-			//float2 uv = longlat / float2(2.0 * UNITY_PI, UNITY_PI);
+			float2 uv = SampleSphericalMap(normalize(i.worldNormal));
 			
-			float2 flippedUv = float2(1 - i.uv_MainTex.x, i.uv_MainTex.y);
-
-			fixed4 result = tex2D(_MainTex, flippedUv);
+			fixed4 result = tex2D(_MainTex, uv);
+		
 			o.Albedo = result.rgb;
 			o.Alpha = result.a;
 		}
 
+		fixed4 LightingNoLighting(SurfaceOutput s, fixed3 lightDir, fixed atten) 
+		{
+			fixed4 c;
+			c.rgb = s.Albedo;
+			c.a = s.Alpha;
+			return c;
+		}
+
 		ENDCG
 	}
-	
-	Fallback "Diffuse"
 }
