@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR;
 
@@ -31,56 +30,40 @@ public class MultipleChoicePanel : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		//NOTE(Kristof): Initial rotation towards the camera
-		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
-		if (!XRSettings.enabled)
-		{
-			canvas.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-		}
-
 		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		// NOTE(Kristof): Turning every frame only needs to happen in Editor
-		if (SceneManager.GetActiveScene().Equals(SceneManager.GetSceneByName("Editor")))
+		if (!XRSettings.enabled)
 		{
-			canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
-		}
+			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hit;
 
-		//NOTE(Kristof): Interacting with the with mouse (Editor and Player without VR)
-		{
-			if (!XRSettings.enabled)
+			//NOTE(Kristof): Resetting toggle background colour
 			{
-				var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-				RaycastHit hit;
-
-				//NOTE(Kristof): Resetting toggle background colour
+				var toggles = answerPanel.GetComponentsInChildren<Toggle>();
+				foreach (var tgl in toggles)
 				{
-					var toggles = answerPanel.GetComponentsInChildren<Toggle>();
-					foreach (var tgl in toggles)
-					{
-						ToggleHoverEnd(tgl.gameObject);
-					}
+					ToggleHoverEnd(tgl.gameObject);
+				}
+			}
+
+			if (Physics.Raycast(ray, out hit, 150, LayerMask.GetMask("UI")))
+			{
+				var toggle = hit.transform.GetComponent<Toggle>();
+				if (toggle)
+				{
+					ToggleHoverStart(toggle.gameObject);
 				}
 
-				if (Physics.Raycast(ray, out hit, 150, LayerMask.GetMask("UI")))
+				if (Input.GetMouseButtonDown(0) && toggleGroup.AnyTogglesOn())
 				{
-					var toggle = hit.transform.GetComponent<Toggle>();
-					if (toggle)
+					var button = hit.transform.GetComponent<Button>();
+					if (button)
 					{
-						ToggleHoverStart(toggle.gameObject);
-					}
-
-					if (Input.GetMouseButtonDown(0) && toggleGroup.AnyTogglesOn())
-					{
-						var button = hit.transform.GetComponent<Button>();
-						if (button)
-						{
-							CheckAnswer();
-						}
+						CheckAnswer();
 					}
 				}
 			}
@@ -171,14 +154,20 @@ public class MultipleChoicePanel : MonoBehaviour
 
 	public void ToggleValueChangedHittable(GameObject toggle)
 	{
-		if (!toggle.GetComponent<Toggle>().interactable) return;
+		if (!toggle.GetComponent<Toggle>().interactable)
+		{ 
+			return; 
+		}
 		toggle.GetComponent<Toggle>().isOn = true;
 		ToggleValueChanged(toggle);
 	}
 
 	public void ToggleHoverStart(GameObject toggle)
 	{
-		if (!toggle.GetComponent<Toggle>().interactable) return;
+		if (!toggle.GetComponent<Toggle>().interactable)
+		{
+			return;
+		}
 		//NOTE(Kristof): background image and checkmark image
 		var childImages = toggle.transform.GetComponentsInChildren<Image>();
 		childImages[0].color = orangeColour;
@@ -187,7 +176,10 @@ public class MultipleChoicePanel : MonoBehaviour
 
 	public void ToggleHoverEnd(GameObject toggle)
 	{
-		if (!toggle.GetComponent<Toggle>().interactable || toggle.GetComponent<Toggle>().isOn) return;
+		if (!toggle.GetComponent<Toggle>().interactable || toggle.GetComponent<Toggle>().isOn)
+		{
+			return;
+		}
 		//NOTE(Kristof): background image and checkmark image
 		var childImages = toggle.transform.GetComponentsInChildren<Image>();
 		childImages[0].color = Color.white;
@@ -249,7 +241,10 @@ public class MultipleChoicePanel : MonoBehaviour
 
 	public void CheckAnswerHittable(Button button)
 	{
-		if (!button.GetComponent<Button>().interactable) return;
+		if (!button.GetComponent<Button>().interactable)
+		{
+			return;
+		}
 		CheckAnswer();
 	}
 }

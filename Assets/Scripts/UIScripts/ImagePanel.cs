@@ -1,13 +1,11 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR;
 
 public class ImagePanel : MonoBehaviour
 {
 	public Text title;
 	public List<string> imageURLs;
-	public Canvas canvas;
 	public ScrollRect imageScrollRect;
 	public RectTransform imagePanel;
 	public List<ImagePanelImage> images;
@@ -17,21 +15,6 @@ public class ImagePanel : MonoBehaviour
 	private int imageIndex;
 
 	public GameObject imagePanelImagePrefab;
-
-	void Start()
-	{
-		//NOTE(Kristof): Initial rotation towards the camera
-		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
-		if (!XRSettings.enabled)
-		{
-			canvas.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-		}
-	}
-
-	void Update()
-	{
-		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
-	}
 
 	void OnEnable()
 	{
@@ -44,6 +27,9 @@ public class ImagePanel : MonoBehaviour
 
 	public void Init(string newTitle, List<string> urls)
 	{
+		prevButton.onClick.AddListener(PrevImage);
+		nextButton.onClick.AddListener(NextImage);
+
 		title.text = newTitle;
 		imageURLs = urls;
 		foreach (var url in imageURLs)
@@ -111,8 +97,5 @@ public class ImagePanel : MonoBehaviour
 
 	public void Move(Vector3 position)
 	{
-		var newPos = position;
-		newPos.y += 0.015f;
-		canvas.GetComponent<RectTransform>().position = position;
 	}
 }

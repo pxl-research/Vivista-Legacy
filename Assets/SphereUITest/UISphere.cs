@@ -21,4 +21,9 @@ public class UISphere : MonoBehaviour
 		var rotation = transform.localRotation.eulerAngles.y + 180;
 		material.SetFloat("offsetDegrees", rotation);
 	}
+
+	public void DebugLog()
+	{
+		Debug.Log("Button clicked");
+	}
 }

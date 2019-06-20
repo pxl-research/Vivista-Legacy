@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class UploadPanel : MonoBehaviour 
@@ -19,12 +18,12 @@ public class UploadPanel : MonoBehaviour
 	public void UpdatePanel(UploadStatus status)
 	{
 		time += Time.deltaTime;
-		var timeRemaining = float.PositiveInfinity;
-		var speed = 0.0f;
+		float timeRemaining = float.PositiveInfinity;
+		float speed = 0.0f;
 
 		if (status.request != null)
 		{
-			var totalUploaded = status.uploaded + (long)status.request.uploadedBytes;
+			long totalUploaded = status.uploaded + (long)status.request.uploadedBytes;
 			
 			var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
 			status.timings.Enqueue(newestTiming);
@@ -34,7 +33,8 @@ public class UploadPanel : MonoBehaviour
 				status.timings.Dequeue();
 			}
 
-			speed = status.timings.Count >= 2 ? (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time) : float.NaN;
+			float currentSpeed = (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time);
+			speed = status.timings.Count >= 2 ? currentSpeed: float.NaN;
 			timeRemaining = (status.totalSize - totalUploaded) / speed;
 			progressBar.SetProgress(totalUploaded / (float)status.totalSize);
 
