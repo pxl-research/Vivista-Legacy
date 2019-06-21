@@ -11,23 +11,6 @@ Prefab:
   m_SourcePrefab: {fileID: 0}
   m_RootGameObject: {fileID: 1239167622065546}
   m_IsPrefabAsset: 1
---- !u!1 &1095594092156178
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 224563668624588198}
-  - component: {fileID: 222173119599529902}
-  - component: {fileID: 114833016708636562}
-  m_Layer: 11
-  m_Name: Body
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!1 &1239167622065546
 GameObject:
   m_ObjectHideFlags: 0
@@ -38,9 +21,27 @@ GameObject:
   - component: {fileID: 224865549737384884}
   - component: {fileID: 222454304886767106}
   - component: {fileID: 114570957408876054}
-  - component: {fileID: 114758852644752138}
+  - component: {fileID: 114138415034569862}
   m_Layer: 5
   m_Name: MultipleChoicePanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &1539046183649554
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 224847775381246988}
+  - component: {fileID: 222095259267808112}
+  - component: {fileID: 114642397642559914}
+  - component: {fileID: 114286095326580058}
+  m_Layer: 5
+  m_Name: Answers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -57,12 +58,54 @@ GameObject:
   - component: {fileID: 222439867063615530}
   - component: {fileID: 114885559682097846}
   m_Layer: 11
-  m_Name: Title
+  m_Name: Question
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &114138415034569862
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1239167622065546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b10ed062794ff654886d59f4eb86c035, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  question: {fileID: 114885559682097846}
+  answers: []
+  correctAnswer: 0
+  answerPanel: {fileID: 224847775381246988}
+  answerTogglePrefab: {fileID: 1895423656925944, guid: e345a930e554c394b8eda0ce1bab8d73,
+    type: 2}
+  answerCheckButtonPrefab: {fileID: 1309263382649292, guid: f384f30236bdfdd459b8dff861c47388,
+    type: 2}
+  crossImage: {fileID: 21300000, guid: 741e6d3a4a96b8c44a0c6c455b5a7f02, type: 3}
+--- !u!114 &114286095326580058
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1539046183649554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1297475563, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 5
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 0
 --- !u!114 &114570957408876054
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -90,62 +133,33 @@ MonoBehaviour:
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
---- !u!114 &114758852644752138
+--- !u!114 &114642397642559914
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1239167622065546}
+  m_GameObject: {fileID: 1539046183649554}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 508dc0c971d985547afe8307ba0800b1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  title: {fileID: 114885559682097846}
-  body: {fileID: 114833016708636562}
---- !u!114 &114833016708636562
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1095594092156178}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-  m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
-    m_FontSize: 40
-    m_FontStyle: 0
-    m_BestFit: 1
-    m_MinSize: 1
-    m_MaxSize: 40
-    m_Alignment: 0
-    m_AlignByGeometry: 0
-    m_RichText: 0
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
-    m_LineSpacing: 1.1
-  m_Text: Hallo ik ben een tekstvak. Hier zou een heel lange tekst in moeten komen,
-    maar ik heb geen internet. Dus ik kan geen Lorem Ipsum opzoeken. Maar dit zou
-    ook wel ok moeten zijn.Hallo ik ben een tekstvak. Hier zou een heel lange tekst
-    in moeten komen, maar ik heb geen internet. Dus ik kan geen Lorem Ipsum opzoeken.
-    Maar dit zou ook wel ok moeten zijn.Hallo ik ben een tekstvak. Hier zou een heel
-    lange tekst in moeten komen, maar ik heb geen internet. Dus ik kan geen Lorem
-    Ipsum opzoeken. Maar dit zou ook wel ok moeten zijn.Hallo ik ben een tekstvak.
-    Hier zou een heel lange tekst in moeten komen, maar ik heb geen internet. Dus
-    ik kan geen Lorem Ipsum opzoeken. Maar dit zou ook wel ok moeten zijn.Hallo ik
-    ben een tekstvak. Hier zou een heel lange tekst in moeten komen, maar ik heb geen
-    internet. Dus ik kan geen Lorem Ipsum opzoeken.
+  m_Sprite: {fileID: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
 --- !u!114 &114885559682097846
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -169,9 +183,9 @@ MonoBehaviour:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 40
     m_FontStyle: 1
-    m_BestFit: 0
+    m_BestFit: 1
     m_MinSize: 1
-    m_MaxSize: 100
+    m_MaxSize: 40
     m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 0
@@ -179,12 +193,12 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Dit is een Titel
---- !u!222 &222173119599529902
+--- !u!222 &222095259267808112
 CanvasRenderer:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1095594092156178}
+  m_GameObject: {fileID: 1539046183649554}
   m_CullTransparentMesh: 0
 --- !u!222 &222439867063615530
 CanvasRenderer:
@@ -213,28 +227,28 @@ RectTransform:
   m_Father: {fileID: 224865549737384884}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.35, y: 1}
-  m_AnchorMax: {x: 0.65, y: 1}
+  m_AnchorMin: {x: 0.4, y: 1}
+  m_AnchorMax: {x: 0.6, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 50}
+  m_SizeDelta: {x: 0, y: 90}
   m_Pivot: {x: 0.5, y: 1}
---- !u!224 &224563668624588198
+--- !u!224 &224847775381246988
 RectTransform:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1095594092156178}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_GameObject: {fileID: 1539046183649554}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 224865549737384884}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.35, y: 0}
-  m_AnchorMax: {x: 0.65, y: 1}
-  m_AnchoredPosition: {x: 0, y: -25}
-  m_SizeDelta: {x: 0, y: -50}
+  m_AnchorMin: {x: 0.4, y: 0}
+  m_AnchorMax: {x: 0.6, y: 1}
+  m_AnchoredPosition: {x: 0, y: -15}
+  m_SizeDelta: {x: 0, y: -150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224865549737384884
 RectTransform:
@@ -247,7 +261,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 2, z: 1}
   m_Children:
   - {fileID: 224096245789600968}
-  - {fileID: 224563668624588198}
+  - {fileID: 224847775381246988}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

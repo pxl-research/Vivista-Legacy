@@ -10,7 +10,6 @@ public class MultipleChoicePanel : MonoBehaviour
 	public Text question;
 	public string[] answers;
 	public int correctAnswer;
-	public Canvas canvas;
 	public RectTransform answerPanel;
 
 	public GameObject answerTogglePrefab;
@@ -83,11 +82,9 @@ public class MultipleChoicePanel : MonoBehaviour
 		question.text = newQuestion;
 		correctAnswer = Convert.ToInt32(newAnswers[0]);
 		answers = new string[newAnswers.Length - 1];
+
+		//TODO(Simon): Why source index + 1???
 		Array.Copy(newAnswers, 1, answers, 0, answers.Length);
-
-		var canvasTectTransform = canvas.GetComponent<RectTransform>();
-
-		var questionHeight = UIHelper.CalculateTextFieldHeight(question.text, question.font, question.fontSize, 400, 0);
 
 		for (var index = 0; index < answers.Length; index++)
 		{
@@ -102,13 +99,8 @@ public class MultipleChoicePanel : MonoBehaviour
 
 			//NOTE(Kristof): First child is question label, second child is question number
 			var textComponents = toggle.transform.GetComponentsInChildren<Text>();
-			var answerHeight =
-				UIHelper.CalculateTextFieldHeight(textComponents[0].text, textComponents[0].font, textComponents[0].fontSize, 400, 0);
 			textComponents[0].text = answer;
 			textComponents[1].text = $"{index + 1})";
-
-			toggle.GetComponent<RectTransform>().sizeDelta += new Vector2(0, answerHeight);
-			answerPanel.sizeDelta += new Vector2(0, answerHeight);
 
 			var col = toggle.AddComponent<BoxCollider>();
 			if (XRSettings.enabled)
@@ -128,16 +120,10 @@ public class MultipleChoicePanel : MonoBehaviour
 		checkAnswerButton = button.GetComponent<Button>();
 		checkAnswerButton.interactable = false;
 		button.GetComponent<Hittable>().onHit.AddListener(delegate { CheckAnswerHittable(checkAnswerButton); });
-
-		answerPanel.sizeDelta += new Vector2(0, button.GetComponent<RectTransform>().sizeDelta.y + 10);
-		canvasTectTransform.sizeDelta = new Vector2(canvasTectTransform.sizeDelta.x, questionHeight * 0.7f + answerPanel.sizeDelta.y + 10);
 	}
 
 	public void Move(Vector3 position)
 	{
-		var newPos = position;
-		newPos.y += 0.015f;
-		canvas.GetComponent<RectTransform>().position = position;
 	}
 
 	public void ToggleValueChanged(GameObject toggle)
