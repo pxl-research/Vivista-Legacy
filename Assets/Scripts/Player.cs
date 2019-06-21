@@ -25,7 +25,6 @@ public class InteractionPointPlayer
 	public double startTime;
 	public double endTime;
 	public float interactionTimer;
-	public bool isStartPoint = false;
 	public bool isTouched;
 	public GameObject blip;
 
@@ -39,7 +38,6 @@ public class Player : MonoBehaviour
 	public static List<Hittable> hittables;
 
 	public GameObject interactionPointPrefab;
-	public GameObject startPointGroup;
 	public GameObject indexPanelPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
@@ -137,8 +135,6 @@ public class Player : MonoBehaviour
 				ch.localScale = Vector3.one;
 				ch.gameObject.layer = LayerMask.NameToLayer("WorldUI");
 			}
-
-			StartCoroutine(InstantiateStartPointGroup());
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 		}
@@ -312,7 +308,7 @@ public class Player : MonoBehaviour
 					var textMesh = point.point.GetComponentInChildren<TextMesh>();
 
 					// Note(Lander): highlight the untouched interaction points
-					if (!point.isStartPoint && pointActive && !point.isTouched)
+					if (pointActive && !point.isTouched)
 					{
 						if (textMesh != null)
 						{
@@ -345,10 +341,12 @@ public class Player : MonoBehaviour
 						}
 					}
 
-					if (!point.isStartPoint && point.isTouched)
+					//NOTE(Simon): Mute shown points
+					if (point.isTouched)
 					{
 						point.point.GetComponent<Renderer>().material.color = GRAY;
 					}
+
 					blipCounter.text = remainingPoints != 0
 						? remainingPoints.ToString()
 						: "";
@@ -359,37 +357,24 @@ public class Player : MonoBehaviour
 						//NOTE(Kristof): Interacting with controller
 						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 						{
-							//NOTE(Kristof): The controllers only raycast on trigger down
-							//NOTE(Kristof): Interacting with StartPoints
-							if (point.isStartPoint)
+							point.panel.SetActive(!point.panel.activeSelf);
+
+							if (point.panel.activeSelf)
 							{
-								videoController.videoState = VideoController.VideoState.Watching;
-								startPointGroup.SetActive(false);
-								Togglecanvasses();
-								interactionPoints.RemoveRange(0, 4);
+								activePoints++;
+								point.isTouched = true;
 							}
-							//NOTE(Kristof): Interacting with InteractionPoints
 							else
 							{
-								point.panel.SetActive(!point.panel.activeSelf);
+								activePoints--;
+							}
 
-								if (point.panel.activeSelf)
-								{
-									activePoints++;
-									point.isTouched = true;
-								}
-								else
-								{
-									activePoints--;
-								}
+							videoController.Pause();
 
-								videoController.Pause();
-
-								//NOTE(Kristof): Play the video when you deactivate the last point
-								if (activePoints == 0 && VideoController.autoResume)
-								{
-									videoController.TogglePlay();
-								}
+							//NOTE(Kristof): Play the video when you deactivate the last point
+							if (activePoints == 0 && VideoController.autoResume)
+							{
+								videoController.TogglePlay();
 							}
 						}
 						//NOTE(Kristof): Interacting without controllers
@@ -399,48 +384,37 @@ public class Player : MonoBehaviour
 
 							if (timeToInteract < interactionTimer)
 							{
-								//NOTE(Kristof): Interacting with StartPoints
-								if (point.isStartPoint)
+								//NOTE(Kristof): Making a panel active
+								if (!point.panel.activeSelf)
 								{
-									videoController.videoState = VideoController.VideoState.Watching;
-									startPointGroup.SetActive(false);
-									Togglecanvasses();
-								}
-								//NOTE(Kristof): Interacting with InteractionPoints
-								else
-								{
-									//NOTE(Kristof): Making a panel active
-									if (!point.panel.activeSelf)
+									if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 									{
-										if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
-										{
-											interactionTimer = -1;
-											activePoints++;
-										}
-										else
-										{
-											//HACK(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away) 
-											interactionTimer = timeToInteract * 2;
-										}
-										point.isTouched = true;
-										point.panel.SetActive(true);
-										videoController.Pause();
-									}
-									//NOTE(Kristof): Making a panel inactive
-									//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
-									//NOTE will be between timeToInteract and timeToInteract + deltaTime
-									//NOTE(Kristof): This condition will occasionally cause bugs (see HACK above)
-									else if (timeToInteract < interactionTimer && interactionTimer < timeToInteract + Time.deltaTime)
-									{
-										point.panel.SetActive(false);
-										activePoints--;
-
 										interactionTimer = -1;
+										activePoints++;
+									}
+									else
+									{
+										//HACK(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away) 
+										interactionTimer = timeToInteract * 2;
+									}
+									point.isTouched = true;
+									point.panel.SetActive(true);
+									videoController.Pause();
+								}
+								//NOTE(Kristof): Making a panel inactive
+								//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
+								//NOTE will be between timeToInteract and timeToInteract + deltaTime
+								//NOTE(Kristof): This condition will occasionally cause bugs (see HACK above)
+								else if (timeToInteract < interactionTimer && interactionTimer < timeToInteract + Time.deltaTime)
+								{
+									point.panel.SetActive(false);
+									activePoints--;
 
-										if (activePoints == 0 && VideoController.autoResume)
-										{
-											videoController.TogglePlay();
-										}
+									interactionTimer = -1;
+
+									if (activePoints == 0 && VideoController.autoResume)
+									{
+										videoController.TogglePlay();
 									}
 								}
 							}
@@ -631,33 +605,6 @@ public class Player : MonoBehaviour
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 
-		//NOTE(Kristof): Add the 4 interactionpoints used for the mini-tutorial and starting the video, then load the InteractionPoints
-		{
-			startPointGroup.SetActive(true);
-
-			foreach (var startPoint in startPoints)
-			{
-				interactionPoints.Add(new InteractionPointPlayer
-				{
-					point = startPoint,
-					isStartPoint = true,
-					startTime = -1,
-					endTime = -1,
-					isTouched = false
-				});
-
-				var content = startPoint.GetComponentInChildren<Text>();
-				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
-				{
-					content.text = "Aim at the white point below and press the trigger";
-				}
-				else
-				{
-					content.text = "Align the central circle with the white point below";
-				}
-			}
-		}
-
 		data.points.Sort((x, y) => x.startTime != y.startTime
 										? x.startTime.CompareTo(y.startTime)
 										: x.endTime.CompareTo(y.endTime));
@@ -818,10 +765,8 @@ public class Player : MonoBehaviour
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
-			if (!interactionPoints[j].isStartPoint)
-			{
-				RemoveInteractionPoint(interactionPoints[j]);
-			}
+			
+			RemoveInteractionPoint(interactionPoints[j]);
 		}
 		interactionPoints.Clear();
 		interactionPointCount = 0;
@@ -855,16 +800,6 @@ public class Player : MonoBehaviour
 				interactionPoint.panel.transform.position = drawLocation;
 			}
 		}
-	}
-
-	//NOTE(Kristof): We don't want to do this while loading the video, bad performance
-	private IEnumerator InstantiateStartPointGroup()
-	{
-		startPointGroup = Instantiate(startPointGroup);
-		//NOTE(Kristof): Wait a frame so the startPointGroup can instantiate properly
-		yield return null;
-		startPoints.AddRange(GameObject.FindGameObjectsWithTag("StartPoint"));
-		startPointGroup.SetActive(false);
 	}
 
 	private IEnumerator EnableVr()
@@ -914,7 +849,7 @@ public class Player : MonoBehaviour
 					//NOTE 45f			offset serves to skip the dead zone
 					//NOTE (i) * 33.75	place a video every 33.75 degrees 
 					//NOTE 90f			camera rig rotation offset
-					var nextAngle = 45f + ((i) * 33.75f) + 90f;
+					var nextAngle = 45f + (i * 33.75f) + 90f;
 					var angle = -nextAngle * Mathf.PI / 180;
 					var x = 9.8f * Mathf.Cos(angle);
 					var z = 9.8f * Mathf.Sin(angle);
