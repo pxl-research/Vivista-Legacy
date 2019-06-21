@@ -178,16 +178,26 @@ public class VideoController : MonoBehaviour
 
 		if (!playing)
 		{
-			video.Play();
-			audioSource.Play();
-			playing = true;
+			Play();
 		}
 		else
 		{
-			video.Pause();
-			audioSource.Pause();
-			playing = false;
+			Pause();
 		}
+	}
+
+	public void Play()
+	{
+		video.Play();
+		audioSource.Play();
+		playing = true;
+	}
+
+	public void Pause()
+	{
+		video.Pause();
+		audioSource.Pause();
+		playing = false;
 	}
 
 	public void PlayFile(string filename)
@@ -304,9 +314,4 @@ public class VideoController : MonoBehaviour
 		return video.url;
 	}
 
-	public void Pause()
-	{
-		video.Pause();
-		playing = false;
-	}
 }

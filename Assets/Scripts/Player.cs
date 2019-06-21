@@ -25,7 +25,7 @@ public class InteractionPointPlayer
 	public double startTime;
 	public double endTime;
 	public float interactionTimer;
-	public bool isTouched;
+	public bool isSeen;
 	public GameObject blip;
 
 	public Vector3 returnRayOrigin;
@@ -55,7 +55,6 @@ public class Player : MonoBehaviour
 	private int interactionPointCount;
 
 	private List<InteractionPointPlayer> interactionPoints;
-	private List<GameObject> startPoints;
 	private List<GameObject> videoPositions;
 	private FileLoader fileLoader;
 	private VideoController videoController;
@@ -76,17 +75,15 @@ public class Player : MonoBehaviour
 	private SaveFile.SaveFileData data;
 
 	private bool isOutofView;
-	private int activePoints;
+	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
 	private int remainingPoints;
 
 	private const float timeToInteract = 0.75f;
-	private bool interacting;
+	private bool isInteractingWithPoint;
 	private float interactionTimer;
 
 	private bool[] cameraRigMovable = new bool[2];
-
-	private Color GRAY = new Color(0.75f, 0.75f, 0.75f, 1);
 
 	void Awake()
 	{
@@ -101,7 +98,6 @@ public class Player : MonoBehaviour
 		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
 
 		interactionPoints = new List<InteractionPointPlayer>();
-		startPoints = new List<GameObject>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
@@ -242,14 +238,14 @@ public class Player : MonoBehaviour
 			Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 			Ray controllerRay = new Ray();
 
-			const ulong ulTriggerValue = (ulong)1 << 33;
+			const ulong triggerValue = (ulong)1 << 33;
 
-			if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + ulTriggerValue)
+			if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + triggerValue)
 			{
 				controllerRay = controllerLeft.GetComponent<Controller>().CastRay();
 			}
 
-			if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + ulTriggerValue)
+			if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + triggerValue)
 			{
 				controllerRay = controllerRight.GetComponent<Controller>().CastRay();
 			}
@@ -260,7 +256,7 @@ public class Player : MonoBehaviour
 			ray = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : cameraRay;
 		}
 
-		interacting = false;
+		isInteractingWithPoint = false;
 
 		if (playerState == PlayerState.Watching)
 		{
@@ -283,7 +279,7 @@ public class Player : MonoBehaviour
 				var right = controllerRight.GetComponent<Controller>();
 
 				float forwardAngle;
-				//Note(lander): Turn the blips with the correct angle.
+				//Note(lander): Compass rotation
 				{
 					if (left || right)
 					{
@@ -297,28 +293,20 @@ public class Player : MonoBehaviour
 					}
 				}
 
-				//NOTE(Kristof): The startpoints are removed in the for loop, so we need to loop in reverse
-				for (var i = interactionPoints.Count - 1; i >= 0; i--)
+				//NOTE(Simon): Update visible points and blips
+				for (int i = 0; i < interactionPoints.Count; i++)
 				{
 					var point = interactionPoints[i];
 
-					var pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
+					bool pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
 					point.point.SetActive(pointActive);
 
-					var textMesh = point.point.GetComponentInChildren<TextMesh>();
-
-					// Note(Lander): highlight the untouched interaction points
-					if (pointActive && !point.isTouched)
+					if (pointActive && !point.isSeen)
 					{
-						if (textMesh != null)
-						{
-							textMesh.color = Color.black;
-						}
-
-						var blipAngle = point.point.transform.eulerAngles.y;
+						float blipAngle = point.point.transform.eulerAngles.y;
 
 						// TODO(Lander): Rely on a start position of a video instead
-						var angle = (XRSettings.enabled ? forwardAngle : 90) - blipAngle;
+						float angle = (XRSettings.enabled ? forwardAngle : 90) - blipAngle;
 
 						if (point.blip == null)
 						{
@@ -329,10 +317,7 @@ public class Player : MonoBehaviour
 					}
 					else
 					{
-						if (textMesh != null)
-						{
-							textMesh.color = Color.white;
-						}
+
 						if (point.blip != null)
 						{
 							Destroy(point.blip);
@@ -341,102 +326,46 @@ public class Player : MonoBehaviour
 						}
 					}
 
-					//NOTE(Simon): Mute shown points
-					if (point.isTouched)
-					{
-						point.point.GetComponent<Renderer>().material.color = GRAY;
-					}
-
 					blipCounter.text = remainingPoints != 0
 						? remainingPoints.ToString()
 						: "";
+				}
 
-					//NOTE(Lander): current point is hit with the raycast
-					if (hit.transform != null && hit.transform.gameObject == point.point)
+				if (activeInteractionPoint == null && hit.transform != null)
+				{
+					var pointGO = hit.transform.gameObject;
+					InteractionPointPlayer point = null;
+
+					for (int i = 0; i < interactionPoints.Count; i++)
 					{
-						//NOTE(Kristof): Interacting with controller
-						if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+						if (pointGO == interactionPoints[i].point)
 						{
-							point.panel.SetActive(!point.panel.activeSelf);
-
-							if (point.panel.activeSelf)
-							{
-								activePoints++;
-								point.isTouched = true;
-							}
-							else
-							{
-								activePoints--;
-							}
-
-							videoController.Pause();
-
-							//NOTE(Kristof): Play the video when you deactivate the last point
-							if (activePoints == 0 && VideoController.autoResume)
-							{
-								videoController.TogglePlay();
-							}
-						}
-						//NOTE(Kristof): Interacting without controllers
-						else
-						{
-							interacting = true;
-
-							if (timeToInteract < interactionTimer)
-							{
-								//NOTE(Kristof): Making a panel active
-								if (!point.panel.activeSelf)
-								{
-									if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
-									{
-										interactionTimer = -1;
-										activePoints++;
-									}
-									else
-									{
-										//HACK(Kristof): Set to to double of timeToInteract to ensure no funky business happens (like disabling the panel right away) 
-										interactionTimer = timeToInteract * 2;
-									}
-									point.isTouched = true;
-									point.panel.SetActive(true);
-									videoController.Pause();
-								}
-								//NOTE(Kristof): Making a panel inactive
-								//NOTE This only needs to be the done the same frame that the interactiontimer exceeds the timeToInteract, on this frame point.interactionTimer
-								//NOTE will be between timeToInteract and timeToInteract + deltaTime
-								//NOTE(Kristof): This condition will occasionally cause bugs (see HACK above)
-								else if (timeToInteract < interactionTimer && interactionTimer < timeToInteract + Time.deltaTime)
-								{
-									point.panel.SetActive(false);
-									activePoints--;
-
-									interactionTimer = -1;
-
-									if (activePoints == 0 && VideoController.autoResume)
-									{
-										videoController.TogglePlay();
-									}
-								}
-							}
+							point = interactionPoints[i];
+							break;
 						}
 					}
-					//NOTE(Kristof): Gets executed for the point.panels that the user made active before but are not currently being interacted with (no hit)
-					else if (point.panel != null && point.panel.activeSelf)
-					{
-						//NOTE(Kristof): Disable all panels when using the Seekbar play button to resume play
-						if (videoController.playing)
-						{
-							point.panel.SetActive(false);
-							activePoints--;
-						}
 
-						//NOTE(Kristof): Video can resume if the user is not using VR
-						if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+					//NOTE(Kristof): Using controllers
+					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+					{ 
+						ActivateInteractionPoint(point);
+					}
+					//NOTE(Kristof): Not using controllers
+					else
+					{
+						isInteractingWithPoint = true;
+
+						if (interactionTimer > timeToInteract)
 						{
-							point.panel.SetActive(false);
-							videoController.TogglePlay();
+							ActivateInteractionPoint(point);
 						}
 					}
+				}
+
+				//NOTE(Simon): Disable active interactionPoint if playback was started through seekbar
+				if (videoController.playing && activeInteractionPoint != null)
+				{
+					DeactivateActiveInteractionPoint();
 				}
 			}
 		}
@@ -480,7 +409,10 @@ public class Player : MonoBehaviour
 			//NOTE(Kristof): Looping over hittable UI scripts
 			foreach (var hittable in hittables)
 			{
-				if (hittable == null) continue;
+				if (hittable == null)
+				{
+					continue;
+				}
 				hittable.hitting = false;
 				hittable.hovering = false;
 
@@ -503,7 +435,7 @@ public class Player : MonoBehaviour
 					//NOTE(Kristof): Interacting without controllers
 					else
 					{
-						interacting = true;
+						isInteractingWithPoint = true;
 						hittable.hovering = true;
 						if (interactionTimer >= timeToInteract)
 						{
@@ -517,7 +449,7 @@ public class Player : MonoBehaviour
 
 		//NOTE(Kristof): Interaction interactionTimer and Crosshair behaviour
 		{
-			if (interacting)
+			if (isInteractingWithPoint)
 			{
 				interactionTimer += Time.deltaTime;
 				crosshairTimer.fillAmount = interactionTimer / timeToInteract;
@@ -552,7 +484,7 @@ public class Player : MonoBehaviour
 						{
 							var touchpad = device.GetAxis();
 
-							if (-0.7f < touchpad.x && touchpad.x < 0.7f)
+							if (touchpad.x > -0.7f && touchpad.x < 0.7f)
 							{
 								cameraRigMovable[index] = true;
 							}
@@ -611,7 +543,7 @@ public class Player : MonoBehaviour
 
 		foreach (var point in data.points)
 		{
-			var newPoint = Instantiate(interactionPointPrefab/*, point.position, Quaternion.identity*/);
+			var newPoint = Instantiate(interactionPointPrefab);
 
 			var newInteractionPoint = new InteractionPointPlayer
 			{
@@ -694,6 +626,24 @@ public class Player : MonoBehaviour
 		playerState = PlayerState.Opening;
 	}
 
+	private void ActivateInteractionPoint(InteractionPointPlayer point)
+	{
+		point.panel.SetActive(true);
+		activeInteractionPoint = point;
+		point.isSeen = true;
+		point.point.GetComponentInChildren<TextMesh>().color = Color.black;
+		point.point.GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f, 1);
+
+		videoController.Pause();
+	}
+
+	private void DeactivateActiveInteractionPoint()
+	{
+		activeInteractionPoint.panel.SetActive(false);
+		activeInteractionPoint = null;
+		videoController.Play();
+	}
+
 	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
@@ -757,15 +707,11 @@ public class Player : MonoBehaviour
 		EventManager.OnSpace();
 		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
-		if (videoController.playing)
-		{
-			videoController.TogglePlay();
-		}
+		videoController.Pause();
 		videoController.videoState = VideoController.VideoState.Intro;
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
-			
 			RemoveInteractionPoint(interactionPoints[j]);
 		}
 		interactionPoints.Clear();
