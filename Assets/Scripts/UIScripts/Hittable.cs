@@ -18,7 +18,7 @@ public class Hittable : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		if (SceneManager.GetActiveScene().name.Equals("Player"))
+		if (!SceneManager.GetActiveScene().name.Equals("Editor"))
 		{
 			Player.hittables.Add(this);
 		}

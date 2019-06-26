@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
-using Debug = UnityEngine.Debug;
 
 public struct ScreenshotParams
 {
@@ -17,7 +16,6 @@ public class VideoController : MonoBehaviour
 {
 	public enum VideoState
 	{
-		Intro,
 		Watching
 	}
 
@@ -57,32 +55,11 @@ public class VideoController : MonoBehaviour
 	void Start()
 	{
 		var players = GetComponents<VideoPlayer>();
-
-		if (players[0].playOnAwake)
+		video = players[0].playOnAwake ? players[0] : players[1];
+		screenshots = players[0].playOnAwake ? players[1] : players[0];
+		if (!SceneManager.GetActiveScene().name.Equals("Editor"))
 		{
-			//NOTE(Kristof): Player doesn't need a component for screenshots
-			if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Player"))
-			{
-				Destroy(players[1]);
-			}
-			else
-			{
-				screenshots = players[1];
-			}
-			video = players[0];
-		}
-		else
-		{
-			//NOTE(Kristof): Player doesn't need a component for screenshots
-			if (SceneManager.GetActiveScene() == SceneManager.GetSceneByName("Player"))
-			{
-				Destroy(players[0]);
-			}
-			else
-			{
-				screenshots = players[0];
-			}
-			video = players[1];
+			Destroy(screenshots);
 		}
 
 		audioSource = video.gameObject.AddComponent<AudioSource>();
@@ -267,7 +244,6 @@ public class VideoController : MonoBehaviour
 				video.targetTexture = renderTexture;
 
 				//TODO(Simon) Fix colors, looks way too dark
-				//TODO(Simon): Only load screenshot stuff in editor.
 				if (screenshots != null)
 				{
 					screenshots.targetTexture = new RenderTexture(descriptor);

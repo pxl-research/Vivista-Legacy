@@ -33,8 +33,8 @@ public class FileLoader : MonoBehaviour
 			time.GetComponent<Text>().fontSize = 75;
 		}
 
-		var seekbar = playerInfo.GetComponentInChildren<Seekbar>();
-		seekbar.controller = controller;
+		var seekbar = Seekbar.instance;
+		seekbar.videoController = controller;
 	}
 
 	public void LoadFile(string filename)

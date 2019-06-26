@@ -23,19 +23,13 @@ public class VideoControls : MonoBehaviour
 
 	public void Skip()
 	{
-		if (videoController.videoState > VideoController.VideoState.Intro)
-		{
-			videoController.video.time += amount;
-		}
+		videoController.video.time += amount;
 	}
 
 	public void Toggle()
 	{
-		if (videoController.videoState > VideoController.VideoState.Intro)
-		{
-			videoController.TogglePlay();
-			VideoController.autoResume = videoController.playing;
-		}
+		videoController.TogglePlay();
+		VideoController.autoResume = videoController.playing;
 	}
 
 	public void OnHoverStart()

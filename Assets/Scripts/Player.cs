@@ -26,7 +26,6 @@ public class InteractionPointPlayer
 	public double endTime;
 	public float interactionTimer;
 	public bool isSeen;
-	public GameObject blip;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
@@ -125,7 +124,7 @@ public class Player : MonoBehaviour
 			//NOTE(Kristof): Moving crosshair to crosshair canvas to display it in worldspace
 			{
 				var ch = Canvass.main.transform.Find("Crosshair");
-				ch.parent = Canvass.crosshair.transform;
+				ch.SetParent(Canvass.crosshair.transform);
 				ch.localPosition = Vector3.zero;
 				ch.localEulerAngles = Vector3.zero;
 				ch.localScale = Vector3.one;
@@ -136,8 +135,6 @@ public class Player : MonoBehaviour
 		}
 
 		VideoControls.videoController = videoController;
-
-		blipCounter = Seekbar.compass.GetComponentInChildren<Text>();
 	}
 
 	void Update()
@@ -149,9 +146,6 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
-
-				//NOTE(Lander): enable the highlight in the tutorial mode
-				VRDevices.SetControllersTutorialMode(new[] { controllerLeft, controllerRight }, videoController.videoState == VideoController.VideoState.Intro);
 
 				//NOTE(Kristof): Rotating the seekbar
 				{
@@ -275,62 +269,20 @@ public class Player : MonoBehaviour
 				RaycastHit hit;
 				Physics.Raycast(reversedRay, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
+				//NOTE(Simon): Update visible interactionpoints
+				for (int i = 0; i < interactionPoints.Count; i++)
+				{
+					bool pointActive = videoController.currentTime >= interactionPoints[i].startTime 
+									&& videoController.currentTime <= interactionPoints[i].endTime;
+					interactionPoints[i].point.SetActive(pointActive);
+				}
+
 				var left = controllerLeft.GetComponent<Controller>();
 				var right = controllerRight.GetComponent<Controller>();
 
-				float forwardAngle;
-				//Note(lander): Compass rotation
-				{
-					if (left || right)
-					{
-						forwardAngle = right.compassAttached
-							? right.transform.eulerAngles.y
-							: left.transform.eulerAngles.y;
-					}
-					else
-					{
-						forwardAngle = Seekbar.compass.transform.parent.localEulerAngles.y;
-					}
-				}
+				Seekbar.instance.RenderBlips(interactionPoints, left, right);
 
-				//NOTE(Simon): Update visible points and blips
-				for (int i = 0; i < interactionPoints.Count; i++)
-				{
-					var point = interactionPoints[i];
-
-					bool pointActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
-					point.point.SetActive(pointActive);
-
-					if (pointActive && !point.isSeen)
-					{
-						float blipAngle = point.point.transform.eulerAngles.y;
-
-						// TODO(Lander): Rely on a start position of a video instead
-						float angle = (XRSettings.enabled ? forwardAngle : 90) - blipAngle;
-
-						if (point.blip == null)
-						{
-							point.blip = Seekbar.CreateBlip(-angle, Instantiate(compassBlipPrefab));
-							remainingPoints++;
-						}
-						point.blip.transform.localEulerAngles = new Vector3(0, 0, angle);
-					}
-					else
-					{
-
-						if (point.blip != null)
-						{
-							Destroy(point.blip);
-							point.blip = null;
-							remainingPoints--;
-						}
-					}
-
-					blipCounter.text = remainingPoints != 0
-						? remainingPoints.ToString()
-						: "";
-				}
-
+				//NOTE(Simon): Interact with inactive interactionpoints
 				if (activeInteractionPoint == null && hit.transform != null)
 				{
 					var pointGO = hit.transform.gameObject;
@@ -379,9 +331,11 @@ public class Player : MonoBehaviour
 				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
 				if (OpenFile(metaFilename))
 				{
+					StartCoroutine(FadevideoCanvasOut(videoCanvas));
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
+					Togglecanvasses();
 					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
 						EventManager.OnSpace();
@@ -700,15 +654,12 @@ public class Player : MonoBehaviour
 
 	public void BackToBrowser()
 	{
-		if (videoController.videoState > VideoController.VideoState.Intro)
-		{
-			Togglecanvasses();
-		}
+		Togglecanvasses();
 		EventManager.OnSpace();
+		Seekbar.ClearBlips();
 		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
 		videoController.Pause();
-		videoController.videoState = VideoController.VideoState.Intro;
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{
@@ -855,7 +806,7 @@ public class Player : MonoBehaviour
 		projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
 	}
 
-	public static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
+	private static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
 	{
 		var group = videoCanvas.GetComponent<CanvasGroup>();
 
@@ -867,7 +818,7 @@ public class Player : MonoBehaviour
 		videoCanvas.root.Find("UICanvas").gameObject.SetActive(true);
 	}
 
-	public static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
+	private static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
 	{
 		videoCanvas.root.Find("UICanvas").gameObject.SetActive(false);
 		var group = videoCanvas.GetComponent<CanvasGroup>();

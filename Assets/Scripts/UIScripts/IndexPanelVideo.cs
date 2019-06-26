@@ -87,9 +87,6 @@ public class IndexPanelVideo : MonoBehaviour
 			indexPanel.answered = true;
 			indexPanel.answerVideoId = uuid;
 		}
-
-		var canvas = transform.root.GetComponentInChildren<Canvas>().transform;
-		StartCoroutine(Player.FadevideoCanvasOut(canvas));
 	}
 
 	public void OnHoverStart()
