@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 using UnityEngine.XR;
 using Valve.VR;
@@ -24,7 +25,6 @@ public class InteractionPointPlayer
 	public string filename;
 	public double startTime;
 	public double endTime;
-	public float interactionTimer;
 	public bool isSeen;
 
 	public Vector3 returnRayOrigin;
@@ -44,9 +44,7 @@ public class Player : MonoBehaviour
 	public GameObject multipleChoicePrefab;
 	public GameObject audioPanelPrefab;
 	public GameObject cameraRig;
-	public GameObject localAvatarPrefab;
 	public GameObject projectorPrefab;
-	public GameObject compassBlipPrefab;
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
@@ -58,10 +56,7 @@ public class Player : MonoBehaviour
 	private FileLoader fileLoader;
 	private VideoController videoController;
 	private List<GameObject> videoList;
-	private Image crosshair;
-	private Image crosshairTimer;
-	private Text blipCounter;
-
+	
 	private GameObject indexPanel;
 	private Transform videoCanvas;
 	private GameObject projector;
@@ -76,13 +71,12 @@ public class Player : MonoBehaviour
 	private bool isOutofView;
 	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
-	private int remainingPoints;
 
 	private const float timeToInteract = 0.75f;
 	private bool isInteractingWithPoint;
 	private float interactionTimer;
 
-	private bool[] cameraRigMovable = new bool[2];
+	private bool[] isControllerEligibleForRotation = new bool[2];
 
 	void Awake()
 	{
@@ -100,10 +94,8 @@ public class Player : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
+		VideoControls.videoController = videoController;
 		OpenFilePanel();
-		playerState = PlayerState.Opening;
-		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
-		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 
 		//NOTE(Kristof): VR specific settings
 		if (XRSettings.enabled)
@@ -134,7 +126,6 @@ public class Player : MonoBehaviour
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 		}
 
-		VideoControls.videoController = videoController;
 	}
 
 	void Update()
@@ -207,30 +198,30 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		//NOTE(Kristof): Controller specific behaviour
+		//NOTE(Simon): Enable/disable crosshair based on usage of controllers
+		if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
 		{
-			if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
-			{
-				crosshair.enabled = false;
-				crosshairTimer.enabled = false;
-			}
-			else
-			{
-				crosshair.enabled = true;
-				crosshairTimer.enabled = true;
-			}
+			Crosshair.Disable();
+		}
+		else
+		{
+			Crosshair.Enable();
+		}
 
+		//NOTE(Simon): Zoom when not using HMD
+		if (!XRSettings.enabled)
+		{
 			if (Input.mouseScrollDelta.y != 0)
 			{
 				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
 			}
 		}
 
-		Ray ray;
+		Ray interactionpointRay;
 		//NOTE(Kristof): Deciding on which object the Ray will be based on
 		{
-			Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
-			Ray controllerRay = new Ray();
+			var cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+			var controllerRay = new Ray();
 
 			const ulong triggerValue = (ulong)1 << 33;
 
@@ -247,7 +238,7 @@ public class Player : MonoBehaviour
 			controllerLeftOldState = trackedControllerLeft.controllerState;
 			controllerRightOldState = trackedControllerRight.controllerState;
 
-			ray = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : cameraRay;
+			interactionpointRay = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : cameraRay;
 		}
 
 		isInteractingWithPoint = false;
@@ -261,10 +252,10 @@ public class Player : MonoBehaviour
 
 			//Note(Simon): Interaction with points
 			{
-				var reversedRay = ray;
+				var reversedRay = interactionpointRay;
 				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
-				reversedRay.origin = ray.GetPoint(100);
-				reversedRay.direction = -ray.direction;
+				reversedRay.origin = interactionpointRay.GetPoint(100);
+				reversedRay.direction = -interactionpointRay.direction;
 
 				RaycastHit hit;
 				Physics.Raycast(reversedRay, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
@@ -331,13 +322,13 @@ public class Player : MonoBehaviour
 				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
 				if (OpenFile(metaFilename))
 				{
-					StartCoroutine(FadevideoCanvasOut(videoCanvas));
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
 					Togglecanvasses();
 					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
+						StartCoroutine(FadevideoCanvasOut(videoCanvas));
 						EventManager.OnSpace();
 						videoPositions.Clear();
 					}
@@ -349,10 +340,10 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		//NOTE(Kristof): Interaction with UI
+		//NOTE(Kristof): Interaction with Hittables
 		{
 			RaycastHit hit;
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
+			Physics.Raycast(interactionpointRay, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
 			var controllerList = new List<Controller>
 			{
@@ -406,14 +397,12 @@ public class Player : MonoBehaviour
 			if (isInteractingWithPoint)
 			{
 				interactionTimer += Time.deltaTime;
-				crosshairTimer.fillAmount = interactionTimer / timeToInteract;
-				crosshair.fillAmount = 1 - (interactionTimer / timeToInteract);
+				Crosshair.SetFillAmount(interactionTimer / timeToInteract);
 			}
 			else
 			{
 				interactionTimer = 0;
-				crosshairTimer.fillAmount = 0;
-				crosshair.fillAmount = 1;
+				Crosshair.SetFillAmount(interactionTimer / timeToInteract);
 			}
 		}
 
@@ -425,60 +414,41 @@ public class Player : MonoBehaviour
 				controllerRight.GetComponent<SteamVR_TrackedObject>()
 			};
 
-			for (var index = 0; index < controllers.Length; index++)
+			for (int index = 0; index < controllers.Length; index++)
 			{
-				var controller = controllers[index];
-				if (controller.index > SteamVR_TrackedObject.EIndex.None)
+				if (controllers[index].index > SteamVR_TrackedObject.EIndex.None)
 				{
-					var device = SteamVR_Controller.Input((int)controller.index);
+					var device = SteamVR_Controller.Input((int)controllers[index].index);
+					float amount = device.GetAxis().x;
+					float direction = 0;
+					const float rotationThreshold = 0.7f;
 
-					switch (VRDevices.loadedControllerSet)
+					//NOTE(Simon): The rift has only an analog stick. So first check if analog value high enough. If so, rotate and set eligibility to false.
+					//NOTE(cont.): Eligibility only gets reset once analog stick goes below threshold. For the Vive it's much simpler.
+					//NOTE(cont.): GetPressDown() is only true during the first frame with button down. So GetPressDown() determines eligibilty.
+					if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Oculus)
 					{
-						case VRDevices.LoadedControllerSet.Oculus:
+						if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
 						{
-							var touchpad = device.GetAxis();
-
-							if (touchpad.x > -0.7f && touchpad.x < 0.7f)
-							{
-								cameraRigMovable[index] = true;
-							}
-							else if (touchpad.x > 0.7f && cameraRigMovable[index])
-							{
-								cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
-								cameraRigMovable[index] = false;
-							}
-							else if (touchpad.x < -0.7f && cameraRigMovable[index])
-							{
-								cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
-								cameraRigMovable[index] = false;
-							}
-
-							break;
+							direction = Mathf.Sign(amount);
+							isControllerEligibleForRotation[index] = false;
 						}
-						case VRDevices.LoadedControllerSet.Vive:
+						else if (Mathf.Abs(amount) <= rotationThreshold)
 						{
-							var touchpad = device.GetAxis();
-							if (device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad))
-							{
-								if (touchpad.x > 0.7f && cameraRigMovable[index])
-								{
-									cameraRig.transform.localEulerAngles += new Vector3(0, 30, 0);
-									cameraRigMovable[index] = false;
-								}
-								else if (touchpad.x < -0.7f && cameraRigMovable[index])
-								{
-									cameraRig.transform.localEulerAngles -= new Vector3(0, 30, 0);
-									cameraRigMovable[index] = false;
-								}
-							}
-							else
-							{
-								cameraRigMovable[index] = true;
-							}
-
-							break;
+							isControllerEligibleForRotation[index] = true;
 						}
 					}
+					else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
+					{
+						isControllerEligibleForRotation[index] = device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad);
+
+						if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
+						{
+							direction = Mathf.Sign(amount);
+						}
+					}
+
+					cameraRig.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
 				}
 			}
 		}
@@ -491,6 +461,7 @@ public class Player : MonoBehaviour
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
 
+		//NOTE(Simon): Sort all interactionpoints based on their timing
 		data.points.Sort((x, y) => x.startTime != y.startTime
 										? x.startTime.CompareTo(y.startTime)
 										: x.endTime.CompareTo(y.endTime));
@@ -505,7 +476,7 @@ public class Player : MonoBehaviour
 				endTime = point.endTime,
 				title = point.title,
 				body = point.body,
-				filename = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), point.filename)),
+				filename = point.filename,
 				type = point.type,
 				point = newPoint,
 				returnRayOrigin = point.returnRayOrigin,
@@ -524,6 +495,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab);
+					//NOTE(Simon): All images are concatenated in the filename field, with a separator of '\f'
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
 					foreach (var file in filenames)
@@ -549,6 +521,7 @@ public class Player : MonoBehaviour
 				case InteractionType.MultipleChoice:
 				{
 					var panel = Instantiate(multipleChoicePrefab);
+					//NOTE(Simon): All answers are concatenated in the body field, with a separator of '\f'
 					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
@@ -589,10 +562,15 @@ public class Player : MonoBehaviour
 		point.point.GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f, 1);
 
 		videoController.Pause();
+
+		Assert.IsNotNull(activeInteractionPoint);
+		Assert.IsNotNull(activeInteractionPoint.point);
 	}
 
 	private void DeactivateActiveInteractionPoint()
 	{
+		Assert.IsNotNull(activeInteractionPoint);
+		Assert.IsNotNull(activeInteractionPoint.point);
 		activeInteractionPoint.panel.SetActive(false);
 		activeInteractionPoint = null;
 		videoController.Play();
@@ -624,7 +602,10 @@ public class Player : MonoBehaviour
 	{
 		var seekbarCollider = Canvass.seekbar.gameObject.GetComponent<BoxCollider>();
 
-		Canvass.main.enabled = !Canvass.main.enabled;
+		if (XRSettings.enabled)
+		{
+			Canvass.main.enabled = !Canvass.main.enabled;
+		}
 		Canvass.seekbar.enabled = !Canvass.seekbar.enabled;
 		seekbarCollider.enabled = !seekbarCollider.enabled;
 	}
