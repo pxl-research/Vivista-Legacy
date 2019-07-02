@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(SteamVR_TrackedController))]
 public class Controller : MonoBehaviour
 {
 	public GameObject laser;
@@ -11,6 +12,10 @@ public class Controller : MonoBehaviour
 
 	public bool uiHovering;
 	public bool compassAttached;
+
+	public bool triggerPressed;
+	public bool triggerDown;
+	public bool triggerReleased;
 
 	private MeshRenderer trigger;
 	private MeshRenderer thumbstick;
@@ -25,31 +30,35 @@ public class Controller : MonoBehaviour
 		controller = GetComponent<SteamVR_TrackedController>();
 		controller.Gripped += OnGripped;
 	}
-
-
+	
 	// Update is called once per frame
 	void Update()
 	{
-		//NOTE(Lander):Difference rotation and position for Vive and Touch controllers
+		//NOTE(Simon): Set laser direction based on controller type
+		if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
 		{
-			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
-			{
-				laser.transform.localPosition = new Vector3(0, 0, 0.1f);
-				laser.transform.localEulerAngles = new Vector3(90, 0, 0);
-			}
+			laser.transform.localPosition = new Vector3(0, 0, 0.1f);
+			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
 		}
 
-		//NOTE(Kristof): Fatty laser when pressing trigger
+		if (controller.triggerPressed && !triggerDown)
 		{
-			if (controller.triggerPressed)
-			{
-				laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
-			}
-			else
-			{
-				laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
-			}
+			triggerPressed = true;
+			triggerDown = true;
 		}
+		else if (controller.triggerPressed && triggerDown)
+		{
+			triggerPressed = false;
+		}
+		else if (!controller.triggerPressed && triggerDown)
+		{
+			triggerReleased = false;
+			triggerDown = false;
+		}
+		
+		//NOTE(Kristof): Fatty laser when pressing trigger
+		float scale = controller.triggerPressed ? 2 : 1;
+		laser.transform.localScale = new Vector3(scale, laser.transform.localScale.y, scale);
 
 		//NOTE(Kristof): Showing controllerUI when gripped 
 		{
@@ -59,7 +68,7 @@ public class Controller : MonoBehaviour
 			{
 				if (gripDown && !compassAttached)
 				{
-					compass.parent = controllerUI.transform;
+					compass.SetParent(controllerUI.transform);
 					compass.localScale = new Vector3(0.001f, 0.001f, 0.001f);
 					compass.localPosition = Vector3.zero;
 					compass.localEulerAngles = Vector3.zero;

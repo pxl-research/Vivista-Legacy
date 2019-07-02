@@ -7,8 +7,7 @@ public static class VRDevices
 	public enum LoadedSdk
 	{
 		None,
-		OpenVr,
-		Oculus
+		OpenVr
 	}
 
 	public enum LoadedControllerSet
@@ -31,13 +30,6 @@ public static class VRDevices
 
 		switch (loadedSdk)
 		{
-			case LoadedSdk.Oculus:
-				hasLeftController = devices.Contains("Oculus Touch Controller - Left");
-				hasRightController = devices.Contains("Oculus Touch Controller - Right");
-				hasRemote = devices.Contains("Oculus Remote");
-				loadedControllerSet = LoadedControllerSet.Oculus;
-				break;
-
 			case LoadedSdk.OpenVr:
 				//NOTE(Kristof): Better way to do this?
 				if (devices.Contains("OpenVR Controller(Oculus Rift CV1 (Left Controller)) - Left") || devices.Contains("OpenVR Controller(Oculus Rift CV1 (Right Controller)) - Right"))

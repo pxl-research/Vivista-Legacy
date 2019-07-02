@@ -48,6 +48,8 @@ public class Player : MonoBehaviour
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
+	private Controller trackedControllerLeft;
+	private Controller trackedControllerRight;
 
 	private int interactionPointCount;
 
@@ -60,11 +62,6 @@ public class Player : MonoBehaviour
 	private GameObject indexPanel;
 	private Transform videoCanvas;
 	private GameObject projector;
-
-	private VRControllerState_t controllerLeftOldState;
-	private VRControllerState_t controllerRightOldState;
-	private SteamVR_TrackedController trackedControllerLeft;
-	private SteamVR_TrackedController trackedControllerRight;
 
 	private SaveFile.SaveFileData data;
 
@@ -87,8 +84,8 @@ public class Player : MonoBehaviour
 	{
 		StartCoroutine(EnableVr());
 
-		trackedControllerLeft = controllerLeft.GetComponent<SteamVR_TrackedController>();
-		trackedControllerRight = controllerRight.GetComponent<SteamVR_TrackedController>();
+		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
+		trackedControllerRight = controllerRight.GetComponent<Controller>();
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -219,24 +216,20 @@ public class Player : MonoBehaviour
 
 		Ray interactionpointRay;
 		//NOTE(Kristof): Deciding on which object the Ray will be based on
+		//TODO(Simon): Prefers right over left controller
 		{
 			var cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 			var controllerRay = new Ray();
 
-			const ulong triggerValue = (ulong)1 << 33;
-
-			if (trackedControllerLeft.controllerState.ulButtonPressed == controllerLeftOldState.ulButtonPressed + triggerValue)
+			if (trackedControllerLeft.triggerPressed)
 			{
-				controllerRay = controllerLeft.GetComponent<Controller>().CastRay();
+				controllerRay = trackedControllerLeft.CastRay();
 			}
 
-			if (trackedControllerRight.controllerState.ulButtonPressed == controllerRightOldState.ulButtonPressed + triggerValue)
+			if (trackedControllerRight.triggerPressed)
 			{
-				controllerRay = controllerRight.GetComponent<Controller>().CastRay();
+				controllerRay = trackedControllerRight.CastRay();
 			}
-
-			controllerLeftOldState = trackedControllerLeft.controllerState;
-			controllerRightOldState = trackedControllerRight.controllerState;
 
 			interactionpointRay = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : cameraRay;
 		}
@@ -268,10 +261,7 @@ public class Player : MonoBehaviour
 					interactionPoints[i].point.SetActive(pointActive);
 				}
 
-				var left = controllerLeft.GetComponent<Controller>();
-				var right = controllerRight.GetComponent<Controller>();
-
-				Seekbar.instance.RenderBlips(interactionPoints, left, right);
+				Seekbar.instance.RenderBlips(interactionPoints, trackedControllerLeft, trackedControllerRight);
 
 				//NOTE(Simon): Interact with inactive interactionpoints
 				if (activeInteractionPoint == null && hit.transform != null)
@@ -340,18 +330,18 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		//NOTE(Kristof): Interaction with Hittables
+		//NOTE(Simon): Interaction with Hittables
 		{
 			RaycastHit hit;
 			Physics.Raycast(interactionpointRay, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
 			var controllerList = new List<Controller>
 			{
-				controllerLeft.GetComponent<Controller>(),
-				controllerRight.GetComponent<Controller>()
+				trackedControllerLeft,
+				trackedControllerRight
 			};
 
-			//NOTE(Kristof): Looping over hittable UI scripts
+			//NOTE(Simon): Reset all hittables
 			foreach (var hittable in hittables)
 			{
 				if (hittable == null)
@@ -360,53 +350,57 @@ public class Player : MonoBehaviour
 				}
 				hittable.hitting = false;
 				hittable.hovering = false;
+			}
 
-				//NOTE(Kristof): Checking for controller hover needs to happen independently of controller interactions
-				foreach (var con in controllerList)
+			//NOTE(Simon): Set hover state when hvoered by controllers
+			foreach (var con in controllerList)
+			{
+				if (con.uiHovering && con.hovered != null)
 				{
-					if (con.uiHovering && con.hovered == hittable.gameObject)
+					var hittable = con.hovered.GetComponent<Hittable>();
+					if (hittable != null)
 					{
 						hittable.hovering = true;
 					}
 				}
+			}
 
-				if (hit.transform != null && hit.transform.gameObject == hittable.gameObject)
+			//NOTE(Simon): Set hitting and hovering in hittables
+			if (hit.transform != null)
+			{
+				var hittable = hit.transform.GetComponent<Hittable>();
+				//NOTE(Kristof): Interacting with controller
+				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
 				{
-					//NOTE(Kristof): Interacting with controller
-					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
+					hittable.hitting = true;
+				}
+				//NOTE(Kristof): Interacting without controllers
+				else
+				{
+					isInteractingWithPoint = true;
+					hittable.hovering = true;
+					if (interactionTimer >= timeToInteract)
 					{
+						interactionTimer = -1;
 						hittable.hitting = true;
 					}
-					//NOTE(Kristof): Interacting without controllers
-					else
-					{
-						isInteractingWithPoint = true;
-						hittable.hovering = true;
-						if (interactionTimer >= timeToInteract)
-						{
-							interactionTimer = -1;
-							hittable.hitting = true;
-						}
-					}
 				}
 			}
 		}
 
-		//NOTE(Kristof): Interaction interactionTimer and Crosshair behaviour
+		//NOTE(Simon): Interaction interactionTimer and Crosshair behaviour
+		if (isInteractingWithPoint)
 		{
-			if (isInteractingWithPoint)
-			{
-				interactionTimer += Time.deltaTime;
-				Crosshair.SetFillAmount(interactionTimer / timeToInteract);
-			}
-			else
-			{
-				interactionTimer = 0;
-				Crosshair.SetFillAmount(interactionTimer / timeToInteract);
-			}
+			interactionTimer += Time.deltaTime;
+			Crosshair.SetFillAmount(interactionTimer / timeToInteract);
+		}
+		else
+		{
+			interactionTimer = 0;
+			Crosshair.SetFillAmount(interactionTimer / timeToInteract);
 		}
 
-		//NOTE(Kristof): Turning CameraRig
+		//NOTE(Simon): Rotate Camera on input
 		{
 			var controllers = new[]
 			{
