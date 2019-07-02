@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR;
 
@@ -7,91 +8,185 @@ public class SphereUIInputModule: StandaloneInputModule
 	private new Camera camera;
 	private RenderTexture uiTexture;
 
-	private Vector2 cursorPos;
 	private readonly MouseState mouseState = new MouseState();
+	private Dictionary<int, PointerEventData> pointers;
+	private Dictionary<int, Vector3> directions;
+	private Dictionary<int, Vector2> positions;
+	private Dictionary<int, Vector2> positionResults;
+	private Dictionary<int, RaycastResult> raycastResults;
+	private Dictionary<int, PointerEventData.FramePressState> clickStates;
 
-	public SteamVR_TrackedController leftController;
-	public SteamVR_TrackedController rightController;
+	public Controller leftController;
+	public Controller rightController;
+
+	private const int gazeId = 1;
+	private const int rightControllerId = 2;
+	private const int leftControllerId = 3;
+
 
 	protected override void Awake()
 	{
+		pointers = new Dictionary<int, PointerEventData>();
+		directions = new Dictionary<int, Vector3>();
+		positions = new Dictionary<int, Vector2>();
+		positionResults = new Dictionary<int, Vector2>();
+		raycastResults = new Dictionary<int, RaycastResult>();
+		clickStates = new Dictionary<int, PointerEventData.FramePressState>();
+
 		camera = Camera.main;
 		uiTexture = GetComponent<Camera>().targetTexture;
 		base.Awake();
 	}
 
+	protected PointerEventData.FramePressState StateForControllerTrigger(Controller controller)
+	{
+		var pressed = controller.triggerPressed;
+		var released = controller.triggerReleased;
+
+		if (pressed && released)
+		{
+			return PointerEventData.FramePressState.PressedAndReleased;
+		}
+		if (pressed)
+		{
+			return PointerEventData.FramePressState.Pressed;
+		}
+		if (released)
+		{
+			return PointerEventData.FramePressState.Released;
+		}
+
+		return PointerEventData.FramePressState.NotChanged;
+	}
+
 	protected override MouseState GetMousePointerEventData(int id)
 	{
 		PointerEventData leftData;
-		bool created = GetPointerData(kMouseLeftId, out leftData, true);
-
+		GetPointerData(kMouseLeftId, out leftData, true);
+		
 		leftData.Reset();
 
-		if (created)
-		{
-			leftData.position = cursorPos;
-		}
-
-		var direction = new Vector3(0, 0);
+		//NOTE(Simon): There could be more than 1 inputdevice (VR controllers for example), so store them all in a list
+		directions.Clear();
 		if (XRSettings.enabled)
 		{
 			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 			{
-				direction = camera.ScreenPointToRay(new Vector2(Screen.width, Screen.height)).direction;
-				Debug.Log("Gaze input");
+				directions.Add(gazeId, camera.ScreenPointToRay(new Vector2(Screen.width, Screen.height)).direction);
 			}
 			else
 			{
+				if (VRDevices.hasRightController)
+				{
+					directions.Add(leftControllerId, rightController.GetComponent<Controller>().CastRay().direction);
+				}
 				if (VRDevices.hasLeftController)
 				{
-					direction = leftController.GetComponent<Controller>().CastRay().direction;
-					Debug.Log("Left controller input");
-				}
-				else if (VRDevices.hasRightController)
-				{
-					direction = rightController.GetComponent<Controller>().CastRay().direction;
-					Debug.Log("Right controller input");
+					directions.Add(rightControllerId, leftController.GetComponent<Controller>().CastRay().direction);
 				}
 			}
 		}
-		else
+		if (Input.mousePresent)
 		{
-			direction = camera.ScreenPointToRay((Vector2)Input.mousePosition).direction;
-			Debug.Log("Mouse input");
+			directions.Add(kMouseLeftId, camera.ScreenPointToRay((Vector2)Input.mousePosition).direction);
 		}
 
-		Vector2 pos;
-		pos.x = uiTexture.width * (0.5f - Mathf.Atan2(direction.z, direction.x) / (2f * Mathf.PI));
-		pos.y = uiTexture.height * (Mathf.Asin(direction.y) / Mathf.PI + 0.5f);
-		cursorPos = pos;
+		positions.Clear();
+		foreach (var direction in directions)
+		{
+			positions.Add(direction.Key, new Vector2
+			{
+				x = uiTexture.width * (0.5f - Mathf.Atan2(direction.Value.z, direction.Value.x) / (2f * Mathf.PI)),
+				y = uiTexture.height * (Mathf.Asin(direction.Value.y) / Mathf.PI + 0.5f)
+			});
+		}
 
-		// For UV-mapped meshes, you could fire a ray against its MeshCollider 
-		// and determine the UV coordinates of the struck point.
+		raycastResults.Clear();
+		positionResults.Clear();
+		foreach (var position in positions)
+		{
+			var tempData = new PointerEventData(eventSystem);
+			tempData.Reset();
 
-		leftData.delta = pos - leftData.position;
-		leftData.position = pos;
-		leftData.scrollDelta = Input.mouseScrollDelta;
-		leftData.button = PointerEventData.InputButton.Left;
+			tempData.position = position.Value;
 
-		eventSystem.RaycastAll(leftData, m_RaycastResultCache);
-		var raycast = FindFirstRaycast(m_RaycastResultCache);
-		leftData.pointerCurrentRaycast = raycast;
-		m_RaycastResultCache.Clear();
+			eventSystem.RaycastAll(tempData, m_RaycastResultCache);
+			var result = FindFirstRaycast(m_RaycastResultCache);
+			if (result.isValid)
+			{
+				raycastResults.Add(position.Key, result);
+				positionResults.Add(position.Key, position.Value);
+			}
+			m_RaycastResultCache.Clear();
+		}
+
+		pointers.Clear();
+		foreach (var kvp in raycastResults)
+		{
+			PointerEventData prevData;
+			GetPointerData(kvp.Key, out prevData, true);
+
+			pointers.Add(kvp.Key, new PointerEventData(eventSystem)
+			{
+				delta = positionResults[kvp.Key] - prevData.position,
+				position = positionResults[kvp.Key],
+				scrollDelta = Input.mouseScrollDelta,
+				button = PointerEventData.InputButton.Left,
+				pointerCurrentRaycast = raycastResults[kvp.Key],
+				pointerId = kvp.Key,
+			});
+		}
 
 		// copy the apropriate data into right and middle slots
-		PointerEventData rightData;
-		GetPointerData(kMouseRightId, out rightData, true);
-		CopyFromTo(leftData, rightData);
-		rightData.button = PointerEventData.InputButton.Right;
+		//PointerEventData rightData;
+		//GetPointerData(kMouseRightId, out rightData, true);
+		//CopyFromTo(leftData, rightData);
+		//rightData.button = PointerEventData.InputButton.Right;
+		//
+		//PointerEventData middleData;
+		//GetPointerData(kMouseMiddleId, out middleData, true);
+		//CopyFromTo(leftData, middleData);
+		//middleData.button = PointerEventData.InputButton.Middle;
 
-		PointerEventData middleData;
-		GetPointerData(kMouseMiddleId, out middleData, true);
-		CopyFromTo(leftData, middleData);
-		middleData.button = PointerEventData.InputButton.Middle;
+		clickStates.Clear();
+		clickStates.Add(leftControllerId, StateForControllerTrigger(leftController));
+		clickStates.Add(rightControllerId, StateForControllerTrigger(leftController));
+		clickStates.Add(kMouseLeftId, StateForMouseButton(0));
+		//clickStates.Add(gazeId, null);
 
-		mouseState.SetButtonState(PointerEventData.InputButton.Left, StateForMouseButton(0), leftData);
-		mouseState.SetButtonState(PointerEventData.InputButton.Right, StateForMouseButton(1), rightData);
-		mouseState.SetButtonState(PointerEventData.InputButton.Middle, StateForMouseButton(2), middleData);
+		//var rightControllerState = StateForControllerTrigger(rightController);
+		//var mouseButtonState = StateForMouseButton(0);
+
+		//bool pressed = leftControllerState == PointerEventData.FramePressState.Pressed | rightControllerState == PointerEventData.FramePressState.Pressed | mouseButtonState == PointerEventData.FramePressState.Pressed;
+		//bool released = leftControllerState == PointerEventData.FramePressState.Released | rightControllerState == PointerEventData.FramePressState.Released | mouseButtonState == PointerEventData.FramePressState.Released;
+		//
+		//PointerEventData.FramePressState totalState;
+		//
+		//if (pressed)
+		//{
+		//	totalState = PointerEventData.FramePressState.Pressed;
+		//}
+		//else if (released)
+		//{
+		//	totalState = PointerEventData.FramePressState.Released;
+		//}
+		//else
+		//{
+		//	totalState = PointerEventData.FramePressState.NotChanged;
+		//}
+
+		foreach (var kvp in pointers)
+		{
+			mouseState.SetButtonState(PointerEventData.InputButton.Left, clickStates[kvp.Key], pointers[kvp.Key]);
+		}
+
+
+		Debug.Log($"Pointercount: {pointers.Count}");
+		foreach (var pointer in pointers)
+		{
+			Debug.Log($"key {pointer.Key} == {pointer.Value.pointerId} \t {pointer.Value.button} clicked {pointer.Value.clickCount} times. {pointer.Value.hovered.Count} items in the hoverstack.");
+		}
+
 
 		return mouseState;
 	}
