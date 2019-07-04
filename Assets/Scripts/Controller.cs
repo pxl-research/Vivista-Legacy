@@ -52,7 +52,12 @@ public class Controller : MonoBehaviour
 		}
 		else if (!controller.triggerPressed && triggerDown)
 		{
-			triggerReleased = false;
+			triggerReleased = true;
+			triggerDown = false;
+		}
+		else
+		{
+			triggerReleased = true;
 			triggerDown = false;
 		}
 		

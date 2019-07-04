@@ -15,6 +15,7 @@ public class SphereUIInputModule: StandaloneInputModule
 	private Dictionary<int, Vector2> positionResults;
 	private Dictionary<int, RaycastResult> raycastResults;
 	private Dictionary<int, PointerEventData.FramePressState> clickStates;
+	private Dictionary<int, GameObject> previousHovers;
 
 	public Controller leftController;
 	public Controller rightController;
@@ -32,6 +33,7 @@ public class SphereUIInputModule: StandaloneInputModule
 		positionResults = new Dictionary<int, Vector2>();
 		raycastResults = new Dictionary<int, RaycastResult>();
 		clickStates = new Dictionary<int, PointerEventData.FramePressState>();
+		previousHovers = new Dictionary<int, GameObject>();
 
 		camera = Camera.main;
 		uiTexture = GetComponent<Camera>().targetTexture;
@@ -59,7 +61,7 @@ public class SphereUIInputModule: StandaloneInputModule
 		return PointerEventData.FramePressState.NotChanged;
 	}
 
-	protected override MouseState GetMousePointerEventData(int id)
+	public override void Process()
 	{
 		PointerEventData leftData;
 		GetPointerData(kMouseLeftId, out leftData, true);
@@ -78,11 +80,11 @@ public class SphereUIInputModule: StandaloneInputModule
 			{
 				if (VRDevices.hasRightController)
 				{
-					directions.Add(leftControllerId, rightController.GetComponent<Controller>().CastRay().direction);
+					directions.Add(rightControllerId, rightController.GetComponent<Controller>().CastRay().direction);
 				}
 				if (VRDevices.hasLeftController)
 				{
-					directions.Add(rightControllerId, leftController.GetComponent<Controller>().CastRay().direction);
+					directions.Add(leftControllerId, leftController.GetComponent<Controller>().CastRay().direction);
 				}
 			}
 		}
@@ -137,57 +139,38 @@ public class SphereUIInputModule: StandaloneInputModule
 			});
 		}
 
-		// copy the apropriate data into right and middle slots
-		//PointerEventData rightData;
-		//GetPointerData(kMouseRightId, out rightData, true);
-		//CopyFromTo(leftData, rightData);
-		//rightData.button = PointerEventData.InputButton.Right;
-		//
-		//PointerEventData middleData;
-		//GetPointerData(kMouseMiddleId, out middleData, true);
-		//CopyFromTo(leftData, middleData);
-		//middleData.button = PointerEventData.InputButton.Middle;
-
 		clickStates.Clear();
 		clickStates.Add(leftControllerId, StateForControllerTrigger(leftController));
-		clickStates.Add(rightControllerId, StateForControllerTrigger(leftController));
+		clickStates.Add(rightControllerId, StateForControllerTrigger(rightController));
 		clickStates.Add(kMouseLeftId, StateForMouseButton(0));
-		//clickStates.Add(gazeId, null);
-
-		//var rightControllerState = StateForControllerTrigger(rightController);
-		//var mouseButtonState = StateForMouseButton(0);
-
-		//bool pressed = leftControllerState == PointerEventData.FramePressState.Pressed | rightControllerState == PointerEventData.FramePressState.Pressed | mouseButtonState == PointerEventData.FramePressState.Pressed;
-		//bool released = leftControllerState == PointerEventData.FramePressState.Released | rightControllerState == PointerEventData.FramePressState.Released | mouseButtonState == PointerEventData.FramePressState.Released;
-		//
-		//PointerEventData.FramePressState totalState;
-		//
-		//if (pressed)
-		//{
-		//	totalState = PointerEventData.FramePressState.Pressed;
-		//}
-		//else if (released)
-		//{
-		//	totalState = PointerEventData.FramePressState.Released;
-		//}
-		//else
-		//{
-		//	totalState = PointerEventData.FramePressState.NotChanged;
-		//}
 
 		foreach (var kvp in pointers)
 		{
-			mouseState.SetButtonState(PointerEventData.InputButton.Left, clickStates[kvp.Key], pointers[kvp.Key]);
+			if (!previousHovers.ContainsKey(kvp.Key))
+			{
+				previousHovers.Add(kvp.Key, null);
+			}
+			if (kvp.Value.pointerCurrentRaycast.gameObject != previousHovers[kvp.Key])
+			{
+				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerEnterHandler);
+				var otherHovers = false;
+				foreach (var currentHover in pointers)
+				{
+					if (currentHover.Value.pointerCurrentRaycast.gameObject == previousHovers[kvp.Key])
+					{
+						otherHovers = true;
+					}
+				}
+				if (!otherHovers)
+				{
+					ExecuteEvents.ExecuteHierarchy(previousHovers[kvp.Key], kvp.Value, ExecuteEvents.pointerExitHandler);
+				}
+				previousHovers[kvp.Key] = kvp.Value.pointerCurrentRaycast.gameObject;
+			}
+			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Pressed || clickStates[kvp.Key] == PointerEventData.FramePressState.PressedAndReleased)
+			{
+				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerClickHandler);
+			}
 		}
-
-
-		Debug.Log($"Pointercount: {pointers.Count}");
-		foreach (var pointer in pointers)
-		{
-			Debug.Log($"key {pointer.Key} == {pointer.Value.pointerId} \t {pointer.Value.button} clicked {pointer.Value.clickCount} times. {pointer.Value.hovered.Count} items in the hoverstack.");
-		}
-
-
-		return mouseState;
 	}
 }
