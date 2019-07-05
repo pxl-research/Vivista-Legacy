@@ -249,8 +249,7 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
-		ray.origin = ray.GetPoint(100);
-		ray.direction = -ray.direction;
+		ray = ray.ReverseRay();
 
 		if (editorState == EditorState.Inactive)
 		{

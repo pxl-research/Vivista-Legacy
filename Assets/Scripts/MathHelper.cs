@@ -88,4 +88,12 @@ public static class MathHelper
 		var result = $"{calculated:0.##} {names[magnitude]}";
 		return result;
 	}
+
+	public static Ray ReverseRay(this Ray ray, float desiredLength = 100f)
+	{
+		var newRay = ray;
+		newRay.origin = ray.GetPoint(desiredLength);
+		newRay.direction = -ray.direction;
+		return newRay;
+	}
 }

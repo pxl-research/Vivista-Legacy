@@ -8,7 +8,6 @@ public class SphereUIInputModule: StandaloneInputModule
 	private new Camera camera;
 	private RenderTexture uiTexture;
 
-	private readonly MouseState mouseState = new MouseState();
 	private Dictionary<int, PointerEventData> pointers;
 	private Dictionary<int, Vector3> directions;
 	private Dictionary<int, Vector2> positions;
@@ -19,6 +18,8 @@ public class SphereUIInputModule: StandaloneInputModule
 
 	public Controller leftController;
 	public Controller rightController;
+
+	public RectTransform[] DebugPointers;
 
 	private const int gazeId = 1;
 	private const int rightControllerId = 2;
@@ -103,6 +104,9 @@ public class SphereUIInputModule: StandaloneInputModule
 			});
 		}
 
+		var debugPositions = new List<Vector2>(positions.Values);
+		DrawDebugPointers(debugPositions);
+
 		raycastResults.Clear();
 		positionResults.Clear();
 		foreach (var position in positions)
@@ -139,6 +143,7 @@ public class SphereUIInputModule: StandaloneInputModule
 			});
 		}
 
+		//TODO(Simon): Add hover clickstate determination
 		clickStates.Clear();
 		clickStates.Add(leftControllerId, StateForControllerTrigger(leftController));
 		clickStates.Add(rightControllerId, StateForControllerTrigger(rightController));
@@ -153,6 +158,7 @@ public class SphereUIInputModule: StandaloneInputModule
 			if (kvp.Value.pointerCurrentRaycast.gameObject != previousHovers[kvp.Key])
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerEnterHandler);
+				//NOTE(Simon): Check if any other pointers aree hovering the object that's just been unhovered.
 				var otherHovers = false;
 				foreach (var currentHover in pointers)
 				{
@@ -161,6 +167,7 @@ public class SphereUIInputModule: StandaloneInputModule
 						otherHovers = true;
 					}
 				}
+				//NOTE(Simon): If no other hovers, send PointerExit Event.
 				if (!otherHovers)
 				{
 					ExecuteEvents.ExecuteHierarchy(previousHovers[kvp.Key], kvp.Value, ExecuteEvents.pointerExitHandler);
@@ -171,6 +178,14 @@ public class SphereUIInputModule: StandaloneInputModule
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerClickHandler);
 			}
+		}
+	}
+
+	public void DrawDebugPointers(List<Vector2> locations)
+	{
+		for (int i = 0; i < locations.Count; i++)
+		{
+			DebugPointers[i].anchoredPosition = locations[i];
 		}
 	}
 }

@@ -245,10 +245,8 @@ public class Player : MonoBehaviour
 
 			//Note(Simon): Interaction with points
 			{
-				var reversedRay = interactionpointRay;
+				var reversedRay = interactionpointRay.ReverseRay();
 				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
-				reversedRay.origin = interactionpointRay.GetPoint(100);
-				reversedRay.direction = -interactionpointRay.direction;
 
 				RaycastHit hit;
 				Physics.Raycast(reversedRay, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));

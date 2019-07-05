@@ -90,44 +90,58 @@ public class Controller : MonoBehaviour
 				}
 			}
 		}
-		var ray = CastRay();
-		RaycastHit hit;
 
 		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
 		{
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
+			RaycastHit hit;
+			int layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints");
+			var ray = CastRay();
+			const float rayLength = 100f;
 
-			if (hit.transform != null)
+			if (Physics.Raycast(ray, out hit, rayLength, layerMask))
 			{
 				uiHovering = true;
 				hovered = hit.transform.gameObject;
 				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
+				SetCursorLocation(hit.point, hit.distance);
 			}
 			else
 			{
-				uiHovering = false;
-				hovered = null;
-				laser.transform.localScale = new Vector3(laser.transform.localScale.x, 100f, laser.transform.localScale.z);
-			}
-		}
-
-		//NOTE(Kristof): Moving cursor to hit location
-		{
-			cursor.transform.position = Vector3.zero;
-			cursor.SetActive(false);
-
-			Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI", "WorldUI", "interactionPoints"));
-			if (hit.transform != null)
-			{
-				var r = 0.02f * hit.distance;
-				if (r >= 0.04f)
+				var reversedRay = ray.ReverseRay();
+				if (Physics.Raycast(reversedRay, out hit, rayLength, layerMask))
 				{
-					cursor.SetActive(true);
-					cursor.transform.position = hit.point;
-					cursor.transform.localScale = new Vector3(r, r, r);
+					uiHovering = true;
+					hovered = hit.transform.gameObject;
+					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength - hit.distance, laser.transform.localScale.z);
+					SetCursorLocation(hit.point, rayLength - hit.distance);
+				}
+				else
+				{
+					HideCursor();
+					uiHovering = false;
+					hovered = null;
+					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength, laser.transform.localScale.z);
 				}
 			}
 		}
+	}
+
+	public void SetCursorLocation(Vector3 position, float distance)
+	{
+		//NOTE(Simon): Radius proportional to laser length
+		var radius = 0.02f * distance;
+		//if (radius >= 0.04f)
+		{
+			cursor.SetActive(true);
+			cursor.transform.position = position;
+			cursor.transform.localScale = new Vector3(radius, radius, radius);
+		}
+	}
+
+	public void HideCursor()
+	{
+		cursor.transform.position = Vector3.zero;
+		cursor.SetActive(false);
 	}
 
 	public void TutorialHighlight()
