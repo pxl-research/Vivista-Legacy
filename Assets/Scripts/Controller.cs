@@ -96,7 +96,7 @@ public class Controller : MonoBehaviour
 			RaycastHit hit;
 			int layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints");
 			var ray = CastRay();
-			const float rayLength = 100f;
+			const float rayLength = 200f;
 
 			if (Physics.Raycast(ray, out hit, rayLength, layerMask))
 			{
@@ -129,6 +129,7 @@ public class Controller : MonoBehaviour
 	public void SetCursorLocation(Vector3 position, float distance)
 	{
 		//NOTE(Simon): Radius proportional to laser length
+		//TODO(Simon): Size does not scale properly to distance (http://wiki.unity3d.com/index.php?title=CameraRelativeScale&oldid=14840)
 		var radius = 0.02f * distance;
 		//if (radius >= 0.04f)
 		{
