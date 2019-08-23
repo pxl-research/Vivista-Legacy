@@ -1,136 +1,157 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using System.IO;
-using System;
+using UnityEngine.Networking;
 
 public class AudioPanel : MonoBehaviour
 {
 
-    public GameObject audioContainer;
-    public GameObject controllButton;
-    public Canvas canvas;
-    public Texture iconPlay;
-    public Texture iconPause;
-    public Text title;
+	public GameObject playButton;
+	public Canvas canvas;
+	public Texture iconPlay;
+	public Texture iconPause;
+	public Text title;
 
-    public AudioSource audioSource;
-    public AudioClip clip;
+	private AudioSource audioSource;
+	private AudioClip clip;
+	public Slider audioTimeSlider;
 
-    public static bool keepFileNames;
-    public string url;
+	//added
+	private float fullLength;
+	private float audioplayTime;
+	private int seconds;
+	private int minutes;
+	public Text clipTimetext;
 
+	private bool prepared;
 
-    void Start()
-    {
-        //NOTE(Kristof): Initial rotation towards the camera 
-        canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
+	public string url;
 
-    }
+	void Awake()
+	{
+		audioSource = gameObject.GetComponent<AudioSource>();
+		//NOTE(Kristof): Initial rotation towards the camera 
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
+		audioSource.playOnAwake = false;
+		
+		
+	}
 
-    // Update is called once per frame
-    void Update()
-    {
-        audioSource = gameObject.GetComponent<AudioSource>();
-        controllButton.GetComponent<RawImage>().texture = !audioSource.isPlaying ? iconPause : iconPlay;
+	// Update is called once per frame
+	void Update()
+	{
+		playButton.GetComponent<RawImage>().texture = !audioSource.isPlaying ? iconPause : iconPlay;
 
-        // NOTE(Lander): Rotate the panels to the camera
-        if (SceneManager.GetActiveScene().Equals(SceneManager.GetSceneByName("Editor")))
-        {
-            canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
-        }
+		// NOTE(Lander): Rotate the panels to the camera
+		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
+		ShowAudioPlayTime();
+	}
 
-    }
+	public void Init(string newTitle, string fullPath, string guid)
+	{
+		if (Player.hittables != null)
+		{
+			GetComponentInChildren<Hittable>().enabled = true;
+		}
 
-    private void OnDestroy()
-    {
-        if (keepFileNames || !audioSource) return;
-        var filename = "file://" + Application.streamingAssetsPath + "/Sound/";
+		var folder = Path.Combine(Application.persistentDataPath, guid);
 
-        //   var filename = audioSource.url;
+		if (!File.Exists(fullPath))
+		{
+			Toasts.AddToast(5, "Corrupted video, ABORT ABORT ABORT");
+		}
 
-        if (File.Exists(filename) && Path.GetExtension(filename) != "")
-        {
-            var newfilename = Path.Combine(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename));
-            try
-            {
-                File.Move(filename, newfilename);
-            }
-            catch (IOException)
-            {
-                try
-                {
-                    Debug.LogFormat("File Already exists? deleting: {0}", newfilename);
-                    File.Delete(filename);
-                }
-                catch (IOException e2)
-                {
-                    Debug.LogErrorFormat("Something went wrong while moving the file. Aborting. \n{0} ", e2.Message);
-                }
-            }
-        }
-    }
-    public void Init(string newTitle, string fullPath, string guid, bool prepareNow = false)
-    {
-        audioSource = Instantiate(audioSource);
+		url = fullPath;
 
-        if (Player.hittables != null)
-        {
-            GetComponentInChildren<Hittable>().enabled = true;
-        }
+		title.text = newTitle;
+		audioSource.playOnAwake = false;
+		ShowAudioPlayTime();
+		TogglePlay();
 
-        var folder = Path.Combine(Application.persistentDataPath, guid);
+	}
 
-        if (!File.Exists(fullPath))
-        {
-            var pathNoExtension = Path.Combine(Path.Combine(folder, SaveFile.extraPath), Path.GetFileNameWithoutExtension(fullPath));
-            if (!File.Exists(pathNoExtension))
-            {
-                Debug.LogErrorFormat("Cannot find extension-less audio file: {1} {0}", pathNoExtension, File.Exists(pathNoExtension));
-                return;
-            }
+	public void TogglePlay()
+	{
+		if (clip == null)
+		{
+			StartCoroutine(GetAudioClip(url));
+			return;
+		}
 
-            try
-            {
-                File.Move(pathNoExtension, fullPath);
-            }
-            catch (IOException e)
-            {
-                Debug.LogErrorFormat("Cannot add extension to file: {0}\n{2}\n{1}", pathNoExtension, e.Message, fullPath);
-                //return;
-            }
+		if (audioSource.isPlaying)
+		{
+			audioSource.Pause();
+		}
+		else
+		{
+			audioSource.Play();
+		}
+	}
 
-        }
+	IEnumerator GetAudioClip(string url)
+	{
+		var extension = Path.GetExtension(url);
+		var audioType = AudioType.UNKNOWN;
+		if (extension == ".mp3")
+		{
+			audioType = AudioType.MPEG;
+		}
+		if (extension == ".ogg")
+		{
+			audioType = AudioType.OGGVORBIS;
+		}
+		if (extension == ".aif" || extension == ".aiff")
+		{
+			audioType = AudioType.AIFF;
+		}
+		if (extension == ".wav")
+		{
+			audioType = AudioType.WAV;
+		}
 
-        //  audioSource.url = fullPath;
-        title.text = newTitle;
+		//using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + url, audioType))
+		using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("https://freewavesamples.com/files/Yamaha-V50-Rock-Beat-120bpm.wav", AudioType.WAV))
+		{
+			yield return www.SendWebRequest();
 
-        audioSource.playOnAwake = false;
+			if (www.isNetworkError)
+			{
+				Debug.Log(www.error);
+			}
+			else if (www.isHttpError)
+			{
+				Debug.Log(www.error);
+			}
+			else
+			{
+				clip = DownloadHandlerAudioClip.GetContent(www);
+				clip.LoadAudioData();
+				audioSource.clip = clip;
+				ShowAudioPlayTime();
+				audioSource.Play();
 
+				fullLength = clip.length;
+			}
 
-    }
-    public void TogglePlay()
-    {
-        audioSource.clip = clip;
-        (audioSource.isPlaying ? (Action)audioSource.Pause : audioSource.Play)();
-        audioSource.PlayOneShot(clip);
-        controllButton.GetComponent<RawImage>().texture = audioSource.isPlaying ? iconPause : iconPlay;
-    }
-    private WWW GetAudioFromFile(string path, string filename)
-    {
-        string audioToLoad = string.Format(path + "{0}", filename);
-        WWW request = new WWW(audioToLoad);
-        return request;
-    }
+		}
 
-    // NOTE(Lander): copied from image panel
-    public void Move(Vector3 position)
-    {
-        var newPos = position;
-        newPos.y += 0.015f;
-        canvas.GetComponent<RectTransform>().position = position;
-    }
+	}
+
+	public void Move(Vector3 position)
+	{
+		var newPos = position;
+		newPos.y += 0.015f;
+		canvas.GetComponent<RectTransform>().position = position;
+	}
+
+	private void ShowAudioPlayTime()
+	{
+		audioplayTime = (int)audioSource.time;
+		seconds = (int)audioplayTime % 60;
+		minutes = (int)(audioplayTime / 60) % 60;
+		clipTimetext.text = $"{minutes}:{seconds} / {(fullLength / 60) % 60}:{fullLength % 60}";
+		//clipTimetext.text = minutes + ":" + seconds.ToString("D2") + "/" + ((fullLength / 60) % 60) + ":" + (fullLength % 60).ToString("D2");
+	}
 }

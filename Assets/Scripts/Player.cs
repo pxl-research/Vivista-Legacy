@@ -45,6 +45,7 @@ public class Player : MonoBehaviour
 	public GameObject textPanelPrefab;
 	public GameObject videoPanelPrefab;
 	public GameObject multipleChoicePrefab;
+	public GameObject audioPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject localAvatarPrefab;
 	public GameObject projectorPrefab;
@@ -716,6 +717,13 @@ public class Player : MonoBehaviour
 				{
 					var panel = Instantiate(multipleChoicePrefab);
 					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Audio:
+				{
+					var panel = Instantiate(audioPanelPrefab);
+					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString());
 					newInteractionPoint.panel = panel;
 					break;
 				}

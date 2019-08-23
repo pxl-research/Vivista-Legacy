@@ -34,7 +34,9 @@ public enum InteractionType
 	Text,
 	Image,
 	Video,
-	MultipleChoice
+	MultipleChoice,
+    Audio,
+	Object
 }
 
 public enum Perspective
@@ -120,11 +122,17 @@ public class Editor : MonoBehaviour
 
 	public GameObject filePanelPrefab;
 	public GameObject textPanelPrefab;
-	public GameObject textPanelEditorPrefab;
-	public GameObject imagePanelPrefab;
+    public GameObject textPanelEditorPrefab;
+    public GameObject audioPanelPrefab;
+    public GameObject audioPanelEditorPrefab;
+    public GameObject imagePanelPrefab;
 	public GameObject imagePanelEditorPrefab;
 	public GameObject videoPanelPrefab;
 	public GameObject videoPanelEditorPrefab;
+	//
+	public GameObject objectPanelPrefab;
+	public GameObject objectPanelEditorPrefab;
+	//
 	public GameObject multipleChoicePanelPrefab;
 	public GameObject multipleChoicePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
@@ -398,6 +406,20 @@ public class Editor : MonoBehaviour
 
 							break;
 						}
+						case InteractionType.Audio:
+						{
+							interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<AudioPanelEditor>().Init("", "");
+							break;
+						}
+						//
+						case InteractionType.Object:
+						{
+							interactionEditor = Instantiate(objectPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<ObjectPanelEditor>().Init("", "");
+							break;
+						}
+						//
 						default:
 						{
 							Assert.IsTrue(true, "FFS, you shoulda added it here");
@@ -534,7 +556,82 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
-				case InteractionType.MultipleChoice:
+				//
+				case InteractionType.Object:
+				{
+					var editor = interactionEditor.GetComponent<ObjectPanelEditor>();
+					if (editor.answered)
+					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var extension = Path.GetExtension(editor.answerURL);
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+						var path = Path.Combine(folder, filename);
+						var pathExt = path + extension;
+
+						if (File.Exists(pathExt) && !File.Exists(path))
+						{
+							File.Move(pathExt, path);
+						}
+
+						if (!File.Exists(path))
+						{
+							File.Copy(editor.answerURL, path);
+						}
+
+						var panel = Instantiate(objectPanelPrefab);
+						panel.GetComponent<ObjectPanel>().Init(editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<ObjectPanel>().Move(lastPlacedPointPos);
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.body = "";
+						lastPlacedPoint.filename = filename + extension;
+						lastPlacedPoint.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						lastPlacedPoint.filled = true;
+					}
+					break;
+				}
+				//
+                case InteractionType.Audio:
+                {
+                    var editor = interactionEditor.GetComponent<AudioPanelEditor>();
+                    if (editor.answered)
+                    {
+                        var sourceExt = Path.GetExtension(editor.answerURL);
+                        var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+                        var destinationFilename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+                        var destinationPath = Path.Combine(projectFolder, destinationFilename);
+                        var destinationPathExt = destinationPath + sourceExt;
+
+                        if (File.Exists(editor.answerURL) && !File.Exists(destinationPathExt))
+                        {
+                            File.Copy(editor.answerURL, destinationPathExt);
+                        }
+						else
+						{
+							Toasts.AddToast(10, "Error while adding this audio file");
+							Destroy(interactionEditor);
+							editorState = EditorState.Active;
+							lastPlacedPoint.filled = true;
+							break;
+						}
+
+                        var panel = Instantiate(audioPanelPrefab);
+                        panel.GetComponent<AudioPanel>().Init(editor.answerTitle, destinationPathExt, meta.guid.ToString());
+                        panel.GetComponent<AudioPanel>().Move(lastPlacedPointPos);
+                        lastPlacedPoint.title = editor.answerTitle;
+                        lastPlacedPoint.body = "";
+                        lastPlacedPoint.filename = destinationFilename + sourceExt;
+                        lastPlacedPoint.panel = panel;
+
+                        Destroy(interactionEditor);
+                        editorState = EditorState.Active;
+                        lastPlacedPoint.filled = true;
+                    }
+                    break;
+                }
+                case InteractionType.MultipleChoice:
 				{
 					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
 					if (editor.answered)
@@ -605,6 +702,12 @@ public class Editor : MonoBehaviour
 						break;
 					case InteractionType.MultipleChoice:
 						pointToMove.panel.GetComponent<MultipleChoicePanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.Audio:
+						pointToMove.panel.GetComponent<AudioPanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.Object:
+						pointToMove.panel.GetComponent<ObjectPanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.None:
 						break;
@@ -709,6 +812,56 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(videoPanelPrefab);
 						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, path, meta.guid.ToString(), true);
 						panel.GetComponent<VideoPanel>().Move(pointToEdit.point.transform.position);
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = filename + extension;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+					break;
+				}
+				//
+				case InteractionType.Object:
+				{
+					var editor = interactionEditor.GetComponent<ObjectPanelEditor>();
+					if (editor && editor.answered)
+					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var extension = Path.GetExtension(editor.answerURL);
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+						var path = Path.Combine(folder, filename + extension);
+
+
+						var panel = Instantiate(objectPanelPrefab);
+						panel.GetComponent<ObjectPanel>().Init(editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<ObjectPanel>().Move(pointToEdit.point.transform.position);
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = filename + extension;
+						pointToEdit.panel = panel;
+
+						Destroy(interactionEditor);
+						editorState = EditorState.Active;
+						pointToEdit.filled = true;
+					}
+					break;
+				}
+				//
+				case InteractionType.Audio:
+				{
+					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
+					if (editor && editor.answered)
+					{
+						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var extension = Path.GetExtension(editor.answerURL);
+						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+						var path = Path.Combine(folder, filename + extension);
+
+
+						var panel = Instantiate(audioPanelEditorPrefab);
+					//	panel.GetComponent<AudioPanel>().Init(editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<AudioPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename + extension;
 						pointToEdit.panel = panel;
@@ -1216,6 +1369,18 @@ public class Editor : MonoBehaviour
 						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(panel.GetComponent<MultipleChoicePanel>().question.text,
 																						panel.GetComponent<MultipleChoicePanel>().GetBody());
 						break;
+					case InteractionType.Audio:
+						interactionEditor = Instantiate(audioPanelPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<AudioPanelEditor>().Init(panel.GetComponent<AudioPanel>().title.text,
+																				panel.GetComponent<AudioPanel>().url);
+						break;
+						//
+					case InteractionType.Object:
+						interactionEditor = Instantiate(objectPanelPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<ObjectPanelEditor>().Init(panel.GetComponent<ObjectPanel>().title.text,
+																				panel.GetComponent<ObjectPanel>().url);
+						break;
+						//
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1704,6 +1869,24 @@ public class Editor : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.Audio:
+				{
+					var panel = Instantiate(audioPanelPrefab);
+					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString());
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				//
+				case InteractionType.Object:
+				{
+					var panel = Instantiate(objectPanelPrefab);
+					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+					panel.GetComponent<ObjectPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString(), true);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				//
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

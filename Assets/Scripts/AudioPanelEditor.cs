@@ -12,7 +12,6 @@ public class AudioPanelEditor : MonoBehaviour
     public InputField url;
     public InputField title;
 
-
     public bool answered;
     public string answerTitle;
     public string answerURL;
@@ -40,7 +39,6 @@ public class AudioPanelEditor : MonoBehaviour
 
     public void Answer()
     {
-        // NOTE(Lander): ensured that this is the right path?
         answered = true;
         answerURL = url.text;
         answerTitle = string.IsNullOrEmpty(title.text) ? "<unnamed>" : title.text;
@@ -48,7 +46,7 @@ public class AudioPanelEditor : MonoBehaviour
 
     public void Browse()
     {
-         var searchPattern = "*.mp3;*.wav;*.aif *.mid;";
+         var searchPattern = "*.mp3;*.wav;*.aif;*.ogg";
 
         explorerPanel = Instantiate(explorerPanelPrefab);
         explorerPanel.transform.SetParent(Canvass.main.transform, false);

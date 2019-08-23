@@ -21,6 +21,7 @@ public class FilePanel : MonoBehaviour
 	public RectTransform fileList;
 	public Text chosenFile;
 	public RawImage thumb;
+	public Texture logo;
 
 	public Button newButton;
 	public Button renameButton;
@@ -387,7 +388,7 @@ public class FilePanel : MonoBehaviour
 		}
 		else
 		{
-			thumb.texture = Texture2D.whiteTexture;
+			thumb.texture = logo;
 		}
 	}
 }
