@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.IO;
 using UnityEngine.Networking;
+using UnityEngine.XR;
 
 public class AudioPanel : MonoBehaviour
 {
@@ -19,13 +20,9 @@ public class AudioPanel : MonoBehaviour
 	public Slider audioTimeSlider;
 
 	//added
-	private float fullLength;
-	private float audioplayTime;
-	private int seconds;
-	private int minutes;
+	private float fullClipLength;
+	private float currentClipTime;
 	public Text clipTimetext;
-
-	private bool prepared;
 
 	public string url;
 
@@ -35,14 +32,21 @@ public class AudioPanel : MonoBehaviour
 		//NOTE(Kristof): Initial rotation towards the camera 
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y);
 		audioSource.playOnAwake = false;
-		
-		
+
+		if (!XRSettings.enabled)
+		{
+			canvas.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+		}
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		playButton.GetComponent<RawImage>().texture = !audioSource.isPlaying ? iconPause : iconPlay;
+		if (clip == null)
+		{
+			StartCoroutine(GetAudioClip(url));
+		}
+		playButton.GetComponent<RawImage>().texture = audioSource.isPlaying ? iconPause : iconPlay;
 
 		// NOTE(Lander): Rotate the panels to the camera
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
@@ -56,8 +60,6 @@ public class AudioPanel : MonoBehaviour
 			GetComponentInChildren<Hittable>().enabled = true;
 		}
 
-		var folder = Path.Combine(Application.persistentDataPath, guid);
-
 		if (!File.Exists(fullPath))
 		{
 			Toasts.AddToast(5, "Corrupted video, ABORT ABORT ABORT");
@@ -67,19 +69,10 @@ public class AudioPanel : MonoBehaviour
 
 		title.text = newTitle;
 		audioSource.playOnAwake = false;
-		ShowAudioPlayTime();
-		TogglePlay();
-
 	}
 
 	public void TogglePlay()
 	{
-		if (clip == null)
-		{
-			StartCoroutine(GetAudioClip(url));
-			return;
-		}
-
 		if (audioSource.isPlaying)
 		{
 			audioSource.Pause();
@@ -90,9 +83,9 @@ public class AudioPanel : MonoBehaviour
 		}
 	}
 
-	IEnumerator GetAudioClip(string url)
+	IEnumerator GetAudioClip(string urlToLoad)
 	{
-		var extension = Path.GetExtension(url);
+		var extension = Path.GetExtension(urlToLoad);
 		var audioType = AudioType.UNKNOWN;
 		if (extension == ".mp3")
 		{
@@ -111,12 +104,27 @@ public class AudioPanel : MonoBehaviour
 			audioType = AudioType.WAV;
 		}
 
-		//using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + url, audioType))
-		using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("https://freewavesamples.com/files/Yamaha-V50-Rock-Beat-120bpm.wav", AudioType.WAV))
+		using (var www = UnityWebRequestMultimedia.GetAudioClip("file://" + urlToLoad, audioType))
 		{
-			yield return www.SendWebRequest();
+			www.timeout = 2;
+			www.SendWebRequest();
 
-			if (www.isNetworkError)
+			while (!www.isDone)
+			{
+				yield return null;
+			}
+
+			if (www.isDone)
+			{
+				clip = DownloadHandlerAudioClip.GetContent(www);
+				clip.LoadAudioData();
+				audioSource.clip = clip;
+				ShowAudioPlayTime();
+				audioSource.Play();
+
+				fullClipLength = clip.length;
+			}
+			else if (www.isNetworkError)
 			{
 				Debug.Log(www.error);
 			}
@@ -126,17 +134,9 @@ public class AudioPanel : MonoBehaviour
 			}
 			else
 			{
-				clip = DownloadHandlerAudioClip.GetContent(www);
-				clip.LoadAudioData();
-				audioSource.clip = clip;
-				ShowAudioPlayTime();
-				audioSource.Play();
-
-				fullLength = clip.length;
+				Debug.Log("Something went wrong while downloading audio file. No errors, but not done either.");
 			}
-
 		}
-
 	}
 
 	public void Move(Vector3 position)
@@ -148,10 +148,9 @@ public class AudioPanel : MonoBehaviour
 
 	private void ShowAudioPlayTime()
 	{
-		audioplayTime = (int)audioSource.time;
-		seconds = (int)audioplayTime % 60;
-		minutes = (int)(audioplayTime / 60) % 60;
-		clipTimetext.text = $"{minutes}:{seconds} / {(fullLength / 60) % 60}:{fullLength % 60}";
-		//clipTimetext.text = minutes + ":" + seconds.ToString("D2") + "/" + ((fullLength / 60) % 60) + ":" + (fullLength % 60).ToString("D2");
+		currentClipTime = audioSource.time;
+		clipTimetext.text = $"{MathHelper.FormatSeconds(currentClipTime)} / {MathHelper.FormatSeconds(fullClipLength)}";
+		audioTimeSlider.maxValue = fullClipLength;
+		audioTimeSlider.value = currentClipTime;
 	}
 }
