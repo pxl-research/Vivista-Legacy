@@ -556,7 +556,6 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
-				//
 				case InteractionType.Object:
 				{
 					var editor = interactionEditor.GetComponent<ObjectPanelEditor>();
@@ -592,7 +591,6 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
-				//
                 case InteractionType.Audio:
                 {
                     var editor = interactionEditor.GetComponent<AudioPanelEditor>();
@@ -822,7 +820,6 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
-				//
 				case InteractionType.Object:
 				{
 					var editor = interactionEditor.GetComponent<ObjectPanelEditor>();
@@ -847,20 +844,17 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
-				//
 				case InteractionType.Audio:
 				{
+					//TODO(Simon): This doesn't work, because the new audio file doesn't get copied at the end of the edit
 					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
 					if (editor && editor.answered)
 					{
 						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 						var extension = Path.GetExtension(editor.answerURL);
 						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-						var path = Path.Combine(folder, filename + extension);
-
 
 						var panel = Instantiate(audioPanelEditorPrefab);
-					//	panel.GetComponent<AudioPanel>().Init(editor.answerTitle, path, meta.guid.ToString(), true);
 						panel.GetComponent<AudioPanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = filename + extension;
@@ -1370,17 +1364,15 @@ public class Editor : MonoBehaviour
 																						panel.GetComponent<MultipleChoicePanel>().GetBody());
 						break;
 					case InteractionType.Audio:
-						interactionEditor = Instantiate(audioPanelPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<AudioPanelEditor>().Init(panel.GetComponent<AudioPanel>().title.text,
 																				panel.GetComponent<AudioPanel>().url);
 						break;
-						//
 					case InteractionType.Object:
-						interactionEditor = Instantiate(objectPanelPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(objectPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<ObjectPanelEditor>().Init(panel.GetComponent<ObjectPanel>().title.text,
 																				panel.GetComponent<ObjectPanel>().url);
 						break;
-						//
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
