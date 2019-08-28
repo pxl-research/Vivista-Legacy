@@ -29,15 +29,9 @@ public class InteractionTypePicker : MonoBehaviour
 		answer = InteractionType.MultipleChoice;
 	}
 
-    public void AnswerAudio()
-    {
-        answered = true;
-        answer = InteractionType.Audio;
-    }
-
-	public void AnswerObject()
+	public void AnswerAudio()
 	{
 		answered = true;
-		answer = InteractionType.Object;
+		answer = InteractionType.Audio;
 	}
 }

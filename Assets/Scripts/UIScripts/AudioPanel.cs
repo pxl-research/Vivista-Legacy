@@ -28,7 +28,7 @@ public class AudioPanel : MonoBehaviour
 		canvas.transform.eulerAngles = new Vector3(Camera.main.transform.eulerAngles.x, Camera.main.transform.eulerAngles.y, Camera.main.transform.eulerAngles.z);
 	}
 
-	public void Init(string newTitle, string fullPath, string guid)
+	public void Init(string newTitle, string fullPath)
 	{
 		if (Player.hittables != null)
 		{

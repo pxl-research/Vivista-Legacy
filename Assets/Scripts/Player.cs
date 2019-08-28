@@ -723,7 +723,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Audio:
 				{
 					var panel = Instantiate(audioPanelPrefab);
-					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString());
+					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename);
 					newInteractionPoint.panel = panel;
 					break;
 				}
