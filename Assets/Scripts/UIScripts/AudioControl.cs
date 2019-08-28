@@ -58,6 +58,15 @@ public class AudioControl : MonoBehaviour
 		}
 	}
 
+	public void Restart()
+	{
+		if (clip != null)
+		{
+			audioSource.Stop();
+			audioSource.Play();
+		}
+	}
+
 	IEnumerator GetAudioClip(string urlToLoad)
 	{
 		var audioType = AudioHelper.AudioTypeFromFilename(urlToLoad);

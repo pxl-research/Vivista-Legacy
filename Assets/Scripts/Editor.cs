@@ -129,10 +129,8 @@ public class Editor : MonoBehaviour
 	public GameObject imagePanelEditorPrefab;
 	public GameObject videoPanelPrefab;
 	public GameObject videoPanelEditorPrefab;
-	//
 	public GameObject objectPanelPrefab;
 	public GameObject objectPanelEditorPrefab;
-	//
 	public GameObject multipleChoicePanelPrefab;
 	public GameObject multipleChoicePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
