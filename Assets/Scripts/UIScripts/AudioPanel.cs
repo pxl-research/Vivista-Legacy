@@ -9,8 +9,6 @@ public class AudioPanel : MonoBehaviour
 	public Text title;
 	public AudioControl audioControl;
 
-	public string url;
-
 	void Awake()
 	{
 		//NOTE(Kristof): Initial rotation towards the camera 
@@ -41,7 +39,6 @@ public class AudioPanel : MonoBehaviour
 			return;
 		}
 
-		url = fullPath;
 		audioControl.Init(fullPath);
 
 		title.text = newTitle;

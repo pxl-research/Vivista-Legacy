@@ -183,8 +183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   videoRenderTexture: {fileID: 8400000, guid: 6fd7f8d405b8e924ba0862dc5996e864, type: 2}
-  videoContainer: {fileID: 1879734881888692}
-  controllButton: {fileID: 1750760681663076}
+  controlButton: {fileID: 1750760681663076}
   canvas: {fileID: 223807789117909674}
   iconPlay: {fileID: 2800000, guid: 33656b95c6241cb4686736a803d137bb, type: 3}
   iconPause: {fileID: 2800000, guid: 774f22a79df44f448a8a813691361142, type: 3}

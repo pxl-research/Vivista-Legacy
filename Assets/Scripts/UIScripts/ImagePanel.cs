@@ -36,6 +36,10 @@ public class ImagePanel : MonoBehaviour
 	void OnEnable()
 	{
 		imageIndex = 0;
+		if (images.Count > 0)
+		{
+			SetIndex(imageIndex);
+		}
 	}
 
 	public void Init(string newTitle, List<string> urls)
@@ -48,7 +52,7 @@ public class ImagePanel : MonoBehaviour
 		}
 		if (images.Count > 0)
 		{
-			images[0].LoadImage();
+			SetIndex(0);
 		}
 		imageIndex = 0;
 		EnableButtons();
@@ -67,24 +71,27 @@ public class ImagePanel : MonoBehaviour
 		images.Add(script);
 	}
 
+	public void SetIndex(int index)
+	{
+		images[index].LoadImage();
+		ScrollTo(images[index].GetComponent<RectTransform>());
+		EnableButtons();
+	}
+
 	public void NextImage()
 	{
 		if (imageIndex < images.Count - 1)
 		{
-			imageIndex++;
+			SetIndex(++imageIndex);
 		}
-		images[imageIndex].LoadImage();
-		ScrollTo(images[imageIndex].GetComponent<RectTransform>());
 	}
 	
 	public void PrevImage()
 	{
 		if (imageIndex > 0)
 		{
-			imageIndex--;
+			SetIndex(--imageIndex);
 		}
-		images[imageIndex].LoadImage();
-		ScrollTo(images[imageIndex].GetComponent<RectTransform>());
 	}
 
 	private void ScrollTo(RectTransform target)
@@ -94,7 +101,6 @@ public class ImagePanel : MonoBehaviour
 		imagePanel.anchoredPosition =
 			(Vector2)imageScrollRect.transform.InverseTransformPoint(imagePanel.position)
 			- (Vector2)imageScrollRect.transform.InverseTransformPoint(target.position);
-		EnableButtons();
 	}
 
 	private void EnableButtons()

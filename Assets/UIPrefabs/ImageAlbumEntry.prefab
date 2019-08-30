@@ -165,10 +165,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   preview: {fileID: 114107413545241238}
-  url: {fileID: 114531232887124954}
+  filename: {fileID: 114531232887124954}
   moveLeftButton: {fileID: 114686880086064322}
   moveRightButton: {fileID: 114476160319182426}
   deleteButton: {fileID: 114222069964674670}
+  url: 
 --- !u!114 &114107413545241238
 MonoBehaviour:
   m_ObjectHideFlags: 1

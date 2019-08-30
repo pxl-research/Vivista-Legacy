@@ -5,27 +5,29 @@ using UnityEngine.UI;
 public class ImageAlbumEntry : MonoBehaviour
 {
 	public RawImage preview;
-	public Text url;
+	public Text filename;
 	public Button2 moveLeftButton;
 	public Button2 moveRightButton;
 	public Button2 deleteButton;
+	public string url;
 
 	private WWW www;
 	private bool downloading;
 	private static Vector2 defaultImageSize = new Vector2(200, 200);
 
-	public void SetURL(string URL)
+	public void SetURL(string newUrl)
 	{
-		if (!String.IsNullOrEmpty(URL))
+		if (!String.IsNullOrEmpty(newUrl))
 		{
-			if (!URL.StartsWith("http://") && !URL.StartsWith("https://"))
+			url = newUrl;
+			if (!newUrl.StartsWith("http://") && !newUrl.StartsWith("https://"))
 			{
-				URL = "file:///" + URL;
+				newUrl = "file:///" + newUrl;
 			}
 
-			url.text = URL.Substring(URL.LastIndexOf("\\", StringComparison.Ordinal) + 1);
+			filename.text = newUrl.Substring(newUrl.LastIndexOf("\\", StringComparison.Ordinal) + 1);
 
-			www = new WWW(URL);
+			www = new WWW(newUrl);
 			downloading = true;
 		}
 	}

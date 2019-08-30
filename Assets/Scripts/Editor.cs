@@ -174,6 +174,8 @@ public class Editor : MonoBehaviour
 	private Metadata meta;
 	private string userToken = "";
 	private UploadStatus uploadStatus;
+	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
+	
 
 	public Cursors cursors;
 	public List<Color> timelineColors;
@@ -190,6 +192,7 @@ public class Editor : MonoBehaviour
 	void Start()
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
+		interactionPointTemp.name = "Temp InteractionPoint";
 		interactionPoints = new List<InteractionPointEditor>();
 
 		var tooltip = Instantiate(TimeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform);
@@ -455,33 +458,25 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
-						var newPaths = new List<string>();
-						var newFileNames = new List<string>();
-						var oldPaths = editor.answerURLs;
-						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						var originalPaths = editor.answerURLs;
+						var newFilenames = new List<string>(originalPaths.Count);
+						var newFullPaths = new List<string>(originalPaths.Count);
 
-						for (int i = 0; i < oldPaths.Count; i++)
+						foreach (string originalPath in originalPaths)
 						{
-							var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-							var path = Path.Combine(folder, filename);
+							var newFilename = CopyNewExtra(lastPlacedPoint, originalPath);
+							var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
 
-							newFileNames.Add(filename);
-							newPaths.Add(path);
-
-							var tex = (Texture2D)editor.TextureForIndex(i);
-							var data = tex.EncodeToJPG(75);
-							using (var image = File.Create(path))
-							{
-								image.Write(data, 0, data.Length);
-							}
+							newFilenames.Add(newFilename);
+							newFullPaths.Add(newFullPath);
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newPaths);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newFullPaths);
 						panel.GetComponent<ImagePanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = String.Join("\f", newFileNames);
+						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
@@ -513,28 +508,15 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					if (editor.answered)
 					{
-						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var extension = Path.GetExtension(editor.answerURL);
-						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-						var path = Path.Combine(folder, filename);
-						var pathExt = path + extension;
-
-						if (File.Exists(pathExt) && !File.Exists(path))
-						{
-							File.Move(pathExt, path);
-						}
-
-						if (!File.Exists(path))
-						{
-							File.Copy(editor.answerURL, path);
-						}
+						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, pathExt, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, newFullPath);
 						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = filename + extension;
+						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
@@ -548,31 +530,16 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
 					if (editor.answered)
 					{
-						var sourceExt = Path.GetExtension(editor.answerURL);
-						var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var destinationFilename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-						var destinationPath = Path.Combine(projectFolder, destinationFilename);
-						var destinationPathExt = destinationPath + sourceExt;
-
-						if (File.Exists(editor.answerURL) && !File.Exists(destinationPathExt))
-						{
-							File.Copy(editor.answerURL, destinationPathExt);
-						}
-						else
-						{
-							Toasts.AddToast(10, "Error while adding this audio file");
-							Destroy(interactionEditor);
-							editorState = EditorState.Active;
-							lastPlacedPoint.filled = true;
-							break;
-						}
+						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
 						var panel = Instantiate(audioPanelPrefab);
-						panel.GetComponent<AudioPanel>().Init(editor.answerTitle, destinationPathExt);
+						panel.GetComponent<AudioPanel>().Init(editor.answerTitle, newFullPath);
 						panel.GetComponent<AudioPanel>().Move(lastPlacedPointPos);
+
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = destinationFilename + sourceExt;
+						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.panel = panel;
 
 						Destroy(interactionEditor);
@@ -686,6 +653,8 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.EditingInteractionPoint)
 		{
+			var finished = false;
+
 			switch (pointToEdit.type)
 			{
 				case InteractionType.Image:
@@ -693,37 +662,29 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
 					if (editor.answered)
 					{
-						var newPaths = new List<string>();
-						var newFileNames = new List<string>();
-						var oldPaths = editor.answerURLs;
-						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+						SetExtrasToDeleted(pointToEdit.filename);
 
-						for (int i = 0; i < oldPaths.Count; i++)
+						var originalPaths = editor.answerURLs;
+						var newFilenames = new List<string>(originalPaths.Count);
+						var newFullPaths = new List<string>(originalPaths.Count);
+
+						foreach (string originalPath in originalPaths)
 						{
-							var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-							var path = Path.Combine(folder, filename);
+							var newFilename = CopyNewExtra(pointToEdit, originalPath);
+							var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
 
-							newFileNames.Add(filename);
-							newPaths.Add(path);
-
-							var tex = (Texture2D)editor.TextureForIndex(i);
-							var data = tex.EncodeToJPG(75);
-							using (var image = File.Create(path))
-							{
-								image.Write(data, 0, data.Length);
-							}
+							newFilenames.Add(newFilename);
+							newFullPaths.Add(newFullPath);
 						}
 
 						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newPaths);
+						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newFullPaths);
 						panel.GetComponent<ImagePanel>().Move(pointToEdit.point.transform.position);
-						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = String.Join("\f", newFileNames);
-						pointToEdit.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = String.Join("\f", newFilenames);
+						pointToEdit.panel = panel;
+						finished = true;
 					}
 					break;
 				}
@@ -735,13 +696,11 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(textPanelPrefab);
 						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
 						panel.GetComponent<TextPanel>().Move(pointToEdit.point.transform.position);
+
 						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
 						pointToEdit.panel = panel;
-
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
+						finished = true;
 					}
 					break;
 				}
@@ -750,62 +709,40 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					if (editor && editor.answered)
 					{
-						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var extension = Path.GetExtension(editor.answerURL);
-						var filename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-						var path = Path.Combine(folder, filename + extension);
+						SetExtrasToDeleted(pointToEdit.filename);
+
+						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
 						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, path, meta.guid.ToString(), true);
+						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, newFullPath);
 						panel.GetComponent<VideoPanel>().Move(pointToEdit.point.transform.position);
-						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = filename + extension;
-						pointToEdit.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = newPath;
+						pointToEdit.panel = panel;
+						finished = true;
 					}
 					break;
 				}
 				case InteractionType.Audio:
 				{
-					//TODO(Simon): This doesn't work, because the new audio file doesn't get copied at the end of the edit
 					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
 					if (editor && editor.answered)
 					{
-						var folder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-						var extension = Path.GetExtension(editor.answerURL);
-						var newFilePath = Path.Combine(folder, SaveFile.extraPath, GenerateExtraGuid());
+						SetExtrasToDeleted(pointToEdit.filename);
 
-						var oldfileName = Path.Combine(folder, pointToEdit.filename);
-						var newFilename = newFilePath + extension;
-						var newFilenameOriginal = editor.answerURL;
-
-						if (File.Exists(newFilenameOriginal) && !File.Exists(newFilename))
-						{
-							File.Copy(newFilenameOriginal, newFilename);
-							File.Delete(oldfileName); 
-						}
-						else
-						{
-							Toasts.AddToast(10, "Error while adding this audio file");
-							Destroy(interactionEditor);
-							editorState = EditorState.Active;
-							lastPlacedPoint.filled = true;
-							break;
-						}
+						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
 						var panel = Instantiate(audioPanelPrefab);
-						panel.GetComponent<AudioPanel>().Init(editor.answerTitle, newFilename);
+						panel.GetComponent<AudioPanel>().Init(editor.answerTitle, newFullPath);
 						panel.GetComponent<AudioPanel>().Move(pointToEdit.point.transform.position);
-						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = newFilename;
-						pointToEdit.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = newPath;
+						pointToEdit.panel = panel;
+						finished = true;
 					}
 					break;
 				}
@@ -819,25 +756,24 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
-						foreach (var answer in editor.answerAnswers)
-						{
-							pointToEdit.body += answer + "\f";
-						}
-						pointToEdit.body = pointToEdit.body.TrimEnd('\f');
+						pointToEdit.body += String.Join("\f", editor.answerAnswers);
 						pointToEdit.panel = panel;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
+						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, editor.answerAnswers);
 						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
-
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						pointToEdit.filled = true;
 					}
 					break;
 				}
 				default:
 					throw new ArgumentOutOfRangeException();
+			}
+
+			if (finished)
+			{
+				Destroy(interactionEditor);
+				editorState = EditorState.Active;
+				pointToEdit.filled = true;
 			}
 		}
 
@@ -871,6 +807,7 @@ public class Editor : MonoBehaviour
 						File.Copy(file, newFilename, true);
 					}
 				}
+
 				meta.guid = newGuid;
 				meta.title = panel.answerTitle;
 
@@ -879,8 +816,8 @@ public class Editor : MonoBehaviour
 					Debug.LogError("Something went wrong while saving the file");
 					return;
 				}
+
 				Toasts.AddToast(5, "File saved!");
-				//cleanExtraFiles();
 
 				SetEditorActive(true);
 				Destroy(filePanel);
@@ -899,6 +836,7 @@ public class Editor : MonoBehaviour
 		{
 			if (openPanel.GetComponent<FilePanel>().answered)
 			{
+
 				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
 
@@ -907,6 +845,9 @@ public class Editor : MonoBehaviour
 					SetEditorActive(true);
 					Destroy(openPanel);
 					Canvass.modalBackground.SetActive(false);
+					InitExtrasList();
+					//NOTE(Simon): When opening a project, any previous to-be-deleted-or-copied files are not relevant anymore. So clear them
+					CleanExtras();
 				}
 				else
 				{
@@ -975,6 +916,7 @@ public class Editor : MonoBehaviour
 					Debug.LogError("Something went wrong while saving the file");
 					return;
 				}
+
 				Toasts.AddToast(5, "File saved!");
 
 				Destroy(filePanel);
@@ -1271,6 +1213,14 @@ public class Editor : MonoBehaviour
 					}
 				}
 
+				//NOTE(Simon): Get filenames for extra files to delete, and add to list.
+				var file = point.filename;
+				if (!String.IsNullOrEmpty(file))
+				{
+					SetExtrasToDeleted(file);
+				}
+
+				//NOTE(Simon): Actually remove the point, and all associated data
 				RemoveItemFromTimeline(point);
 				Destroy(point.point);
 				Destroy(point.panel);
@@ -1280,42 +1230,42 @@ public class Editor : MonoBehaviour
 			if (edit.state == SelectState.Pressed && editorState != EditorState.EditingInteractionPoint)
 			{
 				editorState = EditorState.EditingInteractionPoint;
+				//NOTE(Simon): Set pointToEdit in global state for usage by the main state machine
 				pointToEdit = point;
-				var panel = pointToEdit.panel;
 
-				//TODO(Simon): Switch to getting info from interactionPoints instead of panels
-				switch (pointToEdit.type)
+				switch (point.type)
 				{
 					case InteractionType.Text:
 						interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<TextPanelEditor>().Init(panel.GetComponent<TextPanel>().title.text,
-																				panel.GetComponent<TextPanel>().body.text);
+						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body);
 						break;
 					case InteractionType.Image:
 						interactionEditor = Instantiate(imagePanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<ImagePanelEditor>().Init(panel.GetComponent<ImagePanel>().title.text,
-																				panel.GetComponent<ImagePanel>().imageURLs);
+						var filenames = point.filename.Split('\f');
+						var fullPaths = new List<string>(filenames.Length);
+						foreach (var file in filenames)
+						{
+							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
+						}
+						interactionEditor.GetComponent<ImagePanelEditor>().Init(point.title, fullPaths);
 						break;
 					case InteractionType.Video:
 						interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<VideoPanelEditor>().Init(panel.GetComponent<VideoPanel>().title.text,
-																				panel.GetComponent<VideoPanel>().url);
+						interactionEditor.GetComponent<VideoPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
 					case InteractionType.MultipleChoice:
 						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(panel.GetComponent<MultipleChoicePanel>().question.text,
-																						panel.GetComponent<MultipleChoicePanel>().GetBody());
+						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'));
 						break;
 					case InteractionType.Audio:
 						interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<AudioPanelEditor>().Init(panel.GetComponent<AudioPanel>().title.text,
-																				panel.GetComponent<AudioPanel>().url);
+						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 
-				Destroy(pointToEdit.panel);
+				Destroy(point.panel);
 				break;
 			}
 
@@ -1710,6 +1660,8 @@ public class Editor : MonoBehaviour
 		string thumbname = Path.Combine(path, SaveFile.thumbFilename);
 		videoController.Screenshot(thumbname, 10, 1000, 1000);
 
+		CleanExtras();
+
 		return true;
 	}
 
@@ -1771,7 +1723,7 @@ public class Editor : MonoBehaviour
 					var urls = new List<string>();
 					foreach (var file in filenames)
 					{
-						string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), file));
+						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
 						if (!File.Exists(url))
 						{
 							Debug.LogWarningFormat("File missing: {0}", url);
@@ -1786,9 +1738,9 @@ public class Editor : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
 
-					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url, meta.guid.ToString());
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -1802,7 +1754,7 @@ public class Editor : MonoBehaviour
 				case InteractionType.Audio:
 				{
 					var panel = Instantiate(audioPanelPrefab);
-					string url = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), newInteractionPoint.filename));
+					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
 					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
 					break;
@@ -1982,6 +1934,76 @@ public class Editor : MonoBehaviour
 		}
 
 		uploadStatus.done = true;
+	}
+
+	private void InitExtrasList()
+	{
+		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var extraFolder = Path.Combine(projectFolder, SaveFile.extraPath);
+		allExtras = new Dictionary<string, InteractionPointEditor>();
+
+		foreach (var point in interactionPoints)
+		{
+			if (!String.IsNullOrEmpty(point.filename))
+			{
+				var filesInPoint = point.filename.Split('\f');
+				foreach (var file in filesInPoint)
+				{
+					allExtras.Add(Path.Combine(projectFolder, file), point);
+				}
+			}
+		}
+
+		//TODO(Simon): This gets the full path, but we expect the
+		var filenames = Directory.GetFiles(extraFolder);
+		foreach (var file in filenames)
+		{
+			if (!allExtras.ContainsKey(file))
+			{
+				allExtras.Add(file, null);
+			}
+		}
+	}
+
+	private void CleanExtras()
+	{
+		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		foreach (var file in allExtras)
+		{
+			if (file.Value == null)
+			{
+				File.Delete(Path.Combine(projectFolder, file.Key));
+				allExtras.Remove(file.Key);
+			}
+		}
+	}
+
+	//NOTE(Simon): Accepts single filenames, or mutliple separated by '\f'. Should be the relative ("extra") path, i.e. /extra/<filename>.<ext>
+	private void SetExtrasToDeleted(string relativePaths)
+	{
+		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var list = relativePaths.Split('\f');
+
+		foreach (var path in list)
+		{
+			allExtras[Path.Combine(projectFolder, path)] = null;
+		}
+	}
+
+	//NOTE(Simon): Should be the relative ("extra") path, i.e. /extra/<filename>.<ext>
+	private string CopyNewExtra(InteractionPointEditor point, string sourcePath)
+	{
+		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var newFilename = Path.Combine(SaveFile.extraPath, GenerateExtraGuid() + Path.GetExtension(sourcePath));
+		var destPath = Path.Combine(projectFolder, newFilename);
+
+		if (File.Exists(sourcePath))
+		{
+			File.Copy(sourcePath, destPath);
+		}
+
+		allExtras.Add(newFilename, point);
+		return newFilename;
 	}
 
 	private void UpdateUploadPanel()

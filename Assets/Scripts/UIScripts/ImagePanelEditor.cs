@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -83,13 +84,8 @@ public class ImagePanelEditor : MonoBehaviour
 		answerURLs = new List<string>();
 		foreach (var entry in entries)
 		{
-			answerURLs.Add(entry.url.text);
+			answerURLs.Add(entry.url);
 		}
-	}
-
-	public Texture TextureForIndex(int index)
-	{
-		return entries[index].preview.texture;
 	}
 
 	public void DeleteAlbumEntry(GameObject go)

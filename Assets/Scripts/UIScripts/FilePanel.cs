@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
+//TODO(Simon): Consider renaming to project panel
 public class FilePanel : MonoBehaviour
 {
 	public class FileItem
@@ -238,6 +239,7 @@ public class FilePanel : MonoBehaviour
 		}
 	}
 
+	//TODO(Simon): Look into this function, looks weird how we're constructing the JSON from scratch.
 	public void RenameStop(string newTitle)
 	{
 		var label = files[selectedIndex].listItem.GetComponentInChildren<Text>(true);

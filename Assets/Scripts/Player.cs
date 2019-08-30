@@ -709,7 +709,7 @@ public class Player : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename, data.meta.guid.ToString());
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename);
 					newInteractionPoint.panel = panel;
 					break;
 				}

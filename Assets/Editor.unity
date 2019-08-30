@@ -1352,8 +1352,6 @@ MonoBehaviour:
     type: 2}
   videoPanelEditorPrefab: {fileID: 1339106022732690, guid: 088ff0bf21aca5b4b877f84b8ee6303e,
     type: 2}
-  objectPanelPrefab: {fileID: 0}
-  objectPanelEditorPrefab: {fileID: 0}
   multipleChoicePanelPrefab: {fileID: 1109307375659294, guid: a2977775f7c5758409be40913249cd74,
     type: 2}
   multipleChoicePanelEditorPrefab: {fileID: 1371653262795046, guid: 490cba79c51692144af8e4c1380585b4,

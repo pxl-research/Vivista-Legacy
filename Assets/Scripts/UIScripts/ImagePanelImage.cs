@@ -8,6 +8,7 @@ public class ImagePanelImage : MonoBehaviour
 
 	private WWW www;
 	private bool downloading;
+	private bool loaded = false;
 	private static Vector2 defaultImageSize = new Vector2(500, 500);
 
 	public void SetURL(string URL)
@@ -17,7 +18,7 @@ public class ImagePanelImage : MonoBehaviour
 
 	public void LoadImage()
 	{
-		if (!String.IsNullOrEmpty(url))
+		if (!String.IsNullOrEmpty(url) && !loaded)
 		{
 			if (!url.StartsWith("file:///"))
 			{
@@ -33,6 +34,7 @@ public class ImagePanelImage : MonoBehaviour
 	{
 		if (downloading && www.isDone)
 		{
+			loaded = true;
 			downloading = false;
 			var texture = www.texture;
 			var image = GetComponentInChildren<RawImage>();

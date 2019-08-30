@@ -9,7 +9,6 @@ public class VideoPanelEditor : MonoBehaviour {
 	public InputField url;
 	public InputField title;
 
-
 	public bool answered;
 	public string answerTitle;
 	public string answerURL;
@@ -37,7 +36,6 @@ public class VideoPanelEditor : MonoBehaviour {
 
 	public void Answer()
 	{
-		// NOTE(Lander): ensured that this is the right path?
 		answered = true;
 		answerURL = url.text;
 		answerTitle = string.IsNullOrEmpty(title.text) ? "<unnamed>" : title.text;
@@ -49,7 +47,7 @@ public class VideoPanelEditor : MonoBehaviour {
 
 		explorerPanel = Instantiate(explorerPanelPrefab);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
-		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image");
+		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select video");
 
 		fileOpening = true;
 	}
