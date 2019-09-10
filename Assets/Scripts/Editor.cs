@@ -451,6 +451,8 @@ public class Editor : MonoBehaviour
 		if (editorState == EditorState.FillingPanelDetails)
 		{
 			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
+			var finished = false;
+
 			switch (lastPlacedPoint.type)
 			{
 				case InteractionType.Image:
@@ -479,9 +481,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						lastPlacedPoint.filled = true;
+						finished = true;
 					}
 					break;
 				}
@@ -493,13 +493,11 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(textPanelPrefab);
 						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
 						panel.GetComponent<TextPanel>().Move(lastPlacedPointPos);
-						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
+						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
 						lastPlacedPoint.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						lastPlacedPoint.filled = true;
+						finished = true;
 					}
 					break;
 				}
@@ -515,13 +513,10 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, newFullPath);
 						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
-						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						lastPlacedPoint.filled = true;
+						finished = true;
 					}
 					break;
 				}
@@ -538,13 +533,10 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<AudioPanel>().Move(lastPlacedPointPos);
 
 						lastPlacedPoint.title = editor.answerTitle;
-						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.panel = panel;
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						lastPlacedPoint.filled = true;
+						finished = true;
 					}
 					break;
 				}
@@ -554,7 +546,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(multipleChoicePanelPrefab);
-						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						lastPlacedPoint.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
 						foreach (var answer in editor.answerAnswers)
@@ -568,15 +560,24 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, lastPlacedPoint.body.Split('\f'));
 						panel.GetComponent<MultipleChoicePanel>().Move(lastPlacedPointPos);
 
-						Destroy(interactionEditor);
-						editorState = EditorState.Active;
-						lastPlacedPoint.filled = true;
+						finished = true;
 					}
 					break;
 				}
 				default:
 				{
 					throw new ArgumentOutOfRangeException();
+				}
+			}
+
+			if (finished)
+			{
+				Destroy(interactionEditor);
+				editorState = EditorState.Active;
+				lastPlacedPoint.filled = true;
+				if (String.IsNullOrEmpty(lastPlacedPoint.title))
+				{
+					lastPlacedPoint.title = "<unnamed>";
 				}
 			}
 
@@ -697,7 +698,7 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
 						panel.GetComponent<TextPanel>().Move(pointToEdit.point.transform.position);
 
-						pointToEdit.title = String.IsNullOrEmpty(editor.answerTitle) ? "<unnamed>" : editor.answerTitle;
+						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
 						pointToEdit.panel = panel;
 						finished = true;
@@ -771,9 +772,18 @@ public class Editor : MonoBehaviour
 
 			if (finished)
 			{
+				var wasPanelHidden = pointToEdit.timelineRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>().isOn;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
+				if (String.IsNullOrEmpty(pointToEdit.title))
+				{
+					lastPlacedPoint.title = "<unnamed>";
+				}
+				if (wasPanelHidden)
+				{
+					pointToEdit.panel.SetActive(false);
+				}
 			}
 		}
 
