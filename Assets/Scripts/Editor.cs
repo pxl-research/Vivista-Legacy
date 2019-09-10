@@ -1968,13 +1968,20 @@ public class Editor : MonoBehaviour
 	private void CleanExtras()
 	{
 		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		
+		var toRemoveFromDict = new List<string>();
 		foreach (var file in allExtras)
 		{
 			if (file.Value == null)
 			{
 				File.Delete(Path.Combine(projectFolder, file.Key));
-				allExtras.Remove(file.Key);
+				toRemoveFromDict.Add(file.Key);
 			}
+		}
+
+		foreach (var key in toRemoveFromDict)
+		{
+			allExtras.Remove(key);
 		}
 	}
 
