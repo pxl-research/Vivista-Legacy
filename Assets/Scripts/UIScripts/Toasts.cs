@@ -43,15 +43,22 @@ public class Toasts : MonoBehaviour
 
 	public static void AddToast(float seconds, string text)
 	{
-		var toast = Instantiate(prefab);
-		toast.transform.SetParent(holder.transform, false);
-		toast.GetComponentInChildren<Text>().text = text;
+		if (holder != null)
+		{
+			var toast = Instantiate(prefab);
+			toast.transform.SetParent(holder.transform, false);
+			toast.GetComponentInChildren<Text>().text = text;
 
-		toasts.Enqueue(new Toast
-		{ 
-			secondsRemaining = seconds, 
-			text = text, 
-			gameObject = toast 
-		});
+			toasts.Enqueue(new Toast
+			{
+				secondsRemaining = seconds,
+				text = text,
+				gameObject = toast
+			});
+		}
+		else
+		{
+			Debug.Log("Tried to create a toast, but there is no toast holder in the scene");
+		}
 	}
 }

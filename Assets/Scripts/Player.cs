@@ -506,7 +506,8 @@ public class Player : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var panel = Instantiate(videoPanelPrefab);
-					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename);
+					string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), newInteractionPoint.filename);
+					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -521,7 +522,8 @@ public class Player : MonoBehaviour
 				case InteractionType.Audio:
 				{
 					var panel = Instantiate(audioPanelPrefab);
-					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, newInteractionPoint.filename);
+					string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), newInteractionPoint.filename);
+					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
 					break;
 				}
