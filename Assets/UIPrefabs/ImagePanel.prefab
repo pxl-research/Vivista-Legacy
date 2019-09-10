@@ -488,8 +488,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 114646830587721148}
-        m_MethodName: PrevImage
+      - m_Target: {fileID: 0}
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -566,8 +566,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 114646830587721148}
-        m_MethodName: NextImage
+      - m_Target: {fileID: 0}
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -663,7 +663,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   title: {fileID: 114441372153858238}
   imageURLs: []
-  canvas: {fileID: 223613335787404110}
   imageScrollRect: {fileID: 114617312205642996}
   imagePanel: {fileID: 224479785532967498}
   images: []

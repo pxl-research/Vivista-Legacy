@@ -732,7 +732,7 @@ public class Editor : MonoBehaviour
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
-						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
 						var panel = Instantiate(audioPanelPrefab);

@@ -1,5 +1,4 @@
-﻿using System.IO;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -7,7 +6,6 @@ public class VideoPanel : MonoBehaviour
 {
 	public RenderTexture videoRenderTexture;
 	public GameObject controlButton;
-	public Canvas canvas;
 	public Texture iconPlay;
 	public Texture iconPause;
 	public Text title;
@@ -70,6 +68,6 @@ public class VideoPanel : MonoBehaviour
 			videoPlayer.Play();
 		}
 
-		controllButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
+		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
 	}
 }
