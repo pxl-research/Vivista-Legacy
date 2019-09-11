@@ -97,5 +97,8 @@ public class ImagePanel : MonoBehaviour
 
 	public void Move(Vector3 position)
 	{
+		var newPos = position;
+		newPos.y += 0.015f;
+		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 }
