@@ -158,7 +158,7 @@ public class SphereUIInputModule: StandaloneInputModule
 			if (kvp.Value.pointerCurrentRaycast.gameObject != previousHovers[kvp.Key])
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerEnterHandler);
-				//NOTE(Simon): Check if any other pointers aree hovering the object that's just been unhovered.
+				//NOTE(Simon): Check if any other pointers are hovering the object that's just been unhovered.
 				var otherHovers = false;
 				foreach (var currentHover in pointers)
 				{
@@ -177,6 +177,7 @@ public class SphereUIInputModule: StandaloneInputModule
 			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Pressed || clickStates[kvp.Key] == PointerEventData.FramePressState.PressedAndReleased)
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerClickHandler);
+				Debug.Log("Click by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
 			}
 		}
 	}
