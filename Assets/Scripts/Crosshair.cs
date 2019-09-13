@@ -10,7 +10,7 @@ public class Crosshair : MonoBehaviour
 
 	void Start()
 	{
-		crosshair = Canvass.main.transform.Find("Crosshair").GetComponent<Image>();
+		crosshair = GameObject.Find("Crosshair").GetComponent<Image>();
 		crosshairTimer = crosshair.transform.Find("CrosshairTimer").GetComponent<Image>();
 	}
 

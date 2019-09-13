@@ -17,6 +17,9 @@ public class Controller : MonoBehaviour
 	public bool triggerDown;
 	public bool triggerReleased;
 
+	private Vector3 initialCursorScale;
+	private Plane measuringPlane;
+
 	private MeshRenderer trigger;
 	private MeshRenderer thumbstick;
 	private Material baseMaterial;
@@ -29,6 +32,8 @@ public class Controller : MonoBehaviour
 	{
 		controller = GetComponent<SteamVR_TrackedController>();
 		controller.Gripped += OnGripped;
+		initialCursorScale = cursor.transform.localScale;
+		measuringPlane = new Plane();
 	}
 	
 	// Update is called once per frame
@@ -129,13 +134,12 @@ public class Controller : MonoBehaviour
 	public void SetCursorLocation(Vector3 position, float distance)
 	{
 		//NOTE(Simon): Radius proportional to laser length
-		//TODO(Simon): Size does not scale properly to distance (http://wiki.unity3d.com/index.php?title=CameraRelativeScale&oldid=14840)
-		var radius = 0.02f * distance;
-		//if (radius >= 0.04f)
 		{
+			measuringPlane.SetNormalAndPosition(laser.transform.up, laser.transform.position);
+			var dist = measuringPlane.GetDistanceToPoint(position);
 			cursor.SetActive(true);
 			cursor.transform.position = position;
-			cursor.transform.localScale = new Vector3(radius, radius, radius);
+			cursor.transform.localScale = initialCursorScale * dist * .02f;
 		}
 	}
 
