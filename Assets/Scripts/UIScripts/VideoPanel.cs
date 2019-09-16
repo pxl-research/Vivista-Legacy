@@ -39,6 +39,9 @@ public class VideoPanel : MonoBehaviour
 		}
 
 		videoPlayer.url = fullPath;
+		videoPlayer.Prepare();
+		videoRenderTexture.width = (int)videoPlayer.clip.width;
+		videoRenderTexture.height = (int)videoPlayer.clip.height;
 		title.text = newTitle;
 
 		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
