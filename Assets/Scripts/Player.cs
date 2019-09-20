@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.XR;
-using Valve.VR;
 
 public enum PlayerState
 {
@@ -65,7 +65,7 @@ public class Player : MonoBehaviour
 
 	private SaveFile.SaveFileData data;
 
-	private bool isOutofView;
+	private bool isSeekbarOutOfView;
 	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
 
@@ -82,6 +82,7 @@ public class Player : MonoBehaviour
 
 	void Start()
 	{
+		Canvass.sphereUI.SetActive(false);
 		StartCoroutine(EnableVr());
 
 		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
@@ -150,22 +151,22 @@ public class Player : MonoBehaviour
 
 					var angle = Mathf.Min(distanceLeft, distanceRight);
 
-					if (isOutofView)
+					if (isSeekbarOutOfView)
 					{
 						if (angle < 2.5f)
 						{
-							isOutofView = false;
+							isSeekbarOutOfView = false;
 						}
 					}
 					else
 					{
 						if (angle > fov)
 						{
-							isOutofView = true;
+							isSeekbarOutOfView = true;
 						}
 					}
 
-					if (isOutofView)
+					if (isSeekbarOutOfView)
 					{
 						var newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
 
@@ -243,6 +244,8 @@ public class Player : MonoBehaviour
 				videoController.TogglePlay();
 			}
 
+			Seekbar.instance.RenderBlips(interactionPoints, trackedControllerLeft, trackedControllerRight);
+
 			//Note(Simon): Interaction with points
 			{
 				var reversedRay = interactionpointRay.ReverseRay();
@@ -258,8 +261,6 @@ public class Player : MonoBehaviour
 									&& videoController.currentTime <= interactionPoints[i].endTime;
 					interactionPoints[i].point.SetActive(pointActive);
 				}
-
-				Seekbar.instance.RenderBlips(interactionPoints, trackedControllerLeft, trackedControllerRight);
 
 				//NOTE(Simon): Interact with inactive interactionpoints
 				if (activeInteractionPoint == null && hit.transform != null)
@@ -479,14 +480,14 @@ public class Player : MonoBehaviour
 			{
 				case InteractionType.Text:
 				{
-					var panel = Instantiate(textPanelPrefab);
+					var panel = Instantiate(textPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					panel.GetComponent<TextPanel>().Init(newInteractionPoint.title, newInteractionPoint.body);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				case InteractionType.Image:
 				{
-					var panel = Instantiate(imagePanelPrefab);
+					var panel = Instantiate(imagePanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					//NOTE(Simon): All images are concatenated in the filename field, with a separator of '\f'
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
@@ -505,7 +506,7 @@ public class Player : MonoBehaviour
 				}
 				case InteractionType.Video:
 				{
-					var panel = Instantiate(videoPanelPrefab);
+					var panel = Instantiate(videoPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), newInteractionPoint.filename);
 					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
@@ -513,7 +514,7 @@ public class Player : MonoBehaviour
 				}
 				case InteractionType.MultipleChoice:
 				{
-					var panel = Instantiate(multipleChoicePrefab);
+					var panel = Instantiate(multipleChoicePrefab, Canvass.sphereUIPanelWrapper.transform);
 					//NOTE(Simon): All answers are concatenated in the body field, with a separator of '\f'
 					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel;
@@ -521,7 +522,7 @@ public class Player : MonoBehaviour
 				}
 				case InteractionType.Audio:
 				{
-					var panel = Instantiate(audioPanelPrefab);
+					var panel = Instantiate(audioPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), newInteractionPoint.filename);
 					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
@@ -549,6 +550,7 @@ public class Player : MonoBehaviour
 
 	private void ActivateInteractionPoint(InteractionPointPlayer point)
 	{
+		Canvass.sphereUI.SetActive(true);
 		point.panel.SetActive(true);
 		activeInteractionPoint = point;
 		point.isSeen = true;
@@ -557,12 +559,18 @@ public class Player : MonoBehaviour
 
 		videoController.Pause();
 
+		//NOTE(Simon): No two eventsystems can be active at the same, so disable the main one. The main one is used for all screenspace UI.
+		//NOTE(Simon): The other eventsystem, that remains active, handles input for the spherical UI.
+		var mainEventSystem = EventSystem.current;
+		mainEventSystem.enabled = false;
+
 		Assert.IsNotNull(activeInteractionPoint);
 		Assert.IsNotNull(activeInteractionPoint.point);
 	}
 
 	private void DeactivateActiveInteractionPoint()
 	{
+		Canvass.sphereUI.SetActive(false);
 		Assert.IsNotNull(activeInteractionPoint);
 		Assert.IsNotNull(activeInteractionPoint.point);
 		activeInteractionPoint.panel.SetActive(false);
@@ -669,7 +677,6 @@ public class Player : MonoBehaviour
 				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
 
 				interactionPoint.position = drawLocation;
-				interactionPoint.panel.transform.position = drawLocation;
 			}
 		}
 	}

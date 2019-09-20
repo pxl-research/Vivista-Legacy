@@ -2,18 +2,21 @@
 
 public class Canvass : MonoBehaviour
 { 
-	public static Canvas main					=> _canvas				?? (_canvas = GameObject.Find("Canvas").GetComponent<Canvas>());
-	private static Canvas _canvas;
+	public static Canvas main						=> _main					?? (_main = GameObject.Find("Canvas").GetComponent<Canvas>());
+	private static Canvas _main;
 
-	public static Canvas seekbar				=> _seekBarCanvas		?? (_seekBarCanvas = GameObject.Find("Seekbar Canvas").GetComponent<Canvas>());
-	private static Canvas _seekBarCanvas;
+	public static Canvas seekbar					=> _seekbar					?? (_seekbar = GameObject.Find("Seekbar Canvas").GetComponent<Canvas>());
+	private static Canvas _seekbar;
 
-	public static Canvas crosshair				=> _crosshairCanvas		?? (_crosshairCanvas = GameObject.Find("Crosshair Canvas").GetComponent<Canvas>());
-	private static Canvas _crosshairCanvas;
+	public static Canvas crosshair					=> _crosshair				?? (_crosshair = GameObject.Find("Crosshair Canvas").GetComponent<Canvas>());
+	private static Canvas _crosshair;
 
-	public static GameObject modalBackground	=> _modalBackground		?? (_modalBackground = main.transform.Find("ModalBackground").gameObject);
+	public static GameObject modalBackground		=> _modalBackground			?? (_modalBackground = main.transform.Find("ModalBackground").gameObject);
 	private static GameObject _modalBackground;
 
-	public static GameObject sphere				=> _sphere				?? (_sphere = GameObject.Find("SphereUI").gameObject);
-	private static GameObject _sphere;
+	public static GameObject sphereUI				=> _sphereUI				?? (_sphereUI = GameObject.Find("SphereUI"));
+	private static GameObject _sphereUI;
+
+	public static GameObject sphereUIPanelWrapper	=> _sphereUIPanelWrapper	?? (_sphereUIPanelWrapper = sphereUI.transform.Find("SphereUICanvas/PanelWrapper").gameObject);
+	private static GameObject _sphereUIPanelWrapper;
 }

@@ -664,7 +664,7 @@ MonoBehaviour:
   title: {fileID: 114441372153858238}
   imageURLs: []
   imageScrollRect: {fileID: 114617312205642996}
-  imagePanel: {fileID: 224479785532967498}
+  imagePanelContent: {fileID: 224479785532967498}
   images: []
   prevButton: {fileID: 114450528211193184}
   nextButton: {fileID: 114466707509233118}

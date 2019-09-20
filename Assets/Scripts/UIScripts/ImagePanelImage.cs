@@ -38,25 +38,25 @@ public class ImagePanelImage : MonoBehaviour
 			downloading = false;
 			var texture = www.texture;
 			var image = GetComponentInChildren<RawImage>();
-			var size = defaultImageSize;
-			Vector2 position;
-			var ratio = (float)texture.height / texture.width;
-			if (ratio >= 1)
-			{
-				size.x /= ratio;
-				position = new Vector2((defaultImageSize.x - size.x) / 2, 0);
-			}
-			else
-			{
-				size.y *= ratio;
-				//NOTE(Simon): Negative because of Unity UI Layout reasons
-				position = new Vector2(0, -(defaultImageSize.y - size.y) / 2);
-			}
 
-			image.rectTransform.sizeDelta = size;
-			image.rectTransform.anchoredPosition = position;
+			float heightRatio = texture.height / defaultImageSize.y;
+			float widthRatio = texture.width / defaultImageSize.x;
+			float biggestRatio = Mathf.Max(heightRatio, widthRatio);
+
+			var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
+
+			image.rectTransform.sizeDelta = newSize;
+			image.rectTransform.localPosition = new Vector2(-(defaultImageSize.x - newSize.x), -(defaultImageSize.y - newSize.y) / 2);
 
 			image.texture = texture;
 		}
+	}
+
+	public void SetMaxSize(Vector2 size)
+	{
+		defaultImageSize = size;
+		GetComponent<RectTransform>().sizeDelta = defaultImageSize;
+		GetComponentInChildren<RawImage>().rectTransform.sizeDelta = defaultImageSize;
+		GetComponentInChildren<RawImage>().rectTransform.localPosition = Vector2.zero;
 	}
 }

@@ -23,6 +23,7 @@ public class AudioControl : MonoBehaviour
 
 	void Awake()
 	{
+		Debug.Log("AudioControl Awake");
 		audioSource = GetComponent<AudioSource>();
 		audioSource.playOnAwake = false;
 		playButtonImage = playButton.GetComponentInChildren<RawImage>();
@@ -30,6 +31,10 @@ public class AudioControl : MonoBehaviour
 
 	public void Init(string url)
 	{
+		if (audioSource == null)
+		{
+			audioSource = GetComponent<AudioSource>();
+		}
 		audioSource.Stop();
 		clip = null;
 		this.url = url;

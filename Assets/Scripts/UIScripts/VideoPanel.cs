@@ -35,13 +35,12 @@ public class VideoPanel : MonoBehaviour
 
 		if (Player.hittables != null)
 		{
-			GetComponentInChildren<Hittable>().enabled = true;
+			//GetComponentInChildren<Hittable>().enabled = true;
 		}
 
 		videoPlayer.url = fullPath;
 		videoPlayer.Prepare();
-		videoRenderTexture.width = (int)videoPlayer.clip.width;
-		videoRenderTexture.height = (int)videoPlayer.clip.height;
+		videoPlayer.prepareCompleted += OnPrepareComplete;
 		title.text = newTitle;
 
 		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
@@ -50,10 +49,13 @@ public class VideoPanel : MonoBehaviour
 		videoPlayer.EnableAudioTrack(0, true);
 		videoPlayer.SetTargetAudioSource(0, audioSource);
 		videoPlayer.controlledAudioTrackCount = 1;
+	}
 
-		//NOTE(Lander): duct tape
-		videoPlayer.enabled = false;
-		videoPlayer.enabled = true;
+	private void OnPrepareComplete(VideoPlayer source)
+	{
+		videoRenderTexture.width = (int)videoPlayer.clip.width;
+		videoRenderTexture.height = (int)videoPlayer.clip.height;
+		videoPlayer.Play();
 	}
 
 	public void Move(Vector3 position)

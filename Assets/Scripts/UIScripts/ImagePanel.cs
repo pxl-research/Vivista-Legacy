@@ -7,7 +7,7 @@ public class ImagePanel : MonoBehaviour
 	public Text title;
 	public List<string> imageURLs;
 	public ScrollRect imageScrollRect;
-	public RectTransform imagePanel;
+	public RectTransform imagePanelContent;
 	public List<ImagePanelImage> images;
 	public Button prevButton;
 	public Button nextButton;
@@ -15,15 +15,6 @@ public class ImagePanel : MonoBehaviour
 	private int imageIndex;
 
 	public GameObject imagePanelImagePrefab;
-
-	void OnEnable()
-	{
-		imageIndex = 0;
-		if (images.Count > 0)
-		{
-			SetIndex(imageIndex);
-		}
-	}
 
 	public void Init(string newTitle, List<string> urls)
 	{
@@ -47,12 +38,15 @@ public class ImagePanel : MonoBehaviour
 		var titleRect = title.GetComponent<RectTransform>();
 		float newHeight = UIHelper.CalculateTextFieldHeight(title.text, title.font, title.fontSize, titleRect.sizeDelta.x, 30);
 		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+		imagePanelContent.offsetMin = new Vector2(imagePanelContent.offsetMin.x, 0);
+		imagePanelContent.offsetMax = new Vector2(imagePanelContent.offsetMax.x, 0);
 	}
 
 	private void AddNewImage(string url)
 	{
-		var newImage = Instantiate(imagePanelImagePrefab, imagePanel, false);
+		var newImage = Instantiate(imagePanelImagePrefab, imagePanelContent, false);
 		var script = newImage.GetComponent<ImagePanelImage>();
+		script.SetMaxSize(imagePanelContent.rect.size);
 		script.SetURL(url);
 		images.Add(script);
 	}
@@ -82,11 +76,11 @@ public class ImagePanel : MonoBehaviour
 
 	private void ScrollTo(RectTransform target)
 	{
-		Canvas.ForceUpdateCanvases();
 
-		imagePanel.anchoredPosition =
-			(Vector2)imageScrollRect.transform.InverseTransformPoint(imagePanel.position)
+		imagePanelContent.anchoredPosition =
+			(Vector2)imageScrollRect.transform.InverseTransformPoint(imagePanelContent.position)
 			- (Vector2)imageScrollRect.transform.InverseTransformPoint(target.position);
+		Canvas.ForceUpdateCanvases();
 	}
 
 	private void EnableButtons()
