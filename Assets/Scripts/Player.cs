@@ -72,6 +72,7 @@ public class Player : MonoBehaviour
 	private const float timeToInteract = 0.75f;
 	private bool isInteractingWithPoint;
 	private float interactionTimer;
+	private EventSystem mainEventSystem;
 
 	private bool[] isControllerEligibleForRotation = new bool[2];
 
@@ -124,6 +125,7 @@ public class Player : MonoBehaviour
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 		}
 
+		mainEventSystem = EventSystem.current;
 	}
 
 	void Update()
@@ -561,7 +563,6 @@ public class Player : MonoBehaviour
 
 		//NOTE(Simon): No two eventsystems can be active at the same, so disable the main one. The main one is used for all screenspace UI.
 		//NOTE(Simon): The other eventsystem, that remains active, handles input for the spherical UI.
-		var mainEventSystem = EventSystem.current;
 		mainEventSystem.enabled = false;
 
 		Assert.IsNotNull(activeInteractionPoint);
@@ -576,6 +577,8 @@ public class Player : MonoBehaviour
 		activeInteractionPoint.panel.SetActive(false);
 		activeInteractionPoint = null;
 		videoController.Play();
+
+		mainEventSystem.enabled = true;
 	}
 
 	private void AddInteractionPoint(InteractionPointPlayer point)
