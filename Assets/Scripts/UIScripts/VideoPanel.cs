@@ -5,25 +5,27 @@ using UnityEngine.Video;
 public class VideoPanel : MonoBehaviour
 {
 	public RenderTexture videoRenderTexture;
-	public GameObject controlButton;
+	public Button controlButton;
+	public Button bigButton;
+	public Slider progressBar;
 	public Texture iconPlay;
 	public Texture iconPause;
 	public Text title;
+	public Text timeDisplay;
 	public RawImage videoSurface;
 	public VideoPlayer videoPlayer;
 	public AudioSource audioSource;
 
 	public static bool keepFileNames;
 	public string url;
-	
-	void Update()
-	{
-		if (!videoSurface)
-		{
-			return;
-		}
 
-		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
+	public void Update()
+	{
+		float time = (float)videoPlayer.time;
+		float length = videoPlayer.frameCount / videoPlayer.frameRate;
+		progressBar.value = time;
+		progressBar.maxValue = length;
+		timeDisplay.text = $"{MathHelper.FormatSeconds(time)} / {MathHelper.FormatSeconds(length)}";
 	}
 
 	public void Init(string newTitle, string fullPath)
@@ -39,6 +41,7 @@ public class VideoPanel : MonoBehaviour
 		}
 
 		videoPlayer.url = fullPath;
+		videoPlayer.playOnAwake = false;
 		videoPlayer.Prepare();
 		videoPlayer.prepareCompleted += OnPrepareComplete;
 		title.text = newTitle;
@@ -49,13 +52,15 @@ public class VideoPanel : MonoBehaviour
 		videoPlayer.EnableAudioTrack(0, true);
 		videoPlayer.SetTargetAudioSource(0, audioSource);
 		videoPlayer.controlledAudioTrackCount = 1;
+
+		controlButton.onClick.AddListener(TogglePlay);
+		bigButton.onClick.AddListener(TogglePlay);
 	}
 
 	private void OnPrepareComplete(VideoPlayer source)
 	{
-		videoRenderTexture.width = (int)videoPlayer.clip.width;
-		videoRenderTexture.height = (int)videoPlayer.clip.height;
-		videoPlayer.Play();
+		videoRenderTexture.width = source.texture.width;
+		videoRenderTexture.height = source.texture.height;
 	}
 
 	public void Move(Vector3 position)
@@ -77,5 +82,6 @@ public class VideoPanel : MonoBehaviour
 		}
 
 		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
+		bigButton.GetComponent<RawImage>().enabled = !videoPlayer.isPlaying;
 	}
 }
