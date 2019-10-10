@@ -174,9 +174,16 @@ public class SphereUIInputModule: StandaloneInputModule
 				}
 				previousHovers[kvp.Key] = kvp.Value.pointerCurrentRaycast.gameObject;
 			}
-			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Pressed || clickStates[kvp.Key] == PointerEventData.FramePressState.PressedAndReleased)
+			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Pressed)
+			{
+				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerDownHandler);
+				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.initializePotentialDrag);
+				Debug.Log("Pointer down by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
+			}
+			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Released || clickStates[kvp.Key] == PointerEventData.FramePressState.PressedAndReleased)
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerClickHandler);
+				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerUpHandler);
 				Debug.Log("Click by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
 			}
 		}

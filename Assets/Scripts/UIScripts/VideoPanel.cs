@@ -55,6 +55,7 @@ public class VideoPanel : MonoBehaviour
 
 		controlButton.onClick.AddListener(TogglePlay);
 		bigButton.onClick.AddListener(TogglePlay);
+		progressBar.on.AddListener(OnSeek);
 	}
 
 	private void OnPrepareComplete(VideoPlayer source)
@@ -68,6 +69,10 @@ public class VideoPanel : MonoBehaviour
 		var newPos = position;
 		newPos.y += 0.015f;
 		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
+	}
+
+	private void OnSeek(float value)
+	{
 	}
 
 	public void TogglePlay()
