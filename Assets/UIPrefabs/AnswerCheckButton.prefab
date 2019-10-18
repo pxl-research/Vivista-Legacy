@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 114830515440558886}
   - component: {fileID: 114915173115489614}
   - component: {fileID: 65610312962686098}
+  - component: {fileID: 114139614244528556}
   m_Layer: 5
   m_Name: AnswerCheckButton
   m_TagString: Untagged
@@ -60,6 +61,25 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 650, y: 31, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &114139614244528556
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1309263382649292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1679637790, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: 40
+  m_PreferredWidth: -1
+  m_PreferredHeight: 40
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!114 &114364187504818422
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -240,8 +260,8 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.4, y: 0}
-  m_AnchorMax: {x: 0.6, y: 0}
-  m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 0, y: 50}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0}

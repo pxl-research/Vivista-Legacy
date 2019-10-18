@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -35,11 +36,6 @@ public class VideoPanel : MonoBehaviour
 		videoSurface.texture = videoRenderTexture;
 		videoSurface.color = Color.white;
 
-		if (Player.hittables != null)
-		{
-			//GetComponentInChildren<Hittable>().enabled = true;
-		}
-
 		videoPlayer.url = fullPath;
 		videoPlayer.playOnAwake = false;
 		videoPlayer.Prepare();
@@ -55,7 +51,6 @@ public class VideoPanel : MonoBehaviour
 
 		controlButton.onClick.AddListener(TogglePlay);
 		bigButton.onClick.AddListener(TogglePlay);
-		progressBar.on.AddListener(OnSeek);
 	}
 
 	private void OnPrepareComplete(VideoPlayer source)
@@ -71,8 +66,12 @@ public class VideoPanel : MonoBehaviour
 		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 
-	private void OnSeek(float value)
+	public void OnSeek(float value)
 	{
+		if (Math.Abs(value - videoPlayer.time) > 0.1f)
+		{
+			Debug.Log("Value Changed to " + value);
+		}
 	}
 
 	public void TogglePlay()

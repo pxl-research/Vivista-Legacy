@@ -99,8 +99,8 @@ public class MultipleChoicePanel : MonoBehaviour
 
 			//NOTE(Kristof): First child is question label, second child is question number
 			var textComponents = toggle.transform.GetComponentsInChildren<Text>();
-			textComponents[0].text = answer;
-			textComponents[1].text = $"{index + 1})";
+			textComponents[0].text = $"{index + 1})";
+			textComponents[1].text = answer;
 
 			var col = toggle.AddComponent<BoxCollider>();
 			if (XRSettings.enabled)
@@ -119,6 +119,7 @@ public class MultipleChoicePanel : MonoBehaviour
 		var button = Instantiate(answerCheckButtonPrefab, answerPanel);
 		checkAnswerButton = button.GetComponent<Button>();
 		checkAnswerButton.interactable = false;
+		button.GetComponent<Button>().onClick.AddListener(CheckAnswer);
 		button.GetComponent<Hittable>().onHit.AddListener(delegate { CheckAnswerHittable(checkAnswerButton); });
 	}
 
@@ -192,7 +193,7 @@ public class MultipleChoicePanel : MonoBehaviour
 	{
 		var toggle = toggleGroup.ActiveToggles().ElementAt(0);
 		selectedIndex = toggle.transform.GetSiblingIndex();
-
+		
 		var toggles = answerPanel.GetComponentsInChildren<Toggle>();
 		for (var index = 0; index < toggles.Length; index++)
 		{
