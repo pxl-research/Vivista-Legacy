@@ -62,7 +62,7 @@ public class Controller : MonoBehaviour
 		}
 		else
 		{
-			triggerReleased = true;
+			triggerReleased = false;
 			triggerDown = false;
 		}
 		

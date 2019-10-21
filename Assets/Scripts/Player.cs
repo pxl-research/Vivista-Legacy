@@ -554,6 +554,8 @@ public class Player : MonoBehaviour
 	{
 		Canvass.sphereUI.SetActive(true);
 		point.panel.SetActive(true);
+		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
+		button.onClick.AddListener(DeactivateActiveInteractionPoint);
 		activeInteractionPoint = point;
 		point.isSeen = true;
 		point.point.GetComponentInChildren<TextMesh>().color = Color.black;
@@ -569,7 +571,7 @@ public class Player : MonoBehaviour
 		Assert.IsNotNull(activeInteractionPoint.point);
 	}
 
-	private void DeactivateActiveInteractionPoint()
+	public void DeactivateActiveInteractionPoint()
 	{
 		Canvass.sphereUI.SetActive(false);
 		Assert.IsNotNull(activeInteractionPoint);
