@@ -8,6 +8,7 @@ public class VideoPanel : MonoBehaviour
 	public RenderTexture videoRenderTexture;
 	public Button controlButton;
 	public Button bigButton;
+	public RawImage bigButtonIcon;
 	public Slider progressBar;
 	public Texture iconPlay;
 	public Texture iconPause;
@@ -31,32 +32,34 @@ public class VideoPanel : MonoBehaviour
 
 	public void Init(string newTitle, string fullPath)
 	{
-		videoRenderTexture = Instantiate(videoRenderTexture);
-		videoPlayer.targetTexture = videoRenderTexture;
-		videoSurface.texture = videoRenderTexture;
-		videoSurface.color = Color.white;
-
-		videoPlayer.url = fullPath;
-		videoPlayer.playOnAwake = false;
-		videoPlayer.Prepare();
-		videoPlayer.prepareCompleted += OnPrepareComplete;
-		title.text = newTitle;
-
 		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
 		audioSource.playOnAwake = false;
 
+		videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+		videoPlayer.controlledAudioTrackCount = 1;
 		videoPlayer.EnableAudioTrack(0, true);
 		videoPlayer.SetTargetAudioSource(0, audioSource);
-		videoPlayer.controlledAudioTrackCount = 1;
 
+		videoPlayer.url = fullPath;
+		videoPlayer.playOnAwake = false;
+
+		
+		videoPlayer.prepareCompleted += OnPrepareComplete;
+		videoPlayer.Prepare();
+		title.text = newTitle;
+
+		
 		controlButton.onClick.AddListener(TogglePlay);
 		bigButton.onClick.AddListener(TogglePlay);
 	}
 
 	private void OnPrepareComplete(VideoPlayer source)
 	{
-		videoRenderTexture.width = source.texture.width;
-		videoRenderTexture.height = source.texture.height;
+		videoRenderTexture = new RenderTexture(source.texture.width, source.texture.height, 0, RenderTextureFormat.ARGB32);
+
+		videoPlayer.targetTexture = videoRenderTexture;
+		videoSurface.texture = videoRenderTexture;
+		videoSurface.color = Color.white;
 	}
 
 	public void Move(Vector3 position)
@@ -86,6 +89,6 @@ public class VideoPanel : MonoBehaviour
 		}
 
 		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
-		bigButton.GetComponent<RawImage>().enabled = !videoPlayer.isPlaying;
+		bigButtonIcon.color = videoPlayer.isPlaying ? Color.clear : Color.white;
 	}
 }
