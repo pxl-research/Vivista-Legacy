@@ -19,6 +19,8 @@ public class SphereUIInputModule: StandaloneInputModule
 	public Controller leftController;
 	public Controller rightController;
 
+	public float offset;
+
 	public RectTransform[] DebugPointers;
 
 	private const int gazeId = 1;
@@ -114,14 +116,15 @@ public class SphereUIInputModule: StandaloneInputModule
 			var tempData = new PointerEventData(eventSystem);
 			tempData.Reset();
 
-			tempData.position = position.Value;
+			var positionWithOffset = new Vector2(position.Value.x + offset, position.Value.y);
+			tempData.position = positionWithOffset;
 
 			eventSystem.RaycastAll(tempData, m_RaycastResultCache);
 			var result = FindFirstRaycast(m_RaycastResultCache);
 			if (result.isValid)
 			{
 				raycastResults.Add(position.Key, result);
-				positionResults.Add(position.Key, position.Value);
+				positionResults.Add(position.Key, positionWithOffset);
 			}
 			m_RaycastResultCache.Clear();
 		}

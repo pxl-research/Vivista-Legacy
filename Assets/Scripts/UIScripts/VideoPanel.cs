@@ -32,13 +32,13 @@ public class VideoPanel : MonoBehaviour
 
 	public void Init(string newTitle, string fullPath)
 	{
-		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
-		audioSource.playOnAwake = false;
+		//audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
+		//audioSource.playOnAwake = false;
 
 		videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
 		videoPlayer.controlledAudioTrackCount = 1;
 		videoPlayer.EnableAudioTrack(0, true);
-		videoPlayer.SetTargetAudioSource(0, audioSource);
+		//videoPlayer.SetTargetAudioSource(0, audioSource);
 
 		videoPlayer.url = fullPath;
 		videoPlayer.playOnAwake = false;
