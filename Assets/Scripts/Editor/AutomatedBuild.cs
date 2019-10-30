@@ -16,7 +16,6 @@ public class AutomatedBuild : EditorWindow
 		PlayerSettings.virtualRealitySupported = false;
 		PlayerSettings.fullScreenMode = UnityEngine.FullScreenMode.Windowed;
 		PlayerSettings.defaultIsNativeResolution = true;
-		PlayerSettings.displayResolutionDialog = ResolutionDialogSetting.Enabled;
 		PlayerSettings.usePlayerLog = true;
 		PlayerSettings.resizableWindow = true;
 		BuildPipeline.BuildPlayer(options);
