@@ -1,5 +1,8 @@
-﻿using System.IO;
+﻿using System.Collections;
+using System.IO;
 using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class IndexPanelVideo : MonoBehaviour
@@ -14,12 +17,12 @@ public class IndexPanelVideo : MonoBehaviour
 	public Text DownloadedText;
 	public Image thumbnailImage;
 
-	private WWW imageDownload;
+	private UnityWebRequest imageDownload;
 	private string uuid;
 
 	private bool isLocal;
 
-	public void SetData(VideoSerialize video, bool local)
+	public IEnumerator SetData(VideoSerialize video, bool local)
 	{
 		titleText.text = video.title;
 		authorText.text = video.username;
@@ -44,12 +47,32 @@ public class IndexPanelVideo : MonoBehaviour
 
 		if (isLocal)
 		{
-			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename)));
+			imageDownload = UnityWebRequestTexture.GetTexture("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename)));
 		}
 		else
 		{
-			imageDownload = new WWW(Web.thumbnailUrl + "/" + uuid);
+			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "/" + uuid);
 		}
+
+		yield return imageDownload.SendWebRequest();
+
+		if (imageDownload.isNetworkError || imageDownload.isHttpError)
+		{
+			Debug.Log("Failed to download thumbnail: " + imageDownload.error);
+		}
+		else if (imageDownload.isDone)
+		{
+			var texture = DownloadHandlerTexture.GetContent(imageDownload);
+			thumbnailImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+			thumbnailImage.color = Color.white;
+		}
+		else
+		{
+			Assert.IsTrue(false, "This isn't supposed to happen. Investigate!");
+		}
+
+		imageDownload.Dispose();
+		imageDownload = null;
 
 		Refresh();
 	}
@@ -57,26 +80,6 @@ public class IndexPanelVideo : MonoBehaviour
 	public void Refresh()
 	{
 		DownloadedText.enabled = Directory.Exists(Path.Combine(Application.persistentDataPath, uuid));
-	}
-
-	public void Update()
-	{
-		if (imageDownload != null)
-		{
-			if (imageDownload.error != null)
-			{
-				Debug.Log("Failed to download thumbnail: " + imageDownload.error);
-				imageDownload.Dispose();
-				imageDownload = null;
-			}
-			else if (imageDownload.isDone)
-			{
-				thumbnailImage.sprite = Sprite.Create(imageDownload.texture, new Rect(0, 0, imageDownload.texture.width, imageDownload.texture.height), new Vector2(0.5f, 0.5f));
-				imageDownload.Dispose();
-				imageDownload = null;
-				thumbnailImage.color = Color.white;
-			}
-		}
 	}
 
 	public void OnHit()

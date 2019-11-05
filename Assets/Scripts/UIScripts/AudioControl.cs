@@ -23,7 +23,6 @@ public class AudioControl : MonoBehaviour
 
 	void Awake()
 	{
-		Debug.Log("AudioControl Awake");
 		audioSource = GetComponent<AudioSource>();
 		audioSource.playOnAwake = false;
 		playButtonImage = playButton.GetComponentInChildren<RawImage>();

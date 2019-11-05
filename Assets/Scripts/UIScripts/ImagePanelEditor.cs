@@ -136,7 +136,7 @@ public class ImagePanelEditor : MonoBehaviour
 	private void CreateNewEntry(string path)
 	{
 		var albumEntry = Instantiate(imageAlbumEntryPrefab, imageAlbumList).GetComponent<ImageAlbumEntry>();
-		albumEntry.SetURL(path);
+		StartCoroutine(albumEntry.SetURL(path));
 
 		albumEntry.moveLeftButton.onClick.AddListener(() => MoveLeftAlbumEntry(albumEntry.gameObject));
 		albumEntry.moveRightButton.onClick.AddListener(() => MoveRightAlbumEntry(albumEntry.gameObject));

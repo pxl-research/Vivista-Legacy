@@ -213,11 +213,14 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): Login if details were remembered
 		{
 			var details = LoginPanel.GetSavedLogin();
-			var response = LoginPanel.SendLoginRequest(details.username, details.password);
-			if (response.Item1 == 200)
+			if (details != null)
 			{
-				userToken = response.Item2;
-				Toasts.AddToast(5, "Logged in");
+				var response = LoginPanel.SendLoginRequest(details.username, details.password);
+				if (response.Item1 == 200)
+				{
+					userToken = response.Item2;
+					Toasts.AddToast(5, "Logged in");
+				}
 			}
 		}
 	}

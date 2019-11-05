@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class ImagePanelImage : MonoBehaviour
 {
 	public string url;
 
-	private WWW www;
-	private bool downloading;
+	private UnityWebRequest www;
 	private bool loaded = false;
 	private static Vector2 defaultImageSize = new Vector2(500, 500);
 
@@ -16,7 +17,7 @@ public class ImagePanelImage : MonoBehaviour
 		url = URL;
 	}
 
-	public void LoadImage()
+	public IEnumerator LoadImage()
 	{
 		if (!String.IsNullOrEmpty(url) && !loaded)
 		{
@@ -25,18 +26,16 @@ public class ImagePanelImage : MonoBehaviour
 				url = "file:///" + url;
 			}
 
-			www = new WWW(url);
-			downloading = true;
-		}
-	}
+			Texture2D texture;
 
-	public void Update()
-	{
-		if (downloading && www.isDone)
-		{
-			loaded = true;
-			downloading = false;
-			var texture = www.texture;
+			using (www = UnityWebRequestTexture.GetTexture(url))
+			{
+				yield return www.SendWebRequest();
+
+				loaded = true;
+				texture = DownloadHandlerTexture.GetContent(www);
+			}
+
 			var image = GetComponentInChildren<RawImage>();
 
 			float heightRatio = texture.height / defaultImageSize.y;

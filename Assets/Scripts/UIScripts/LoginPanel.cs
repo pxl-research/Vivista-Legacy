@@ -123,12 +123,14 @@ public class LoginPanel : MonoBehaviour
 		var form = new WWWForm();
 		form.AddField("username", username);
 		form.AddField("password", password);
-
-		using (var www = new WWW(Web.registerUrl, form))
+		
+		using (var www = UnityWebRequest.Post(Web.registerUrl, form))
 		{
+			www.SendWebRequest();
+			//TODO(Simon): Async??
 			while (!www.isDone) { }
 
-			var status = www.StatusCode();
+			var status = www.responseCode;
 			if (status == 409)
 			{
 				registerError.text = "This username is already taken.";
@@ -139,14 +141,14 @@ public class LoginPanel : MonoBehaviour
 				registerError.text = "An error happened in the server. Please try again later";
 				return;
 			}
-			if (!String.IsNullOrEmpty(www.error))
+			if (www.isNetworkError || www.isHttpError)
 			{
 				registerError.text = www.error;
 				return;
 			}
 
 			answered = true;
-			answerToken = www.text;
+			answerToken = www.downloadHandler.text;
 
 			Toasts.AddToast(5, "Registered succesfully");
 			Toasts.AddToast(5, "Logged in");
@@ -174,12 +176,13 @@ public class LoginPanel : MonoBehaviour
 		return details;
 	}
 
-	//NOTE(Simon): Returns HTTP response code . 200 is good, anything else is bad
+	//NOTE(Simon): Returns HTTP response code. 200 is good, anything else is bad
 	public static Tuple<int, string> SendLoginRequest(string username, string password)
 	{
 		using (var www = new UnityWebRequest($"{Web.loginUrl}?username={username}&password={password}", "POST", new DownloadHandlerBuffer(), null))
 		{
 			var request = www.SendWebRequest();
+			//TODO(Simon): Async?
 			while (!request.isDone) { }
 			return new Tuple<int, string>((int)www.responseCode, www.downloadHandler.text);
 		}

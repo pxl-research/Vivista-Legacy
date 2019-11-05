@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System.Collections;
+using System.IO;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class DetailPanel : MonoBehaviour
@@ -21,30 +23,13 @@ public class DetailPanel : MonoBehaviour
 	public bool answered;
 	public string answerVideoId;
 	
-	private WWW imageDownload;
+	private UnityWebRequest imageDownload;
 	private GameObject indexPanel;
 	private float time;
 	private const float refreshTime = 1.0f;
 
 	void Update()
 	{
-		if (imageDownload != null)
-		{
-			if (imageDownload.error != null)
-			{
-				Debug.Log("Failed to download thumbnail: " + imageDownload.error);
-				imageDownload.Dispose();
-				imageDownload = null;
-			}
-			else if (imageDownload.isDone)
-			{
-				thumb.sprite = Sprite.Create(imageDownload.texture, new Rect(0, 0, imageDownload.texture.width, imageDownload.texture.height), new Vector2(0.5f, 0.5f));
-				imageDownload.Dispose();
-				imageDownload = null;
-				thumb.color = Color.white;
-			}
-		}
-
 		time += Time.deltaTime;
 		if (time > refreshTime)
 		{
@@ -53,10 +38,12 @@ public class DetailPanel : MonoBehaviour
 		}
 	}
 
-	public void Init(VideoSerialize videoToDownload, GameObject indexPanel, bool isLocal)
+	public IEnumerator Init(VideoSerialize videoToDownload, GameObject indexPanel, bool isLocal)
 	{
 		this.indexPanel = indexPanel;
-		this.indexPanel.SetActive(false);
+		//NOTE(Simon): Move offscreen. We can't disable it just yet. It's still running _this_ coroutine. Disable at end of function
+		var indexPanelPos = this.indexPanel.transform.localPosition;
+		this.indexPanel.transform.localPosition = new Vector2(10000, 10000);
 
 		video = videoToDownload;
 
@@ -66,15 +53,36 @@ public class DetailPanel : MonoBehaviour
 		author.text = video.username;
 		timestamp.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
+
 		if (isLocal)
 		{
-			imageDownload = new WWW("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename)));
+			imageDownload = UnityWebRequest.Get("file:///" + Path.Combine(Application.persistentDataPath, video.id, SaveFile.thumbFilename));
 		}
 		else
 		{
-			imageDownload = new WWW(Web.thumbnailUrl + "/" + video.id);
+			imageDownload = UnityWebRequest.Get(Web.thumbnailUrl + "/" + video.id);
 		}
 
+		yield return imageDownload.SendWebRequest();
+
+		if (imageDownload.isNetworkError)
+		{
+			Debug.Log("Failed to download thumbnail: " + imageDownload.error);
+			imageDownload.Dispose();
+			imageDownload = null;
+		}
+		else if (imageDownload.isDone || imageDownload.downloadProgress >= 1f)
+		{
+			var texture = new Texture2D(1, 1);
+			texture.LoadImage(imageDownload.downloadHandler.data);
+			thumb.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+			imageDownload.Dispose();
+			imageDownload = null;
+			thumb.color = Color.white;
+		}
+
+		this.indexPanel.SetActive(false);
+		this.indexPanel.transform.localPosition = indexPanelPos;
 		Refresh();
 	}
 	

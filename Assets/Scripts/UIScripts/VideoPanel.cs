@@ -19,7 +19,6 @@ public class VideoPanel : MonoBehaviour
 	public AudioSource audioSource;
 
 	public static bool keepFileNames;
-	public string url;
 
 	public void Update()
 	{

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.XR;
 
@@ -146,35 +147,38 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		//Note(Simon): Spinner animation
-		if (spinner.enabled)
+		if (spinner.gameObject.activeSelf)
 		{
-			spinner.rectTransform.Rotate(0, 0, -0.5f);
+			spinner.rectTransform.Rotate(0, 0, -1f);
 		}
 
 		//Note(Simon): Video Hovering & clicking
-		for (int i = 0; i < videos.Count; i++)
+		if (videoContainer.activeSelf)
 		{
-			var rect = new Vector3[4];
-			videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
-
-			bool hovering;
-
-			//NOTE(Simon): Check if hovering
-			hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
-
-			//TODO: Get this to work with Hittable
-			if (!XRSettings.enabled)
+			for (int i = 0; i < videos.Count; i++)
 			{
-				videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
-			}
+				var rect = new Vector3[4];
+				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
 
-			if (hovering && Input.GetMouseButtonDown(0))
-			{
-				detailVideo = loadedVideos.videos[i];
-				detailPanel = Instantiate(detailPanelPrefab);
-				detailPanel.transform.SetParent(Canvass.main.transform, false);
+				bool hovering;
 
-				detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal);
+				//NOTE(Simon): Check if hovering
+				hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
+
+				//TODO: Get this to work with Hittable
+				if (!XRSettings.enabled)
+				{
+					videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
+				}
+
+				if (hovering && Input.GetMouseButtonDown(0))
+				{
+					detailVideo = loadedVideos.videos[i];
+					detailPanel = Instantiate(detailPanelPrefab);
+					detailPanel.transform.SetParent(Canvass.main.transform, false);
+
+					StartCoroutine(detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal));
+				}
 			}
 		}
 
@@ -317,7 +321,7 @@ public class IndexPanel : MonoBehaviour
 	{
 		serverConnectionError.SetActive(false);
 		videoContainer.SetActive(false);
-		spinner.enabled = true;
+		spinner.gameObject.SetActive(true);
 		spinner.rectTransform.rotation = Quaternion.identity;
 
 		var offset = (page - 1) * videosPerPage;
@@ -336,20 +340,20 @@ public class IndexPanel : MonoBehaviour
 			url += $"&author={searchParamAuthor}";
 		}
 
-		var www = new WWW(url);
+		var www = UnityWebRequest.Get(url);
 
-		yield return www;
-		videoContainer.SetActive(true);
-		spinner.enabled = false;
+		yield return www.SendWebRequest();
+		spinner.gameObject.SetActive(false);
 
-		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.text);
-
-		if (www.error != null || www.text == "")
+		if (www.isNetworkError || www.isHttpError)
 		{
 			serverConnectionError.SetActive(true);
 			yield break;
 		}
 
+		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.downloadHandler.text);
+
+		videoContainer.SetActive(true);
 		noVideos.enabled = loadedVideos.videos.Count == 0;
 
 		for (int i = offset; i < loadedVideos.videos.Count; i++)
@@ -381,7 +385,7 @@ public class IndexPanel : MonoBehaviour
 			for (int i = 0; i < videosThisPage.Count; i++)
 			{
 				var v = videosThisPage[i];
-				videos[i].GetComponent<IndexPanelVideo>().SetData(v, false);
+				StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, false));
 			}
 		}
 	}
@@ -390,7 +394,7 @@ public class IndexPanel : MonoBehaviour
 	{
 		serverConnectionError.SetActive(false);
 		videoContainer.SetActive(false);
-		spinner.enabled = true;
+		spinner.gameObject.SetActive(true);
 		spinner.rectTransform.rotation = Quaternion.identity;
 
 		var di = new DirectoryInfo(Application.persistentDataPath);
@@ -422,7 +426,7 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		videoContainer.SetActive(true);
-		spinner.enabled = false;
+		spinner.gameObject.SetActive(false);
 
 		noVideos.enabled = loadedVideos.videos.Count == 0;
 
@@ -548,7 +552,8 @@ public class IndexPanel : MonoBehaviour
 		for (int i = 0; i < videosThisPage.Count; i++)
 		{
 			var v = videosThisPage[i];
-			videos[i].GetComponent<IndexPanelVideo>().SetData(v, true);
+			StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, true));
+			//TODO(Simon): Is this needed?
 			//NOTE(Kristof): Space out SetData over some time to prevent lag spike in VR
 			if (XRSettings.enabled)
 			{

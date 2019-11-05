@@ -16,6 +16,15 @@ public class ImagePanel : MonoBehaviour
 
 	public GameObject imagePanelImagePrefab;
 
+	public void OnEnable()
+	{
+		if (images.Count > 0)
+		{
+			SetIndex(0);
+			imageIndex = 0;
+		}
+	}
+
 	public void Init(string newTitle, List<string> urls)
 	{
 		prevButton.onClick.AddListener(PrevImage);
@@ -53,7 +62,7 @@ public class ImagePanel : MonoBehaviour
 
 	public void SetIndex(int index)
 	{
-		images[index].LoadImage();
+		StartCoroutine(images[index].LoadImage());
 		ScrollTo(images[index].GetComponent<RectTransform>());
 		EnableButtons();
 	}

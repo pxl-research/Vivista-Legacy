@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class ImageAlbumEntry : MonoBehaviour
@@ -11,11 +13,11 @@ public class ImageAlbumEntry : MonoBehaviour
 	public Button2 deleteButton;
 	public string url;
 
-	private WWW www;
+	private UnityWebRequest request;
 	private bool downloading;
 	private static Vector2 defaultImageSize = new Vector2(200, 200);
 
-	public void SetURL(string newUrl)
+	public IEnumerator SetURL(string newUrl)
 	{
 		if (!String.IsNullOrEmpty(newUrl))
 		{
@@ -27,17 +29,17 @@ public class ImageAlbumEntry : MonoBehaviour
 
 			filename.text = newUrl.Substring(newUrl.LastIndexOf("\\", StringComparison.Ordinal) + 1);
 
-			www = new WWW(newUrl);
-			downloading = true;
-		}
-	}
+			Texture2D texture;
 
-	public void Update()
-	{
-		if (downloading && www.isDone)
-		{
-			downloading = false;
-			var texture = www.texture;
+			using (request = UnityWebRequestTexture.GetTexture(newUrl))
+			{
+				yield return request.SendWebRequest();
+
+				//TODO(Simon): Error handling
+
+				texture = DownloadHandlerTexture.GetContent(request);
+			}
+
 			var image = GetComponentInChildren<RawImage>();
 			var size = defaultImageSize;
 			Vector2 position;
