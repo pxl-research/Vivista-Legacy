@@ -35,39 +35,6 @@ public class MultipleChoicePanel : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		if (!XRSettings.enabled)
-		{
-			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-
-			//NOTE(Kristof): Resetting toggle background colour
-			{
-				var toggles = answerPanel.GetComponentsInChildren<Toggle>();
-				foreach (var tgl in toggles)
-				{
-					ToggleHoverEnd(tgl.gameObject);
-				}
-			}
-
-			if (Physics.Raycast(ray, out hit, 150, LayerMask.GetMask("UI")))
-			{
-				var toggle = hit.transform.GetComponent<Toggle>();
-				if (toggle)
-				{
-					ToggleHoverStart(toggle.gameObject);
-				}
-
-				if (Input.GetMouseButtonDown(0) && toggleGroup.AnyTogglesOn())
-				{
-					var button = hit.transform.GetComponent<Button>();
-					if (button)
-					{
-						CheckAnswer();
-					}
-				}
-			}
-		}
-
 		//NOTE(Kristof): Disable colliders on elements that aren't interactable
 
 		foreach (var toggle in answerPanel.GetComponentsInChildren<Toggle>())

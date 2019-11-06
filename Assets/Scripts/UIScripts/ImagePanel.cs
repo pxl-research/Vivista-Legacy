@@ -18,11 +18,8 @@ public class ImagePanel : MonoBehaviour
 
 	public void OnEnable()
 	{
-		if (images.Count > 0)
-		{
-			SetIndex(0);
-			imageIndex = 0;
-		}
+		//HACK(Simon): Fixes a bug where no image is loaded on first opening of this panel. 
+		StartCoroutine(images[imageIndex].LoadImage());
 	}
 
 	public void Init(string newTitle, List<string> urls)
@@ -47,6 +44,7 @@ public class ImagePanel : MonoBehaviour
 		var titleRect = title.GetComponent<RectTransform>();
 		float newHeight = UIHelper.CalculateTextFieldHeight(title.text, title.font, title.fontSize, titleRect.sizeDelta.x, 30);
 		titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, newHeight);
+		
 		imagePanelContent.offsetMin = new Vector2(imagePanelContent.offsetMin.x, 0);
 		imagePanelContent.offsetMax = new Vector2(imagePanelContent.offsetMax.x, 0);
 	}
@@ -62,9 +60,12 @@ public class ImagePanel : MonoBehaviour
 
 	public void SetIndex(int index)
 	{
-		StartCoroutine(images[index].LoadImage());
-		ScrollTo(images[index].GetComponent<RectTransform>());
-		EnableButtons();
+		if (gameObject.activeInHierarchy)
+		{ 
+			StartCoroutine(images[index].LoadImage());
+			ScrollTo(images[index].GetComponent<RectTransform>());
+			EnableButtons();
+		}
 	}
 
 	public void NextImage()
@@ -85,11 +86,9 @@ public class ImagePanel : MonoBehaviour
 
 	private void ScrollTo(RectTransform target)
 	{
-
 		imagePanelContent.anchoredPosition =
 			(Vector2)imageScrollRect.transform.InverseTransformPoint(imagePanelContent.position)
 			- (Vector2)imageScrollRect.transform.InverseTransformPoint(target.position);
-		Canvas.ForceUpdateCanvases();
 	}
 
 	private void EnableButtons()
