@@ -84,6 +84,7 @@ public class Player : MonoBehaviour
 	void Start()
 	{
 		Canvass.sphereUI.SetActive(false);
+		Canvass.sphereUIRenderer.SetActive(false);
 		StartCoroutine(EnableVr());
 
 		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
@@ -553,6 +554,8 @@ public class Player : MonoBehaviour
 	private void ActivateInteractionPoint(InteractionPointPlayer point)
 	{
 		Canvass.sphereUI.SetActive(true);
+		Canvass.sphereUIRenderer.SetActive(true);
+		Canvass.sphereUIRenderer.GetComponent<UISphere>().offset = Camera.current.transform.localRotation.eulerAngles.y - 270;
 		point.panel.SetActive(true);
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
@@ -574,6 +577,7 @@ public class Player : MonoBehaviour
 	public void DeactivateActiveInteractionPoint()
 	{
 		Canvass.sphereUI.SetActive(false);
+		Canvass.sphereUIRenderer.SetActive(false);
 		Assert.IsNotNull(activeInteractionPoint);
 		Assert.IsNotNull(activeInteractionPoint.point);
 		activeInteractionPoint.panel.SetActive(false);

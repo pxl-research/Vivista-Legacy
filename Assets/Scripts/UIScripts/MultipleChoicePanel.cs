@@ -26,13 +26,11 @@ public class MultipleChoicePanel : MonoBehaviour
 	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
-	// Use this for initialization
 	void Start()
 	{
 		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
 	}
 
-	// Update is called once per frame
 	void Update()
 	{
 		//NOTE(Kristof): Disable colliders on elements that aren't interactable
