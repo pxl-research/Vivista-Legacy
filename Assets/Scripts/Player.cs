@@ -555,7 +555,10 @@ public class Player : MonoBehaviour
 	{
 		Canvass.sphereUI.SetActive(true);
 		Canvass.sphereUIRenderer.SetActive(true);
-		Canvass.sphereUIRenderer.GetComponent<UISphere>().offset = Camera.current.transform.localRotation.eulerAngles.y - 270;
+
+		var pointAngle = Mathf.Rad2Deg * Mathf.Atan2(point.position.x, point.position.z);
+		Canvass.sphereUIRenderer.GetComponent<UISphere>().offset = pointAngle - 90;
+
 		point.panel.SetActive(true);
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
