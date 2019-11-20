@@ -16,6 +16,9 @@ public class Canvass : MonoBehaviour
 
 	public static GameObject sphereUI				=> _sphereUI				?? (_sphereUI = GameObject.Find("SphereUI"));
 	private static GameObject _sphereUI;
+	
+	public static GameObject sphereUICanvas			=>_sphereUICanvas			?? (_sphereUICanvas = GameObject.Find("SphereUICanvas"));
+	private static GameObject _sphereUICanvas;
 
 	public static GameObject sphereUIRenderer		=>_sphereUIRenderer			?? (_sphereUIRenderer = GameObject.Find("SphereUIRenderer"));
 	private static GameObject _sphereUIRenderer;

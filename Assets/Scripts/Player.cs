@@ -553,11 +553,8 @@ public class Player : MonoBehaviour
 
 	private void ActivateInteractionPoint(InteractionPointPlayer point)
 	{
-		Canvass.sphereUI.SetActive(true);
-		Canvass.sphereUIRenderer.SetActive(true);
-
-		var pointAngle = Mathf.Rad2Deg * Mathf.Atan2(point.position.x, point.position.z);
-		Canvass.sphereUIRenderer.GetComponent<UISphere>().offset = pointAngle - 90;
+		var pointAngle = Mathf.Rad2Deg * Mathf.Atan2(point.position.x, point.position.z) - 90;
+		Canvass.sphereUIRenderer.GetComponent<UISphere>().Activate(pointAngle);
 
 		point.panel.SetActive(true);
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();

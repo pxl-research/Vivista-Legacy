@@ -234,7 +234,7 @@ public class VersionManager
 			return false;
 		}
 
-		//NOTE(Kristof): Set version to version 1
+		//NOTE(Kristof): Set version to version 3
 		meta.version = 3;
 
 #if DEBUG_VERSION

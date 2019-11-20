@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 [ExecuteInEditMode]
@@ -7,6 +8,9 @@ public class UISphere : MonoBehaviour
 	public float offset;
 	private Material material;
 	private SphereUIInputModule inputModule;
+	private CanvasGroup canvasGroup;
+	private float fadeInTimer;
+	private float fadeInLength = .15f;
 
 	void Start()
 	{
@@ -26,12 +30,40 @@ public class UISphere : MonoBehaviour
 
 	void Update()
 	{
-		offset %= 360;
-		transform.localRotation = Quaternion.Euler(0, offset, 0);
-		var rotation = (transform.localRotation.eulerAngles.y + 270) % 360;
-		material.SetFloat("offsetDegrees", rotation);
-		Assert.IsNotNull(inputModule);
-		inputModule.offset = offset;
+		if (Application.isPlaying)
+		{
+			offset %= 360;
+			transform.localRotation = Quaternion.Euler(0, offset, 0);
+			var rotation = (transform.localRotation.eulerAngles.y + 270) % 360;
+			material.SetFloat("offsetDegrees", rotation);
+			Assert.IsNotNull(inputModule);
+			inputModule.offset = offset;
+		}
+	}
+
+	private IEnumerator FadeIn()
+	{
+		fadeInTimer = 0;
+		if (canvasGroup == null)
+		{
+			canvasGroup = Canvass.sphereUICanvas.GetComponent<CanvasGroup>();
+		}
+
+		while (fadeInTimer < fadeInLength)
+		{
+			fadeInTimer += Time.deltaTime;
+			canvasGroup.alpha = fadeInTimer / fadeInLength;
+			yield return new WaitForEndOfFrame();
+		}
+		yield return null;
+	}
+
+	public void Activate(float offset)
+	{
+		Canvass.sphereUI.SetActive(true);
+		Canvass.sphereUIRenderer.SetActive(true);
+		this.offset = offset;
+		StartCoroutine(FadeIn());
 	}
 
 	//NOTE(Simon): From http://wiki.unity3d.com/index.php/ProceduralPrimitives
