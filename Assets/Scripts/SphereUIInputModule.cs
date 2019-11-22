@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿//#define DEBUG_UI_INPUT_MODULE
+
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR;
@@ -20,8 +22,6 @@ public class SphereUIInputModule: StandaloneInputModule
 	public Controller rightController;
 
 	public float offset;
-
-	public RectTransform[] DebugPointers;
 
 	private const int gazeId = 1;
 	private const int rightControllerId = 2;
@@ -106,9 +106,6 @@ public class SphereUIInputModule: StandaloneInputModule
 			});
 		}
 
-		var debugPositions = new List<Vector2>(positions.Values);
-		DrawDebugPointers(debugPositions);
-
 		raycastResults.Clear();
 		positionResults.Clear();
 		foreach (var position in positions)
@@ -179,22 +176,18 @@ public class SphereUIInputModule: StandaloneInputModule
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerDownHandler);
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.initializePotentialDrag);
+#if DEBUG_UI_INPUT_MODULE
 				Debug.Log("Pointer down by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
+#endif
 			}
 			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Released || clickStates[kvp.Key] == PointerEventData.FramePressState.PressedAndReleased)
 			{
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerClickHandler);
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerUpHandler);
+#if DEBUG_UI_INPUT_MODULE
 				Debug.Log("Click by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
+#endif
 			}
-		}
-	}
-
-	public void DrawDebugPointers(List<Vector2> locations)
-	{
-		for (int i = 0; i < locations.Count; i++)
-		{
-			DebugPointers[i].anchoredPosition = locations[i];
 		}
 	}
 }

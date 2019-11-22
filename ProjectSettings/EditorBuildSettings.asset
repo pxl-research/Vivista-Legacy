@@ -12,6 +12,6 @@ EditorBuildSettings:
     path: Assets/Player.unity
     guid: 3f1572a940ad67647b94e31b308af2e1
   - enabled: 1
-    path: Assets/SphereUITest/UITest.unity
+    path: Assets/Player.unity
     guid: 2a0027d70cdd83241be8e92231461799
   m_configObjects: {}

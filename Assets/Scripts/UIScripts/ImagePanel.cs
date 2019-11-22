@@ -18,8 +18,12 @@ public class ImagePanel : MonoBehaviour
 
 	public void OnEnable()
 	{
-		//HACK(Simon): Fixes a bug where no image is loaded on first opening of this panel. 
-		StartCoroutine(images[imageIndex].LoadImage());
+		Debug.Log("OnEnable");
+		//HACK(Simon): Fixes a bug where no image is loaded on first opening of this panel.
+		if (images.Count > 0)
+		{
+			StartCoroutine(images[imageIndex].LoadImage());
+		}
 	}
 
 	public void Init(string newTitle, List<string> urls)

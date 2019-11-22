@@ -714,7 +714,7 @@ public class Editor : MonoBehaviour
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
-						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
 						var panel = Instantiate(videoPanelPrefab);
@@ -780,7 +780,7 @@ public class Editor : MonoBehaviour
 				pointToEdit.filled = true;
 				if (String.IsNullOrEmpty(pointToEdit.title))
 				{
-					lastPlacedPoint.title = "<unnamed>";
+					pointToEdit.title = "<unnamed>";
 				}
 				if (wasPanelHidden)
 				{
@@ -1777,7 +1777,6 @@ public class Editor : MonoBehaviour
 
 			try
 			{
-
 				newInteractionPoint.panel.SetActive(false);
 			}
 			catch (NullReferenceException e)

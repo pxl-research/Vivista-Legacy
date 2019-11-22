@@ -839,7 +839,7 @@ GameObject:
   - component: {fileID: 222583454569076304}
   - component: {fileID: 114584674720588140}
   m_Layer: 5
-  m_Name: VideoPanel
+  m_Name: VideoPanelSphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
