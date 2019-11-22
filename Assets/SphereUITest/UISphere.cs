@@ -60,7 +60,7 @@ public class UISphere : MonoBehaviour
 
 	public void Activate(float offset)
 	{
-		Canvass.sphereUI.SetActive(true);
+		Canvass.sphereUIWrapper.SetActive(true);
 		Canvass.sphereUIRenderer.SetActive(true);
 		this.offset = offset;
 		StartCoroutine(FadeIn());

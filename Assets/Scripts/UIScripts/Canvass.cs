@@ -14,8 +14,8 @@ public class Canvass : MonoBehaviour
 	public static GameObject modalBackground		=> _modalBackground			?? (_modalBackground = main.transform.Find("ModalBackground").gameObject);
 	private static GameObject _modalBackground;
 
-	public static GameObject sphereUI				=> _sphereUI				?? (_sphereUI = GameObject.Find("SphereUI"));
-	private static GameObject _sphereUI;
+	public static GameObject sphereUIWrapper		=> _sphereUIWrapper			?? (_sphereUIWrapper = GameObject.Find("SphereUI"));
+	private static GameObject _sphereUIWrapper;
 	
 	public static GameObject sphereUICanvas			=>_sphereUICanvas			?? (_sphereUICanvas = GameObject.Find("SphereUICanvas"));
 	private static GameObject _sphereUICanvas;
@@ -23,6 +23,6 @@ public class Canvass : MonoBehaviour
 	public static GameObject sphereUIRenderer		=>_sphereUIRenderer			?? (_sphereUIRenderer = GameObject.Find("SphereUIRenderer"));
 	private static GameObject _sphereUIRenderer;
 
-	public static GameObject sphereUIPanelWrapper	=> _sphereUIPanelWrapper	?? (_sphereUIPanelWrapper = sphereUI.transform.Find("SphereUICanvas/PanelWrapper").gameObject);
+	public static GameObject sphereUIPanelWrapper	=> _sphereUIPanelWrapper	?? (_sphereUIPanelWrapper = sphereUIWrapper.transform.Find("SphereUICanvas/PanelWrapper").gameObject);
 	private static GameObject _sphereUIPanelWrapper;
 }

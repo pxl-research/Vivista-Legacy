@@ -83,7 +83,7 @@ public class Player : MonoBehaviour
 
 	void Start()
 	{
-		Canvass.sphereUI.SetActive(false);
+		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
 		StartCoroutine(EnableVr());
 
@@ -576,7 +576,7 @@ public class Player : MonoBehaviour
 
 	public void DeactivateActiveInteractionPoint()
 	{
-		Canvass.sphereUI.SetActive(false);
+		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
 		Assert.IsNotNull(activeInteractionPoint);
 		Assert.IsNotNull(activeInteractionPoint.point);
