@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TextPanel : MonoBehaviour
@@ -17,5 +18,13 @@ public class TextPanel : MonoBehaviour
 		var newPos = position;
 		newPos.y += 0.015f;
 		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
+	}
+
+	public void Update()
+	{
+		if (SceneManager.GetActiveScene().name == "Editor")
+		{
+			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
+		}
 	}
 }

@@ -1,18 +1,19 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 public class AudioPanel : MonoBehaviour
 {
 	public Text title;
 	public AudioControl audioControl;
 
-	void Awake()
-	{
-	}
-
 	void Update()
 	{
+		if (SceneManager.GetActiveScene().name == "Editor")
+		{
+			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
+		}
 	}
 
 	public void Init(string newTitle, string fullPath)

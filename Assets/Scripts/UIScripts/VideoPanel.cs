@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -27,6 +28,11 @@ public class VideoPanel : MonoBehaviour
 		progressBar.value = time;
 		progressBar.maxValue = length;
 		timeDisplay.text = $"{MathHelper.FormatSeconds(time)} / {MathHelper.FormatSeconds(length)}";
+
+		if (SceneManager.GetActiveScene().name == "Editor")
+		{
+			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
+		}
 	}
 
 	public void Init(string newTitle, string fullPath)

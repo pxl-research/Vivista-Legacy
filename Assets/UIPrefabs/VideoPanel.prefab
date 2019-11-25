@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 224922285569534542}
   - component: {fileID: 223807789117909674}
   - component: {fileID: 114091602651246342}
+  - component: {fileID: -2902393244726994555}
   - component: {fileID: 222205240750771376}
   - component: {fileID: 5483658892374480953}
   m_Layer: 0
@@ -59,7 +60,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: -862591857
   m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!114 &114091602651246342
@@ -86,6 +87,28 @@ MonoBehaviour:
   videoSurface: {fileID: 114167466339609494}
   videoPlayer: {fileID: 328974316446840502}
   audioSource: {fileID: 0}
+--- !u!114 &-2902393244726994555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040955220156240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_UiScaleMode: 0
+  m_ReferencePixelsPerUnit: 100
+  m_ScaleFactor: 1
+  m_ReferenceResolution: {x: 800, y: 600}
+  m_ScreenMatchMode: 0
+  m_MatchWidthOrHeight: 0
+  m_PhysicalUnit: 3
+  m_FallbackScreenDPI: 96
+  m_DefaultSpriteDPI: 96
+  m_DynamicPixelsPerUnit: 1.5
 --- !u!222 &222205240750771376
 CanvasRenderer:
   m_ObjectHideFlags: 0

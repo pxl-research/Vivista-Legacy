@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ImagePanel : MonoBehaviour
@@ -18,7 +19,6 @@ public class ImagePanel : MonoBehaviour
 
 	public void OnEnable()
 	{
-		Debug.Log("OnEnable");
 		//HACK(Simon): Fixes a bug where no image is loaded on first opening of this panel.
 		if (images.Count > 0)
 		{
@@ -51,6 +51,14 @@ public class ImagePanel : MonoBehaviour
 		
 		imagePanelContent.offsetMin = new Vector2(imagePanelContent.offsetMin.x, 0);
 		imagePanelContent.offsetMax = new Vector2(imagePanelContent.offsetMax.x, 0);
+	}
+
+	public void Update()
+	{
+		if (SceneManager.GetActiveScene().name == "Editor")
+		{
+			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
+		}
 	}
 
 	private void AddNewImage(string url)
