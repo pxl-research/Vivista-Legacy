@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 //TODO(Simon): Consider renaming to project panel
-public class FilePanel : MonoBehaviour
+public class ProjectPanel : MonoBehaviour
 {
 	public class FileItem
 	{
@@ -24,7 +24,6 @@ public class FilePanel : MonoBehaviour
 	public RawImage thumb;
 	public Texture logo;
 
-	public Button newButton;
 	public Button renameButton;
 	public Button deleteButton;
 	public Button openButton;

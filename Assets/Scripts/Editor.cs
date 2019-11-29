@@ -791,9 +791,9 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Saving)
 		{
-			if (filePanel.GetComponent<FilePanel>().answered)
+			if (filePanel.GetComponent<ProjectPanel>().answered)
 			{
-				var panel = filePanel.GetComponent<FilePanel>();
+				var panel = filePanel.GetComponent<ProjectPanel>();
 
 				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file.
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
@@ -846,10 +846,10 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Opening)
 		{
-			if (openPanel.GetComponent<FilePanel>().answered)
+			if (openPanel.GetComponent<ProjectPanel>().answered)
 			{
 
-				var guid = openPanel.GetComponent<FilePanel>().answerGuid;
+				var guid = openPanel.GetComponent<ProjectPanel>().answerGuid;
 				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
 
 				if (OpenFile(metaPath))
@@ -917,9 +917,9 @@ public class Editor : MonoBehaviour
 				Destroy(loginPanel);
 				InitSavePanel();
 			}
-			if (filePanel != null && filePanel.GetComponent<FilePanel>().answered)
+			if (filePanel != null && filePanel.GetComponent<ProjectPanel>().answered)
 			{
-				var panel = filePanel.GetComponent<FilePanel>();
+				var panel = filePanel.GetComponent<ProjectPanel>();
 				panel.Init(true);
 				meta.title = panel.answerTitle;
 
@@ -1562,7 +1562,7 @@ public class Editor : MonoBehaviour
 	public void InitOpenFilePanel()
 	{
 		openPanel = Instantiate(filePanelPrefab);
-		openPanel.GetComponent<FilePanel>().Init(isSaveFileDialog: false);
+		openPanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: false);
 		openPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Opening;
@@ -1579,7 +1579,7 @@ public class Editor : MonoBehaviour
 	{
 		filePanel = Instantiate(filePanelPrefab);
 		filePanel.transform.SetParent(Canvass.main.transform, false);
-		filePanel.GetComponent<FilePanel>().Init(isSaveFileDialog: true);
+		filePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Saving;
 	}

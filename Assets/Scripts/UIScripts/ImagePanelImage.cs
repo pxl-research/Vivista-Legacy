@@ -45,8 +45,8 @@ public class ImagePanelImage : MonoBehaviour
 			var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
 
 			image.rectTransform.sizeDelta = newSize;
-			image.rectTransform.localPosition = new Vector2(-(defaultImageSize.x - newSize.x), -(defaultImageSize.y - newSize.y) / 2);
-
+			//image.rectTransform.localPosition = new Vector2(-(defaultImageSize.x - newSize.x), -(defaultImageSize.y - newSize.y) / 2);
+			Debug.Log("Set"); 
 			image.texture = texture;
 		}
 	}
@@ -56,6 +56,6 @@ public class ImagePanelImage : MonoBehaviour
 		defaultImageSize = size;
 		GetComponent<RectTransform>().sizeDelta = defaultImageSize;
 		GetComponentInChildren<RawImage>().rectTransform.sizeDelta = defaultImageSize;
-		GetComponentInChildren<RawImage>().rectTransform.localPosition = Vector2.zero;
+		GetComponentInChildren<RawImage>().rectTransform.anchoredPosition = Vector2.zero;
 	}
 }
