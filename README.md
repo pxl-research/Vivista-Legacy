@@ -14,12 +14,12 @@ The software consists of an editor to create interactive videos, a server where 
 ### Player Demo
 (click for larger video)
 
-[![video player demo](https://thumbs.gfycat.com/PlasticValuableKronosaurus-size_restricted.gif)](https://gfycat.com/PlasticValuableKronosaurus)
+[![video player demo](https://thumbs.gfycat.com/PlasticValuableKronosaurus-size_restricted.gif)](https://gfycat.com/PlasticValuableKronosaurus.gif)
 
 ### Editor Demo
 (click for larger video)
 
-[![video editor demo](https://thumbs.gfycat.com/ScratchyThoroughAsiaticmouflon-size_restricted.gif)](https://gfycat.com/ScratchyThoroughAsiaticmouflon)
+[![video editor demo](https://thumbs.gfycat.com/ScratchyThoroughAsiaticmouflon-size_restricted.gif)](https://gfycat.com/ScratchyThoroughAsiaticmouflon.gif)
 
 # Contributors
 
