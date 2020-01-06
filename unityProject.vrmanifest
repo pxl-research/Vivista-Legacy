@@ -1,0 +1,16 @@
+{
+  "source": "Unity",
+  "applications": [
+    {
+      "app_key": "application.generated.unity.360video.exe",
+      "launch_type": "url",
+      "url": "steam://launch/",
+      "action_manifest_path": "C:\\Users\\Simon\\Documents\\Git\\360video\\actions.json",
+      "strings": {
+        "en_us": {
+          "name": "360Video [Testing]"
+        }
+      }
+    }
+  ]
+}
