@@ -7,6 +7,7 @@ using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.XR;
+using Valve.VR;
 
 public enum PlayerState
 {
@@ -89,6 +90,8 @@ public class Player : MonoBehaviour
 
 		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
 		trackedControllerRight = controllerRight.GetComponent<Controller>();
+		trackedControllerLeft.OnRotate += RotateCamera;
+		trackedControllerRight.OnRotate += RotateCamera;
 
 		interactionPoints = new List<InteractionPointPlayer>();
 
@@ -222,7 +225,6 @@ public class Player : MonoBehaviour
 		//NOTE(Kristof): Deciding on which object the Ray will be based on
 		//TODO(Simon): Prefers right over left controller
 		{
-			var cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 			var controllerRay = new Ray();
 
 			if (trackedControllerLeft.triggerPressed)
@@ -235,7 +237,7 @@ public class Player : MonoBehaviour
 				controllerRay = trackedControllerRight.CastRay();
 			}
 
-			interactionpointRay = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : cameraRay;
+			interactionpointRay = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 		}
 
 		isInteractingWithPoint = false;
@@ -357,9 +359,9 @@ public class Player : MonoBehaviour
 			//NOTE(Simon): Set hover state when hvoered by controllers
 			foreach (var con in controllerList)
 			{
-				if (con.uiHovering && con.hovered != null)
+				if (con.uiHovering && con.hoveredGo != null)
 				{
-					var hittable = con.hovered.GetComponent<Hittable>();
+					var hittable = con.hoveredGo.GetComponent<Hittable>();
 					if (hittable != null)
 					{
 						hittable.hovering = true;
@@ -402,52 +404,52 @@ public class Player : MonoBehaviour
 			Crosshair.SetFillAmount(interactionTimer / timeToInteract);
 		}
 
-		//NOTE(Simon): Rotate Camera on input
-		{
-			var controllers = new[]
-			{
-				controllerLeft.GetComponent<SteamVR_TrackedObject>(),
-				controllerRight.GetComponent<SteamVR_TrackedObject>()
-			};
-
-			for (int index = 0; index < controllers.Length; index++)
-			{
-				if (controllers[index].index > SteamVR_TrackedObject.EIndex.None)
-				{
-					var device = SteamVR_Controller.Input((int)controllers[index].index);
-					float amount = device.GetAxis().x;
-					float direction = 0;
-					const float rotationThreshold = 0.7f;
-
-					//NOTE(Simon): The rift has only an analog stick. So first check if analog value high enough. If so, rotate and set eligibility to false.
-					//NOTE(cont.): Eligibility only gets reset once analog stick goes below threshold. For the Vive it's much simpler.
-					//NOTE(cont.): GetPressDown() is only true during the first frame with button down. So GetPressDown() determines eligibilty.
-					if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Oculus)
-					{
-						if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
-						{
-							direction = Mathf.Sign(amount);
-							isControllerEligibleForRotation[index] = false;
-						}
-						else if (Mathf.Abs(amount) <= rotationThreshold)
-						{
-							isControllerEligibleForRotation[index] = true;
-						}
-					}
-					else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
-					{
-						isControllerEligibleForRotation[index] = device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad);
-
-						if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
-						{
-							direction = Mathf.Sign(amount);
-						}
-					}
-
-					cameraRig.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
-				}
-			}
-		}
+		////NOTE(Simon): Rotate Camera on input
+		//{
+		//	var controllers = new[]
+		//	{
+		//		controllerLeft.GetComponent<SteamVR_TrackedObject>(),
+		//		controllerRight.GetComponent<SteamVR_TrackedObject>()
+		//	};
+		//
+		//	for (int index = 0; index < controllers.Length; index++)
+		//	{
+		//		if (controllers[index].index > SteamVR_TrackedObject.EIndex.None)
+		//		{
+		//			var device = SteamVR_Controller.Input((int)controllers[index].index);
+		//			float amount = device.GetAxis().x;
+		//			float direction = 0;
+		//			const float rotationThreshold = 0.7f;
+		//
+		//			//NOTE(Simon): The rift has only an analog stick. So first check if analog value high enough. If so, rotate and set eligibility to false.
+		//			//NOTE(cont.): Eligibility only gets reset once analog stick goes below threshold. For the Vive it's much simpler.
+		//			//NOTE(cont.): GetPressDown() is only true during the first frame with button down. So GetPressDown() determines eligibilty.
+		//			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Oculus)
+		//			{
+		//				if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
+		//				{
+		//					direction = Mathf.Sign(amount);
+		//					isControllerEligibleForRotation[index] = false;
+		//				}
+		//				else if (Mathf.Abs(amount) <= rotationThreshold)
+		//				{
+		//					isControllerEligibleForRotation[index] = true;
+		//				}
+		//			}
+		//			else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
+		//			{
+		//				isControllerEligibleForRotation[index] = device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad);
+		//
+		//				if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
+		//				{
+		//					direction = Mathf.Sign(amount);
+		//				}
+		//			}
+		//
+		//			cameraRig.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
+		//		}
+		//	}
+		//}
 	}
 
 	private bool OpenFile(string path)
@@ -642,6 +644,11 @@ public class Player : MonoBehaviour
 			}
 			videoList = null;
 		}
+	}
+
+	public void RotateCamera(int direction)
+	{
+		cameraRig.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
 	}
 
 	public void BackToBrowser()
