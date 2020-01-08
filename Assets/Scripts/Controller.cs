@@ -6,11 +6,11 @@ public class Controller : MonoBehaviour
 	public SteamVR_Input_Sources inputSource;
 
 	public GameObject laser;
-	public GameObject model;
+	//public GameObject model;
 	public GameObject controllerUI;
 	public GameObject hoveredGo;
 	public GameObject cursor;
-	public Material highlightMaterial;
+	//public Material highlightMaterial;
 
 	public bool uiHovering;
 	public bool compassAttached;
@@ -24,13 +24,14 @@ public class Controller : MonoBehaviour
 	public bool triggerDown;
 	//NOTE(Simon): true on the frame trigger is released
 	public bool triggerReleased;
+	private int triggerPressedFrame;
 
 	private Vector3 initialCursorScale;
 	private Plane measuringPlane;
 
-	private MeshRenderer trigger;
-	private MeshRenderer thumbstick;
-	private Material baseMaterial;
+	//private MeshRenderer trigger;
+	//private MeshRenderer thumbstick;
+	//private Material baseMaterial;
 
 	private bool gripDown;
 
@@ -57,13 +58,10 @@ public class Controller : MonoBehaviour
 			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
 		}
 
-		if (SteamVR_Actions.default_Trigger.GetState(inputSource))
+		//NOTE(Simon): triggerPressed should only be true in the frame the trigger was pressed. So set to false if frame numbers don't match.
+		if (triggerPressedFrame != Time.frameCount)
 		{
-			//NOTE(Simon): triggerDown should only be true in the frame the trigger was pressed. So set to false now.
-			if (triggerDown)
-			{
-				triggerPressed = false;
-			}
+			triggerPressed = false;
 		}
 
 		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
@@ -119,52 +117,52 @@ public class Controller : MonoBehaviour
 		cursor.SetActive(false);
 	}
 
-	public void TutorialHighlight()
-	{
-		if (trigger == null)
-		{
-			var triggerGo = model.transform.Find("trigger");
-			if (triggerGo != null)
-			{
-				trigger = triggerGo.gameObject.GetComponent<MeshRenderer>();
-			}
-		}
-
-		if (trigger != null)
-		{
-			baseMaterial = trigger.material;
-			trigger.materials = new[] { baseMaterial, highlightMaterial };
-		}
-
-		//TODO(Kristof): Thumbstick is only used for the Ocoulus Touch controllers, The Vive controllers use trackpad. Needs to be added
-		if (thumbstick == null)
-		{
-			var thumbstickGo = model.transform.Find("thumbstick");
-			if (thumbstickGo != null)
-			{
-				thumbstick = thumbstickGo.gameObject.GetComponent<MeshRenderer>();
-			}
-		}
-
-		if (thumbstick != null)
-		{
-			baseMaterial = thumbstick.material;
-			thumbstick.materials = new[] { baseMaterial, highlightMaterial };
-		}
-	}
-
-	public void ResetMaterial()
-	{
-		if (trigger != null)
-		{
-			trigger.materials = new[] { baseMaterial };
-		}
-
-		if (thumbstick != null)
-		{
-			thumbstick.materials = new[] { baseMaterial };
-		}
-	}
+	//public void TutorialHighlight()
+	//{
+	//	if (trigger == null)
+	//	{
+	//		var triggerGo = model.transform.Find("trigger");
+	//		if (triggerGo != null)
+	//		{
+	//			trigger = triggerGo.gameObject.GetComponent<MeshRenderer>();
+	//		}
+	//	}
+	//
+	//	if (trigger != null)
+	//	{
+	//		baseMaterial = trigger.material;
+	//		trigger.materials = new[] { baseMaterial, highlightMaterial };
+	//	}
+	//
+	//	//TODO(Kristof): Thumbstick is only used for the Ocoulus Touch controllers, The Vive controllers use trackpad. Needs to be added
+	//	if (thumbstick == null)
+	//	{
+	//		var thumbstickGo = model.transform.Find("thumbstick");
+	//		if (thumbstickGo != null)
+	//		{
+	//			thumbstick = thumbstickGo.gameObject.GetComponent<MeshRenderer>();
+	//		}
+	//	}
+	//
+	//	if (thumbstick != null)
+	//	{
+	//		baseMaterial = thumbstick.material;
+	//		thumbstick.materials = new[] { baseMaterial, highlightMaterial };
+	//	}
+	//}
+	//
+	//public void ResetMaterial()
+	//{
+	//	if (trigger != null)
+	//	{
+	//		trigger.materials = new[] { baseMaterial };
+	//	}
+	//
+	//	if (thumbstick != null)
+	//	{
+	//		thumbstick.materials = new[] { baseMaterial };
+	//	}
+	//}
 
 	public Ray CastRay()
 	{
@@ -213,6 +211,7 @@ public class Controller : MonoBehaviour
 		laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
 		triggerDown = true;
 		triggerPressed = true;
+		triggerPressedFrame = Time.frameCount;
 	}
 
 	private void OnTriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)

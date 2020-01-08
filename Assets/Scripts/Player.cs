@@ -130,12 +130,11 @@ public class Player : MonoBehaviour
 		}
 
 		mainEventSystem = EventSystem.current;
+		VRDevices.BeginHandlingVRDeviceEvents();
 	}
 
 	void Update()
 	{
-		VRDevices.DetectDevices();
-
 		//NOTE(Kristof): VR specific behaviour
 		{
 			if (XRSettings.enabled)
@@ -403,53 +402,6 @@ public class Player : MonoBehaviour
 			interactionTimer = 0;
 			Crosshair.SetFillAmount(interactionTimer / timeToInteract);
 		}
-
-		////NOTE(Simon): Rotate Camera on input
-		//{
-		//	var controllers = new[]
-		//	{
-		//		controllerLeft.GetComponent<SteamVR_TrackedObject>(),
-		//		controllerRight.GetComponent<SteamVR_TrackedObject>()
-		//	};
-		//
-		//	for (int index = 0; index < controllers.Length; index++)
-		//	{
-		//		if (controllers[index].index > SteamVR_TrackedObject.EIndex.None)
-		//		{
-		//			var device = SteamVR_Controller.Input((int)controllers[index].index);
-		//			float amount = device.GetAxis().x;
-		//			float direction = 0;
-		//			const float rotationThreshold = 0.7f;
-		//
-		//			//NOTE(Simon): The rift has only an analog stick. So first check if analog value high enough. If so, rotate and set eligibility to false.
-		//			//NOTE(cont.): Eligibility only gets reset once analog stick goes below threshold. For the Vive it's much simpler.
-		//			//NOTE(cont.): GetPressDown() is only true during the first frame with button down. So GetPressDown() determines eligibilty.
-		//			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Oculus)
-		//			{
-		//				if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
-		//				{
-		//					direction = Mathf.Sign(amount);
-		//					isControllerEligibleForRotation[index] = false;
-		//				}
-		//				else if (Mathf.Abs(amount) <= rotationThreshold)
-		//				{
-		//					isControllerEligibleForRotation[index] = true;
-		//				}
-		//			}
-		//			else if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
-		//			{
-		//				isControllerEligibleForRotation[index] = device.GetPressDown(SteamVR_Controller.ButtonMask.Touchpad);
-		//
-		//				if (Mathf.Abs(amount) > rotationThreshold && isControllerEligibleForRotation[index])
-		//				{
-		//					direction = Mathf.Sign(amount);
-		//				}
-		//			}
-		//
-		//			cameraRig.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
-		//		}
-		//	}
-		//}
 	}
 
 	private bool OpenFile(string path)

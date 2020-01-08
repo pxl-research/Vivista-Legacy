@@ -1,6 +1,5 @@
-﻿using System;
-using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.XR;
 
 public static class VRDevices
 {
@@ -22,68 +21,72 @@ public static class VRDevices
 
 	public static bool hasLeftController;
 	public static bool hasRightController;
-	public static bool hasRemote;
 
-	public static void DetectDevices()
+	public static void BeginHandlingVRDeviceEvents()
 	{
-		var devices = Input.GetJoystickNames();
+		//NOTE(Simon): First unassign the event handler, to make sure only 1 is ever connected
+		InputDevices.deviceConnected -= OnDeviceConnect;
+		InputDevices.deviceConnected += OnDeviceConnect;
+		InputDevices.deviceDisconnected -= OnDeviceDisconnect;
+		InputDevices.deviceDisconnected += OnDeviceDisconnect;
+	}
 
-		switch (loadedSdk)
+	public static void OnDeviceConnect(InputDevice device)
+	{
+		var name = device.name.ToLowerInvariant();
+		if (name.Contains("left"))
 		{
-			case LoadedSdk.OpenVr:
-				//NOTE(Kristof): Better way to do this?
-				if (devices.Contains("OpenVR Controller(Oculus Rift CV1 (Left Controller)) - Left") || devices.Contains("OpenVR Controller(Oculus Rift CV1 (Right Controller)) - Right"))
-				{
-					hasLeftController = devices.Contains("OpenVR Controller(Oculus Rift CV1 (Left Controller)) - Left");
-					hasRightController = devices.Contains("OpenVR Controller(Oculus Rift CV1 (Right Controller)) - Right");
-					//NOTE(kristof): OpenVR doesn't seem to detect the remote
-					hasRemote = false;
-
-					loadedControllerSet = LoadedControllerSet.Oculus;
-				}
-				else if (devices.Contains("OpenVR Controller(Vive. Controller MV) - Left") || devices.Contains("OpenVR Controller(Vive. Controller MV) - Right"))
-				{
-					hasLeftController = devices.Contains("OpenVR Controller(Vive. Controller MV) - Left");
-					hasRightController = devices.Contains("OpenVR Controller(Vive. Controller MV) - Right");
-
-					loadedControllerSet = LoadedControllerSet.Vive;
-				}
-				else
-				{
-					hasLeftController = false;
-					hasRightController = false;
-					hasRemote = false;
-					loadedControllerSet = LoadedControllerSet.NoControllers;
-				}
-
-				break;
-
-			case LoadedSdk.None:
-				break;
-
-			default:
-				throw new ArgumentOutOfRangeException();
+			Debug.Log("left controller connected: " + device.name);
+			hasLeftController = true;
+		}
+		if (name.Contains("right"))
+		{
+			Debug.Log("right controller connected: " + device.name);
+			hasRightController = true;
+		}
+		if (name.Contains("oculus"))
+		{
+			Debug.Log("oculus device connected: " + device.name);
+			loadedControllerSet = LoadedControllerSet.Oculus;
+		}
+		else if (name.Contains("vive"))
+		{
+			Debug.Log("vive device connected: " + device.name);
+			loadedControllerSet = LoadedControllerSet.Vive;
 		}
 	}
 
-	public static void SetControllerTutorialMode(GameObject controller, bool enabled)
+	public static void OnDeviceDisconnect(InputDevice device)
 	{
-		GameObject[] controllerArray = { controller };
-		SetControllersTutorialMode(controllerArray, enabled);
-	}
-
-	public static void SetControllersTutorialMode(GameObject[] controllers, bool enabled)
-	{
-		foreach (var controller in controllers)
+		var name = device.name.ToLowerInvariant();
+		if (name.Contains("left"))
 		{
-			if (enabled)
-			{
-				controller.GetComponent<Controller>().TutorialHighlight();
-			}
-			else
-			{
-				controller.GetComponent<Controller>().ResetMaterial();
-			}
+			hasLeftController = false;
+		}
+		if (name.Contains("right"))
+		{
+			hasRightController = false;
 		}
 	}
+
+	//public static void SetControllerTutorialMode(GameObject controller, bool enabled)
+	//{
+	//	GameObject[] controllerArray = { controller };
+	//	SetControllersTutorialMode(controllerArray, enabled);
+	//}
+	//
+	//public static void SetControllersTutorialMode(GameObject[] controllers, bool enabled)
+	//{
+	//	foreach (var controller in controllers)
+	//	{
+	//		if (enabled)
+	//		{
+	//			controller.GetComponent<Controller>().TutorialHighlight();
+	//		}
+	//		else
+	//		{
+	//			controller.GetComponent<Controller>().ResetMaterial();
+	//		}
+	//	}
+	//}
 }
