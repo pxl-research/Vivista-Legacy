@@ -25,6 +25,7 @@ public class Controller : MonoBehaviour
 	//NOTE(Simon): true on the frame trigger is released
 	public bool triggerReleased;
 	private int triggerPressedFrame;
+	private int triggerReleasedFrame;
 
 	private Vector3 initialCursorScale;
 	private Plane measuringPlane;
@@ -46,6 +47,7 @@ public class Controller : MonoBehaviour
 		SteamVR_Actions.default_Grip[inputSource].onStateUp += OnGripDown;
 		SteamVR_Actions.default_RotateLeft[inputSource].onStateDown += OnRotateLeft;
 		SteamVR_Actions.default_RotateRight[inputSource].onStateDown += OnRotateRight;
+		
 	}
 	
 	// Update is called once per frame
@@ -56,12 +58,6 @@ public class Controller : MonoBehaviour
 		{
 			laser.transform.localPosition = new Vector3(0, 0, 0.1f);
 			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
-		}
-
-		//NOTE(Simon): triggerPressed should only be true in the frame the trigger was pressed. So set to false if frame numbers don't match.
-		if (triggerPressedFrame != Time.frameCount)
-		{
-			triggerPressed = false;
 		}
 
 		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
@@ -96,6 +92,19 @@ public class Controller : MonoBehaviour
 					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength, laser.transform.localScale.z);
 				}
 			}
+		}
+	}
+
+	private void LateUpdate()
+	{
+		//NOTE(Simon): triggerPressed should only be true in the frame the trigger was pressed. So reset their state if state was changed last frame.
+		if (SteamVR_Actions.default_Trigger[inputSource].stateDown)
+		{
+			triggerPressed = false;
+		}
+		if (SteamVR_Actions.default_Trigger[inputSource].stateUp)
+		{
+			triggerReleased = false;
 		}
 	}
 
@@ -218,5 +227,9 @@ public class Controller : MonoBehaviour
 	{
 		//NOTE(Simon): Make laser skinny when releasing trigger
 		laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
+		triggerDown = false;
+		triggerReleased = true;
+		triggerReleasedFrame = Time.frameCount;
 	}
+
 }

@@ -361,7 +361,7 @@ public class ExplorerPanel : MonoBehaviour
 			}
 			else
 			{
-				Debug.Log("File or Directory does not exist");
+				Debug.LogError("File or Directory does not exist");
 			}
 		}
 	}

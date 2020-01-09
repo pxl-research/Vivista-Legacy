@@ -58,7 +58,7 @@ public class Toasts : MonoBehaviour
 		}
 		else
 		{
-			Debug.Log("Tried to create a toast, but there is no toast holder in the scene");
+			Debug.LogError("Tried to create a toast, but there is no toast holder in the scene");
 		}
 	}
 }

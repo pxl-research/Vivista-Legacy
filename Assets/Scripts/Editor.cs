@@ -425,7 +425,7 @@ public class Editor : MonoBehaviour
 			}
 			else
 			{
-				Debug.Log("interactionTypePicker is null");
+				Debug.LogError("interactionTypePicker is null");
 			}
 
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
@@ -1665,7 +1665,7 @@ public class Editor : MonoBehaviour
 		}
 		catch (Exception e)
 		{
-			Debug.Log(e.ToString());
+			Debug.LogError(e.ToString());
 			return false;
 		}
 
@@ -1940,7 +1940,7 @@ public class Editor : MonoBehaviour
 		{
 			uploadStatus.failed = true;
 			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: " + uploadStatus.request.error;
-			Debug.Log(uploadStatus.error);
+			Debug.LogError(uploadStatus.error);
 			yield break;
 		}
 
@@ -2037,7 +2037,7 @@ public class Editor : MonoBehaviour
 			}
 			catch (Exception e)
 			{
-				Debug.Log(e);
+				Debug.LogError(e);
 			}
 			Canvass.modalBackground.SetActive(false);
 			Toasts.AddToast(5, "Upload succesful");

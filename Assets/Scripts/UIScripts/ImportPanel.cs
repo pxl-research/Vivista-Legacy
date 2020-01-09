@@ -26,7 +26,7 @@ public class ImportPanel : MonoBehaviour
 	{
 		if (sourcePath == "")
 		{
-			Debug.Log("No filename received");
+			Debug.LogError("No filename received");
 			Destroy(this);
 			return;
 		}

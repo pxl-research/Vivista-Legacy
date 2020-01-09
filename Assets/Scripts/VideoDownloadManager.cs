@@ -153,7 +153,7 @@ public class VideoDownloadManager : MonoBehaviour
 
 		if (e.Error != null)
 		{
-			Debug.Log(e.Error);
+			Debug.LogError(e.Error);
 			//TODO(Simon): Error handling
 			//TODO(Simon): Do not remove if error, but keep in queue to retry
 			download.failed = true;

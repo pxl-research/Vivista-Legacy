@@ -177,7 +177,7 @@ public class SphereUIInputModule: StandaloneInputModule
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerDownHandler);
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.initializePotentialDrag);
 #if DEBUG_UI_INPUT_MODULE
-				Debug.Log("Pointer down by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
+				Debug.Log("Pointer down by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject + " in frame " + Time.frameCount);
 #endif
 			}
 			if (clickStates[kvp.Key] == PointerEventData.FramePressState.Released || clickStates[kvp.Key] == PointerEventData.FramePressState.PressedAndReleased)
@@ -185,7 +185,7 @@ public class SphereUIInputModule: StandaloneInputModule
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerClickHandler);
 				ExecuteEvents.ExecuteHierarchy(kvp.Value.pointerCurrentRaycast.gameObject, kvp.Value, ExecuteEvents.pointerUpHandler);
 #if DEBUG_UI_INPUT_MODULE
-				Debug.Log("Click by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject);
+				Debug.Log("Click by " + kvp.Key + " on " + kvp.Value.pointerCurrentRaycast.gameObject + " in frame " + Time.frameCount);
 #endif
 			}
 		}

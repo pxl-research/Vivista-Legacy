@@ -33,6 +33,7 @@ public static class VRDevices
 
 	public static void OnDeviceConnect(InputDevice device)
 	{
+		//TODO(Simon): This should be more robust
 		var name = device.name.ToLowerInvariant();
 		if (name.Contains("left"))
 		{

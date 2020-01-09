@@ -220,11 +220,11 @@ public class VideoController : MonoBehaviour
 		video.errorReceived += delegate (VideoPlayer player, string message)
 		{
 			videoLoaded = false;
-			Debug.Log(message);
+			Debug.LogError(message);
 		};
 		screenshots.errorReceived += delegate (VideoPlayer player, string message)
 		{
-			Debug.Log(message);
+			Debug.LogError(message);
 		};
 	}
 

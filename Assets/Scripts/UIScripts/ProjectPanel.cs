@@ -92,7 +92,7 @@ public class ProjectPanel : MonoBehaviour
 				catch (Exception e)
 				{
 					newFileItem = new FileItem { title = "corrupted file: " + directory.Name, guid = directory.Name };
-					Debug.Log(e);
+					Debug.LogError(e);
 				}
 
 				filenameListItem.transform.SetParent(fileList, false);
@@ -214,7 +214,7 @@ public class ProjectPanel : MonoBehaviour
 			}
 			catch (Exception e)
 			{
-				Debug.Log(e.ToString());
+				Debug.LogError(e.ToString());
 			}
 		}
 		else
@@ -315,7 +315,7 @@ public class ProjectPanel : MonoBehaviour
 			}
 			catch (Exception e)
 			{
-				Debug.Log(e.ToString());
+				Debug.LogError(e.ToString());
 			}
 		}
 	}

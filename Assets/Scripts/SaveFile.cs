@@ -22,8 +22,8 @@ public static class SaveFile
 			}
 			catch (Exception e)
 			{
-				Debug.Log("Something went wrong while loading the file.");
-				Debug.Log(e.ToString());
+				Debug.LogError("Something went wrong while loading the file.");
+				Debug.LogError(e.ToString());
 				return "";
 			}
 		}
@@ -43,8 +43,8 @@ public static class SaveFile
 			}
 			catch (Exception e)
 			{
-				Debug.Log("Something went wrong while loading the file.");
-				Debug.Log(e.ToString());
+				Debug.LogError("Something went wrong while loading the file.");
+				Debug.LogError(e.ToString());
 				return new byte[0];
 			}
 		}
@@ -150,7 +150,7 @@ public static class SaveFile
 			}
 			catch (Exception e)
 			{
-				Debug.Log(e.ToString());
+				Debug.LogError(e.ToString());
 			}
 		}
 
@@ -192,7 +192,7 @@ public static class SaveFile
 			}
 			if (level < 0)
 			{
-				Debug.Log("Corrupted save file. Aborting");
+				Debug.LogError("Corrupted save file. Aborting");
 				return null;
 			}
 		}

@@ -328,7 +328,7 @@ public class Player : MonoBehaviour
 				}
 				else
 				{
-					Debug.Log("Couldn't open savefile");
+					Debug.LogError("Couldn't open savefile");
 				}
 			}
 		}
