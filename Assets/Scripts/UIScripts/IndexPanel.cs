@@ -368,25 +368,7 @@ public class IndexPanel : MonoBehaviour
 
 		//Note(Simon): Videos
 		{
-			var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-			while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
-			{
-				var video = Instantiate(videoPrefab);
-				video.transform.SetParent(videoContainer.transform, false);
-				videos.Add(video);
-			}
-			while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
-			{
-				var video = videos[videos.Count - 1];
-				videos.RemoveAt(videos.Count - 1);
-				Destroy(video);
-			}
-
-			for (int i = 0; i < videosThisPage.Count; i++)
-			{
-				var v = videosThisPage[i];
-				StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, false));
-			}
+			StartCoroutine(BuildVideoGameObjects(false));
 		}
 	}
 
@@ -435,7 +417,7 @@ public class IndexPanel : MonoBehaviour
 
 		//Note(Simon): Videos
 		{
-			StartCoroutine(BuildVideoGameObjects());
+			StartCoroutine(BuildVideoGameObjects(true));
 		}
 	}
 
@@ -531,7 +513,7 @@ public class IndexPanel : MonoBehaviour
 		transform.localScale = new Vector3(0, 0, 0);
 	}
 
-	private IEnumerator BuildVideoGameObjects()
+	private IEnumerator BuildVideoGameObjects(bool isLocal)
 	{
 		isFinishedLoadingVideos = false;
 
@@ -552,7 +534,7 @@ public class IndexPanel : MonoBehaviour
 		for (int i = 0; i < videosThisPage.Count; i++)
 		{
 			var v = videosThisPage[i];
-			StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, true));
+			StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, isLocal));
 			//TODO(Simon): Is this needed?
 			//NOTE(Kristof): Space out SetData over some time to prevent lag spike in VR
 			if (XRSettings.enabled)

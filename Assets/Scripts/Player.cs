@@ -84,9 +84,9 @@ public class Player : MonoBehaviour
 
 	void Start()
 	{
+		StartCoroutine(EnableVr());
 		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
-		StartCoroutine(EnableVr());
 
 		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
 		trackedControllerRight = controllerRight.GetComponent<Controller>();
@@ -114,7 +114,7 @@ public class Player : MonoBehaviour
 			}
 
 			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after tutorial mode)
-			Togglecanvasses();
+			SetCanvasesActive(false);
 
 			//NOTE(Kristof): Moving crosshair to crosshair canvas to display it in worldspace
 			{
@@ -127,10 +127,16 @@ public class Player : MonoBehaviour
 			}
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
+
+			VRDevices.BeginHandlingVRDeviceEvents();
+		}
+		else
+		{
+			controllerLeft.SetActive(false);
+			controllerRight.SetActive(false);
 		}
 
 		mainEventSystem = EventSystem.current;
-		VRDevices.BeginHandlingVRDeviceEvents();
 	}
 
 	void Update()
@@ -226,12 +232,12 @@ public class Player : MonoBehaviour
 		{
 			var controllerRay = new Ray();
 
-			if (trackedControllerLeft.triggerPressed)
+			if (trackedControllerLeft != null && trackedControllerLeft.triggerPressed)
 			{
 				controllerRay = trackedControllerLeft.CastRay();
 			}
 
-			if (trackedControllerRight.triggerPressed)
+			if (trackedControllerRight != null && trackedControllerRight.triggerPressed)
 			{
 				controllerRay = trackedControllerRight.CastRay();
 			}
@@ -318,7 +324,7 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-					Togglecanvasses();
+					SetCanvasesActive(true);
 					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
 						StartCoroutine(FadevideoCanvasOut(videoCanvas));
@@ -563,16 +569,16 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	private void Togglecanvasses()
+	private void SetCanvasesActive(bool active)
 	{
 		var seekbarCollider = Canvass.seekbar.gameObject.GetComponent<BoxCollider>();
 
 		if (XRSettings.enabled)
 		{
-			Canvass.main.enabled = !Canvass.main.enabled;
+			Canvass.main.enabled = active;
 		}
-		Canvass.seekbar.enabled = !Canvass.seekbar.enabled;
-		seekbarCollider.enabled = !seekbarCollider.enabled;
+		Canvass.seekbar.enabled = active;
+		seekbarCollider.enabled = active;
 	}
 
 	public void OnVideoBrowserHologramUp()
@@ -605,12 +611,17 @@ public class Player : MonoBehaviour
 
 	public void BackToBrowser()
 	{
-		Togglecanvasses();
+		SetCanvasesActive(false);
 		EventManager.OnSpace();
 		Seekbar.ClearBlips();
 		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
 		videoController.Pause();
+
+		if (activeInteractionPoint != null)
+		{
+			DeactivateActiveInteractionPoint();
+		}
 
 		for (var j = interactionPoints.Count - 1; j >= 0; j--)
 		{

@@ -56,9 +56,13 @@ public class IndexPanelVideo : MonoBehaviour
 
 		yield return imageDownload.SendWebRequest();
 
+		if (imageDownload == null)
+		{
+			Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
+		}
 		if (imageDownload.isNetworkError || imageDownload.isHttpError)
 		{
-			Debug.Log("Failed to download thumbnail: " + imageDownload.error);
+			Debug.Log("Failed to download thumbnail " + imageDownload.url + ": " + imageDownload.error);
 		}
 		else if (imageDownload.isDone)
 		{
@@ -68,7 +72,7 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 		else
 		{
-			Assert.IsTrue(false, "This isn't supposed to happen. Investigate!");
+			Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
 		}
 
 		imageDownload.Dispose();
