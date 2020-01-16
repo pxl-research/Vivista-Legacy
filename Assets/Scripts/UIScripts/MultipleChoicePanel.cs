@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.XR;
 
 public class MultipleChoicePanel : MonoBehaviour
 {
@@ -47,44 +46,28 @@ public class MultipleChoicePanel : MonoBehaviour
 		correctAnswer = Convert.ToInt32(newAnswers[0]);
 		answers = new string[newAnswers.Length - 1];
 
-		//TODO(Simon): Why source index + 1???
+		//NOTE(Simon): newAnswers from index 1, because index 0 contains the correct answer
 		Array.Copy(newAnswers, 1, answers, 0, answers.Length);
 
 		for (var index = 0; index < answers.Length; index++)
 		{
 			var answer = answers[index];
-			var toggle = Instantiate(answerTogglePrefab, answerPanel);
-			toggle.GetComponent<Toggle>().onValueChanged.AddListener(delegate { ToggleValueChanged(toggle); });
-			toggle.GetComponent<Hittable>().onHit.AddListener(delegate { ToggleValueChangedHittable(toggle); });
-			toggle.GetComponent<Hittable>().onHoverStart.AddListener(delegate { ToggleHoverStart(toggle); });
-			toggle.GetComponent<Hittable>().onHoverEnd.AddListener(delegate { ToggleHoverEnd(toggle); });
-			toggle.GetComponent<Toggle>().isOn = false;
-			toggle.GetComponent<Toggle>().group = answerPanel.GetComponent<ToggleGroup>();
+			var toggleGo = Instantiate(answerTogglePrefab, answerPanel);
+			var toggle = toggleGo.GetComponent<Toggle>();
+			toggle.onValueChanged.AddListener(delegate { ToggleValueChanged(toggleGo); });
+			toggle.isOn = false;
+			toggle.group = toggleGroup;
 
-			//NOTE(Kristof): First child is question label, second child is question number
-			var textComponents = toggle.transform.GetComponentsInChildren<Text>();
+			//NOTE(Kristof): First child is answer number, second child is answer text
+			var textComponents = toggleGo.transform.GetComponentsInChildren<Text>();
 			textComponents[0].text = $"{index + 1})";
 			textComponents[1].text = answer;
-
-			var col = toggle.AddComponent<BoxCollider>();
-			if (XRSettings.enabled)
-			{
-				col.size = new Vector2(50, 50);
-				col.center = new Vector3(35, 0, -1);
-			}
-			else
-			{
-				col.size = toggle.GetComponent<RectTransform>().sizeDelta;
-				col.center = new Vector3(col.size.x / 2, 0, 0);
-			}
-
 		}
 
 		var button = Instantiate(answerCheckButtonPrefab, answerPanel);
 		checkAnswerButton = button.GetComponent<Button>();
 		checkAnswerButton.interactable = false;
-		button.GetComponent<Button>().onClick.AddListener(CheckAnswer);
-		button.GetComponent<Hittable>().onHit.AddListener(delegate { CheckAnswerHittable(checkAnswerButton); });
+		checkAnswerButton.onClick.AddListener(CheckAnswer);
 	}
 
 	public void Move(Vector3 position)
@@ -94,63 +77,18 @@ public class MultipleChoicePanel : MonoBehaviour
 		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 
-	public void ToggleValueChanged(GameObject toggle)
+	public void ToggleValueChanged(GameObject toggleGo)
 	{
 		if (checkAnswerButton != null)
 		{
 			checkAnswerButton.interactable = toggleGroup.AnyTogglesOn();
 		}
+
 		//NOTE(Kristof): background image and checkmark image
-		var childImages = toggle.transform.GetComponentsInChildren<Image>();
-		childImages[0].color = toggle.GetComponent<Toggle>().isOn ? orangeColour : Color.white;
-		childImages[1].color = toggle.GetComponent<Toggle>().isOn ? Color.white : lightGreyColour;
-	}
-
-	public void ToggleValueChangedHittable(GameObject toggle)
-	{
-		if (!toggle.GetComponent<Toggle>().interactable)
-		{ 
-			return; 
-		}
-		toggle.GetComponent<Toggle>().isOn = true;
-		ToggleValueChanged(toggle);
-	}
-
-	public void ToggleHoverStart(GameObject toggle)
-	{
-		if (!toggle.GetComponent<Toggle>().interactable)
-		{
-			return;
-		}
-		//NOTE(Kristof): background image and checkmark image
-		var childImages = toggle.transform.GetComponentsInChildren<Image>();
-		childImages[0].color = orangeColour;
-		childImages[1].color = Color.white;
-	}
-
-	public void ToggleHoverEnd(GameObject toggle)
-	{
-		if (!toggle.GetComponent<Toggle>().interactable || toggle.GetComponent<Toggle>().isOn)
-		{
-			return;
-		}
-		//NOTE(Kristof): background image and checkmark image
-		var childImages = toggle.transform.GetComponentsInChildren<Image>();
-		childImages[0].color = Color.white;
-		childImages[1].color = lightGreyColour;
-	}
-
-	public string[] GetBody()
-	{
-		var returnAnswers = new string[answers.Length + 1];
-
-		returnAnswers[0] = correctAnswer.ToString();
-		for (var index = 1; index <= answers.Length; index++)
-		{
-			returnAnswers[index] = answers[index - 1];
-		}
-
-		return returnAnswers;
+		var childImages = toggleGo.transform.GetComponentsInChildren<Image>();
+		var toggle = toggleGo.GetComponent<Toggle>();
+		childImages[0].color = toggle.isOn ? orangeColour : Color.white;
+		childImages[1].color = toggle.isOn ? Color.white : lightGreyColour;
 	}
 
 	public void CheckAnswer()
@@ -191,14 +129,5 @@ public class MultipleChoicePanel : MonoBehaviour
 		}
 
 		checkAnswerButton.interactable = false;
-	}
-
-	public void CheckAnswerHittable(Button button)
-	{
-		if (!button.GetComponent<Button>().interactable)
-		{
-			return;
-		}
-		CheckAnswer();
 	}
 }

@@ -1166,13 +1166,14 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Colors
 		foreach (var point in interactionPoints)
 		{
-			var image = point.timelineRow.transform.GetComponentInChildren<Image>();
+			var image = point.timelineRow.transform.Find("Content/Image").gameObject.GetComponent<Image>();
 
 			image.color = timelineColors[colorIndex];
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
-		//NOTE(Simon): Highlight interactionPoint and show preview when hovering over timelineRow
+		//NOTE(Simon): Highlight interactionPoint
+		//TODO(Simon): Show preview when hovering over timelineRow
 		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 		{
 			foreach (var point in interactionPoints)
@@ -1182,8 +1183,6 @@ public class Editor : MonoBehaviour
 				{
 					HighlightPoint(point);
 				}
-
-				//TODO(Simon): Show Preview
 			}
 		}
 

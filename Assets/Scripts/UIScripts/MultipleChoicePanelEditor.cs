@@ -25,7 +25,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	void Update()
 	{
-		done.interactable = !(question.text.Length < 1);
+		done.interactable = question.text.Length > 0;
 	}
 
 	public void Init(string initialTitle, string[] initialAnswers = null)
