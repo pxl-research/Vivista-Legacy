@@ -26,12 +26,6 @@ public class MultipleChoicePanel : MonoBehaviour
 	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
-	//TODO(Simon): show question solution at init
-	void Start()
-	{
-		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
-	}
-
 	void Update()
 	{
 		if (SceneManager.GetActiveScene().name == "Editor")
@@ -42,6 +36,7 @@ public class MultipleChoicePanel : MonoBehaviour
 
 	public void Init(string newQuestion, string[] newAnswers)
 	{
+		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
 		question.text = newQuestion;
 		correctAnswer = Convert.ToInt32(newAnswers[0]);
 		answers = new string[newAnswers.Length - 1];

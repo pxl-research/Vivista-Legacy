@@ -11,9 +11,9 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public InputField question;
 	public GameObject answerPanelPrefab;
 	public RectTransform answerWrapper;
-	public List<InputField> answerList;
-	public Button addAnswer;
-	public Button done;
+	public List<InputField> answerInputs;
+	public Button addAnswerButton;
+	public Button doneButton;
 
 	public bool answered;
 	public string answerQuestion;
@@ -22,16 +22,31 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	private int answerCount;
 	private const int MAXANSWERS = 6;
+	private ToggleGroup toggleGroup;
 
 	void Update()
 	{
-		done.interactable = question.text.Length > 0;
+		bool questionFilled = question.text.Length > 0;
+		bool answersCount = answerInputs.Count > 1;
+		bool correctAnswerSelected = toggleGroup.ActiveToggles().Any();
+		bool answersFilled = true;
+
+		for (int i = 0; i < answerInputs.Count; i++)
+		{
+			if (answerInputs[i].text.Length == 0)
+			{
+				answersFilled = false;
+				break;
+			}
+		}
+
+		doneButton.interactable =  questionFilled && answersCount && correctAnswerSelected && answersFilled;
 	}
 
 	public void Init(string initialTitle, string[] initialAnswers = null)
 	{
-		answerList = new List<InputField>();
-		answerList.Clear();
+		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup>();
+		answerInputs = new List<InputField>();
 
 		var answers = new string[0];
 		if (initialAnswers == null)
@@ -46,12 +61,8 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		}
 
 		question.text = initialTitle;
-		InitAnswers(answers);
-	}
 
-	private void InitAnswers(string[] initialAnswers)
-	{
-		foreach (var answer in initialAnswers)
+		foreach (var answer in answers)
 		{
 			AddAnswer(answer, answerCount == answerCorrect);
 		}
@@ -64,32 +75,33 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	public void AddAnswer(string answer, bool isCorrect = false)
 	{
-		var answerPanel = Instantiate(answerPanelPrefab, answerWrapper).GetComponent<AnswerPanel>();
-		answerPanel.editor = this;
+		var answerPanel = Instantiate(answerPanelPrefab, answerWrapper);
 		answerPanel.GetComponentInChildren<Toggle>().isOn = isCorrect;
+		answerPanel.GetComponentInChildren<Toggle>().group = toggleGroup;
+		answerPanel.GetComponentInChildren<Button>().onClick.AddListener(delegate { RemoveAnswer(answerPanel.gameObject); });
 
 		var answerInput = answerPanel.transform.GetComponentInChildren<InputField>();
 		answerInput.text = answer;
-		answerList.Add(answerInput);
+		answerInputs.Add(answerInput);
 
 		answerPanel.transform.SetAsLastSibling();
 		answerCount++;
 
 		if (answerCount == MAXANSWERS)
 		{
-			addAnswer.interactable = false;
+			addAnswerButton.interactable = false;
 		}
 	}
 
 	public void RemoveAnswer(GameObject answerPanel)
 	{
-		answerList.Remove(answerPanel.transform.GetComponentInChildren<InputField>());
+		answerInputs.Remove(answerPanel.transform.GetComponentInChildren<InputField>());
 		Destroy(answerPanel);
 		answerCount--;
 
 		if (answerCount < MAXANSWERS)
 		{
-			addAnswer.interactable = true;
+			addAnswerButton.interactable = true;
 		}
 	}
 
@@ -99,12 +111,12 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		answerQuestion = question.text;
 
 		//NOTE(Kristof): Converting InputTexts to array of strings
-		answerAnswers = new string[answerList.Count];
-		for (var index = 0; index < answerList.Count; index++)
+		answerAnswers = new string[answerInputs.Count];
+		for (var index = 0; index < answerInputs.Count; index++)
 		{
-			answerAnswers[index] = answerList[index].text;
+			answerAnswers[index] = answerInputs[index].text;
 		}
-		var toggle = layoutPanelTransform.GetComponent<ToggleGroup>().ActiveToggles().First();
+		var toggle = toggleGroup.ActiveToggles().First();
 		answerCorrect = toggle.transform.parent.GetSiblingIndex();
 	}
 }

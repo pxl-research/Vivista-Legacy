@@ -432,10 +432,9 @@ MonoBehaviour:
   answerPanelPrefab: {fileID: 1807588516658786, guid: 8997dce9e3a61164ab47a0a5591acb12,
     type: 3}
   answerWrapper: {fileID: 224325227621707230}
-  answerList:
-  - {fileID: 0}
-  addAnswer: {fileID: 114519569735518056}
-  done: {fileID: 114931311556187620}
+  answerInputs: []
+  addAnswerButton: {fileID: 114519569735518056}
+  doneButton: {fileID: 114931311556187620}
   answered: 0
   answerQuestion: 
   answerAnswers: []
@@ -849,8 +848,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 305, y: 0}
-  m_SizeDelta: {x: 590, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222901728596887972
 CanvasRenderer:
@@ -966,10 +965,10 @@ RectTransform:
   m_Father: {fileID: 224729112629262554}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 305, y: 0}
-  m_SizeDelta: {x: 610, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &222293073665235358
 CanvasRenderer:

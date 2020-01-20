@@ -402,7 +402,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.MultipleChoice:
 						{
 							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
-							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init("", new [] { "0" });
+							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init("");
 
 							break;
 						}
@@ -548,14 +548,10 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(multipleChoicePanelPrefab);
-						lastPlacedPoint.title = editor.answerQuestion;
+						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
-						foreach (var answer in editor.answerAnswers)
-						{
-							lastPlacedPoint.body += answer + '\f';
-						}
-						lastPlacedPoint.body = lastPlacedPoint.body.TrimEnd('\f');
+						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
 						lastPlacedPoint.panel = panel;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -763,8 +759,9 @@ public class Editor : MonoBehaviour
 						pointToEdit.panel = panel;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, editor.answerAnswers);
+						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
 						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
+						finished = true;
 					}
 					break;
 				}
