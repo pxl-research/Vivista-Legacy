@@ -14,7 +14,7 @@ public class UISphere : MonoBehaviour
 
 	void Start()
 	{
-		if (Application.isEditor && material == null)
+		if (material == null)
 		{
 			Debug.Log("new material");
 			material = new Material(GetComponent<Renderer>().sharedMaterial);
