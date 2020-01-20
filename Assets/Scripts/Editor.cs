@@ -903,6 +903,17 @@ public class Editor : MonoBehaviour
 				Canvass.modalBackground.SetActive(false);
 				editorState = EditorState.Active;
 			}
+
+			if (Input.GetKeyUp(KeyCode.Escape))
+			{
+				if (loginPanel != null)
+				{
+					Canvass.modalBackground.SetActive(false);
+					Destroy(loginPanel);
+				}
+
+				editorState = EditorState.Active;
+			}
 		}
 
 		if (editorState == EditorState.SavingThenUploading)
@@ -933,6 +944,26 @@ public class Editor : MonoBehaviour
 			if (uploadPanel != null)
 			{
 				UpdateUploadPanel();
+			}
+
+			if (Input.GetKeyUp(KeyCode.Escape))
+			{
+				//NOTE(Simon): If already uploading, don't allow cancel
+				if (uploadPanel == null)
+				{
+					if (loginPanel != null)
+					{
+						Destroy(loginPanel);
+					}
+
+					if (filePanel != null)
+					{
+						Destroy(filePanel);
+					}
+
+					Canvass.modalBackground.SetActive(false);
+					editorState = EditorState.Active;
+				}
 			}
 		}
 
