@@ -19,8 +19,6 @@ public class VideoPanel : MonoBehaviour
 	public VideoPlayer videoPlayer;
 	public AudioSource audioSource;
 
-	public static bool keepFileNames;
-
 	public void Update()
 	{
 		float time = (float)videoPlayer.time;
@@ -50,14 +48,22 @@ public class VideoPanel : MonoBehaviour
 
 		title.text = newTitle;
 
-		
+		//NOTE(Simon): Make sure we have added the events
+		controlButton.onClick.RemoveListener(TogglePlay);
 		controlButton.onClick.AddListener(TogglePlay);
+		bigButton.onClick.RemoveListener(TogglePlay);
 		bigButton.onClick.AddListener(TogglePlay);
 	}
 
 	private void OnPrepareComplete(VideoPlayer source)
 	{
-		videoRenderTexture = new RenderTexture(source.texture.width, source.texture.height, 0, RenderTextureFormat.ARGB32);
+		var heightFactor = source.texture.height / videoSurface.rectTransform.rect.height;
+		var widthFactor = source.texture.width / videoSurface.rectTransform.rect.width;
+		var largestFactor = Mathf.Max(heightFactor, widthFactor);
+
+		var desiredWidth = videoSurface.rectTransform.rect.width * largestFactor;
+		var desiredHeight = videoSurface.rectTransform.rect.height * largestFactor;
+		videoRenderTexture = new RenderTexture((int)desiredWidth, (int)desiredHeight, 0, RenderTextureFormat.ARGB32);
 
 		videoPlayer.targetTexture = videoRenderTexture;
 		videoSurface.texture = videoRenderTexture;
@@ -75,6 +81,12 @@ public class VideoPanel : MonoBehaviour
 	{
 		videoPlayer.prepareCompleted += OnPrepareComplete;
 		videoPlayer.Prepare();
+
+		//NOTE(Simon): Make sure we have added the events
+		controlButton.onClick.RemoveListener(TogglePlay);
+		controlButton.onClick.AddListener(TogglePlay);
+		bigButton.onClick.RemoveListener(TogglePlay);
+		bigButton.onClick.AddListener(TogglePlay);
 	}
 
 	public void OnSeek(float value)

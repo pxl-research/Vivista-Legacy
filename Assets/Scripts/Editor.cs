@@ -208,7 +208,6 @@ public class Editor : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
-		VideoPanel.keepFileNames = true;
 
 		//NOTE(Simon): Login if details were remembered
 		{
