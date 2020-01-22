@@ -91,7 +91,8 @@ public class ProjectPanel : MonoBehaviour
 				}
 				catch (Exception e)
 				{
-					newFileItem = new FileItem { title = "corrupted file: " + directory.Name, guid = directory.Name };
+					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name};
+					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
 					Debug.LogError(e);
 				}
 

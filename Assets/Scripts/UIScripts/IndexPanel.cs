@@ -392,19 +392,34 @@ public class IndexPanel : MonoBehaviour
 		for (var i = (page - 1) * videosPerPage; i < Mathf.Min(page * videosPerPage, localVideos.Length); i++)
 		{
 			var path = localVideos[i].FullName;
-
-			var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
 			var folderInfo = new DirectoryInfo(path);
 
-			loadedVideos.videos.Add(new VideoSerialize
+			try
 			{
-				title = data.meta.title,
-				description = data.meta.description,
-				downloadsize = SaveFile.DirectorySize(folderInfo),
-				realTimestamp = folderInfo.LastWriteTime,
-				id = localVideos[i].Name,
-				compatibleVersion = !(data.meta.version > VersionManager.VERSION)
-			});
+				var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
+
+				loadedVideos.videos.Add(new VideoSerialize
+				{
+					title = data.meta.title,
+					description = data.meta.description,
+					downloadsize = SaveFile.DirectorySize(folderInfo),
+					realTimestamp = folderInfo.LastWriteTime,
+					id = localVideos[i].Name,
+					compatibleVersion = !(data.meta.version > VersionManager.VERSION)
+				});
+			}
+			catch
+			{
+				loadedVideos.videos.Add(new VideoSerialize
+				{
+					title = "Corrupted file",
+					description = "",
+					downloadsize = 0,
+					realTimestamp = DateTime.MinValue,
+					id = localVideos[i].Name,
+					compatibleVersion = true
+				});
+			}
 		}
 
 		videoContainer.SetActive(true);
