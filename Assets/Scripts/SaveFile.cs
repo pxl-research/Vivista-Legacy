@@ -16,16 +16,7 @@ public static class SaveFile
 		string str;
 		using (var fileContents = File.OpenText(path))
 		{
-			try
-			{
-				str = fileContents.ReadToEnd();
-			}
-			catch (Exception e)
-			{
-				Debug.LogError("Something went wrong while loading the file.");
-				Debug.LogError(e.ToString());
-				return "";
-			}
+			str = fileContents.ReadToEnd();
 		}
 
 		return str;
@@ -36,17 +27,8 @@ public static class SaveFile
 		byte[] data;
 		using (var fileContents = File.OpenRead(path))
 		{
-			try
-			{
-				data = new byte[(int)fileContents.Length];
-				fileContents.Read(data, 0, (int)fileContents.Length);
-			}
-			catch (Exception e)
-			{
-				Debug.LogError("Something went wrong while loading the file.");
-				Debug.LogError(e.ToString());
-				return new byte[0];
-			}
+			data = new byte[(int)fileContents.Length];
+			fileContents.Read(data, 0, (int)fileContents.Length);
 		}
 
 		return data;

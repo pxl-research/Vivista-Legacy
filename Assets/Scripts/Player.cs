@@ -305,6 +305,7 @@ public class Player : MonoBehaviour
 
 		//NOTE(Simon): Interaction with Hittables
 		{
+			Debug.Log($"Counted {hittables.Count} hittables");
 			RaycastHit hit;
 			Physics.Raycast(interactionpointRay, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 

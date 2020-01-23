@@ -73,7 +73,6 @@ public class ProjectPanel : MonoBehaviour
 
 				try
 				{
-
 					var meta = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta;
 					string title;
 					if (meta.version > VersionManager.VERSION)
@@ -89,9 +88,14 @@ public class ProjectPanel : MonoBehaviour
 					newFileItem = new FileItem { title = title, guid = directory.Name };
 
 				}
+				catch (FileNotFoundException e)
+				{
+					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name };
+					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
+				}
 				catch (Exception e)
 				{
-					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name};
+					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name };
 					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
 					Debug.LogError(e);
 				}
