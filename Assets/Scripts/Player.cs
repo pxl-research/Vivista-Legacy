@@ -100,42 +100,6 @@ public class Player : MonoBehaviour
 		VideoControls.videoController = videoController;
 		OpenFilePanel();
 
-		//NOTE(Kristof): VR specific settings
-		if (XRSettings.enabled)
-		{
-			//NOTE(Kristof): Instantiate the projector
-			{
-				projector = Instantiate(projectorPrefab);
-				projector.transform.position = new Vector3(4.5f, 0, 0);
-				projector.transform.eulerAngles = new Vector3(0, 270, 0);
-				projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-
-				projector.GetComponent<AnimateProjector>().Subscribe(this);
-			}
-
-			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after tutorial mode)
-			SetCanvasesActive(false);
-
-			//NOTE(Kristof): Moving crosshair to crosshair canvas to display it in worldspace
-			{
-				var ch = Canvass.main.transform.Find("Crosshair");
-				ch.SetParent(Canvass.crosshair.transform);
-				ch.localPosition = Vector3.zero;
-				ch.localEulerAngles = Vector3.zero;
-				ch.localScale = Vector3.one;
-				ch.gameObject.layer = LayerMask.NameToLayer("WorldUI");
-			}
-
-			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
-
-			VRDevices.BeginHandlingVRDeviceEvents();
-		}
-		else
-		{
-			controllerLeft.SetActive(false);
-			controllerRight.SetActive(false);
-		}
-
 		mainEventSystem = EventSystem.current;
 	}
 
@@ -662,9 +626,11 @@ public class Player : MonoBehaviour
 
 	private IEnumerator EnableVr()
 	{
-		//NOTE(Kristof) If More APIs need to be implemented, add them here
-		XRSettings.LoadDeviceByName(new[] { "OpenVR", "None" });
-
+		var supportedDevices = XRSettings.supportedDevices;
+		//NOTE(Simon): We start with None as the default in the player settings. But in player we want to load OpenVR first (and in the future other APIs?) so reverse the array
+		Array.Reverse(supportedDevices);
+		XRSettings.LoadDeviceByName(supportedDevices);
+		
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
 		yield return null;
 
@@ -672,10 +638,40 @@ public class Player : MonoBehaviour
 		{
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
 			XRSettings.enabled = true;
+			SteamVR.Initialize(true);
+
+			//NOTE(Kristof): Instantiate the projector
+			{
+				projector = Instantiate(projectorPrefab);
+				projector.transform.position = new Vector3(4.5f, 0, 0);
+				projector.transform.eulerAngles = new Vector3(0, 270, 0);
+				projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+				projector.GetComponent<AnimateProjector>().Subscribe(this);
+			}
+
+			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after tutorial mode)
+			SetCanvasesActive(false);
+
+			//NOTE(Kristof): Move crosshair to crosshair canvas to display it in worldspace
+			{
+				var ch = Canvass.main.transform.Find("Crosshair");
+				ch.SetParent(Canvass.crosshair.transform);
+				ch.localPosition = Vector3.zero;
+				ch.localEulerAngles = Vector3.zero;
+				ch.localScale = Vector3.one;
+				ch.gameObject.layer = LayerMask.NameToLayer("WorldUI");
+			}
+
+			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
+
+			VRDevices.BeginHandlingVRDeviceEvents();
 		}
 		else if (XRSettings.loadedDeviceName.Equals(""))
 		{
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
+			controllerLeft.SetActive(false);
+			controllerRight.SetActive(false);
 		}
 	}
 

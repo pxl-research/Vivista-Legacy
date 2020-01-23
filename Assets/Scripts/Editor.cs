@@ -187,6 +187,7 @@ public class Editor : MonoBehaviour
 	{
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
 		UnityEngine.XR.XRSettings.enabled = false;
+		Screen.SetResolution(1600, 900, FullScreenMode.Windowed);
 	}
 
 	void Start()
