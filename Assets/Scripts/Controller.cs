@@ -24,8 +24,6 @@ public class Controller : MonoBehaviour
 	public bool triggerDown;
 	//NOTE(Simon): true on the frame trigger is released
 	public bool triggerReleased;
-	private int triggerPressedFrame;
-	private int triggerReleasedFrame;
 
 	private Vector3 initialCursorScale;
 	private Plane measuringPlane;
@@ -220,7 +218,6 @@ public class Controller : MonoBehaviour
 		laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
 		triggerDown = true;
 		triggerPressed = true;
-		triggerPressedFrame = Time.frameCount;
 	}
 
 	private void OnTriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
@@ -229,7 +226,6 @@ public class Controller : MonoBehaviour
 		laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
 		triggerDown = false;
 		triggerReleased = true;
-		triggerReleasedFrame = Time.frameCount;
 	}
 
 }

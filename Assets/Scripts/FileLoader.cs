@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class FileLoader : MonoBehaviour 
 {
@@ -8,11 +10,15 @@ public class FileLoader : MonoBehaviour
 
 	public VideoController controller;
 
-	public void Start()
+	public IEnumerator Start()
 	{
 		controller = Instantiate(videoMesh).GetComponent<VideoController>();
+		var seekbar = Seekbar.instance;
+		seekbar.videoController = controller;
 
-		if (UnityEngine.XR.XRSettings.enabled)
+		yield return new WaitForEndOfFrame();
+
+		if (XRSettings.enabled)
 		{
 			//TODO(Kristof): This should all probably be done somewhere else
 			playerInfo.GetComponent<RectTransform>().SetParent(Canvass.seekbar.transform, false);
@@ -32,9 +38,6 @@ public class FileLoader : MonoBehaviour
 			time.transform.localScale = new Vector3(0.2f, 0.2f, 1);
 			time.GetComponent<Text>().fontSize = 75;
 		}
-
-		var seekbar = Seekbar.instance;
-		seekbar.videoController = controller;
 	}
 
 	public void LoadFile(string filename)

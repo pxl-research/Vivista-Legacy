@@ -259,7 +259,7 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		//NOTE(Simon): Wait for path from explorer panel
+		//NOTE(Simon): Wait for import path from explorer panel
 		if (importing)
 		{
 			var panel = explorerPanel.GetComponent<ExplorerPanel>();

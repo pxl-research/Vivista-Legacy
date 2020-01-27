@@ -110,6 +110,7 @@ public class Player : MonoBehaviour
 			if (XRSettings.enabled)
 			{
 				videoController.transform.position = Camera.main.transform.position;
+				Canvass.seekbar.gameObject.SetActive(true);
 
 				//NOTE(Kristof): Rotating the seekbar
 				{
@@ -305,7 +306,6 @@ public class Player : MonoBehaviour
 
 		//NOTE(Simon): Interaction with Hittables
 		{
-			Debug.Log($"Counted {hittables.Count} hittables");
 			RaycastHit hit;
 			Physics.Raycast(interactionpointRay, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
@@ -470,7 +470,6 @@ public class Player : MonoBehaviour
 	private void OpenFilePanel()
 	{
 		indexPanel = Instantiate(indexPanelPrefab);
-		indexPanel.GetComponent<IndexPanel>();
 		indexPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		playerState = PlayerState.Opening;
@@ -651,7 +650,7 @@ public class Player : MonoBehaviour
 				projector.GetComponent<AnimateProjector>().Subscribe(this);
 			}
 
-			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after tutorial mode)
+			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after the lobby)
 			SetCanvasesActive(false);
 
 			//NOTE(Kristof): Move crosshair to crosshair canvas to display it in worldspace
