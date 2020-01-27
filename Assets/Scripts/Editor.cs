@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -109,7 +110,11 @@ public class Editor : MonoBehaviour
 {
 	public EditorState editorState;
 
-	public GameObject TimeTooltipPrefab;
+	private bool unsavedChanges;
+	private bool forceQuit;
+	public GameObject unsavedChangesPanelPrefab;
+
+	public GameObject timeTooltipPrefab;
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
@@ -183,20 +188,20 @@ public class Editor : MonoBehaviour
 	private int interactionPointCount;
 
 
-	void Awake()
+	private void Awake()
 	{
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
 		UnityEngine.XR.XRSettings.enabled = false;
 		Screen.SetResolution(1600, 900, FullScreenMode.Windowed);
 	}
 
-	void Start()
+	private void Start()
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPointTemp.name = "Temp InteractionPoint";
 		interactionPoints = new List<InteractionPointEditor>();
 
-		var tooltip = Instantiate(TimeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform);
+		var tooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform);
 		timeTooltip = tooltip.GetComponent<TimeTooltip>();
 		timeTooltip.ResetPosition();
 
@@ -209,6 +214,8 @@ public class Editor : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
+
+		Application.wantsToQuit += OnWantsToQuit;
 
 		//NOTE(Simon): Login if details were remembered
 		{
@@ -225,7 +232,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	void Update()
+	private void Update()
 	{
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
@@ -248,6 +255,8 @@ public class Editor : MonoBehaviour
 		{
 			UpdateTimeline();
 		}
+
+		unsavedChangesPanelPrefab.SetActive(unsavedChanges);
 
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -548,7 +557,7 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(multipleChoicePanelPrefab);
-						lastPlacedPoint.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						lastPlacedPoint.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
 						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
@@ -577,6 +586,7 @@ public class Editor : MonoBehaviour
 				{
 					lastPlacedPoint.title = "<unnamed>";
 				}
+				unsavedChanges = true;
 			}
 
 			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
@@ -636,6 +646,7 @@ public class Editor : MonoBehaviour
 
 				SetEditorActive(true);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
+				unsavedChanges = true;
 			}
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
@@ -783,6 +794,7 @@ public class Editor : MonoBehaviour
 				{
 					pointToEdit.panel.SetActive(false);
 				}
+				unsavedChanges = true;
 			}
 		}
 
@@ -857,6 +869,7 @@ public class Editor : MonoBehaviour
 					InitExtrasList();
 					//NOTE(Simon): When opening a project, any previous to-be-deleted-or-copied files are not relevant anymore. So clear them
 					CleanExtras();
+					unsavedChanges = false;
 				}
 				else
 				{
@@ -882,6 +895,7 @@ public class Editor : MonoBehaviour
 					Destroy(explorerPanel);
 					SetEditorActive(true);
 					Canvass.modalBackground.SetActive(false);
+					unsavedChanges = true;
 				}
 				else
 				{
@@ -1006,14 +1020,14 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	bool AreFileOpsAllowed()
+	private bool AreFileOpsAllowed()
 	{
 		return editorState != EditorState.Saving
 			&& editorState != EditorState.Opening
 			&& editorState != EditorState.PickingPerspective;
 	}
 
-	void SetEditorActive(bool active)
+	private void SetEditorActive(bool active)
 	{
 		ResetInteractionPointTemp();
 
@@ -1029,7 +1043,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	void AddItemToTimeline(InteractionPointEditor point, bool hidden)
+	private void AddItemToTimeline(InteractionPointEditor point, bool hidden)
 	{
 		var newRow = Instantiate(timelineRowPrefab);
 		point.timelineRow = newRow;
@@ -1047,7 +1061,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	void RemoveItemFromTimeline(InteractionPointEditor point)
+	private void RemoveItemFromTimeline(InteractionPointEditor point)
 	{
 		Destroy(point.timelineRow);
 		interactionPoints.Remove(point);
@@ -1056,9 +1070,10 @@ public class Editor : MonoBehaviour
 		{
 			Destroy(point.panel);
 		}
+		unsavedChanges = true;
 	}
 
-	void UpdateTimeline()
+	private void UpdateTimeline()
 	{
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
@@ -1386,6 +1401,7 @@ public class Editor : MonoBehaviour
 					}
 				}
 
+				//NOTE(Simon) Check if conditions are met to start a resize or drag operation on a timeline item
 				if (!isDraggingTimelineItem && !isResizingTimelineItem
 					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
 					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
@@ -1416,11 +1432,13 @@ public class Editor : MonoBehaviour
 
 			if (isDraggingTimelineItem)
 			{
+				//NOTE(Simon): End drag operation
 				if (!Input.GetMouseButton(0))
 				{
 					isDraggingTimelineItem = false;
 					timelineItemBeingDragged = null;
 					timeTooltip.ResetPosition();
+					unsavedChanges = true;
 				}
 				else
 				{
@@ -1442,11 +1460,13 @@ public class Editor : MonoBehaviour
 			}
 			else if (isResizingTimelineItem)
 			{
+				//NOTE(Simon): End resize operation
 				if (!Input.GetMouseButton(0))
 				{
 					isResizingTimelineItem = false;
 					timelineItemBeingResized = null;
 					timeTooltip.ResetPosition();
+					unsavedChanges = true;
 				}
 				else
 				{
@@ -1515,17 +1535,6 @@ public class Editor : MonoBehaviour
 		point.point.GetComponent<MeshRenderer>().material.color = Color.red;
 	}
 
-	public float TimeToPx(double time)
-	{
-		//NOTE(Simon): If time is outside currently displayed range, return a pixel _far_ outside the window
-		if (time < timelineWindowStartTime || time > timelineWindowEndTime)
-		{
-			return -1000;
-		}
-		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
-		return (float)(timelineOffsetPixels + (fraction * timelineWidthPixels));
-	}
-
 	public void DrawLineAtTime(double time, float thickness, Color color)
 	{
 		var timePx = TimeToPx(time);
@@ -1540,17 +1549,47 @@ public class Editor : MonoBehaviour
 			color);
 	}
 
-	public float PxToAbsTime(double px)
+	public bool OnWantsToQuit()
 	{
-		var realPx = px - timelineOffsetPixels;
-		var fraction = realPx / timelineWidthPixels;
-		var time = fraction * (timelineWindowEndTime - timelineWindowStartTime) + timelineWindowStartTime;
-		return (float)time;
-	}
+		if (forceQuit)
+		{
+			return true;
+		}
 
-	public float PxToRelativeTime(float px)
-	{
-		return px / timelineWidthPixels * (timelineWindowEndTime - timelineWindowStartTime);
+		if (unsavedChanges)
+		{
+			var go = Instantiate(unsavedChangesPanelPrefab);
+			go.transform.SetParent(Canvass.main.transform, false);
+			var panel = go.GetComponent<UnsavedChangesPanel>();
+			Canvass.modalBackground.SetActive(true);
+
+			panel.OnSave += () =>
+			{
+				if (SaveToFile(false))
+				{
+					forceQuit = true;
+					Application.Quit();
+				}
+				else
+				{
+					Debug.LogError("Something went wrong while saving the file");
+				}
+			};
+			panel.OnDiscard += () =>
+			{
+				forceQuit = true;
+				Application.Quit();
+			};
+			panel.OnCancel += () =>
+			{
+				Destroy(panel.gameObject);
+				Canvass.modalBackground.SetActive(false);
+			};
+			
+			return false;
+		}
+
+		return true;
 	}
 
 	public void OnDrag(BaseEventData e)
@@ -1618,7 +1657,7 @@ public class Editor : MonoBehaviour
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
 	}
 
-	private bool SaveToFile()
+	private bool SaveToFile(bool makeThumbnail = true)
 	{
 		var sb = new StringBuilder();
 
@@ -1696,10 +1735,14 @@ public class Editor : MonoBehaviour
 			return false;
 		}
 
-		string thumbname = Path.Combine(path, SaveFile.thumbFilename);
-		videoController.Screenshot(thumbname, 10, 1000, 1000);
+		if (makeThumbnail)
+		{
+			string thumbname = Path.Combine(path, SaveFile.thumbFilename);
+			videoController.Screenshot(thumbname, 10, 1000, 1000);
+		}
 
 		CleanExtras();
+		unsavedChanges = false;
 
 		return true;
 	}
@@ -2132,6 +2175,30 @@ public class Editor : MonoBehaviour
 		}
 
 		return niceTimes[0];
+	}
+
+	public float TimeToPx(double time)
+	{
+		//NOTE(Simon): If time is outside currently displayed range, return a pixel _far_ outside the window
+		if (time < timelineWindowStartTime || time > timelineWindowEndTime)
+		{
+			return -1000;
+		}
+		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
+		return (float)(timelineOffsetPixels + (fraction * timelineWidthPixels));
+	}
+
+	public float PxToAbsTime(double px)
+	{
+		var realPx = px - timelineOffsetPixels;
+		var fraction = realPx / timelineWidthPixels;
+		var time = fraction * (timelineWindowEndTime - timelineWindowStartTime) + timelineWindowStartTime;
+		return (float)time;
+	}
+
+	public float PxToRelativeTime(float px)
+	{
+		return px / timelineWidthPixels * (timelineWindowEndTime - timelineWindowStartTime);
 	}
 
 	private static long FileSize(string path)

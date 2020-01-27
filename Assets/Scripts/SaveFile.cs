@@ -69,7 +69,7 @@ public static class SaveFile
 			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
 			{
 				var metaPath = Path.Combine(dir.FullName, metaFilename);
-				if (new FileInfo(metaPath).Length > 0)
+				if (File.Exists(metaPath) && new FileInfo(metaPath).Length > 0)
 				{
 					var meta = OpenFile(metaPath).meta;
 					if (meta.title == title)
