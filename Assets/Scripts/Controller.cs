@@ -195,7 +195,7 @@ public class Controller : MonoBehaviour
 		{
 			if (compassAttached)
 			{
-				compass.gameObject.SetActive(false);
+				Seekbar.ReattachCompass();
 				compassAttached = false;
 			}
 			else

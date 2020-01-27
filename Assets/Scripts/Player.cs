@@ -295,6 +295,7 @@ public class Player : MonoBehaviour
 						StartCoroutine(FadevideoCanvasOut(videoCanvas));
 						EventManager.OnSpace();
 						videoPositions.Clear();
+						Seekbar.ReattachCompass();
 					}
 				}
 				else
@@ -665,6 +666,7 @@ public class Player : MonoBehaviour
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 
+			fileLoader.MoveSeekbarToVRPos();
 			VRDevices.BeginHandlingVRDeviceEvents();
 		}
 		else if (XRSettings.loadedDeviceName.Equals(""))
