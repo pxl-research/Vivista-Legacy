@@ -113,6 +113,7 @@ public class Editor : MonoBehaviour
 	private bool unsavedChanges;
 	private bool forceQuit;
 	public GameObject unsavedChangesPanelPrefab;
+	public GameObject unsavedChangesNotification;
 
 	public GameObject timeTooltipPrefab;
 	public GameObject interactionPointPrefab;
@@ -256,7 +257,7 @@ public class Editor : MonoBehaviour
 			UpdateTimeline();
 		}
 
-		unsavedChangesPanelPrefab.SetActive(unsavedChanges);
+		unsavedChangesNotification.SetActive(unsavedChanges);
 
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);

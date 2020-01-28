@@ -1506,6 +1506,7 @@ MonoBehaviour:
   editorState: 0
   unsavedChangesPanelPrefab: {fileID: 3468096204004913107, guid: 86fd5b0bf4fe06b4fb2e4b255e48d0a4,
     type: 3}
+  unsavedChangesNotification: {fileID: 1569531949}
   timeTooltipPrefab: {fileID: 1003459771833592, guid: 74931ff51af60fa4dbc4257009bfff93,
     type: 3}
   interactionPointPrefab: {fileID: 1057334565152188, guid: 799a1f08d99508c44a9ae065c5405a54,
