@@ -796,6 +796,7 @@ GameObject:
   - component: {fileID: 222904392952031650}
   - component: {fileID: 114586463235808176}
   - component: {fileID: 114220591119617300}
+  - component: {fileID: 6938059349697739783}
   m_Layer: 5
   m_Name: Menu
   m_TagString: Untagged
@@ -876,9 +877,25 @@ MonoBehaviour:
   menuBarItems:
   - {fileID: 114461404761674296}
   - {fileID: 114146255740287096}
+  - {fileID: 636302205174910665}
   menuBarPanels:
   - {fileID: 1829513023883324}
   - {fileID: 1067642662263576}
+  - {fileID: 6227257127581191429}
+--- !u!114 &6938059349697739783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400890692353530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09524d97821a8f440bcf0d9dc00ce5dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bugReportPanelPrefab: {fileID: 1151479936642796153, guid: 22f2321856eecbb479c2968c5cb24749,
+    type: 3}
 --- !u!1 &1408425811091668
 GameObject:
   m_ObjectHideFlags: 0
@@ -1891,7 +1908,29 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8743506808712922378}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6938059349697739783}
+        m_MethodName: ReportBug
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 114220591119617300}
+        m_MethodName: ClosePanels
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &963280316771550435
 GameObject:
   m_ObjectHideFlags: 0
@@ -2163,7 +2202,29 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8840365944995031749}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6938059349697739783}
+        m_MethodName: ExportLog
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 114220591119617300}
+        m_MethodName: ClosePanels
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &4108202255657252176
 GameObject:
   m_ObjectHideFlags: 0

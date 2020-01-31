@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class HelpMenu : MonoBehaviour
 {
+	public GameObject bugReportPanelPrefab;
+
 	//NOTE(Simon): For now this shows the log file in the appropriate explorer-like application on the various OSes
 	public void ExportLog()
 	{
@@ -22,5 +24,12 @@ public class HelpMenu : MonoBehaviour
 		var path = Path.Combine(Application.persistentDataPath, "Player.log");
 		Process.Start("xdg-open", path);
 #endif
+	}
+
+	public void ReportBug()
+	{
+		//TODO(Simon): Enable again once implemented on server side
+		return;
+		Instantiate(bugReportPanelPrefab, Canvass.main.transform, false);
 	}
 }
