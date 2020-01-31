@@ -2,10 +2,58 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using UnityEngine;
+
+public class SaveFileData
+{
+	public Metadata meta;
+	public List<InteractionPointSerialize> points = new List<InteractionPointSerialize>();
+
+	public SaveFileData()
+	{
+		meta = new Metadata();
+	}
+}
+
+public class SaveFileDataCompat
+{
+	public MetaDataCompat meta;
+	public List<InteractionPointSerializeCompat> points = new List<InteractionPointSerializeCompat>();
+
+	public SaveFileDataCompat()
+	{
+		meta = new MetaDataCompat();
+	}
+}
+
+[Serializable]
+public class MetaDataCompat
+{
+	public int version;
+	public string title;
+	public string description;
+	public Guid guid;
+	public float length;
+}
+
+[Serializable]
+public class InteractionPointSerializeCompat
+{
+	public InteractionType type;
+	public string title;
+	public string body;
+	public string filename;
+	public double startTime;
+	public double endTime;
+	public Vector3 returnRayOrigin;
+	public Vector3 returnRayDirection;
+}
 
 public static class SaveFile
 {
+	public const int VERSION = 3;
+
 	public static string metaFilename = "meta.json";
 	public static string videoFilename = "main.mp4";
 	public static string thumbFilename = "thumb.jpg";
@@ -32,12 +80,6 @@ public static class SaveFile
 		}
 
 		return data;
-	}
-
-	public class SaveFileData
-	{
-		public Metadata meta;
-		public List<InteractionpointSerialize> points = new List<InteractionpointSerialize>();
 	}
 
 	public static Dictionary<string, Guid> GetAllSavefileNames()
@@ -83,61 +125,110 @@ public static class SaveFile
 		return null;
 	}
 
-	/*
-	public static List<string> GetExtraFiles(string metaFileName)
-	{
-		var str = GetSaveFileContents(metaFileName);
-	}
-	*/
-
 	public static SaveFileData OpenFile(string path)
 	{
-		var str = GetSaveFileContents(path);
+		var raw = GetSaveFileContents(path);
 
-		str = VersionManager.CheckAndUpgradeVersion(str);
+		var result = JsonGetValueFromLine(raw, 0);
+		int fileVersion = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
+
+		if (fileVersion < VERSION)
+		{
+			var saveFileDataCompat = ParseForVersion(raw, fileVersion);
+			UpgradeSaveFileToCurrent(saveFileDataCompat);
+			var currentSaveFile = ConvertCompatToCurrent(saveFileDataCompat);
+			WriteFile(currentSaveFile);
+		}
 
 		var saveFileData = new SaveFileData();
 
-		var result = new ParsedJsonLine();
-
-		result = JsonGetValueFromLine(str, result.endindex);
+		raw = GetSaveFileContents(path);
+		result = JsonGetValueFromLine(raw, 0);
 		saveFileData.meta.version = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
 
-		result = JsonGetValueFromLine(str, result.endindex);
+		result = JsonGetValueFromLine(raw, result.endindex);
 		saveFileData.meta.guid = new Guid(result.value);
 
-		result = JsonGetValueFromLine(str, result.endindex);
+		result = JsonGetValueFromLine(raw, result.endindex);
 		saveFileData.meta.title = result.value;
 
-		result = JsonGetValueFromLine(str, result.endindex);
+		result = JsonGetValueFromLine(raw, result.endindex);
 		saveFileData.meta.description = result.value;
 
-		result = JsonGetValueFromLine(str, result.endindex);
+		result = JsonGetValueFromLine(raw, result.endindex);
 		saveFileData.meta.length = Convert.ToSingle(result.value, CultureInfo.InvariantCulture);
 
-		saveFileData.points = new List<InteractionpointSerialize>();
+		saveFileData.points = new List<InteractionPointSerialize>();
 
-		foreach (var obj in ParseInteractionPoints(str, result.endindex))
+		foreach (var obj in ParseInteractionPoints(raw, result.endindex))
 		{
-			saveFileData.points.Add(JsonUtility.FromJson<InteractionpointSerialize>(obj));
-		}
-
-		if (VersionManager.isUpdated)
-		{
-			try
-			{
-				using (var file = File.CreateText(path))
-				{
-					file.Write(str);
-				}
-			}
-			catch (Exception e)
-			{
-				Debug.LogError(e.ToString());
-			}
+			saveFileData.points.Add(JsonUtility.FromJson<InteractionPointSerialize>(obj));
 		}
 
 		return saveFileData;
+	}
+
+	public static bool WriteFile(SaveFileData data)
+	{
+		var sb = new StringBuilder();
+		var meta = data.meta;
+
+		var path = GetPathForTitle(meta.title);
+		
+		data.meta = meta;
+
+		sb.Append("version:").Append(VERSION)
+			.Append(",\n");
+
+		sb.Append("uuid:")
+			.Append(meta.guid)
+			.Append(",\n");
+
+		sb.Append("title:")
+			.Append(meta.title)
+			.Append(",\n");
+
+		sb.Append("description:")
+			.Append(meta.description)
+			.Append(",\n");
+
+		sb.Append("length:")
+			.Append(meta.length)
+			.Append(",\n");
+
+		sb.Append("[");
+		if (data.points.Count > 0)
+		{
+			foreach (var point in data.points)
+			{
+				sb.Append(JsonUtility.ToJson(point, true));
+				sb.Append(",");
+			}
+
+			sb.Remove(sb.Length - 1, 1);
+		}
+		else
+		{
+			sb.Append("[]");
+		}
+
+		sb.Append("]");
+
+		try
+		{
+			string jsonname = Path.Combine(path, SaveFile.metaFilename);
+			using (var file = File.CreateText(jsonname))
+			{
+				file.Write(sb.ToString());
+			}
+		}
+		catch (Exception e)
+		{
+			Debug.LogError(e.ToString());
+			return false;
+		}
+
+		return true;
 	}
 
 	public static List<string> ParseInteractionPoints(string str, int startIndex)
@@ -218,4 +309,63 @@ public static class SaveFile
 		}
 		return size;
 	}
+
+	public static SaveFileDataCompat ParseForVersion(string raw, int version)
+	{
+		switch (version)
+		{
+			case 3: return ParseToCompatV3(raw);
+			default: throw new IndexOutOfRangeException("This save file is deprecated");
+		}
+	}
+
+	public static SaveFileDataCompat UpgradeSaveFileToCurrent(SaveFileDataCompat data)
+	{
+		//NOTE(Simon): Add versions any time savefile format is changed, see example:
+		//if (data.meta.version == 0) data = Upgrade0To1(data);
+
+		return data;
+	}
+
+	public static SaveFileData ConvertCompatToCurrent(SaveFileDataCompat compatData)
+	{
+		var currentData = new SaveFileData();
+		currentData.meta = Metadata.FromCompat(compatData.meta);
+		foreach (var pointCompat in compatData.points)
+		{
+			currentData.points.Add(InteractionPointSerialize.FromCompat(pointCompat));
+		}
+		return currentData;
+	}
+
+	public static SaveFileDataCompat ParseToCompatV3(string raw)
+	{
+		var saveFileData = new SaveFileDataCompat();
+
+		var result = new ParsedJsonLine();
+
+		result = JsonGetValueFromLine(raw, result.endindex);
+		saveFileData.meta.version = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
+
+		result = JsonGetValueFromLine(raw, result.endindex);
+		saveFileData.meta.guid = new Guid(result.value);
+
+		result = JsonGetValueFromLine(raw, result.endindex);
+		saveFileData.meta.title = result.value;
+
+		result = JsonGetValueFromLine(raw, result.endindex);
+		saveFileData.meta.description = result.value;
+
+		result = JsonGetValueFromLine(raw, result.endindex);
+		saveFileData.meta.length = Convert.ToSingle(result.value, CultureInfo.InvariantCulture);
+
+		saveFileData.points = new List<InteractionPointSerializeCompat>();
+
+		foreach (var obj in ParseInteractionPoints(raw, result.endindex))
+		{
+			saveFileData.points.Add(JsonUtility.FromJson<InteractionPointSerializeCompat>(obj));
+		}
+		return saveFileData;
+	}
+
 }

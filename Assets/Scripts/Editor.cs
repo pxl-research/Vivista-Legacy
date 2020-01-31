@@ -64,7 +64,7 @@ public class InteractionPointEditor
 	public Vector3 returnRayDirection;
 }
 
-public class InteractionpointSerialize
+public class InteractionPointSerialize
 {
 	public InteractionType type;
 	public string title;
@@ -75,6 +75,21 @@ public class InteractionpointSerialize
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
+
+	public static InteractionPointSerialize FromCompat(InteractionPointSerializeCompat compat)
+	{
+		return new InteractionPointSerialize
+		{
+			type = compat.type,
+			title = compat.title,
+			body = compat.body,
+			filename = compat.filename,
+			startTime = compat.startTime,
+			endTime = compat.endTime,
+			returnRayOrigin = compat.returnRayOrigin,
+			returnRayDirection = compat.returnRayDirection,
+		};
+	}
 }
 
 public class UploadStatus
@@ -101,9 +116,19 @@ public struct Metadata
 	public string title;
 	public string description;
 	public Guid guid;
-	public Perspective perspective;
-	public int extraCounter;
 	public float length;
+
+	public static Metadata FromCompat(MetaDataCompat compat)
+	{
+		return new Metadata
+		{
+			version = compat.version,
+			title = compat.title,
+			description = compat.description,
+			guid = compat.guid,
+			length = compat.length
+		};
+	}
 }
 
 public class Editor : MonoBehaviour
@@ -1660,44 +1685,21 @@ public class Editor : MonoBehaviour
 
 	private bool SaveToFile(bool makeThumbnail = true)
 	{
-		var sb = new StringBuilder();
-
-		var path = SaveFile.GetPathForTitle(meta.title);
-		var videoPath = Path.Combine(path, SaveFile.videoFilename);
+		string path = SaveFile.GetPathForTitle(meta.title);
+		string videoPath = Path.Combine(path, SaveFile.videoFilename);
 		if (!File.Exists(videoPath))
 		{
 			File.Copy(videoController.VideoPath(), videoPath);
 		}
 
-		var data = new SaveFile.SaveFileData();
+		var data = new SaveFileData();
 		data.meta = meta;
 
-		sb.Append("version:")
-			.Append(VersionManager.VERSION)
-			.Append(",\n");
-
-		sb.Append("uuid:")
-			.Append(meta.guid)
-			.Append(",\n");
-
-		sb.Append("title:")
-			.Append(meta.title)
-			.Append(",\n");
-
-		sb.Append("description:")
-			.Append(meta.description)
-			.Append(",\n");
-
-		sb.Append("length:")
-			.Append(videoController.videoLength.ToString(CultureInfo.InvariantCulture))
-			.Append(",\n");
-
-		sb.Append("[");
 		if (interactionPoints.Count > 0)
 		{
 			foreach (var point in interactionPoints)
 			{
-				var temp = new InteractionpointSerialize
+				data.points.Add(new InteractionPointSerialize
 				{
 					type = point.type,
 					title = point.title,
@@ -1707,34 +1709,11 @@ public class Editor : MonoBehaviour
 					endTime = point.endTime,
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
-				};
-
-				sb.Append(JsonUtility.ToJson(temp, true));
-				sb.Append(",");
-			}
-
-			sb.Remove(sb.Length - 1, 1);
-		}
-		else
-		{
-			sb.Append("[]");
-		}
-
-		sb.Append("]");
-
-		try
-		{
-			string jsonname = Path.Combine(path, SaveFile.metaFilename);
-			using (var file = File.CreateText(jsonname))
-			{
-				file.Write(sb.ToString());
+				});
 			}
 		}
-		catch (Exception e)
-		{
-			Debug.LogError(e.ToString());
-			return false;
-		}
+
+		SaveFile.WriteFile(data);
 
 		if (makeThumbnail)
 		{

@@ -64,7 +64,7 @@ public class Player : MonoBehaviour
 	private Transform videoCanvas;
 	private GameObject projector;
 
-	private SaveFile.SaveFileData data;
+	private SaveFileData data;
 
 	private bool isSeekbarOutOfView;
 	private InteractionPointPlayer activeInteractionPoint;

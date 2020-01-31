@@ -75,9 +75,9 @@ public class ProjectPanel : MonoBehaviour
 				{
 					var meta = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta;
 					string title;
-					if (meta.version > VersionManager.VERSION)
+					if (meta.version > SaveFile.VERSION)
 					{
-						title = $"This project uses a version that's higher than the Editor's. Please update the Editor: {directory.Name}";
+						title = $"Project version too high. Please update the Editor: {directory.Name}";
 						filenameListItem.GetComponentInChildren<Text>().color = Color.red;
 					}
 					else
@@ -171,60 +171,34 @@ public class ProjectPanel : MonoBehaviour
 
 		if (!Directory.Exists(path))
 		{
-			Directory.CreateDirectory(path);
-			File.Create(Path.Combine(path, ".editable")).Close();
-			Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
-
-			var meta = new Metadata
-			{
-				version = VersionManager.VERSION,
-				title = files[selectedIndex].title,
-				description = "",
-				guid = new Guid(files[selectedIndex].guid),
-			};
-
-			var sb = new StringBuilder();
-			sb.Append("version:")
-				.Append(meta.version)
-				.Append(",\n");
-
-			sb.Append("uuid:")
-				.Append(meta.guid)
-				.Append(",\n");
-
-			sb.Append("title:")
-				.Append(meta.title)
-				.Append(",\n");
-
-			sb.Append("description:")
-				.Append(meta.description)
-				.Append(",\n");
-
-			sb.Append("perspective:")
-				.Append("0")
-				.Append(",\n");
-
-			sb.Append("length:")
-				.Append("0")
-				.Append(",\n");
-
-			sb.Append("[[]]");
-
 			try
 			{
-				using (var metaFile = File.CreateText(Path.Combine(path, SaveFile.metaFilename)))
-				{
-					metaFile.WriteLine(sb.ToString());
-				}
+				Directory.CreateDirectory(path);
+				File.Create(Path.Combine(path, ".editable")).Close();
+				Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
 			}
 			catch (Exception e)
 			{
-				Debug.LogError(e.ToString());
+				Toasts.AddToast(5, "Something went wrong while creating a new project");
+				Debug.LogError(e.StackTrace);
 			}
+
+			var data = new SaveFileData
+			{
+				meta = new Metadata
+				{
+					version = SaveFile.VERSION,
+					title = files[selectedIndex].title,
+					description = "",
+					guid = new Guid(files[selectedIndex].guid),
+				}
+			};
+
+			SaveFile.WriteFile(data);
 		}
 		else
 		{
-			Debug.LogError("The hell you doin' boy");
+			Debug.LogError("Guid collision");
 		}
 	}
 
@@ -243,7 +217,6 @@ public class ProjectPanel : MonoBehaviour
 		}
 	}
 
-	//TODO(Simon): Look into this function, looks weird how we're constructing the JSON from scratch.
 	public void RenameStop(string newTitle)
 	{
 		var label = files[selectedIndex].listItem.GetComponentInChildren<Text>(true);
@@ -264,64 +237,9 @@ public class ProjectPanel : MonoBehaviour
 		{
 			var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
 
-			var file = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
-			file.meta.title = newTitle;
-
-			Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
-
-			var sb = new StringBuilder();
-
-			sb.Append("uuid:")
-				.Append(file.meta.guid)
-				.Append(",\n");
-
-			sb.Append("title:")
-				.Append(file.meta.title)
-				.Append(",\n");
-
-			sb.Append("description:")
-				.Append(file.meta.description)
-				.Append(",\n");
-
-			sb.Append("perspective:")
-				.Append(file.meta.perspective)
-				.Append(",\n");
-
-			sb.Append("length:")
-				.Append(file.meta.length)
-				.Append(",\n");
-
-			//NOTE(Kristof): Add the interaction points to the string
-			sb.Append("[");
-			if (file.points.Count > 0)
-			{
-				foreach (var point in file.points)
-				{
-					sb.Append(JsonUtility.ToJson(point, true));
-					sb.Append(",");
-				}
-
-				sb.Remove(sb.Length - 1, 1);
-			}
-			else
-			{
-				sb.Append("[]");
-			}
-
-			sb.Append("]");
-
-			try
-			{
-				string jsonname = Path.Combine(path, SaveFile.metaFilename);
-				using (var renamedFile = File.CreateText(jsonname))
-				{
-					renamedFile.Write(sb.ToString());
-				}
-			}
-			catch (Exception e)
-			{
-				Debug.LogError(e.ToString());
-			}
+			var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
+			data.meta.title = newTitle;
+			SaveFile.WriteFile(data);
 		}
 	}
 

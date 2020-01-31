@@ -405,7 +405,7 @@ public class IndexPanel : MonoBehaviour
 					downloadsize = SaveFile.DirectorySize(folderInfo),
 					realTimestamp = folderInfo.LastWriteTime,
 					id = localVideos[i].Name,
-					compatibleVersion = !(data.meta.version > VersionManager.VERSION)
+					compatibleVersion = !(data.meta.version > SaveFile.VERSION)
 				});
 			}
 			catch
