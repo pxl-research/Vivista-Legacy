@@ -1,5 +1,6 @@
 using UnityEditor;
 using System.Diagnostics;
+using System.IO;
 
 
 public class AutomatedBuild : EditorWindow
@@ -24,6 +25,8 @@ public class AutomatedBuild : EditorWindow
 		options = new BuildPlayerOptions { scenes = new[] { "Assets/Player.unity" }, locationPathName = path + "VivistaPlayer.exe", target = BuildTarget.StandaloneWindows64, options = 0 };
 		PlayerSettings.virtualRealitySupported = true;
 		BuildPipeline.BuildPlayer(options);
+
+		ShowInWindowsExplorer("builds/" + branch);
 
 		//TODO(Kristof): zip all in folder and copy zips one higher
 	}
@@ -53,5 +56,20 @@ public class AutomatedBuild : EditorWindow
 		};
 		proc.Start();
 		return proc.StandardOutput.ReadToEnd().Trim();
+	}
+
+	public static void ShowInWindowsExplorer(string folder)
+	{
+		var cleaned = Path.GetFullPath(folder);
+		UnityEngine.Debug.Log(cleaned);
+		var proc = new Process
+		{
+			StartInfo = new ProcessStartInfo
+			{
+				FileName = "explorer.exe",
+				Arguments = $"/select,\"{cleaned}\"",
+			}
+		};
+		proc.Start();
 	}
 }
