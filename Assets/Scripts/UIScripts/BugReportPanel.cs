@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class BugReportPanel : MonoBehaviour
@@ -13,8 +12,8 @@ public class BugReportPanel : MonoBehaviour
 
 	public void Start()
 	{
-		description.onValueChanged.AddListener(OnInputChange);
-		reproduction.onValueChanged.AddListener(OnInputChange);
+		description.onValueChanged.AddListener(delegate { OnInputChange(description); });
+		reproduction.onValueChanged.AddListener(delegate { OnInputChange(reproduction); });
 	}
 
 	public void OnSubmit()
@@ -35,27 +34,24 @@ public class BugReportPanel : MonoBehaviour
 			errors = true;
 		}
 
-		if (errors)
+		if (!errors)
 		{
-			return;
-		}
-		
-		var success = SendReport();
+			var success = SendReport(desc, repro, mail);
 
-		if (success)
-		{
-			Destroy(gameObject);
+			if (success)
+			{
+				Destroy(gameObject);
+			}
 		}
 	}
 
-	public void OnInputChange(string arg0)
-	{
-		var input = EventSystem.current.currentSelectedGameObject.GetComponent<InputField>();
-		input.image.color = Color.white;
-	}
-
-	public bool SendReport()
+	private bool SendReport(string desc, string repro, string mail)
 	{
 		return true;
+	}
+
+	public void OnInputChange(InputField input)
+	{
+		input.image.color = Color.white;
 	}
 }

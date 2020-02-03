@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +25,8 @@ public class ImagePanelEditor : MonoBehaviour
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
 
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
+
 	void Update()
 	{
 		if (imageEditorState == ImageEditorState.Opening)
@@ -40,6 +42,10 @@ public class ImagePanelEditor : MonoBehaviour
 				imageEditorState = ImageEditorState.Showing;
 
 				Destroy(explorerPanel.gameObject);
+
+				//NOTE(Simon): Reset the background color, in case it was red/invalid previously
+				var background = imageAlbumList.parent.parent.GetComponent<Image>();
+				background.color = Color.white;
 			}
 		}
 
@@ -54,6 +60,8 @@ public class ImagePanelEditor : MonoBehaviour
 	public void Init(string initialTitle, List<string> initialURLs)
 	{
 		title.text = initialTitle;
+		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+
 		if (initialURLs != null)
 		{
 			foreach (string initialURL in initialURLs)
@@ -79,12 +87,29 @@ public class ImagePanelEditor : MonoBehaviour
 
 	public void Answer()
 	{
-		answered = true;
-		answerTitle = title.text;
-		answerURLs = new List<string>();
-		foreach (var entry in entries)
+		bool errors = false;
+		if (String.IsNullOrEmpty(title.text))
 		{
-			answerURLs.Add(entry.url);
+			title.image.color = errorColor;
+			errors = true;
+		}
+
+		if (entries.Count < 1)
+		{
+			var background = imageAlbumList.parent.parent.GetComponent<Image>();
+			background.color = errorColor;
+			errors = true;
+		}
+
+		if (!errors)
+		{
+			answered = true;
+			answerTitle = title.text;
+			answerURLs = new List<string>();
+			foreach (var entry in entries)
+			{
+				answerURLs.Add(entry.url);
+			}
 		}
 	}
 
@@ -143,5 +168,10 @@ public class ImagePanelEditor : MonoBehaviour
 		albumEntry.deleteButton.onClick.AddListener(() => DeleteAlbumEntry(albumEntry.gameObject));
 
 		entries.Add(albumEntry);
+	}
+
+	public void OnInputChange(InputField input)
+	{
+		input.image.color = Color.white;
 	}
 }

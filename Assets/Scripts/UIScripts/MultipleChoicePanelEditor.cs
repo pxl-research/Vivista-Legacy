@@ -22,30 +22,13 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	private int answerCount;
 	private const int MAXANSWERS = 6;
-	private ToggleGroup toggleGroup;
+	private ToggleGroup2 toggleGroup;
 
-	void Update()
-	{
-		bool questionFilled = question.text.Length > 0;
-		bool answersCount = answerInputs.Count > 1;
-		bool correctAnswerSelected = toggleGroup.ActiveToggles().Any();
-		bool answersFilled = true;
-
-		for (int i = 0; i < answerInputs.Count; i++)
-		{
-			if (answerInputs[i].text.Length == 0)
-			{
-				answersFilled = false;
-				break;
-			}
-		}
-
-		doneButton.interactable =  questionFilled && answersCount && correctAnswerSelected && answersFilled;
-	}
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void Init(string initialTitle, string[] initialAnswers = null)
 	{
-		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup>();
+		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup2>();
 		answerInputs = new List<InputField>();
 
 		var answers = new string[0];
@@ -66,6 +49,9 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		{
 			AddAnswer(answer, answerCount == answerCorrect);
 		}
+
+		question.onValueChanged.AddListener(delegate { OnInputChangeColor(question); });
+		addAnswerButton.onClick.AddListener(delegate { OnButtonChangeColor(addAnswerButton); });
 	}
 
 	public void AddAnswer()
@@ -76,13 +62,16 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public void AddAnswer(string answer, bool isCorrect = false)
 	{
 		var answerPanel = Instantiate(answerPanelPrefab, answerWrapper);
-		answerPanel.GetComponentInChildren<Toggle>().isOn = isCorrect;
-		answerPanel.GetComponentInChildren<Toggle>().group = toggleGroup;
+		var toggle = answerPanel.GetComponentInChildren<Toggle>();
+		toggle.isOn = isCorrect;
+		toggle.group = toggleGroup;
+		toggle.onValueChanged.AddListener(ResetTogglesColor);
 		answerPanel.GetComponentInChildren<Button>().onClick.AddListener(delegate { RemoveAnswer(answerPanel.gameObject); });
 
 		var answerInput = answerPanel.transform.GetComponentInChildren<InputField>();
 		answerInput.text = answer;
 		answerInputs.Add(answerInput);
+		answerInput.onValueChanged.AddListener(delegate { OnInputChangeColor(answerInput); });
 
 		answerPanel.transform.SetAsLastSibling();
 		answerCount++;
@@ -107,16 +96,70 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	public void Answer()
 	{
-		answered = true;
-		answerQuestion = question.text;
+		bool errors = false;
 
-		//NOTE(Kristof): Converting InputTexts to array of strings
-		answerAnswers = new string[answerInputs.Count];
-		for (var index = 0; index < answerInputs.Count; index++)
+		if (String.IsNullOrEmpty(question.text))
 		{
-			answerAnswers[index] = answerInputs[index].text;
+			question.image.color = errorColor;
+			errors = true;
 		}
-		var toggle = toggleGroup.ActiveToggles().First();
-		answerCorrect = toggle.transform.parent.GetSiblingIndex();
+
+		if (answerInputs.Count < 2)
+		{
+			addAnswerButton.image.color = errorColor;
+			errors = true;
+		}
+
+		var toggles = toggleGroup.GetAllToggles();
+		foreach (var input in answerInputs)
+		{
+			if (String.IsNullOrEmpty(input.text))
+			{
+				input.image.color = errorColor;
+				errors = true;
+			}
+		}
+		if (!toggleGroup.AnyTogglesOn())
+		{
+			foreach (var toggle in toggles)
+			{
+				toggle.image.color = errorColor;
+				errors = true;
+			}
+		}
+
+		if (!errors)
+		{
+			answered = true;
+			answerQuestion = question.text;
+
+			//NOTE(Kristof): Converting InputTexts to array of strings
+			answerAnswers = new string[answerInputs.Count];
+			for (var index = 0; index < answerInputs.Count; index++)
+			{
+				answerAnswers[index] = answerInputs[index].text;
+			}
+			var toggle = toggleGroup.ActiveToggles().First();
+			answerCorrect = toggle.transform.parent.GetSiblingIndex();
+		}
+	}
+
+	public void OnInputChangeColor(InputField input)
+	{
+		input.image.color = Color.white;
+	}
+
+	public void ResetTogglesColor(bool _)
+	{
+		var toggles = toggleGroup.GetAllToggles();
+		foreach (var toggle in toggles)
+		{
+			toggle.image.color = Color.white;
+		}
+	}
+
+	public void OnButtonChangeColor(Button button)
+	{
+		button.image.color = Color.white;
 	}
 }

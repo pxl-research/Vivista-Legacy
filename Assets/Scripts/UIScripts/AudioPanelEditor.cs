@@ -18,6 +18,8 @@ public class AudioPanelEditor : MonoBehaviour
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
+
 	void Update()
 	{
 		if (fileOpening)
@@ -35,6 +37,9 @@ public class AudioPanelEditor : MonoBehaviour
 
 	public void Init(string initialTitle, string initialUrl)
 	{
+		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+		url.onValueChanged.AddListener(delegate { OnInputChange(url); });
+
 		title.text = initialTitle;
 		url.text = initialUrl;
 		if (String.IsNullOrEmpty(initialUrl))
@@ -49,9 +54,25 @@ public class AudioPanelEditor : MonoBehaviour
 
 	public void Answer()
 	{
-		answered = true;
-		answerURL = url.text;
-		answerTitle = String.IsNullOrEmpty(title.text) ? "<unnamed>" : title.text;
+		bool errors = false;
+		if (String.IsNullOrEmpty(title.text))
+		{
+			title.image.color = errorColor;
+			errors = true;
+		}
+
+		if (String.IsNullOrEmpty(url.text))
+		{
+			url.image.color = errorColor;
+			errors = true;
+		}
+
+		if (!errors)
+		{
+			answered = true;
+			answerURL = url.text;
+			answerTitle = title.text;
+		}
 	}
 
 	public void Browse()
@@ -63,5 +84,10 @@ public class AudioPanelEditor : MonoBehaviour
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select audio");
 
 		fileOpening = true;
+	}
+
+	public void OnInputChange(InputField input)
+	{
+		input.image.color = Color.white;
 	}
 }

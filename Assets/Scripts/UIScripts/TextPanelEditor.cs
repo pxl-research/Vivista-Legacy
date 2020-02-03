@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class TextPanelEditor : MonoBehaviour
@@ -11,13 +12,15 @@ public class TextPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public string answerBody;
 	
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
+
 	void Start()
 	{
 		ResizeToFit();
 		title.onValueChanged.RemoveAllListeners();
-		title.onValueChanged.AddListener(delegate { OnInputChanged(); });
+		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
 		body.onValueChanged.RemoveAllListeners();
-		body.onValueChanged.AddListener(delegate { OnInputChanged(); });
+		body.onValueChanged.AddListener(delegate { OnInputChange(body); });
 	}
 
 	void ResizeToFit()
@@ -37,13 +40,31 @@ public class TextPanelEditor : MonoBehaviour
 
 	public void Answer()
 	{
-		answered = true;
-		answerTitle = title.text;
-		answerBody = body.text;
+		bool errors = false;
+		if (String.IsNullOrEmpty(title.text))
+		{
+			title.image.color = errorColor;
+			errors = true;
+		}
+
+		if (String.IsNullOrEmpty(body.text))
+		{
+			body.image.color = errorColor;
+			errors = true;
+		}
+
+		if (!errors)
+		{
+			answered = true;
+			answerTitle = title.text;
+			answerBody = body.text;
+		}
 	}
 
-	public void OnInputChanged()
+	public void OnInputChange(InputField input)
 	{
 		ResizeToFit();
+
+		input.image.color = Color.white;
 	}
 }

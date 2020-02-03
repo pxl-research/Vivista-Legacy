@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class VideoPanelEditor : MonoBehaviour {
@@ -16,6 +17,8 @@ public class VideoPanelEditor : MonoBehaviour {
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
+
 	void Update () 
 	{
 		if (fileOpening)
@@ -32,13 +35,32 @@ public class VideoPanelEditor : MonoBehaviour {
 	{
 		title.text = initialTitle;
 		url.text = initialUrl;
+
+		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+		url.onValueChanged.AddListener(delegate { OnInputChange(url); });
 	}
 
 	public void Answer()
 	{
-		answered = true;
-		answerURL = url.text;
-		answerTitle = string.IsNullOrEmpty(title.text) ? "<unnamed>" : title.text;
+		bool errors = false;
+		if (String.IsNullOrEmpty(title.text))
+		{
+			title.image.color = errorColor;
+			errors = true;
+		}
+
+		if (String.IsNullOrEmpty(url.text))
+		{
+			url.image.color = errorColor;
+			errors = true;
+		}
+
+		if (!errors)
+		{
+			answered = true;
+			answerURL = url.text;
+			answerTitle = title.text;
+		}
 	}
 
 	public void Browse()
@@ -50,5 +72,10 @@ public class VideoPanelEditor : MonoBehaviour {
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select video");
 
 		fileOpening = true;
+	}
+
+	public void OnInputChange(InputField input)
+	{
+		input.image.color = Color.white;
 	}
 }
