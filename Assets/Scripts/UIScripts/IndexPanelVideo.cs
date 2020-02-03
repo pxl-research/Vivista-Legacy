@@ -32,6 +32,11 @@ public class IndexPanelVideo : MonoBehaviour
 		uuid = video.id;
 		isLocal = local;
 
+		if (video.title == "Corrupted file")
+		{
+			titleText.color = Color.red;
+		}
+
 		//TODO(Kristof): Prevent being able to open it without VR (will be fixed if we use raycasts from mouse instead of mouse events)
 		if (!video.compatibleVersion)
 		{

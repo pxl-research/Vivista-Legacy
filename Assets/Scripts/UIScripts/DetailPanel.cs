@@ -54,6 +54,11 @@ public class DetailPanel : MonoBehaviour
 		timestamp.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
 		downloadSize.text = MathHelper.FormatBytes(video.downloadsize);
 
+		if (video.title == "Corrupted file")
+		{
+			playButton.interactable = false;
+		}
+
 		if (isLocal)
 		{
 			imageDownload = UnityWebRequest.Get("file:///" + Path.Combine(Application.persistentDataPath, video.id, SaveFile.thumbFilename));
