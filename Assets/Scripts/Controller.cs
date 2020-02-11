@@ -45,7 +45,6 @@ public class Controller : MonoBehaviour
 		SteamVR_Actions.default_Grip[inputSource].onStateUp += OnGripDown;
 		SteamVR_Actions.default_RotateLeft[inputSource].onStateDown += OnRotateLeft;
 		SteamVR_Actions.default_RotateRight[inputSource].onStateDown += OnRotateRight;
-		
 	}
 	
 	// Update is called once per frame

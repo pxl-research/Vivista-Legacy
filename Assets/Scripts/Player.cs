@@ -457,6 +457,8 @@ public class Player : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.FindArea:
+					throw new NotImplementedException();
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

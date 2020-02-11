@@ -37,6 +37,7 @@ public enum InteractionType
 	Video,
 	MultipleChoice,
 	Audio,
+	FindArea
 }
 
 public enum Perspective
@@ -161,6 +162,7 @@ public class Editor : MonoBehaviour
 	public GameObject videoPanelEditorPrefab;
 	public GameObject multipleChoicePanelPrefab;
 	public GameObject multipleChoicePanelEditorPrefab;
+	public GameObject findAreaPanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
@@ -206,9 +208,7 @@ public class Editor : MonoBehaviour
 	private string userToken = "";
 	private UploadStatus uploadStatus;
 	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
-	
 
-	public Cursors cursors;
 	public List<Color> timelineColors;
 	private int colorIndex;
 	private int interactionPointCount;
@@ -240,6 +240,7 @@ public class Editor : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
+		VideoControls.videoController = videoController;
 
 		Application.wantsToQuit += OnWantsToQuit;
 
@@ -424,27 +425,30 @@ public class Editor : MonoBehaviour
 						{
 							interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
 							interactionEditor.GetComponent<TextPanelEditor>().Init("", "");
-
 							break;
 						}
 						case InteractionType.Video:
 						{
 							interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
 							interactionEditor.GetComponent<VideoPanelEditor>().Init("", "");
-
 							break;
 						}
 						case InteractionType.MultipleChoice:
 						{
 							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
 							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init("");
-
 							break;
 						}
 						case InteractionType.Audio:
 						{
 							interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
 							interactionEditor.GetComponent<AudioPanelEditor>().Init("", "");
+							break;
+						}
+						case InteractionType.FindArea:
+						{
+							interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<FindAreaPanelEditor>().Init();
 							break;
 						}
 						default:
@@ -597,6 +601,16 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
+				case InteractionType.FindArea:
+				{
+					throw new NotImplementedException();
+					var editor = interactionEditor.GetComponent<FindAreaPanelEditor>();
+					if (editor.answered)
+					{
+						finished = true;
+					}
+					break;
+				}
 				default:
 				{
 					throw new ArgumentOutOfRangeException();
@@ -658,7 +672,9 @@ public class Editor : MonoBehaviour
 					case InteractionType.Audio:
 						pointToMove.panel.GetComponent<AudioPanel>().Move(pointToMove.point.transform.position);
 						break;
-					case InteractionType.None:
+					case InteractionType.FindArea:
+						throw new NotImplementedException();
+						//pointToMove.panel.GetComponent<FindAreaPanel>().Move(pointToMove.point.transform.position);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -801,6 +817,10 @@ public class Editor : MonoBehaviour
 						finished = true;
 					}
 					break;
+				}
+				case InteractionType.FindArea:
+				{
+					throw new NotImplementedException();
 				}
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -1341,6 +1361,8 @@ public class Editor : MonoBehaviour
 						interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
+					case InteractionType.FindArea:
+						throw new NotImplementedException();
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1411,19 +1433,19 @@ public class Editor : MonoBehaviour
 				{
 					if (isDraggingTimelineItem)
 					{
-						desiredCursor = cursors.CursorDrag;
+						desiredCursor = Cursors.Instance.CursorDrag;
 					}
 					else if (isResizingTimelineItem)
 					{
-						desiredCursor = cursors.CursorResizeHorizontal;
+						desiredCursor = Cursors.Instance.CursorResizeHorizontal;
 					}
 					else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
 					{
-						desiredCursor = cursors.CursorResizeHorizontal;
+						desiredCursor = Cursors.Instance.CursorResizeHorizontal;
 					}
 					else
 					{
-						desiredCursor = cursors.CursorDrag;
+						desiredCursor = Cursors.Instance.CursorDrag;
 					}
 				}
 
@@ -1453,8 +1475,11 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			//TODO(Simon): Software cursors make the lag from double buffering less obvious. But is there a better way?
-			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.ForceSoftware);
+			if (!Cursors.isOverridingCursor)
+			{
+				//TODO(Simon): Software cursors make the lag from double buffering less obvious. But is there a better way?
+				Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.ForceSoftware);
+			}
 
 			if (isDraggingTimelineItem)
 			{
@@ -1546,7 +1571,10 @@ public class Editor : MonoBehaviour
 				if (Input.mousePosition.y > coords[1].y - 2
 					&& Input.mousePosition.y < coords[1].y + 2)
 				{
-					Cursor.SetCursor(cursors.CursorResizeVertical, new Vector2(15, 15), CursorMode.Auto);
+					if (!Cursors.isOverridingCursor)
+					{
+						Cursor.SetCursor(Cursors.Instance.CursorResizeVertical, new Vector2(15, 15), CursorMode.Auto);
+					}
 					if (Input.GetMouseButtonDown(0))
 					{
 						isResizingTimeline = true;
@@ -1821,6 +1849,11 @@ public class Editor : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.FindArea:
+				{
+					throw new NotImplementedException();
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -1942,6 +1975,14 @@ public class Editor : MonoBehaviour
 			if (point.type == InteractionType.Image)
 			{
 				extras.Add(point.filename);
+			}
+			if (point.type == InteractionType.Video)
+			{
+				throw new NotImplementedException();
+			}
+			if (point.type == InteractionType.Audio)
+			{
+				throw new NotImplementedException();
 			}
 		}
 

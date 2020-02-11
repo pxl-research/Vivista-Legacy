@@ -34,4 +34,10 @@ public class InteractionTypePicker : MonoBehaviour
 		answered = true;
 		answer = InteractionType.Audio;
 	}
+
+	public void AnswerFindArea()
+	{
+		answered = true;
+		answer = InteractionType.FindArea;
+	}
 }
