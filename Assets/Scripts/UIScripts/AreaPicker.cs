@@ -22,6 +22,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 	private GameObject polygonOutline;
 	private MeshFilter outlineMesh;
 
+	private bool eligibleForPlacement;
 	private bool isDragging;
 	private Vector3 DragOrigin;
 	private GameObject dragObject;
@@ -69,7 +70,15 @@ public class AreaPicker : MonoBehaviour, IDisposable
 				dragObject = null;
 				indicator.SetActive(true);
 			}
-			else if(Physics.Raycast(ray, out hit, 100f))
+			else if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				dragObject.transform.position = DragOrigin;
+				isDragging = false;
+				dragObject = null;
+				dirty = true;
+				indicator.SetActive(true);
+			}
+			else if (Physics.Raycast(ray, out hit, 100f))
 			{
 				dragObject.transform.position = hit.point;
 				dirty = true;
@@ -79,6 +88,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		}
 		else if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask("Area")))
 		{
+			eligibleForPlacement = false;
 			Cursors.isOverridingCursor = true;
 			Cursor.SetCursor(Cursors.Instance.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
 			indicator.SetActive(false);
@@ -96,7 +106,12 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			indicator.SetActive(true);
 			indicator.transform.position = hit.point;
 
-			if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
+			if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+			{
+				//NOTE(Simon): Store if mouse button went down at a valid time (i.e. not while dragging)
+				eligibleForPlacement = true;
+			}
+			if (eligibleForPlacement && Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
 			{
 				rayDirections.Add(ray.origin);
 				rayOrigins.Add(ray.direction);
