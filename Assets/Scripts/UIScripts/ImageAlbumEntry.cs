@@ -8,9 +8,9 @@ public class ImageAlbumEntry : MonoBehaviour
 {
 	public RawImage preview;
 	public Text filename;
-	public Button2 moveLeftButton;
-	public Button2 moveRightButton;
-	public Button2 deleteButton;
+	public Button moveLeftButton;
+	public Button moveRightButton;
+	public Button deleteButton;
 	public string url;
 
 	private UnityWebRequest request;

@@ -1509,7 +1509,6 @@ MonoBehaviour:
     type: 3}
   labelPrefab: {fileID: 114245306502253168, guid: 1efc485e7ab1a5d41bb9ec14d2431504,
     type: 3}
-  cursors: {fileID: 1483952332}
   timelineColors:
   - {r: 0.6993463, g: 0.41176468, b: 1, a: 1}
   - {r: 1, g: 0.41176468, b: 0.72972983, a: 1}
@@ -1775,8 +1774,7 @@ MonoBehaviour:
   maxY: 80
   minY: -80
   sensivity: 0.5
-  mouseClickRequired: 1
-  LookEnabled: 1
+  forceActive: 0
   originalRotation: {x: 0, y: 0, z: 0, w: 0}
   editor: {fileID: 0}
 --- !u!1 &1988716302

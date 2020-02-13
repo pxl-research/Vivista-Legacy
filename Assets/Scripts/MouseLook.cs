@@ -3,6 +3,9 @@ using UnityEngine.EventSystems;
 
 public class MouseLook : MonoBehaviour 
 {
+	public static MouseLook Instance { get; private set; }
+
+	private static MouseLook _instance;
 	public Vector3 mousePos;
 	public float mouseRotX;
 	public float mouseRotY;
@@ -13,17 +16,22 @@ public class MouseLook : MonoBehaviour
 	public float minY = -80;
 
 	public float sensivity = 0.5f;
-	public bool mouseClickRequired = true;
-	public bool LookEnabled = true;
+	public bool forceActive;
 
 	public Quaternion originalRotation;
 
 	public Editor editor;
 
+	void Awake()
+	{
+		Instance = this;
+	}
+
 	void Start () 
 	{
 		mousePos = Input.mousePosition;
 		originalRotation = transform.localRotation;
+
 		var editorObject = GameObject.Find("Editor");
 		if (editorObject != null)
 		{
@@ -41,12 +49,12 @@ public class MouseLook : MonoBehaviour
 		//NOTE(Simon): Do use mouselook if in editor and correct editorstate
 		if (!UnityEngine.XR.XRSettings.enabled)
 		{
-			if (editor == null || (editor.GetComponent<Editor>().editorState == EditorState.Active
+			if (forceActive || editor == null || (editor.editorState == EditorState.Active
 									|| editor.editorState == EditorState.Inactive
 									|| editor.editorState == EditorState.MovingInteractionPoint
 									|| editor.editorState == EditorState.PlacingInteractionPoint))
 			{
-				if (LookEnabled && (!mouseClickRequired || Input.GetMouseButton(1)) && !EventSystem.current.IsPointerOverGameObject())
+				if (Input.GetMouseButton(1) && !EventSystem.current.IsPointerOverGameObject())
 				{
 					mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
 					mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
@@ -57,12 +65,6 @@ public class MouseLook : MonoBehaviour
 					var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
 
 					transform.localRotation = originalRotation * newRotx * newRoty;
-				}
-
-				if ((Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-					&& Input.GetKeyDown(KeyCode.Space))
-				{
-					LookEnabled = !LookEnabled;
 				}
 			}
 		}

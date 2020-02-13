@@ -88,9 +88,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ea36b7801191924095306a2198ee1fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  answerButton: {fileID: 1408417863479673730}
   answered: 0
-  rayDirections: []
-  rayOrigins: []
   pointMaterial: {fileID: 2100000, guid: 8fcc8b36e7d90ab44a6a299bdc24b44c, type: 2}
   polygonMaterial: {fileID: 2100000, guid: 6dd4b7c6bf659c144a1c072e7aa4c5dd, type: 2}
 --- !u!1 &1408417863470809154

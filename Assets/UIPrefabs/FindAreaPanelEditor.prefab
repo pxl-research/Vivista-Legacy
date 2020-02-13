@@ -1052,8 +1052,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   areaPickerPrefab: {fileID: 1408417862701483931, guid: 8174424da093f84478ce7b141c663713,
     type: 3}
+  areaEntryPrefab: {fileID: 4448285910196399163, guid: edf1cd373f8721b438d11604e272a856,
+    type: 3}
   resizePanel: {fileID: 5651805417440123545}
   areaList: {fileID: 5651805418915643995}
+  answered: 0
 --- !u!1 &5651805418620340932
 GameObject:
   m_ObjectHideFlags: 0

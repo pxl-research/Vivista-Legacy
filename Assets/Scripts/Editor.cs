@@ -448,7 +448,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.FindArea:
 						{
 							interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
-							interactionEditor.GetComponent<FindAreaPanelEditor>().Init();
+							interactionEditor.GetComponent<FindAreaPanelEditor>().Init("", meta.guid, null);
 							break;
 						}
 						default:
@@ -603,7 +603,6 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.FindArea:
 				{
-					throw new NotImplementedException();
 					var editor = interactionEditor.GetComponent<FindAreaPanelEditor>();
 					if (editor.answered)
 					{
