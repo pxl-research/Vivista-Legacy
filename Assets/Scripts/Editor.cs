@@ -162,6 +162,7 @@ public class Editor : MonoBehaviour
 	public GameObject videoPanelEditorPrefab;
 	public GameObject multipleChoicePanelPrefab;
 	public GameObject multipleChoicePanelEditorPrefab;
+	public GameObject findAreaPanelPrefab;
 	public GameObject findAreaPanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
@@ -606,6 +607,29 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<FindAreaPanelEditor>();
 					if (editor.answered)
 					{
+						var panel = Instantiate(findAreaPanelPrefab);
+						var areas = editor.answerAreas;
+						var jsonAreas = new StringBuilder();
+						var jsonMiniatures = new StringBuilder();
+						foreach (var area in areas)
+						{
+							jsonAreas.Append(JsonHelper.ToJson(area.vertices.ToArray()));
+							jsonAreas.Append('\f');
+							jsonMiniatures.Append(area.miniatureName);
+							jsonMiniatures.Append('\f');
+						}
+
+						jsonAreas.Remove(jsonAreas.Length - 1, 1);
+						jsonMiniatures.Remove(jsonMiniatures.Length - 1, 1);
+
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.filename = jsonMiniatures.ToString();
+						lastPlacedPoint.body = jsonAreas.ToString();
+						lastPlacedPoint.panel = panel;
+
+						panel.GetComponent<FindAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas);
+						panel.GetComponent<FindAreaPanel>().Move(lastPlacedPointPos);
+
 						finished = true;
 					}
 					break;
@@ -672,8 +696,7 @@ public class Editor : MonoBehaviour
 						pointToMove.panel.GetComponent<AudioPanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.FindArea:
-						throw new NotImplementedException();
-						//pointToMove.panel.GetComponent<FindAreaPanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<FindAreaPanel>().Move(pointToMove.point.transform.position);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -804,7 +827,7 @@ public class Editor : MonoBehaviour
 					{
 						var panel = Instantiate(multipleChoicePanelPrefab);
 						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
-						pointToEdit.title = String.IsNullOrEmpty(editor.answerQuestion) ? "<unnamed>" : editor.answerQuestion;
+						pointToEdit.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
 						pointToEdit.body += String.Join("\f", editor.answerAnswers);
@@ -819,7 +842,37 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.FindArea:
 				{
-					throw new NotImplementedException();
+					var editor = interactionEditor.GetComponent<FindAreaPanelEditor>();
+					if (editor.answered)
+					{
+						var panel = Instantiate(findAreaPanelPrefab);
+						panel.GetComponent<FindAreaPanel>().Move(pointToEdit.point.transform.position);
+						panel.GetComponent<FindAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas);
+						panel.GetComponent<FindAreaPanel>().Move(pointToEdit.point.transform.position);
+
+						var areas = editor.answerAreas;
+						var jsonAreas = new StringBuilder();
+						var jsonMiniatures = new StringBuilder();
+						foreach (var area in areas)
+						{
+							jsonAreas.Append(JsonHelper.ToJson(area.vertices.ToArray()));
+							jsonAreas.Append('\f');
+							jsonMiniatures.Append(area.miniatureName);
+							jsonMiniatures.Append('\f');
+						}
+
+						jsonAreas.Remove(jsonAreas.Length - 1, 1);
+						jsonMiniatures.Remove(jsonMiniatures.Length - 1, 1);
+
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.body = jsonAreas.ToString();
+						pointToEdit.filename = jsonMiniatures.ToString();
+						pointToEdit.panel = panel;
+
+						
+						finished = true;
+					}
+					break;
 				}
 				default:
 					throw new ArgumentOutOfRangeException();
@@ -1183,6 +1236,10 @@ public class Editor : MonoBehaviour
 
 		//NOTE(Simon): Timeline labels
 		{
+			if (Single.IsNaN(zoomedLength))
+			{
+				return;
+			}
 			var maxNumLabels = Mathf.Floor(timelineWidthPixels / 100);
 			var lowerNiceTime = LowerNiceTime(zoomedLength / maxNumLabels);
 			var upperNiceTime = UpperNiceTime(zoomedLength / maxNumLabels);
@@ -1361,7 +1418,20 @@ public class Editor : MonoBehaviour
 						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
 					case InteractionType.FindArea:
-						throw new NotImplementedException();
+						var areas = new List<Area>();
+						var files = point.filename.Split('\f');
+						var vertices = point.body.Split('\f');
+						for (int j = 0; j < files.Length; j++)
+						{
+							areas.Add(new Area
+							{
+								miniatureName = files[j],
+								vertices = new List<Vector3>(JsonHelper.ToArray<Vector3>(vertices[j]))
+							});
+						}
+						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas);
+						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1815,7 +1885,7 @@ public class Editor : MonoBehaviour
 						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
 						if (!File.Exists(url))
 						{
-							Debug.LogWarningFormat("File missing: {0}", url);
+							Debug.LogWarningFormat($"File missing: {url}");
 						}
 						urls.Add(url);
 					}
@@ -1850,7 +1920,20 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.FindArea:
 				{
-					throw new NotImplementedException();
+					var panel = Instantiate(findAreaPanelPrefab);
+					var areas = new List<Area>();
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var vertices = newInteractionPoint.body.Split('\f');
+					for (int i = 0; i < filenames.Length; i++)
+					{
+						areas.Add(new Area
+						{
+							miniatureName = filenames[i],
+							vertices = new List<Vector3>(JsonHelper.ToArray<Vector3>(vertices[i]))
+						});
+					}
+					panel.GetComponent<FindAreaPanel>().Init(newInteractionPoint.title, meta.guid, areas);
+					newInteractionPoint.panel = panel;
 					break;
 				}
 				default:
@@ -1863,8 +1946,9 @@ public class Editor : MonoBehaviour
 			}
 			catch (NullReferenceException e)
 			{
-				Debug.LogErrorFormat("{0}, {1}", e, e.Message);
+				Debug.LogErrorFormat($"{e}, {e.Message}");
 			}
+
 			AddItemToTimeline(newInteractionPoint, true);
 		}
 
@@ -2083,6 +2167,31 @@ public class Editor : MonoBehaviour
 		foreach (var key in toRemoveFromDict)
 		{
 			allExtras.Remove(key);
+		}
+
+		//NOTE(Simon): Delete all unused miniatures
+		{
+			var allMiniatures = Directory.GetFiles(Path.Combine(projectFolder, SaveFile.miniaturesFolder));
+			var miniaturesInUse = new List<string>();
+			foreach (var point in interactionPoints)
+			{
+				if (point.type == InteractionType.FindArea)
+				{
+					var files = point.filename.Split('\f');
+					foreach (var file in files)
+					{
+						miniaturesInUse.Add(Path.Combine(projectFolder, SaveFile.miniaturesFolder, file));
+					}
+				}
+			}
+
+			foreach (var miniature in allMiniatures)
+			{
+				if (!miniaturesInUse.Contains(miniature))
+				{
+					File.Delete(miniature);
+				}
+			}
 		}
 	}
 

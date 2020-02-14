@@ -1494,6 +1494,8 @@ MonoBehaviour:
     type: 3}
   multipleChoicePanelEditorPrefab: {fileID: 1371653262795046, guid: 490cba79c51692144af8e4c1380585b4,
     type: 3}
+  findAreaPanelPrefab: {fileID: 2343380510708631203, guid: 056a37bbbdc43f141b11c4eb09f06a91,
+    type: 3}
   findAreaPanelEditorPrefab: {fileID: 5651805418575855432, guid: 1e365db0f2a1aff4d986fdc42a98b3eb,
     type: 3}
   uploadPanelPrefab: {fileID: 1771621273584302, guid: 1007a2f2cc427de4ca38dfbacd1da109,

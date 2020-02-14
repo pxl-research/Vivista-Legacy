@@ -65,7 +65,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 	{
 		answerArea = area;
 
-		for (int i = 0; i < area.rayOrigins.Count; i++)
+		for (int i = 0; i < area.vertices.Count; i++)
 		{
 			areaPoints.Add(NewPoint(area.vertices[i]));
 
@@ -87,7 +87,6 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			if (Input.GetMouseButtonUp(0))
 			{
 				answerArea.vertices[dragIndex] = dragObject.transform.position;
-				answerArea.rayOrigins[dragIndex] = ray.origin;
 				isDragging = false;
 				dragObject = null;
 				indicator.SetActive(true);
@@ -136,7 +135,6 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			}
 			if (eligibleForPlacement && Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
 			{
-				answerArea.rayOrigins.Add(ray.origin);
 				answerArea.vertices.Add(hit.point);
 
 				areaPoints.Add(NewPoint(hit.point));

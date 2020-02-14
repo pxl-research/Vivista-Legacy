@@ -425,7 +425,7 @@ public class Player : MonoBehaviour
 						string url = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), file));
 						if (!File.Exists(url))
 						{
-							Debug.LogWarningFormat("File missing: {0}", url);
+							Debug.LogWarningFormat($"File missing: {url}");
 						}
 						urls.Add(url);
 					}

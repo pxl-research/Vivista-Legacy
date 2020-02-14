@@ -12,19 +12,20 @@ public class AreaEntry : MonoBehaviour
 	public string miniatureUrl;
 	public Area area;
 
-	private UnityWebRequest request;
-	private bool downloading;
+	private bool initialized;
 	private static Vector2 defaultImageSize = new Vector2(200, 200);
 
-	public IEnumerator SetArea(Area NewArea, string newMiniatureUrl)
+
+	public IEnumerator SetArea(Area NewArea, string newMiniatureUrl, bool hideButtons = false)
 	{
+		if (initialized) { yield break; }
 		miniatureUrl = newMiniatureUrl;
 		area = NewArea;
 		numPoints.text = NewArea.vertices.Count + " points";
 
 		Texture2D texture;
 
-		using (request = UnityWebRequestTexture.GetTexture("file:///" + miniatureUrl))
+		using (var request = UnityWebRequestTexture.GetTexture("file:///" + miniatureUrl))
 		{
 			yield return request.SendWebRequest();
 
@@ -51,5 +52,11 @@ public class AreaEntry : MonoBehaviour
 		image.rectTransform.anchoredPosition = position;
 
 		preview.texture = texture;
+
+		if (hideButtons)
+		{
+			deleteButton.transform.parent.gameObject.SetActive(false);
+		}
+		initialized = true;
 	}
 }

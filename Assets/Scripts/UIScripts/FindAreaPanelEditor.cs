@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Area
 {
-	public List<Vector3> rayOrigins = new List<Vector3>();
 	public List<Vector3> vertices = new List<Vector3>();
 	public string miniatureName;
 }
 
+//TODO(Simon): error checking
 public class FindAreaPanelEditor : MonoBehaviour
 {
 	public GameObject areaPickerPrefab;
 	public GameObject areaEntryPrefab;
 
+	public InputField title;
 	public GameObject resizePanel;
 	private AreaPicker areaPicker;
 	public RectTransform areaList;
@@ -27,19 +29,18 @@ public class FindAreaPanelEditor : MonoBehaviour
 	private GameObject editingGo;
 
 	private Guid guid;
-	private static string miniaturesFolder = "areaMiniatures";
 
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
 		guid = newGuid;
-		answerTitle = newTitle;
+		title.text = newTitle;
 		if (newAreas != null)
 		{
 			answerAreas = newAreas;
 			for (int i = 0; i < answerAreas.Count; i++)
 			{
 				var filename = answerAreas[i].miniatureName;
-				var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), miniaturesFolder);
+				var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesFolder);
 				var fullPath = Path.Combine(path, filename);
 
 				var go = Instantiate(areaEntryPrefab, areaList);
@@ -63,11 +64,12 @@ public class FindAreaPanelEditor : MonoBehaviour
 		if (areaPicker != null && areaPicker.answered)
 		{
 			var filename = MakeMiniature();
-			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), miniaturesFolder);
+			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesFolder);
 			var fullPath = Path.Combine(path, filename); 
 			
 			var go = editing ? editingGo : Instantiate(areaEntryPrefab, areaList);
 			var entry = go.GetComponent<AreaEntry>();
+			areaPicker.answerArea.miniatureName = filename;
 			StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
 
 			entry.deleteButton.onClick.RemoveAllListeners();
@@ -112,7 +114,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 		texture.Apply();
 
 		var textureData = texture.EncodeToPNG();
-		var path = Path.Combine(Application.persistentDataPath, guid.ToString(), miniaturesFolder);
+		var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesFolder);
 		var filename = Guid.NewGuid() + ".png";
 		var fullPath = Path.Combine(path, filename);
 
@@ -157,5 +159,11 @@ public class FindAreaPanelEditor : MonoBehaviour
 		editing = true;
 		editingGo = go;
 		resizePanel.SetActive(false);
+	}
+
+	public void Answer()
+	{
+		answered = true;
+		answerTitle = title.text;
 	}
 }
