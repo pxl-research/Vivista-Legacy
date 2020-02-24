@@ -225,7 +225,7 @@ public class ExplorerPanel : MonoBehaviour
 		}
 		if (sortedBy == SortedBy.Size)
 		{
-			filteredFiles.Sort((x, y) => direction * Comparer<long>.Default.Compare(x.Length, y.Length));
+			filteredFiles.Sort((x, y) => direction * x.Length.CompareTo(y.Length));
 		}
 
 		ClearItems();
@@ -560,37 +560,30 @@ public class ExplorerPanel : MonoBehaviour
 
 	public static string PrettyPrintFileType(string extension)
 	{
-		var imageTypes = new[] { ".jpg", ".jpeg", ".bmp", ".png" };
-		var videoTypes = new[] { ".mp4", ".webm", ".m4v" };
-		var audioTypes = new[] { ".mp3", ".wav", ".aif", ".ogg" };
-		var fileType = string.Empty;
-		var extensionLower = extension.ToLower();
+		var types = new Dictionary<string, string>()
+        {
+            {".jpg", "Image" },
+            {".jpeg", "Image" },
+            {".bmp", "Image" },
+            {".png", "Image" },
+            {".mp4", "Video" },
+            {".webm", "Video" },
+            {".m4v", "Video" },
+            {".mp3", "Audio" },
+            {".wav", "Audio" },
+            {".aif", "Audio" },
+            {".ogg", "Audio" },
+        };
 
-		foreach (var t in imageTypes)
-		{
-			if (extensionLower == t)
-			{
-				fileType = "Image";
-			}
-		}
+		var extensionLower = extension.ToLowerInvariant();
 
-		foreach (var t in videoTypes)
-		{
-			if (extensionLower == t)
-			{
-				fileType = "Video";
-			}
-		}
+        string fileType;
 
-		foreach (var t in audioTypes)
-		{
-			if (extensionLower == t)
-			{
-				fileType = "Audio";
-			}
-		}
-
-		if (fileType == string.Empty)
+        if (types.ContainsKey(extensionLower))
+        {
+            fileType = types[extensionLower];
+        }
+        else
 		{
 			fileType = extension.Substring(1);
 		}
