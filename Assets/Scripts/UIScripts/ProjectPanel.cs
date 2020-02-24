@@ -195,7 +195,7 @@ public class ProjectPanel : MonoBehaviour
 				}
 			};
 
-			SaveFile.WriteFile(data);
+			SaveFile.WriteFile(path, data);
 		}
 		else
 		{
