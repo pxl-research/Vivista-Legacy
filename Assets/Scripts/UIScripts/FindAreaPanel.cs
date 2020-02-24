@@ -25,7 +25,7 @@ public class FindAreaPanel : MonoBehaviour
 		for (int i = 0; i < areas.Count; i++)
 		{
 			var filename = areas[i].miniatureName;
-			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesFolder);
+			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
 			var fullPath = Path.Combine(path, filename);
 
 			StartCoroutine(entries[i].SetArea(areas[i], fullPath, true));
@@ -54,7 +54,7 @@ public class FindAreaPanel : MonoBehaviour
 		foreach (var area in newAreas)
 		{
 			var filename = area.miniatureName;
-			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesFolder);
+			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
 			var fullPath = Path.Combine(path, filename);
 
 			var go = Instantiate(areaEntryPrefab, areaList);

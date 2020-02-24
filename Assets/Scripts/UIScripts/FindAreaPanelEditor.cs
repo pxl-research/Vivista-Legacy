@@ -40,7 +40,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 			for (int i = 0; i < answerAreas.Count; i++)
 			{
 				var filename = answerAreas[i].miniatureName;
-				var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesFolder);
+				var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
 				var fullPath = Path.Combine(path, filename);
 
 				var go = Instantiate(areaEntryPrefab, areaList);
@@ -64,7 +64,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 		if (areaPicker != null && areaPicker.answered)
 		{
 			var filename = MakeMiniature();
-			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesFolder);
+			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
 			var fullPath = Path.Combine(path, filename); 
 			
 			var go = editing ? editingGo : Instantiate(areaEntryPrefab, areaList);
@@ -114,7 +114,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 		texture.Apply();
 
 		var textureData = texture.EncodeToPNG();
-		var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesFolder);
+		var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
 		var filename = Guid.NewGuid() + ".png";
 		var fullPath = Path.Combine(path, filename);
 

@@ -176,6 +176,7 @@ public class ProjectPanel : MonoBehaviour
 				Directory.CreateDirectory(path);
 				File.Create(Path.Combine(path, ".editable")).Close();
 				Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
+				Directory.CreateDirectory(Path.Combine(path, SaveFile.miniaturesPath));
 			}
 			catch (Exception e)
 			{

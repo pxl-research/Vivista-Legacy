@@ -58,7 +58,7 @@ public static class SaveFile
 	public static string videoFilename = "main.mp4";
 	public static string thumbFilename = "thumb.jpg";
 	public static string extraPath = "extra";
-	public static string miniaturesFolder = "areaMiniatures";
+	public static string miniaturesPath = "areaMiniatures";
 
 	public static string GetSaveFileContents(string path)
 	{
