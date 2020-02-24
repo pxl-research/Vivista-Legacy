@@ -13,11 +13,13 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		public string fullPath;
 		public string name;
-		public bool selected;
 		public DateTime date;
+		public string extension;
+		public long size;
 		public Sprite sprite;
 		public GameObject explorerPanelItem;
 		public EntryType entryType;
+		public bool selected;
 	}
 
 	private enum EntryType
@@ -33,6 +35,15 @@ public class ExplorerPanel : MonoBehaviour
 		Directory
 	}
 
+	public enum SortedBy
+	{
+		Name,
+		Date,
+		Type,
+		Size,
+		Resolution
+	}
+
 	public bool answered;
 	public string answerPath;
 	public List<string> answerPaths;
@@ -46,6 +57,7 @@ public class ExplorerPanel : MonoBehaviour
 	public GameObject filenameIconItemPrefab;
 	public Button sortDateButton;
 	public Button sortNameButton;
+	public Button sortSizeButton;
 	public InputField filenameField;
 	public Text title;
 
@@ -56,9 +68,8 @@ public class ExplorerPanel : MonoBehaviour
 	private static string osType;
 	private string currentDirectory;
 	private List<ExplorerEntry> entries;
-	private bool sortByDate;
-	private bool sortByName = true;
 	private bool sortAscending = true;
+	private SortedBy sortedBy = SortedBy.Name;
 
 	private float lastClickTime;
 	private int lastClickIndex;
@@ -87,7 +98,7 @@ public class ExplorerPanel : MonoBehaviour
 			{
 				startDirectory = File.ReadAllText(cookiePath);
 			}
-			
+
 			//TODO(SImon): Is this bugged? Debugger does weird stuff after stepping over this line.
 			if (!Directory.Exists(startDirectory))
 			{
@@ -108,7 +119,7 @@ public class ExplorerPanel : MonoBehaviour
 		answered = false;
 		osType = Environment.OSVersion.Platform.ToString();
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
-		
+
 		UpdateDir();
 	}
 
@@ -131,18 +142,18 @@ public class ExplorerPanel : MonoBehaviour
 
 	public void OnSortNameClick()
 	{
-		if (sortByName && sortAscending)
+		ResetSortButtonLabels();
+
+		if (sortedBy == SortedBy.Name && sortAscending)
 		{
 			sortNameButton.GetComponentInChildren<Text>().text = "Name ↑";
 			sortAscending = false;
 		}
 		else
 		{
-			sortDateButton.GetComponentInChildren<Text>().text = "Date";
-			sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
+            sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 			sortAscending = true;
-			sortByName = true;
-			sortByDate = false;
+			sortedBy = SortedBy.Name;
 		}
 
 		UpdateDir();
@@ -150,22 +161,41 @@ public class ExplorerPanel : MonoBehaviour
 
 	public void OnSortDateClick()
 	{
-		if (sortByDate && sortAscending)
+        ResetSortButtonLabels();
+
+
+		if (sortedBy == SortedBy.Date && sortAscending)
 		{
 			sortDateButton.GetComponentInChildren<Text>().text = "Date ↑";
 			sortAscending = false;
 		}
 		else
 		{
-			sortNameButton.GetComponentInChildren<Text>().text = "Name";
-			sortDateButton.GetComponentInChildren<Text>().text = "Date ↓";
+            sortDateButton.GetComponentInChildren<Text>().text = "Date ↓";
 			sortAscending = true;
-			sortByDate = true;
-			sortByName = false;
+			sortedBy = SortedBy.Date;
 		}
 		UpdateDir();
 	}
-	
+
+	public void OnSortFileSizeClick()
+	{
+        ResetSortButtonLabels();
+
+        if (sortedBy == SortedBy.Size && sortAscending)
+		{
+			sortSizeButton.GetComponentInChildren<Text>().text = "Size ↑";
+			sortAscending = false;
+		}
+		else
+		{
+            sortSizeButton.GetComponentInChildren<Text>().text = "Size ↓";
+			sortAscending = true;
+			sortedBy = SortedBy.Size;
+		}
+		UpdateDir();
+	}
+
 	private void UpdateDir()
 	{
 		var dirinfo = new DirectoryInfo(currentDirectory);
@@ -183,15 +213,19 @@ public class ExplorerPanel : MonoBehaviour
 
 		int direction = sortAscending ? 1 : -1;
 
-		if (sortByName)
+		if (sortedBy == SortedBy.Name)
 		{
 			Array.Sort(directories, (x, y) => direction * String.Compare(x.Name, y.Name, StringComparison.Ordinal));
 			filteredFiles.Sort((x, y) => direction * String.Compare(x.Name, y.Name, StringComparison.Ordinal));
 		}
-		if (sortByDate)
+		if (sortedBy == SortedBy.Date)
 		{
 			Array.Sort(directories, (x, y) => direction * x.LastWriteTime.CompareTo(y.LastWriteTime));
 			filteredFiles.Sort((x, y) => direction * x.LastWriteTime.CompareTo(y.LastWriteTime));
+		}
+		if (sortedBy == SortedBy.Size)
+		{
+			filteredFiles.Sort((x, y) => direction * Comparer<long>.Default.Compare(x.Length, y.Length));
 		}
 
 		ClearItems();
@@ -218,6 +252,8 @@ public class ExplorerPanel : MonoBehaviour
 				sprite = iconFile,
 				fullPath = file.FullName,
 				date = file.LastWriteTime,
+				size = file.Length,
+				extension = file.Extension,
 				entryType = EntryType.File
 			};
 
@@ -255,13 +291,13 @@ public class ExplorerPanel : MonoBehaviour
 
 				var trigger = explorerPanelItem.GetComponent<EventTrigger>();
 
-				var enterTrigger = new EventTrigger.Entry {eventID = EventTriggerType.PointerEnter};
+				var enterTrigger = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
 				enterTrigger.callback.AddListener(OnItemEnter);
 
-				var exitTrigger = new EventTrigger.Entry {eventID = EventTriggerType.PointerExit};
+				var exitTrigger = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
 				exitTrigger.callback.AddListener(OnItemExit);
 
-				var clickTrigger = new EventTrigger.Entry {eventID = EventTriggerType.PointerClick};
+				var clickTrigger = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
 				clickTrigger.callback.AddListener(OnItemClick);
 
 				trigger.triggers.Add(enterTrigger);
@@ -269,10 +305,13 @@ public class ExplorerPanel : MonoBehaviour
 				trigger.triggers.Add(clickTrigger);
 			}
 
+			var labels = explorerPanelItem.GetComponentsInChildren<Text>();
 			explorerPanelItem.transform.SetParent(directoryContent.content, false);
 			explorerPanelItem.transform.SetAsLastSibling();
-			explorerPanelItem.GetComponentsInChildren<Text>()[0].text = entries[i].name;
-			explorerPanelItem.GetComponentsInChildren<Text>()[1].text = entries[i].entryType == EntryType.Drive ? "" : entries[i].date.ToString("dd/MM/yyyy");
+			labels[0].text = entries[i].name;
+			labels[1].text = entries[i].entryType == EntryType.Drive ? "" : entries[i].date.ToString("dd/MM/yyyy");
+			labels[2].text = PrettyPrintFileType(entries[i].extension);
+			labels[3].text = PrettyPrintFileSize(entries[i].size);
 			explorerPanelItem.GetComponentsInChildren<Image>()[1].sprite = entries[i].sprite;
 
 			entries[i].explorerPanelItem = explorerPanelItem;
@@ -499,5 +538,70 @@ public class ExplorerPanel : MonoBehaviour
 		}
 		Assert.IsTrue(true, "Should not be able to get here");
 		return -1;
+	}
+
+	public static string PrettyPrintFileSize(long size)
+	{
+		long prevSize;
+		//NOTE(Jeroen): We go through the loop at least once, so offset by -1
+		int loops = -1;
+
+		do
+		{
+			loops++;
+			prevSize = size;
+			size /= 1024;
+		} while (size > 1);
+
+		var names = new[] { "B", "kB", "MB", "GB" };
+
+		return prevSize + names[loops];
+	}
+
+	public static string PrettyPrintFileType(string extension)
+	{
+		var imageTypes = new[] { ".jpg", ".jpeg", ".bmp", ".png" };
+		var videoTypes = new[] { ".mp4", ".webm", ".m4v" };
+		var audioTypes = new[] { ".mp3", ".wav", ".aif", ".ogg" };
+		var fileType = string.Empty;
+		var extensionLower = extension.ToLower();
+
+		foreach (var t in imageTypes)
+		{
+			if (extensionLower == t)
+			{
+				fileType = "Image";
+			}
+		}
+
+		foreach (var t in videoTypes)
+		{
+			if (extensionLower == t)
+			{
+				fileType = "Video";
+			}
+		}
+
+		foreach (var t in audioTypes)
+		{
+			if (extensionLower == t)
+			{
+				fileType = "Audio";
+			}
+		}
+
+		if (fileType == string.Empty)
+		{
+			fileType = extension.Substring(1);
+		}
+
+		return fileType;
+	}
+
+    public void ResetSortButtonLabels()
+    {
+        sortNameButton.GetComponentInChildren<Text>().text = "Name";
+        sortDateButton.GetComponentInChildren<Text>().text = "Date";
+        sortSizeButton.GetComponentInChildren<Text>().text = "Type";
 	}
 }
