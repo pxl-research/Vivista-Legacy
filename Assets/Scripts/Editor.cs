@@ -1828,8 +1828,9 @@ public class Editor : MonoBehaviour
 	{
 		var data = SaveFile.OpenFile(path);
 		meta = data.meta;
-		var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
+		var videoPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), SaveFile.videoFilename);
 
+		Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), SaveFile.miniaturesPath));
 
 		if (!File.Exists(videoPath))
 		{
@@ -2171,7 +2172,7 @@ public class Editor : MonoBehaviour
 
 		//NOTE(Simon): Delete all unused miniatures
 		{
-			var allMiniatures = Directory.GetFiles(Path.Combine(projectFolder, SaveFile.miniaturesFolder));
+			var allMiniatures = Directory.GetFiles(Path.Combine(projectFolder, SaveFile.miniaturesPath));
 			var miniaturesInUse = new List<string>();
 			foreach (var point in interactionPoints)
 			{
@@ -2180,7 +2181,7 @@ public class Editor : MonoBehaviour
 					var files = point.filename.Split('\f');
 					foreach (var file in files)
 					{
-						miniaturesInUse.Add(Path.Combine(projectFolder, SaveFile.miniaturesFolder, file));
+						miniaturesInUse.Add(Path.Combine(projectFolder, SaveFile.miniaturesPath, file));
 					}
 				}
 			}
