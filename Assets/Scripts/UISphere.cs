@@ -9,8 +9,8 @@ public class UISphere : MonoBehaviour
 	private Material material;
 	private SphereUIInputModule inputModule;
 	private CanvasGroup canvasGroup;
-	private float fadeInTimer;
-	private float fadeInLength = .15f;
+	private float fadeTimer;
+	private float fadeLength = .15f;
 
 	void Start()
 	{
@@ -43,18 +43,37 @@ public class UISphere : MonoBehaviour
 
 	private IEnumerator FadeIn()
 	{
-		fadeInTimer = 0;
+		fadeTimer = 0;
 		if (canvasGroup == null)
 		{
 			canvasGroup = Canvass.sphereUICanvas.GetComponent<CanvasGroup>();
 		}
 
-		while (fadeInTimer < fadeInLength)
+		while (fadeTimer < fadeLength)
 		{
-			fadeInTimer += Time.deltaTime;
-			canvasGroup.alpha = fadeInTimer / fadeInLength;
+			fadeTimer += Time.deltaTime;
+			canvasGroup.alpha = fadeTimer / fadeLength;
 			yield return new WaitForEndOfFrame();
 		}
+		yield return null;
+	}
+
+	private IEnumerator FadeOut()
+	{
+		fadeTimer = 0;
+		if (canvasGroup == null)
+		{
+			canvasGroup = Canvass.sphereUICanvas.GetComponent<CanvasGroup>();
+		}
+
+		while (fadeTimer < fadeLength)
+		{
+			fadeTimer += Time.deltaTime;
+			canvasGroup.alpha = 1 - fadeTimer / fadeLength;
+			yield return new WaitForEndOfFrame();
+		}
+		Canvass.sphereUIWrapper.SetActive(false);
+		Canvass.sphereUIRenderer.SetActive(false);
 		yield return null;
 	}
 
@@ -64,6 +83,12 @@ public class UISphere : MonoBehaviour
 		Canvass.sphereUIRenderer.SetActive(true);
 		this.offset = offset;
 		StartCoroutine(FadeIn());
+	}
+
+	public void Deactivate()
+	{
+		
+		StartCoroutine(FadeOut());
 	}
 
 	//NOTE(Simon): From http://wiki.unity3d.com/index.php/ProceduralPrimitives

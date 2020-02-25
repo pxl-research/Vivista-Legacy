@@ -503,8 +503,7 @@ public class Player : MonoBehaviour
 
 	public void DeactivateActiveInteractionPoint()
 	{
-		Canvass.sphereUIWrapper.SetActive(false);
-		Canvass.sphereUIRenderer.SetActive(false);
+		Canvass.sphereUIRenderer.GetComponent<UISphere>().Deactivate();
 		Assert.IsNotNull(activeInteractionPoint);
 		Assert.IsNotNull(activeInteractionPoint.point);
 		activeInteractionPoint.panel.SetActive(false);
