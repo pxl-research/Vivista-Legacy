@@ -24,7 +24,7 @@ public class UISphere : MonoBehaviour
 		if (Application.isPlaying)
 		{
 			inputModule = FindObjectOfType<SphereUIInputModule>();
-			GenerateSphere(1);
+			GenerateSphere(2);
 		}
 	}
 
