@@ -413,7 +413,7 @@ public class Editor : MonoBehaviour
 				if (picker.answered)
 				{
 					lastPlacedPoint.type = picker.answer;
-					
+
 					switch (lastPlacedPoint.type)
 					{
 						case InteractionType.Image:
@@ -868,8 +868,6 @@ public class Editor : MonoBehaviour
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
 						pointToEdit.panel = panel;
-
-						
 						finished = true;
 					}
 					break;
@@ -907,7 +905,7 @@ public class Editor : MonoBehaviour
 				var newGuid = new Guid(panel.answerGuid);
 
 				// NOTE(Lander): When the guid changes, overwrite extra and main.mp4
-				if (newGuid != meta.guid && meta.guid != Guid.Empty )
+				if (newGuid != meta.guid && meta.guid != Guid.Empty)
 				{
 					var oldDir = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 					var newDir = Path.Combine(Application.persistentDataPath, newGuid.ToString());
@@ -1466,8 +1464,8 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and separator lines.
 		{
 			//NOTE(Simon): current time indicator
-			DrawLineAtTime(videoController.rawCurrentTime, 3 ,new Color(0, 0, 0, 100f / 255));
-			
+			DrawLineAtTime(videoController.rawCurrentTime, 3, new Color(0, 0, 0, 100f / 255));
+
 			//NOTE(Simon): Top line. Only draw when inside timeline.
 			var offset = new Vector3(0, -3);
 			if (timeline.localPosition.y < timelineHeader.rect.height - offset.y)
@@ -1708,7 +1706,7 @@ public class Editor : MonoBehaviour
 				Destroy(panel.gameObject);
 				Canvass.modalBackground.SetActive(false);
 			};
-			
+
 			return false;
 		}
 
@@ -2154,7 +2152,7 @@ public class Editor : MonoBehaviour
 	private void CleanExtras()
 	{
 		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		
+
 		var toRemoveFromDict = new List<string>();
 		foreach (var file in allExtras)
 		{

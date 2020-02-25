@@ -171,75 +171,75 @@ public static class SaveFile
 
 	public static bool WriteFile(SaveFileData data)
 	{
-        var meta = data.meta;
+		var meta = data.meta;
 
 		var path = GetPathForTitle(meta.title);
 
-        return WriteFile(path, data);
-    }
-
-    public static bool WriteFile(string path, SaveFileData data)
-    {
-        var sb = new StringBuilder();
-        var meta = data.meta;
-
-        data.meta = meta;
-
-        sb.Append("version:").Append(VERSION)
-            .Append(",\n");
-
-        sb.Append("uuid:")
-            .Append(meta.guid)
-            .Append(",\n");
-
-        sb.Append("title:")
-            .Append(meta.title)
-            .Append(",\n");
-
-        sb.Append("description:")
-            .Append(meta.description)
-            .Append(",\n");
-
-        sb.Append("length:")
-            .Append(meta.length)
-            .Append(",\n");
-
-        sb.Append("[");
-        if (data.points.Count > 0)
-        {
-            foreach (var point in data.points)
-            {
-                sb.Append(JsonUtility.ToJson(point, true));
-                sb.Append(",");
-            }
-
-            sb.Remove(sb.Length - 1, 1);
-        }
-        else
-        {
-            sb.Append("[]");
-        }
-
-        sb.Append("]");
-
-        try
-        {
-            string jsonname = Path.Combine(path, SaveFile.metaFilename);
-            using (var file = File.CreateText(jsonname))
-            {
-                file.Write(sb.ToString());
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError(e.ToString());
-            return false;
-        }
-
-        return true;
+		return WriteFile(path, data);
 	}
 
-    public static List<string> ParseInteractionPoints(string str, int startIndex)
+	public static bool WriteFile(string path, SaveFileData data)
+	{
+		var sb = new StringBuilder();
+		var meta = data.meta;
+
+		data.meta = meta;
+
+		sb.Append("version:").Append(VERSION)
+			.Append(",\n");
+
+		sb.Append("uuid:")
+			.Append(meta.guid)
+			.Append(",\n");
+
+		sb.Append("title:")
+			.Append(meta.title)
+			.Append(",\n");
+
+		sb.Append("description:")
+			.Append(meta.description)
+			.Append(",\n");
+
+		sb.Append("length:")
+			.Append(meta.length)
+			.Append(",\n");
+
+		sb.Append("[");
+		if (data.points.Count > 0)
+		{
+			foreach (var point in data.points)
+			{
+				sb.Append(JsonUtility.ToJson(point, true));
+				sb.Append(",");
+			}
+
+			sb.Remove(sb.Length - 1, 1);
+		}
+		else
+		{
+			sb.Append("[]");
+		}
+
+		sb.Append("]");
+
+		try
+		{
+			string jsonname = Path.Combine(path, SaveFile.metaFilename);
+			using (var file = File.CreateText(jsonname))
+			{
+				file.Write(sb.ToString());
+			}
+		}
+		catch (Exception e)
+		{
+			Debug.LogError(e.ToString());
+			return false;
+		}
+
+		return true;
+	}
+
+	public static List<string> ParseInteractionPoints(string str, int startIndex)
 	{
 		var stringObjects = new List<string>();
 		var level = 0;

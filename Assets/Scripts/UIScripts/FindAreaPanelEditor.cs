@@ -65,8 +65,8 @@ public class FindAreaPanelEditor : MonoBehaviour
 		{
 			var filename = MakeMiniature();
 			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
-			var fullPath = Path.Combine(path, filename); 
-			
+			var fullPath = Path.Combine(path, filename);
+
 			var go = editing ? editingGo : Instantiate(areaEntryPrefab, areaList);
 			var entry = go.GetComponent<AreaEntry>();
 			areaPicker.answerArea.miniatureName = filename;
