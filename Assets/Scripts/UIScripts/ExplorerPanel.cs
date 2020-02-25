@@ -151,7 +151,7 @@ public class ExplorerPanel : MonoBehaviour
 		}
 		else
 		{
-            sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
+			sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 			sortAscending = true;
 			sortedBy = SortedBy.Name;
 		}
@@ -161,7 +161,7 @@ public class ExplorerPanel : MonoBehaviour
 
 	public void OnSortDateClick()
 	{
-        ResetSortButtonLabels();
+		ResetSortButtonLabels();
 
 
 		if (sortedBy == SortedBy.Date && sortAscending)
@@ -171,7 +171,7 @@ public class ExplorerPanel : MonoBehaviour
 		}
 		else
 		{
-            sortDateButton.GetComponentInChildren<Text>().text = "Date ↓";
+			sortDateButton.GetComponentInChildren<Text>().text = "Date ↓";
 			sortAscending = true;
 			sortedBy = SortedBy.Date;
 		}
@@ -180,16 +180,16 @@ public class ExplorerPanel : MonoBehaviour
 
 	public void OnSortFileSizeClick()
 	{
-        ResetSortButtonLabels();
+		ResetSortButtonLabels();
 
-        if (sortedBy == SortedBy.Size && sortAscending)
+		if (sortedBy == SortedBy.Size && sortAscending)
 		{
 			sortSizeButton.GetComponentInChildren<Text>().text = "Size ↑";
 			sortAscending = false;
 		}
 		else
 		{
-            sortSizeButton.GetComponentInChildren<Text>().text = "Size ↓";
+			sortSizeButton.GetComponentInChildren<Text>().text = "Size ↓";
 			sortAscending = true;
 			sortedBy = SortedBy.Size;
 		}
@@ -561,29 +561,29 @@ public class ExplorerPanel : MonoBehaviour
 	public static string PrettyPrintFileType(string extension)
 	{
 		var types = new Dictionary<string, string>()
-        {
-            {".jpg", "Image" },
-            {".jpeg", "Image" },
-            {".bmp", "Image" },
-            {".png", "Image" },
-            {".mp4", "Video" },
-            {".webm", "Video" },
-            {".m4v", "Video" },
-            {".mp3", "Audio" },
-            {".wav", "Audio" },
-            {".aif", "Audio" },
-            {".ogg", "Audio" },
-        };
+		{
+			{".jpg", "Image" },
+			{".jpeg", "Image" },
+			{".bmp", "Image" },
+			{".png", "Image" },
+			{".mp4", "Video" },
+			{".webm", "Video" },
+			{".m4v", "Video" },
+			{".mp3", "Audio" },
+			{".wav", "Audio" },
+			{".aif", "Audio" },
+			{".ogg", "Audio" },
+		};
 
 		var extensionLower = extension.ToLowerInvariant();
 
-        string fileType;
+		string fileType;
 
-        if (types.ContainsKey(extensionLower))
-        {
-            fileType = types[extensionLower];
-        }
-        else
+		if (types.ContainsKey(extensionLower))
+		{
+			fileType = types[extensionLower];
+		}
+		else
 		{
 			fileType = extension.Substring(1);
 		}
@@ -591,10 +591,10 @@ public class ExplorerPanel : MonoBehaviour
 		return fileType;
 	}
 
-    public void ResetSortButtonLabels()
-    {
-        sortNameButton.GetComponentInChildren<Text>().text = "Name";
-        sortDateButton.GetComponentInChildren<Text>().text = "Date";
-        sortSizeButton.GetComponentInChildren<Text>().text = "Type";
+	public void ResetSortButtonLabels()
+	{
+		sortNameButton.GetComponentInChildren<Text>().text = "Name";
+		sortDateButton.GetComponentInChildren<Text>().text = "Date";
+		sortSizeButton.GetComponentInChildren<Text>().text = "Type";
 	}
 }
