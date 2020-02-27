@@ -152,7 +152,6 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			}
 
 			mesh.mesh.vertices = vertices;
-			mesh.mesh.normals = new Vector3[mesh.mesh.vertices.Length];
 			var triangulator = new Triangulator(mesh.mesh.vertices);
 			mesh.mesh.triangles = triangulator.Triangulate();
 			mesh.mesh.RecalculateNormals();

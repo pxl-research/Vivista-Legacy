@@ -44,6 +44,7 @@ public class Player : MonoBehaviour
 	public GameObject videoPanelPrefab;
 	public GameObject multipleChoicePrefab;
 	public GameObject audioPanelPrefab;
+	public GameObject findAreaPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject projectorPrefab;
 
@@ -74,8 +75,6 @@ public class Player : MonoBehaviour
 	private bool isInteractingWithPoint;
 	private float interactionTimer;
 	private EventSystem mainEventSystem;
-
-	private bool[] isControllerEligibleForRotation = new bool[2];
 
 	void Awake()
 	{
@@ -458,7 +457,14 @@ public class Player : MonoBehaviour
 					break;
 				}
 				case InteractionType.FindArea:
-					throw new NotImplementedException();
+				{
+					var panel = Instantiate(findAreaPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
+					var areas = Area.ParseFromSave(newInteractionPoint.filename, newInteractionPoint.body);
+
+					panel.GetComponent<FindAreaPanelSphere>().Init(newInteractionPoint.title, areas);
+					newInteractionPoint.panel = panel;
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -496,21 +502,28 @@ public class Player : MonoBehaviour
 		//NOTE(Simon): No two eventsystems can be active at the same, so disable the main one. The main one is used for all screenspace UI.
 		//NOTE(Simon): The other eventsystem, that remains active, handles input for the spherical UI.
 		mainEventSystem.enabled = false;
-
-		Assert.IsNotNull(activeInteractionPoint);
-		Assert.IsNotNull(activeInteractionPoint.point);
 	}
 
 	public void DeactivateActiveInteractionPoint()
 	{
 		Canvass.sphereUIRenderer.GetComponent<UISphere>().Deactivate();
-		Assert.IsNotNull(activeInteractionPoint);
-		Assert.IsNotNull(activeInteractionPoint.point);
 		activeInteractionPoint.panel.SetActive(false);
 		activeInteractionPoint = null;
 		videoController.Play();
 
 		mainEventSystem.enabled = true;
+	}
+
+	public void SuspendInteractionPoint()
+	{
+		Canvass.sphereUIRenderer.GetComponent<UISphere>().Suspend();
+		mainEventSystem.enabled = true;
+	}
+
+	public void UnsuspendInteractionPoint()
+	{
+		Canvass.sphereUIRenderer.GetComponent<UISphere>().Unsuspend();
+		mainEventSystem.enabled = false;
 	}
 
 	private void AddInteractionPoint(InteractionPointPlayer point)
@@ -597,6 +610,11 @@ public class Player : MonoBehaviour
 		interactionPointCount = 0;
 
 		OpenFilePanel();
+	}
+
+	public Controller[] GetControllers()
+	{
+		return new [] { trackedControllerLeft, trackedControllerRight};
 	}
 
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.

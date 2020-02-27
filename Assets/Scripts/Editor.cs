@@ -1416,17 +1416,7 @@ public class Editor : MonoBehaviour
 						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
 					case InteractionType.FindArea:
-						var areas = new List<Area>();
-						var files = point.filename.Split('\f');
-						var vertices = point.body.Split('\f');
-						for (int j = 0; j < files.Length; j++)
-						{
-							areas.Add(new Area
-							{
-								miniatureName = files[j],
-								vertices = new List<Vector3>(JsonHelper.ToArray<Vector3>(vertices[j]))
-							});
-						}
+						var areas = Area.ParseFromSave(point.filename, point.body);
 						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas);
 						break;
@@ -1920,17 +1910,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.FindArea:
 				{
 					var panel = Instantiate(findAreaPanelPrefab);
-					var areas = new List<Area>();
-					var filenames = newInteractionPoint.filename.Split('\f');
-					var vertices = newInteractionPoint.body.Split('\f');
-					for (int i = 0; i < filenames.Length; i++)
-					{
-						areas.Add(new Area
-						{
-							miniatureName = filenames[i],
-							vertices = new List<Vector3>(JsonHelper.ToArray<Vector3>(vertices[i]))
-						});
-					}
+					var areas = Area.ParseFromSave(newInteractionPoint.filename, newInteractionPoint.body);
+
 					panel.GetComponent<FindAreaPanel>().Init(newInteractionPoint.title, meta.guid, areas);
 					newInteractionPoint.panel = panel;
 					break;

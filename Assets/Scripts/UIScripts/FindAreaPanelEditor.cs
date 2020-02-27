@@ -8,6 +8,23 @@ public class Area
 {
 	public List<Vector3> vertices = new List<Vector3>();
 	public string miniatureName;
+
+	public static List<Area> ParseFromSave(string filename, string body)
+	{
+		var areas = new List<Area>();
+		var filenames = filename.Split('\f');
+		var vertices = body.Split('\f');
+		for (int i = 0; i < filenames.Length; i++)
+		{
+			areas.Add(new Area
+			{
+				miniatureName = filenames[i],
+				vertices = new List<Vector3>(JsonHelper.ToArray<Vector3>(vertices[i]))
+			});
+		}
+
+		return areas;
+	}
 }
 
 //TODO(Simon): error checking

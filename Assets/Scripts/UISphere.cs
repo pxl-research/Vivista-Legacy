@@ -41,9 +41,9 @@ public class UISphere : MonoBehaviour
 		}
 	}
 
-	private IEnumerator FadeIn()
+	private IEnumerator FadeIn(float delaySeconds = 0)
 	{
-		fadeTimer = 0;
+		fadeTimer = -delaySeconds;
 		if (canvasGroup == null)
 		{
 			canvasGroup = Canvass.sphereUICanvas.GetComponent<CanvasGroup>();
@@ -87,8 +87,21 @@ public class UISphere : MonoBehaviour
 
 	public void Deactivate()
 	{
-		
 		StartCoroutine(FadeOut());
+	}
+
+	public void Suspend()
+	{
+		Canvass.sphereUIRenderer.SetActive(false);
+		//NOTE(Simon): We can't fully deactivate the Sphere Canvas GO, because a child script might still need processing.
+		Canvass.sphereUICanvas.GetComponent<Canvas>().enabled = false;
+	}
+
+	public void Unsuspend()
+	{
+		Canvass.sphereUIRenderer.SetActive(true);
+		Canvass.sphereUICanvas.GetComponent<Canvas>().enabled = true;
+		StartCoroutine(FadeIn(1));
 	}
 
 	//NOTE(Simon): From http://wiki.unity3d.com/index.php/ProceduralPrimitives
