@@ -305,13 +305,18 @@ public class ExplorerPanel : MonoBehaviour
 				trigger.triggers.Add(clickTrigger);
 			}
 
+			bool isFile = entries[i].entryType == EntryType.File;
+			bool isDrive = entries[i].entryType == EntryType.Drive;
+
 			var labels = explorerPanelItem.GetComponentsInChildren<Text>();
 			explorerPanelItem.transform.SetParent(directoryContent.content, false);
 			explorerPanelItem.transform.SetAsLastSibling();
 			labels[0].text = entries[i].name;
-			labels[1].text = entries[i].entryType == EntryType.Drive ? "" : entries[i].date.ToString("dd/MM/yyyy");
-			labels[2].text = PrettyPrintFileType(entries[i].extension);
-			labels[3].text = PrettyPrintFileSize(entries[i].size);
+			labels[1].text = isDrive ? "" : entries[i].date.ToString("dd/MM/yyyy");
+			labels[2].text = isFile ? PrettyPrintFileType(entries[i].extension) : "";
+			labels[3].text = isFile ? PrettyPrintFileSize(entries[i].size) : "";
+			//TODO(Simon): Get resolution
+			labels[4].text = "";
 			explorerPanelItem.GetComponentsInChildren<Image>()[1].sprite = entries[i].sprite;
 
 			entries[i].explorerPanelItem = explorerPanelItem;
