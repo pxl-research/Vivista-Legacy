@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public enum EditorState
 {
@@ -2248,6 +2250,20 @@ public class Editor : MonoBehaviour
 	private void ResetInteractionPointTemp()
 	{
 		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
+	}
+
+	public void ShowProjectInExplorer()
+	{
+		string path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+
+#if UNITY_STANDALONE_WIN
+		path = path.Replace('/', '\\');
+		Process.Start("explorer.exe", $"/select,\"{path}\"");
+#endif
+
+#if UNITY_STANDALONE_OSX
+		Process.Start("open", "-R " + path);
+#endif
 	}
 
 	public static string GenerateExtraGuid()
