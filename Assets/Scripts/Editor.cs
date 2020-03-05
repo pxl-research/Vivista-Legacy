@@ -1454,7 +1454,7 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and separator lines.
 		{
 			//NOTE(Simon): current time indicator
-			DrawLineAtTime(videoController.rawCurrentTime, 3, new Color(0, 0, 0, 100f / 255));
+			DrawLineAtTime(Seekbar.instance.lastSmoothTime * videoController.videoLength, 3, new Color(0, 0, 0, 100f / 255));
 
 			//NOTE(Simon): Top line. Only draw when inside timeline.
 			var offset = new Vector3(0, -3);

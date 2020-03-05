@@ -112,7 +112,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		compassForeground.transform.localEulerAngles = new Vector3(0, 0, -(rotation));
 
 		timeSinceLastTextUpdate += Time.deltaTime;
-		lastSmoothTime = float.IsNaN(smoothedTime) ? 0 : smoothedTime;
+		lastSmoothTime = smoothedTime;
 	}
 
 	public void OnPointerUp(PointerEventData e)

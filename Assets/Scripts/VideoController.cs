@@ -72,7 +72,7 @@ public class VideoController : MonoBehaviour
 	{
 		videoLength = video.frameCount / video.frameRate;
 		rawCurrentTime = videoLength * (video.frame / (double)video.frameCount);
-		currentFractionalTime = video.frame / (double)video.frameCount;
+		currentFractionalTime = video.frameCount > 0 ? video.frame / (double)video.frameCount : 0;
 	}
 
 	//NOTE(Simon): if keepAspect == true, the screenshot will be resized to keep the correct aspectratio, and still fit within the requested size.

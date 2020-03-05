@@ -39,3 +39,13 @@ The following packages were added:
   com.unity.modules.androidjni@1.0.0
 The following packages were updated:
   com.unity.package-manager-ui from version 2.1.2 to 2.2.0
+
+=== Thu Mar  5 11:54:40 2020
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.xr.openvr.standalone from version 1.0.5 to 2.0.5
+The following packages were removed:
+  com.unity.package-manager-ui@2.2.0
