@@ -90,21 +90,21 @@ public class MultipleChoicePanel : MonoBehaviour
 		selectedIndex = toggle.transform.GetSiblingIndex();
 		
 		var toggles = answerPanel.GetComponentsInChildren<Toggle>();
-		for (var index = 0; index < toggles.Length; index++)
+		for (int i = 0; i < toggles.Length; i++)
 		{
-			toggles[index].interactable = false;
-			if (index == correctAnswer)
+			toggles[i].interactable = false;
+			if (i == correctAnswer)
 			{
-				toggles[index].transform.GetComponentInChildren<Image>().color = greenColour;
-				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = Color.white;
-				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = Color.white;
+				toggles[i].transform.GetComponentInChildren<Image>().color = greenColour;
+				toggles[i].transform.GetComponentsInChildren<Text>()[0].color = Color.white;
+				toggles[i].transform.GetComponentsInChildren<Text>()[1].color = Color.white;
 			}
 			else
 			{
-				toggles[index].transform.GetComponentsInChildren<Image>()[0].color = lightGreyColour;
-				toggles[index].transform.GetComponentsInChildren<Image>()[1].sprite = crossImage;
-				toggles[index].transform.GetComponentsInChildren<Text>()[0].color = darkGreyColour;
-				toggles[index].transform.GetComponentsInChildren<Text>()[1].color = darkGreyColour;
+				toggles[i].transform.GetComponentsInChildren<Image>()[0].color = lightGreyColour;
+				toggles[i].transform.GetComponentsInChildren<Image>()[1].sprite = crossImage;
+				toggles[i].transform.GetComponentsInChildren<Text>()[0].color = darkGreyColour;
+				toggles[i].transform.GetComponentsInChildren<Text>()[1].color = darkGreyColour;
 			}
 		}
 

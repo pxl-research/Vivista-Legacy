@@ -13,7 +13,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public RectTransform answerWrapper;
 	public List<InputField> answerInputs;
 	public Button addAnswerButton;
-	public Button doneButton;
 
 	public bool answered;
 	public string answerQuestion;
