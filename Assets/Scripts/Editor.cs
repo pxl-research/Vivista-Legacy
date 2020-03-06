@@ -1754,13 +1754,16 @@ public class Editor : MonoBehaviour
 		loginPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
-	public void InitSavePanel()
+	public void InitSavePanel(bool uploading = false)
 	{
 		filePanel = Instantiate(filePanelPrefab);
 		filePanel.transform.SetParent(Canvass.main.transform, false);
 		filePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true);
 		Canvass.modalBackground.SetActive(true);
-		editorState = EditorState.Saving;
+		if (!uploading)
+		{
+			editorState = EditorState.Saving;
+		}
 	}
 
 	public void InitExplorerPanel(string searchPattern, string title)
