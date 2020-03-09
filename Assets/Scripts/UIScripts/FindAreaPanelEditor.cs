@@ -47,10 +47,14 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	private Guid guid;
 
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
+
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
 		guid = newGuid;
 		title.text = newTitle;
+		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+
 		if (newAreas != null)
 		{
 			answerAreas = newAreas;
@@ -99,6 +103,10 @@ public class FindAreaPanelEditor : MonoBehaviour
 			areaPicker.Dispose();
 			Destroy(areaPicker.gameObject);
 			resizePanel.SetActive(true);
+
+			//NOTE(Simon): Reset the background color, in case it was red/invalid previously
+			var background = areaList.parent.parent.GetComponent<Image>();
+			background.color = Color.white;
 
 			if (editing) { editing = false; }
 		}
@@ -180,7 +188,31 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	public void Answer()
 	{
-		answered = true;
-		answerTitle = title.text;
+		bool errors = false;
+
+		if (String.IsNullOrEmpty(title.text))
+		{
+			title.image.color = errorColor;
+			errors = true;
+		}
+
+		if (answerAreas.Count == 0)
+		{
+			var background = areaList.parent.parent.GetComponent<Image>();
+			background.color = errorColor;
+			errors = true;
+		}
+
+
+		if (!errors)
+		{
+			answered = true;
+			answerTitle = title.text;
+		}
+	}
+
+	public void OnInputChange(InputField input)
+	{
+		input.image.color = Color.white;
 	}
 }
