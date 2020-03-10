@@ -143,6 +143,8 @@ MonoBehaviour:
   title: {fileID: 3890333984368996211}
   StartButton: {fileID: 3539935295940331206}
   result: {fileID: 1259856367519722930}
+  areaRendererPrefab: {fileID: 5627738579661189201, guid: f8fa131f73342364ea6e6fa601788632,
+    type: 3}
 --- !u!1 &3778234480165387115
 GameObject:
   m_ObjectHideFlags: 0

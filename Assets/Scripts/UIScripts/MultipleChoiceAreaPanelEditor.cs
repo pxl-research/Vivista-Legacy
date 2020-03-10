@@ -4,30 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Area
-{
-	public List<Vector3> vertices = new List<Vector3>();
-	public string miniatureName;
-
-	public static List<Area> ParseFromSave(string filename, string body)
-	{
-		var areas = new List<Area>();
-		var filenames = filename.Split('\f');
-		var vertices = body.Split('\f');
-		for (int i = 0; i < filenames.Length; i++)
-		{
-			areas.Add(new Area
-			{
-				miniatureName = filenames[i],
-				vertices = new List<Vector3>(JsonHelper.ToArray<Vector3>(vertices[i]))
-			});
-		}
-
-		return areas;
-	}
-}
-
-public class FindAreaPanelEditor : MonoBehaviour
+public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 {
 	public GameObject areaPickerPrefab;
 	public GameObject areaEntryPrefab;
@@ -39,20 +16,22 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	public bool answered;
 	public string answerTitle;
-	public List<Area> answerAreas = new List<Area>();
+	public List<Area> answerAreas;
+	public int answerCorrect;
 
 	private bool editing;
 	private GameObject editingGo;
 
 	private Guid guid;
-
+	
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
-	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
+	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect)
 	{
 		guid = newGuid;
 		title.text = newTitle;
 		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+		answerCorrect = newCorrect;
 
 		if (newAreas != null)
 		{
@@ -83,33 +62,30 @@ public class FindAreaPanelEditor : MonoBehaviour
 	{
 		if (areaPicker != null && areaPicker.answered)
 		{
-			//NOTE(Simon): If areaPicker was not cancelled
-			if (areaPicker.answerArea != null)
-			{
-				var filename = areaPicker.MakeMiniature(guid);
-				var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
-				var fullPath = Path.Combine(path, filename);
+			var filename = areaPicker.MakeMiniature(guid);
+			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
+			var fullPath = Path.Combine(path, filename);
 
-				var go = editing ? editingGo : Instantiate(areaEntryPrefab, areaList);
-				var entry = go.GetComponent<AreaEntry>();
-				areaPicker.answerArea.miniatureName = filename;
-				StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
+			var go = editing ? editingGo : Instantiate(areaEntryPrefab, areaList);
+			var entry = go.GetComponent<AreaEntry>();
+			areaPicker.answerArea.miniatureName = filename;
+			StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
 
-				entry.deleteButton.onClick.RemoveAllListeners();
-				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
-				entry.editButton.onClick.RemoveAllListeners();
-				entry.editButton.onClick.AddListener(() => OnEditArea(go));
+			entry.deleteButton.onClick.RemoveAllListeners();
+			entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
+			entry.editButton.onClick.RemoveAllListeners();
+			entry.editButton.onClick.AddListener(() => OnEditArea(go));
 
-				answerAreas.Add(areaPicker.answerArea);
-
-				//NOTE(Simon): Reset the background color, in case it was red/invalid previously
-				var background = areaList.parent.parent.GetComponent<Image>();
-				background.color = Color.white;
-			}
+			answerAreas.Add(areaPicker.answerArea);
 
 			areaPicker.Dispose();
 			Destroy(areaPicker.gameObject);
 			resizePanel.SetActive(true);
+
+			//NOTE(Simon): Reset the background color, in case it was red/invalid previously
+			var background = areaList.parent.parent.GetComponent<Image>();
+			background.color = Color.white;
+
 			if (editing) { editing = false; }
 		}
 	}

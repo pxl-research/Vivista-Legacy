@@ -8,6 +8,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.XR;
 using Valve.VR;
+using Object = UnityEngine.Object;
 
 public enum PlayerState
 {
@@ -45,6 +46,7 @@ public class Player : MonoBehaviour
 	public GameObject multipleChoicePrefab;
 	public GameObject audioPanelPrefab;
 	public GameObject findAreaPanelPrefab;
+	public GameObject multipleChoiceAreaPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject projectorPrefab;
 
@@ -465,6 +467,18 @@ public class Player : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.MultipleChoiceArea:
+				{
+					var split = newInteractionPoint.body.Split(new[] { '\f' }, 1);
+					var correct = Int32.Parse(split[0]);
+					var areaJson = split[1];
+					var panel = Instantiate(multipleChoiceAreaPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
+					var areas = Area.ParseFromSave(newInteractionPoint.filename, areaJson);
+
+					panel.GetComponent<MultipleChoiceAreaPanelSphere>().Init(newInteractionPoint.title, areas, correct);
+					newInteractionPoint.panel = panel;
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -475,6 +489,7 @@ public class Player : MonoBehaviour
 
 		return true;
 	}
+
 
 	private void OpenFilePanel()
 	{

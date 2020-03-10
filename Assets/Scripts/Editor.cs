@@ -2,17 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 public enum EditorState
 {
@@ -39,7 +38,8 @@ public enum InteractionType
 	Video,
 	MultipleChoice,
 	Audio,
-	FindArea
+	FindArea,
+	MultipleChoiceArea
 }
 
 public enum Perspective
@@ -166,6 +166,8 @@ public class Editor : MonoBehaviour
 	public GameObject multipleChoicePanelEditorPrefab;
 	public GameObject findAreaPanelPrefab;
 	public GameObject findAreaPanelEditorPrefab;
+	public GameObject multipleChoiceAreaPanelPrefab;
+	public GameObject multipleChoiceAreaPanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
@@ -454,6 +456,12 @@ public class Editor : MonoBehaviour
 							interactionEditor.GetComponent<FindAreaPanelEditor>().Init("", meta.guid, null);
 							break;
 						}
+						case InteractionType.MultipleChoiceArea:
+						{
+							interactionEditor = Instantiate(multipleChoiceAreaPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init("", meta.guid, null, -1);
+							break;
+						}
 						default:
 						{
 							Assert.IsTrue(true, "FFS, you shoulda added it here");
@@ -636,6 +644,42 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
+				case InteractionType.MultipleChoiceArea:
+				{
+					var editor = interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>();
+					if (editor.answered)
+					{
+						var panel = Instantiate(multipleChoiceAreaPanelPrefab);
+
+						var areas = editor.answerAreas;
+						var jsonAreas = new StringBuilder();
+						var jsonMiniatures = new StringBuilder();
+
+						jsonAreas.Append(editor.answerCorrect);
+						jsonAreas.Append('\f');
+						foreach (var area in areas)
+						{
+							jsonAreas.Append(JsonHelper.ToJson(area.vertices.ToArray()));
+							jsonAreas.Append('\f');
+							jsonMiniatures.Append(area.miniatureName);
+							jsonMiniatures.Append('\f');
+						}
+
+						jsonAreas.Remove(jsonAreas.Length - 1, 1);
+						jsonMiniatures.Remove(jsonMiniatures.Length - 1, 1);
+
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.body = jsonAreas.ToString();
+						lastPlacedPoint.filename = jsonMiniatures.ToString();
+						lastPlacedPoint.panel = panel;
+
+						panel.GetComponent<MultipleChoiceAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
+						panel.GetComponent<MultipleChoiceAreaPanel>().Move(lastPlacedPointPos);
+
+						finished = true;
+					}
+					break;
+				}
 				default:
 				{
 					throw new ArgumentOutOfRangeException();
@@ -699,6 +743,9 @@ public class Editor : MonoBehaviour
 						break;
 					case InteractionType.FindArea:
 						pointToMove.panel.GetComponent<FindAreaPanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.MultipleChoiceArea:
+						pointToMove.panel.GetComponent<MultipleChoiceAreaPanel>().Move(pointToMove.point.transform.position);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -828,7 +875,6 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(multipleChoicePanelPrefab);
-						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
 						pointToEdit.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
@@ -836,8 +882,8 @@ public class Editor : MonoBehaviour
 						pointToEdit.panel = panel;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
 						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
+						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
 						finished = true;
 					}
 					break;
@@ -850,11 +896,44 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(findAreaPanelPrefab);
 						panel.GetComponent<FindAreaPanel>().Move(pointToEdit.point.transform.position);
 						panel.GetComponent<FindAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas);
-						panel.GetComponent<FindAreaPanel>().Move(pointToEdit.point.transform.position);
 
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
 						var jsonMiniatures = new StringBuilder();
+						foreach (var area in areas)
+						{
+							jsonAreas.Append(JsonHelper.ToJson(area.vertices.ToArray()));
+							jsonAreas.Append('\f');
+							jsonMiniatures.Append(area.miniatureName);
+							jsonMiniatures.Append('\f');
+						}
+
+						jsonAreas.Remove(jsonAreas.Length - 1, 1);
+						jsonMiniatures.Remove(jsonMiniatures.Length - 1, 1);
+
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.body = jsonAreas.ToString();
+						pointToEdit.filename = jsonMiniatures.ToString();
+						pointToEdit.panel = panel;
+						finished = true;
+					}
+					break;
+				}
+				case InteractionType.MultipleChoiceArea:
+				{
+					var editor = interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>();
+					if (editor.answered)
+					{
+						var panel = Instantiate(multipleChoiceAreaPanelPrefab);
+						panel.GetComponent<MultipleChoiceAreaPanel>().Move(pointToEdit.point.transform.position);
+						panel.GetComponent<MultipleChoiceAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
+
+						var areas = editor.answerAreas;
+						var jsonAreas = new StringBuilder();
+						var jsonMiniatures = new StringBuilder();
+
+						jsonAreas.Append(editor.answerCorrect);
+						jsonAreas.Append('\f');
 						foreach (var area in areas)
 						{
 							jsonAreas.Append(JsonHelper.ToJson(area.vertices.ToArray()));
@@ -1392,10 +1471,13 @@ public class Editor : MonoBehaviour
 				switch (point.type)
 				{
 					case InteractionType.Text:
+					{
 						interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body);
 						break;
+					}
 					case InteractionType.Image:
+					{
 						interactionEditor = Instantiate(imagePanelEditorPrefab, Canvass.main.transform);
 						var filenames = point.filename.Split('\f');
 						var fullPaths = new List<string>(filenames.Length);
@@ -1405,23 +1487,42 @@ public class Editor : MonoBehaviour
 						}
 						interactionEditor.GetComponent<ImagePanelEditor>().Init(point.title, fullPaths);
 						break;
+					}
 					case InteractionType.Video:
+					{
 						interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<VideoPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
+					}
 					case InteractionType.MultipleChoice:
+					{
 						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'));
 						break;
+					}
 					case InteractionType.Audio:
+					{
 						interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
+					}
 					case InteractionType.FindArea:
+					{
 						var areas = Area.ParseFromSave(point.filename, point.body);
 						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
 						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas);
 						break;
+					}
+					case InteractionType.MultipleChoiceArea:
+					{
+						var split = point.body.Split(new[] { '\f' }, 1);
+						var correct = Int32.Parse(split[0]);
+						var areaJson = split[1];
+						var areas = Area.ParseFromSave(point.filename, areaJson);
+						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct);
+						break;
+					}
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1921,6 +2022,18 @@ public class Editor : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.MultipleChoiceArea:
+				{
+					var split = newInteractionPoint.body.Split(new[] { '\f' }, 1);
+					var correct = Int32.Parse(split[0]);
+					var areaJson = split[1];
+					var panel = Instantiate(multipleChoiceAreaPanelPrefab);
+					var areas = Area.ParseFromSave(newInteractionPoint.filename, areaJson);
+
+					panel.GetComponent<MultipleChoiceAreaPanel>().Init(newInteractionPoint.title, meta.guid, areas, correct);
+					newInteractionPoint.panel = panel;
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -2160,7 +2273,7 @@ public class Editor : MonoBehaviour
 			var miniaturesInUse = new List<string>();
 			foreach (var point in interactionPoints)
 			{
-				if (point.type == InteractionType.FindArea)
+				if (point.type == InteractionType.FindArea || point.type == InteractionType.MultipleChoiceArea)
 				{
 					var files = point.filename.Split('\f');
 					foreach (var file in files)

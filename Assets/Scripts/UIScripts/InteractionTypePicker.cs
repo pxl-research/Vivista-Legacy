@@ -40,4 +40,10 @@ public class InteractionTypePicker : MonoBehaviour
 		answered = true;
 		answer = InteractionType.FindArea;
 	}
+
+	public void AnswerMultipleChoiceArea()
+	{
+		answered = true;
+		answer = InteractionType.MultipleChoiceArea;
+	}
 }

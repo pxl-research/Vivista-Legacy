@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -73,6 +74,51 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		}
 	}
 
+	public string MakeMiniature(Guid projectGuid)
+	{
+		var camGo = new GameObject();
+		var cam = camGo.AddComponent<Camera>();
+		cam.cullingMask = LayerMask.GetMask("Area");
+
+		var bounds = GetBounds();
+		camGo.transform.LookAt(bounds.center, Vector3.up);
+
+		var size = bounds.size.magnitude;
+		var distanceFromPoint = (Camera.main.transform.position - bounds.center).magnitude;
+		cam.fieldOfView = 2.0f * Mathf.Rad2Deg * Mathf.Atan((0.5f * size) / distanceFromPoint);
+
+		var targetTexture = new RenderTexture(200, 200, 0);
+		targetTexture.antiAliasing = 8;
+		targetTexture.Create();
+
+		var previousTexture = RenderTexture.active;
+		RenderTexture.active = targetTexture;
+		cam.targetTexture = targetTexture;
+		cam.Render();
+
+		var texture = new Texture2D(200, 200);
+		texture.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0, false);
+		texture.Apply();
+
+		var textureData = texture.EncodeToPNG();
+		var path = Path.Combine(Application.persistentDataPath, projectGuid.ToString(), SaveFile.miniaturesPath);
+		var filename = Guid.NewGuid() + ".png";
+		var fullPath = Path.Combine(path, filename);
+
+		Directory.CreateDirectory(path);
+
+		using (var file = File.Open(fullPath, FileMode.OpenOrCreate))
+		{
+			file.Write(textureData, 0, textureData.Length);
+		}
+
+		Destroy(camGo);
+		RenderTexture.active = previousTexture;
+		targetTexture.Release();
+
+		return filename;
+	}
+
 	void Update()
 	{
 		answerButton.interactable = answerArea.vertices.Count >= 3;
@@ -128,6 +174,12 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			indicator.SetActive(true);
 			indicator.transform.position = hit.point;
 
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				answered = true;
+				answerArea = null;
+			}
+
 			if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
 			{
 				//NOTE(Simon): Store if mouse button went down at a valid time (i.e. not while dragging)
@@ -155,7 +207,6 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			var triangulator = new Triangulator(mesh.mesh.vertices);
 			mesh.mesh.triangles = triangulator.Triangulate();
 			mesh.mesh.RecalculateNormals();
-			mesh.mesh.RecalculateBounds();
 
 			//NOTE(Simon): +1 because we need to add the first vertex again, to complete the polygon
 			var outlineVertices = new Vector3[vertices.Length + 1];
