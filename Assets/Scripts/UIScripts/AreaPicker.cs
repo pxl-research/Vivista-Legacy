@@ -14,14 +14,11 @@ public class AreaPicker : MonoBehaviour, IDisposable
 	private List<GameObject> areaPoints = new List<GameObject>();
 
 	public Material pointMaterial;
-	public Material polygonMaterial;
 
+	public GameObject areaRendererPrefab;
 	private GameObject indicator;
 	private GameObject goContainer;
-	private GameObject polygon;
-	private MeshFilter mesh;
-	private GameObject polygonOutline;
-	private MeshFilter outlineMesh;
+	private AreaRenderer areaRenderer;
 
 	private bool dirty;
 
@@ -44,20 +41,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		indicator.layer = 0;
 		Destroy(indicator.GetComponent<SphereCollider>());
 
-		polygon = new GameObject("mesh");
-		polygon.transform.SetParent(goContainer.transform);
-		polygon.layer = AreaLayer;
-		
-		var r = polygon.AddComponent<MeshRenderer>();
-		mesh = polygon.AddComponent<MeshFilter>();
-		r.material = polygonMaterial;
-
-		polygonOutline = new GameObject("meshOutline");
-		polygonOutline.transform.SetParent(goContainer.transform);
-		polygonOutline.layer = AreaLayer;
-		r = polygonOutline.AddComponent<MeshRenderer>();
-		outlineMesh = polygonOutline.AddComponent<MeshFilter>();
-		r.material = pointMaterial;
+		areaRenderer = Instantiate(areaRendererPrefab).GetComponent<AreaRenderer>();
 
 		MouseLook.Instance.forceActive = true;
 	}
@@ -80,7 +64,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		var cam = camGo.AddComponent<Camera>();
 		cam.cullingMask = LayerMask.GetMask("Area");
 
-		var bounds = GetBounds();
+		var bounds = areaRenderer.GetBounds();
 		camGo.transform.LookAt(bounds.center, Vector3.up);
 
 		var size = bounds.size.magnitude;
@@ -203,21 +187,8 @@ public class AreaPicker : MonoBehaviour, IDisposable
 				vertices[i] = areaPoints[i].transform.position;
 			}
 
-			mesh.mesh.vertices = vertices;
-			var triangulator = new Triangulator(mesh.mesh.vertices);
-			mesh.mesh.triangles = triangulator.Triangulate();
-			mesh.mesh.RecalculateNormals();
+			areaRenderer.SetVertices(vertices);
 
-			//NOTE(Simon): +1 because we need to add the first vertex again, to complete the polygon
-			var outlineVertices = new Vector3[vertices.Length + 1];
-			Array.Copy(vertices, outlineVertices, vertices.Length);
-			outlineVertices[outlineVertices.Length - 1] = outlineVertices[0];
-			outlineMesh.mesh.vertices = outlineVertices;
-
-			//NOTE(Simon): Generate indices for a line strip. 
-			var indices = new int[outlineVertices.Length];
-			for (int i = 0; i < indices.Length; i++) { indices[i] = i; }
-			outlineMesh.mesh.SetIndices(indices, MeshTopology.LineStrip, 0);
 			dirty = false;
 		}
 	}
@@ -240,13 +211,9 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		MouseLook.Instance.forceActive = false;
 	}
 
-	public Bounds GetBounds()
-	{
-		return mesh.mesh.bounds;
-	}
-
 	public void Dispose()
 	{
 		Destroy(goContainer);
+		Destroy(areaRenderer.gameObject);
 	}
 }

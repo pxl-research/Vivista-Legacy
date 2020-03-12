@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 222454304886767106}
   - component: {fileID: 114138415034569862}
   m_Layer: 5
-  m_Name: MultipleChoicePanel
+  m_Name: MultipleChoicePanelSphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

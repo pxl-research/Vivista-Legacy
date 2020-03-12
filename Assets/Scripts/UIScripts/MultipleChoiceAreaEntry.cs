@@ -3,12 +3,13 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class AreaEntry : MonoBehaviour
+public class MultipleChoiceAreaEntry : MonoBehaviour
 {
 	public RawImage preview;
 	public Text numPoints;
 	public Button deleteButton;
 	public Button editButton;
+	public Toggle toggle;
 	public string miniatureUrl;
 	public Area area;
 
@@ -16,12 +17,12 @@ public class AreaEntry : MonoBehaviour
 	private static Vector2 defaultImageSize = new Vector2(200, 200);
 
 
-	public IEnumerator SetArea(Area newArea, string newMiniatureUrl, bool hideButtons = false)
+	public IEnumerator SetArea(Area NewArea, string newMiniatureUrl, bool hideButtons = false)
 	{
 		if (initialized) { yield break; }
 		miniatureUrl = newMiniatureUrl;
-		area = newArea;
-		numPoints.text = newArea.vertices.Count + " points";
+		area = NewArea;
+		numPoints.text = NewArea.vertices.Count + " points";
 
 		Texture2D texture;
 

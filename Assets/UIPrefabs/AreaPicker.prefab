@@ -92,6 +92,8 @@ MonoBehaviour:
   answered: 0
   pointMaterial: {fileID: 2100000, guid: 8fcc8b36e7d90ab44a6a299bdc24b44c, type: 2}
   polygonMaterial: {fileID: 2100000, guid: 6dd4b7c6bf659c144a1c072e7aa4c5dd, type: 2}
+  areaRendererPrefab: {fileID: 5627738579661189201, guid: f8fa131f73342364ea6e6fa601788632,
+    type: 3}
 --- !u!1 &1408417863470809154
 GameObject:
   m_ObjectHideFlags: 0

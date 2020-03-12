@@ -17,9 +17,14 @@ public class AreaRenderer : MonoBehaviour
 
 	public void SetVertices(List<Vector3> vertices)
 	{
+		SetVertices(vertices.ToArray());
+	}
+
+	public void SetVertices(Vector3[] vertices)
+	{
 		var mesh = new Mesh();
 
-		mesh.vertices = vertices.ToArray();
+		mesh.vertices = vertices;
 		var triangulator = new Triangulator(mesh.vertices);
 		mesh.triangles = triangulator.Triangulate();
 
@@ -58,5 +63,16 @@ public class AreaRenderer : MonoBehaviour
 	{
 		meshRenderer.enabled = false;
 		outlineRenderer.enabled = false;
+	}
+
+	public Bounds GetBounds()
+	{
+		return meshFilter.mesh.bounds;
+	}
+
+	public void SetColor(Color backgroundColor, Color outlineColor)
+	{
+		meshRenderer.material.color = backgroundColor;
+		outlineRenderer.material.color = outlineColor;
 	}
 }

@@ -7,11 +7,11 @@ using UnityEngine.UI;
 
 public class MultipleChoiceAreaPanel : MonoBehaviour
 {
-	public GameObject areaEntryPrefab;
+	public GameObject multipleChoiceAreaEntryPrefab;
 	public Text title;
 	public RectTransform areaList;
 
-	private List<AreaEntry> entries = new List<AreaEntry>();
+	private List<MultipleChoiceAreaEntry> entries = new List<MultipleChoiceAreaEntry>();
 	private List<Area> areas;
 	private int correct;
 	private Guid guid;
@@ -53,16 +53,23 @@ public class MultipleChoiceAreaPanel : MonoBehaviour
 		guid = newGuid;
 		correct = newCorrect;
 
-		foreach (var area in newAreas)
+		for (int i = 0; i < newAreas.Count; i++)
 		{
-			var filename = area.miniatureName;
+			var filename = newAreas[i].miniatureName;
 			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
 			var fullPath = Path.Combine(path, filename);
 
-			var go = Instantiate(areaEntryPrefab, areaList);
-			var entry = go.GetComponent<AreaEntry>();
+			var go = Instantiate(multipleChoiceAreaEntryPrefab, areaList);
+			var entry = go.GetComponent<MultipleChoiceAreaEntry>();
+			entry.toggle.interactable = false;
+
+			if (i == correct)
+			{
+				entry.toggle.SetIsOnWithoutNotify(true);
+			}
+			
 			entries.Add(entry);
-			StartCoroutine(entry.SetArea(area, fullPath, true));
+			StartCoroutine(entry.SetArea(newAreas[i], fullPath, true));
 		}
 
 		Update();

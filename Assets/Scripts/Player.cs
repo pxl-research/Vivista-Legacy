@@ -469,7 +469,7 @@ public class Player : MonoBehaviour
 				}
 				case InteractionType.MultipleChoiceArea:
 				{
-					var split = newInteractionPoint.body.Split(new[] { '\f' }, 1);
+					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
 					var correct = Int32.Parse(split[0]);
 					var areaJson = split[1];
 					var panel = Instantiate(multipleChoiceAreaPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
@@ -489,7 +489,6 @@ public class Player : MonoBehaviour
 
 		return true;
 	}
-
 
 	private void OpenFilePanel()
 	{

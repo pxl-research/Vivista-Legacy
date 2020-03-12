@@ -109,7 +109,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 			errors = true;
 		}
 
-		var toggles = toggleGroup.GetAllToggles();
 		foreach (var input in answerInputs)
 		{
 			if (String.IsNullOrEmpty(input.text))
@@ -118,6 +117,8 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 				errors = true;
 			}
 		}
+		
+		var toggles = toggleGroup.GetAllToggles();
 		if (!toggleGroup.AnyTogglesOn())
 		{
 			foreach (var toggle in toggles)

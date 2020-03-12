@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class FindAreaPanelSphere : MonoBehaviour
 {
 	public Text title;
-	public Button StartButton;
+	public Button startButton;
 	public Text result;
 	private List<Area> areas;
 	private List<AreaRenderer> areaRenderers = new List<AreaRenderer>();
@@ -71,7 +71,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 
 				player.UnsuspendInteractionPoint();
 
-				StartButton.gameObject.SetActive(false);
+				startButton.gameObject.SetActive(false);
 				result.gameObject.SetActive(true);
 
 				isFindingArea = false;
