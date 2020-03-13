@@ -1515,7 +1515,7 @@ public class Editor : MonoBehaviour
 					}
 					case InteractionType.MultipleChoiceArea:
 					{
-						var split = point.body.Split(new[] { '\f' }, 1);
+						var split = point.body.Split(new[] { '\f' }, 2);
 						var correct = Int32.Parse(split[0]);
 						var areaJson = split[1];
 						var areas = Area.ParseFromSave(point.filename, areaJson);
@@ -2024,7 +2024,7 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoiceArea:
 				{
-					var split = newInteractionPoint.body.Split(new[] { '\f' }, 1);
+					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
 					var correct = Int32.Parse(split[0]);
 					var areaJson = split[1];
 					var panel = Instantiate(multipleChoiceAreaPanelPrefab);
