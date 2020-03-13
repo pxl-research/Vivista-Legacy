@@ -718,7 +718,7 @@ public class Editor : MonoBehaviour
 				}
 			}
 
-			if (Input.GetKeyUp(KeyCode.Escape))
+			if (Input.GetMouseButtonDown(0))
 			{
 				pointToMove.returnRayOrigin = ray.origin;
 				pointToMove.returnRayDirection = ray.direction;
