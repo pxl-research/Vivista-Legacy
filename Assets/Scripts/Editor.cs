@@ -668,10 +668,6 @@ public class Editor : MonoBehaviour
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				lastPlacedPoint.filled = true;
-				if (String.IsNullOrEmpty(lastPlacedPoint.title))
-				{
-					lastPlacedPoint.title = "<unnamed>";
-				}
 				unsavedChanges = true;
 			}
 
@@ -928,10 +924,6 @@ public class Editor : MonoBehaviour
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
-				if (String.IsNullOrEmpty(pointToEdit.title))
-				{
-					pointToEdit.title = "<unnamed>";
-				}
 				if (wasPanelHidden)
 				{
 					pointToEdit.panel.SetActive(false);
