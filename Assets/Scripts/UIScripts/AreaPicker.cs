@@ -20,6 +20,8 @@ public class AreaPicker : MonoBehaviour, IDisposable
 	private GameObject goContainer;
 	private AreaRenderer areaRenderer;
 
+	private Action OnAreaPickerCancelled;
+
 	private bool dirty;
 
 	private bool eligibleForPlacement;
@@ -105,6 +107,11 @@ public class AreaPicker : MonoBehaviour, IDisposable
 
 	void Update()
 	{
+		if (answered)
+		{
+			return;
+		}
+
 		answerButton.interactable = answerArea.vertices.Count >= 3;
 
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);

@@ -19,6 +19,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public List<Area> answerAreas;
 	public int answerCorrect;
+	public bool allowCancel => areaPicker == null;
 
 	private bool editing;
 	private GameObject editingGo;
@@ -68,23 +69,27 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	{
 		if (areaPicker != null && areaPicker.answered)
 		{
-			var filename = areaPicker.MakeMiniature(guid);
-			var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
-			var fullPath = Path.Combine(path, filename);
+			//NOTE(Simon): If areaPicker was not cancelled
+			if (areaPicker.answerArea != null)
+			{
+				var filename = areaPicker.MakeMiniature(guid);
+				var path = Path.Combine(Application.persistentDataPath, guid.ToString(), SaveFile.miniaturesPath);
+				var fullPath = Path.Combine(path, filename);
 
-			var go = editing ? editingGo : Instantiate(multipleChoiceAreaEntryPrefab, areaList);
-			var entry = go.GetComponent<MultipleChoiceAreaEntry>();
-			areaPicker.answerArea.miniatureName = filename;
-			StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
+				var go = editing ? editingGo : Instantiate(multipleChoiceAreaEntryPrefab, areaList);
+				var entry = go.GetComponent<MultipleChoiceAreaEntry>();
+				areaPicker.answerArea.miniatureName = filename;
+				StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
 
-			entry.deleteButton.onClick.RemoveAllListeners();
-			entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
-			entry.editButton.onClick.RemoveAllListeners();
-			entry.editButton.onClick.AddListener(() => OnEditArea(go));
-			group.RegisterToggle(entry.toggle);
-			entry.toggle.group = group;
+				entry.deleteButton.onClick.RemoveAllListeners();
+				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
+				entry.editButton.onClick.RemoveAllListeners();
+				entry.editButton.onClick.AddListener(() => OnEditArea(go));
+				group.RegisterToggle(entry.toggle);
+				entry.toggle.group = group;
 
-			answerAreas.Add(areaPicker.answerArea);
+				answerAreas.Add(areaPicker.answerArea);
+			}
 
 			areaPicker.Dispose();
 			Destroy(areaPicker.gameObject);

@@ -480,7 +480,9 @@ public class Editor : MonoBehaviour
 		if (editorState == EditorState.FillingPanelDetails)
 		{
 			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
-			var finished = false;
+			bool finished = false;
+			//NOTE(Simon): Some panels use Esc internally to cancel a child action. We don't want to also cancel the panel in that case.
+			bool allowCancel = false;
 
 			switch (lastPlacedPoint.type)
 			{
@@ -592,6 +594,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.FindArea:
 				{
 					var editor = interactionEditor.GetComponent<FindAreaPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var panel = Instantiate(findAreaPanelPrefab);
@@ -624,6 +628,7 @@ public class Editor : MonoBehaviour
 				case InteractionType.MultipleChoiceArea:
 				{
 					var editor = interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>();
+					allowCancel = editor.allowCancel;
 					if (editor.answered)
 					{
 						var panel = Instantiate(multipleChoiceAreaPanelPrefab);
@@ -671,7 +676,7 @@ public class Editor : MonoBehaviour
 				unsavedChanges = true;
 			}
 
-			if (Input.GetKeyDown(KeyCode.Escape))
+			if (allowCancel && Input.GetKeyDown(KeyCode.Escape))
 			{
 				RemoveItemFromTimeline(lastPlacedPoint);
 				lastPlacedPoint = null;

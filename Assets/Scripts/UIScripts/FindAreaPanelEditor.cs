@@ -40,6 +40,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public List<Area> answerAreas = new List<Area>();
+	public bool allowCancel => areaPicker == null;
 
 	private bool editing;
 	private GameObject editingGo;
