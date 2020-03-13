@@ -297,13 +297,6 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Inactive)
 		{
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(true);
-				//Note(Simon): Early return so we don't interfere with the rest of the state machine
-				return;
-			}
-
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
 				&& Input.GetKeyDown(KeyCode.Space))
 			{
@@ -341,11 +334,6 @@ public class Editor : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints")))
 			{
 				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
-			}
-
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(false);
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -396,10 +384,6 @@ public class Editor : MonoBehaviour
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
 				SetEditorActive(true);
-			}
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(false);
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -478,19 +462,12 @@ public class Editor : MonoBehaviour
 				Debug.LogError("interactionTypePicker is null");
 			}
 
-			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
+			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				RemoveItemFromTimeline(lastPlacedPoint);
 				lastPlacedPoint = null;
 				Destroy(interactionTypePicker);
-			}
-			if (Input.GetKeyDown(KeyCode.Escape))
-			{
 				SetEditorActive(true);
-			}
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(false);
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -698,19 +675,12 @@ public class Editor : MonoBehaviour
 				unsavedChanges = true;
 			}
 
-			if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.F1))
+			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				RemoveItemFromTimeline(lastPlacedPoint);
 				lastPlacedPoint = null;
 				Destroy(interactionEditor);
-			}
-			if (Input.GetKeyDown(KeyCode.Escape))
-			{
 				SetEditorActive(true);
-			}
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(false);
 			}
 		}
 
@@ -760,11 +730,6 @@ public class Editor : MonoBehaviour
 				SetEditorActive(true);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 				unsavedChanges = true;
-			}
-			if (Input.GetKeyDown(KeyCode.F1))
-			{
-				SetEditorActive(false);
-				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
