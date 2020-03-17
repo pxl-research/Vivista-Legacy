@@ -8,9 +8,9 @@ public class TagPanel : MonoBehaviour
 	private GameObject colorPicker;
 	public GameObject shapePickerPrefab;
 	private GameObject shapePicker;
-	public GameObject TagItemPrefab;
+	public GameObject tagItemPrefab;
 
-	public GameObject TagItemHolder;
+	public GameObject tagItemHolder;
 
 	public InputField newName;
 	public Image newColor;
@@ -21,11 +21,6 @@ public class TagPanel : MonoBehaviour
 	void Start()
 	{
 		newName.onValueChanged.AddListener(OnEditName);
-	}
-
-	void Update()
-	{
-
 	}
 
 	public void OnColorPicker(Image image)
@@ -65,9 +60,9 @@ public class TagPanel : MonoBehaviour
 		{
 			newName.text = "";
 
-			var tagGo = Instantiate(TagItemPrefab);
+			var tagGo = Instantiate(tagItemPrefab);
 			var tagItem = tagGo.GetComponent<TagItem>();
-			tagGo.transform.SetParent(TagItemHolder.transform);
+			tagGo.transform.SetParent(tagItemHolder.transform);
 			tagItem.Init(name, color, imageIndex);
 			tagItem.deleteButton.onClick.AddListener(() => OnRemove(tagGo, name));
 		}
@@ -86,5 +81,10 @@ public class TagPanel : MonoBehaviour
 	public void OnEditName(string _)
 	{
 		newName.image.color = Color.white;
+	}
+
+	public void Close()
+	{
+		Destroy(gameObject);
 	}
 }

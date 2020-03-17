@@ -171,6 +171,7 @@ public class Editor : MonoBehaviour
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
+	public GameObject tagPanelPrefab;
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
@@ -179,6 +180,7 @@ public class Editor : MonoBehaviour
 	private GameObject uploadPanel;
 	private GameObject loginPanel;
 	private GameObject explorerPanel;
+	private GameObject tagPanel;
 
 	public RectTransform timelineContainer;
 	public RectTransform timeline;
@@ -1834,6 +1836,17 @@ public class Editor : MonoBehaviour
 		explorerPanel = Instantiate(explorerPanelPrefab);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
+	}
+
+	public void ShowTagPanel()
+	{
+		if (tagPanel != null)
+		{
+			return;
+		}
+
+		tagPanel = Instantiate(tagPanelPrefab);
+		tagPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
 	private bool SaveToFile(bool makeThumbnail = true)

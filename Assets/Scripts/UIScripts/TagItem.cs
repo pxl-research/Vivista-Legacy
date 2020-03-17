@@ -3,14 +3,14 @@ using UnityEngine.UI;
 
 public class TagItem : MonoBehaviour
 {
-	public Text name;
+	public Text label;
 	public Image background;
 	public Image shape;
 	public Button deleteButton;
 
 	public void Init(string name, Color color, int shapeIndex)
 	{
-		this.name.text = name;
+		label.text = name;
 		background.color = color;
 		shape.sprite = TagManager.Instance.ShapeForIndex(shapeIndex);
 	}
