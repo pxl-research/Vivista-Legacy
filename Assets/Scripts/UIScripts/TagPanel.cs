@@ -21,6 +21,13 @@ public class TagPanel : MonoBehaviour
 	void Start()
 	{
 		newName.onValueChanged.AddListener(OnEditName);
+
+		var tags = TagManager.Instance.tags;
+		
+		for (int i = 0; i < tags.Count; i++)
+		{
+			AddTagItem(tags[i].name, tags[i].color, tags[i].shapeIndex);
+		}
 	}
 
 	public void OnColorPicker(Image image)
@@ -51,25 +58,30 @@ public class TagPanel : MonoBehaviour
 	{
 		var name = newName.text;
 		var color = newColor.color;
-		var imagename = newShape.image.sprite.name;
-		var imageIndex = Int32.Parse(imagename.Substring(imagename.LastIndexOf('_') + 1));
+		var shapeName = newShape.image.sprite.name;
+		var shapeIndex = Int32.Parse(shapeName.Substring(shapeName.LastIndexOf('_') + 1));
 
-		var success = TagManager.Instance.AddTag(name, color, imageIndex);
+		var success = TagManager.Instance.AddTag(name, color, shapeIndex);
 
 		if (success)
 		{
 			newName.text = "";
 
-			var tagGo = Instantiate(tagItemPrefab);
-			var tagItem = tagGo.GetComponent<TagItem>();
-			tagGo.transform.SetParent(tagItemHolder.transform);
-			tagItem.Init(name, color, imageIndex);
-			tagItem.deleteButton.onClick.AddListener(() => OnRemove(tagGo, name));
+			AddTagItem(name, color, shapeIndex);
 		}
 		else
 		{
 			newName.image.color = errorColor;
 		}
+	}
+
+	public void AddTagItem(string name, Color color, int shapeIndex)
+	{
+		var tagGo = Instantiate(tagItemPrefab);
+		var tagItem = tagGo.GetComponent<TagItem>();
+		tagGo.transform.SetParent(tagItemHolder.transform);
+		tagItem.Init(name, color, shapeIndex);
+		tagItem.deleteButton.onClick.AddListener(() => OnRemove(tagGo, name));
 	}
 
 	public void OnRemove(GameObject tagGo, string name)

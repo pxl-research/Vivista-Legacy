@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class Tag
 {
 	public Color color;
-	public int imageIndex;
+	public int shapeIndex;
 	public string name;
 }
 
@@ -13,7 +15,14 @@ public class TagManager : MonoBehaviour
 	public Sprite[] shapes;
 	public static TagManager Instance { get; private set; }
 
-	private List<Tag> tags;
+	public List<Tag> tags;
+
+	public static List<Tag> defaultTags = new List<Tag>
+	{
+		new Tag {name = "Instruction", color = new Color(0.8666667f, 0.8f, 0.4666667f), shapeIndex = 2},
+		new Tag {name = "Information", color = new Color(0.06666667f, 0.4666667f, 0.2f), shapeIndex = 1},
+		new Tag {name = "Test", color = new Color(0.5333334f, 0.8f, 0.9333334f), shapeIndex = 0},
+	};
 
 	void Start()
 	{
@@ -21,7 +30,7 @@ public class TagManager : MonoBehaviour
 		Instance = this;
 	}
 
-	public bool AddTag(string name, Color color, int imageIndex)
+	public bool AddTag(string name, Color color, int shapeIndex)
 	{
 		bool error = false;
 		for (int i = 0; i < tags.Count; i++)
@@ -33,7 +42,7 @@ public class TagManager : MonoBehaviour
 			}
 		}
 
-		if (string.IsNullOrEmpty(name))
+		if (String.IsNullOrEmpty(name))
 		{
 			error = true;
 		}
@@ -47,7 +56,7 @@ public class TagManager : MonoBehaviour
 		{
 			name = name,
 			color = color,
-			imageIndex = imageIndex
+			shapeIndex = shapeIndex
 		});
 
 		return true;

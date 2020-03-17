@@ -57,8 +57,10 @@ public static class SaveFile
 	public static string metaFilename = "meta.json";
 	public static string videoFilename = "main.mp4";
 	public static string thumbFilename = "thumb.jpg";
+	public static string tagsFilename = "tags.json";
 	public static string extraPath = "extra";
 	public static string miniaturesPath = "areaMiniatures";
+
 
 	public static string GetSaveFileContents(string path)
 	{
@@ -169,6 +171,36 @@ public static class SaveFile
 		return saveFileData;
 	}
 
+	public static List<Tag> ReadTags(string path)
+	{
+		string tagsname = Path.Combine(path, tagsFilename);
+
+		List<Tag> tags;
+
+		if (File.Exists(tagsname))
+		{
+			try
+			{
+				using (var fileContents = File.OpenText(tagsname))
+				{
+					string raw = fileContents.ReadToEnd();
+					tags = new List<Tag>(JsonHelper.ToArray<Tag>(raw));
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.LogError(e.ToString());
+				return null;
+			}
+		}
+		else
+		{
+			tags = TagManager.defaultTags;
+		}
+
+		return tags;
+	}
+
 	public static bool WriteFile(SaveFileData data)
 	{
 		var meta = data.meta;
@@ -224,8 +256,31 @@ public static class SaveFile
 
 		try
 		{
-			string jsonname = Path.Combine(path, SaveFile.metaFilename);
+			string jsonname = Path.Combine(path, metaFilename);
 			using (var file = File.CreateText(jsonname))
+			{
+				file.Write(sb.ToString());
+			}
+		}
+		catch (Exception e)
+		{
+			Debug.LogError(e.ToString());
+			return false;
+		}
+
+		return true;
+	}
+
+	public static bool WriteTags(string path, List<Tag> tags)
+	{
+		var sb = new StringBuilder();
+
+		sb.Append(JsonHelper.ToJson(tags.ToArray()));
+
+		try
+		{
+			string tagsname = Path.Combine(path, tagsFilename);
+			using (var file = File.CreateText(tagsname))
 			{
 				file.Write(sb.ToString());
 			}

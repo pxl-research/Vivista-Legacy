@@ -1167,8 +1167,9 @@ MonoBehaviour:
     type: 3}
   shapePickerPrefab: {fileID: 812945735584098055, guid: bc3920b43fcb9494c81ae04a212d7e96,
     type: 3}
-  tagItemPrefab: {fileID: 0}
-  tagItemHolder: {fileID: 0}
+  tagItemPrefab: {fileID: 3301482808315802712, guid: e3858a17fa2883a40b5c8bfe24b44430,
+    type: 3}
+  tagItemHolder: {fileID: 1956604569}
   newName: {fileID: 8492929647223049636}
   newColor: {fileID: 8492929646713201776}
   newShape: {fileID: 7206265320107879167}

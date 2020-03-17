@@ -1887,15 +1887,17 @@ public class Editor : MonoBehaviour
 			videoController.Screenshot(thumbname, 10, 1000, 1000);
 		}
 
+		SaveFile.WriteTags(path, TagManager.Instance.tags);
+
 		CleanExtras();
 		unsavedChanges = false;
 
 		return true;
 	}
 
-	private bool OpenFile(string path)
+	private bool OpenFile(string metaPath)
 	{
-		var data = SaveFile.OpenFile(path);
+		var data = SaveFile.OpenFile(metaPath);
 		meta = data.meta;
 		var videoPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), SaveFile.videoFilename);
 
@@ -1917,6 +1919,8 @@ public class Editor : MonoBehaviour
 		}
 
 		interactionPoints.Clear();
+
+		TagManager.Instance.tags = SaveFile.ReadTags(Path.Combine(Application.persistentDataPath, meta.guid.ToString()));
 
 		foreach (var point in data.points)
 		{
