@@ -138,7 +138,6 @@ public static class SaveFile
 		if (fileVersion < VERSION)
 		{
 			var saveFileDataCompat = ParseForVersion(raw, fileVersion);
-			UpgradeSaveFileToCurrent(saveFileDataCompat);
 			var currentSaveFile = ConvertCompatToCurrent(saveFileDataCompat);
 			WriteFile(currentSaveFile);
 		}
@@ -373,6 +372,7 @@ public static class SaveFile
 		return size;
 	}
 
+	//NOTE(Simon): Parses the input version to the compat version
 	public static SaveFileDataCompat ParseForVersion(string raw, int version)
 	{
 		switch (version)
@@ -380,14 +380,6 @@ public static class SaveFile
 			case 3: return ParseToCompatV3(raw);
 			default: throw new IndexOutOfRangeException("This save file is deprecated");
 		}
-	}
-
-	public static SaveFileDataCompat UpgradeSaveFileToCurrent(SaveFileDataCompat data)
-	{
-		//NOTE(Simon): Add versions any time savefile format is changed, see example:
-		//if (data.meta.version == 0) data = Upgrade0To1(data);
-
-		return data;
 	}
 
 	public static SaveFileData ConvertCompatToCurrent(SaveFileDataCompat compatData)
@@ -401,6 +393,10 @@ public static class SaveFile
 		return currentData;
 	}
 
+
+	//NOTE(Simon): These function parse a specific version to the current Compat class.
+	//NOTE(Simon): Add more of these when changing the savefile version.
+	#region Upgraders
 	public static SaveFileDataCompat ParseToCompatV3(string raw)
 	{
 		var saveFileData = new SaveFileDataCompat();
@@ -430,5 +426,5 @@ public static class SaveFile
 		}
 		return saveFileData;
 	}
-
+	#endregion
 }
