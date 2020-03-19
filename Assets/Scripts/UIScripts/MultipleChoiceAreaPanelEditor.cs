@@ -19,7 +19,11 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public List<Area> answerAreas;
 	public int answerCorrect;
+	public int answerTagId;
+	
 	public bool allowCancel => areaPicker == null;
+
+	public TagPicker tagPicker;
 
 	private bool editing;
 	private GameObject editingGo;
@@ -28,11 +32,11 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
-	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect)
+	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect, int tagId = -1)
 	{
 		guid = newGuid;
 		title.text = newTitle;
-		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		answerCorrect = newCorrect;
 		group = gameObject.AddComponent<ToggleGroup2>();
 
@@ -63,6 +67,8 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 		}
 
 		group.onToggleGroupChanged.AddListener(OnSelectCorrectArea);
+
+		tagPicker.Init(tagId);
 	}
 
 	void Update()
@@ -178,6 +184,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 		{
 			answered = true;
 			answerTitle = title.text;
+			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

@@ -11,7 +11,10 @@ public class TextPanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public string answerBody;
-	
+	public int answerTagId;
+
+	public TagPicker tagPicker;
+
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	void Start()
@@ -32,10 +35,12 @@ public class TextPanelEditor : MonoBehaviour
 		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, UIHelper.CalculateInputFieldHeight(body, 10));
 	}
 
-	public void Init(string initialTitle, string initialBody)
+	public void Init(string initialTitle, string initialBody, int tagId = -1)
 	{
 		title.text = initialTitle;
 		body.text = initialBody;
+
+		tagPicker.Init(tagId);
 	}
 
 	public void Answer()
@@ -58,6 +63,7 @@ public class TextPanelEditor : MonoBehaviour
 			answered = true;
 			answerTitle = title.text;
 			answerBody = body.text;
+			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

@@ -61,12 +61,14 @@ public class InteractionPointEditor
 	public string filename;
 	public double startTime;
 	public double endTime;
+	public int tagId;
 	public bool filled;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
 }
 
+//NOTE(Simon): If you change something here, update SaveFile and InteractionPointSerializeCompat as well
 public class InteractionPointSerialize
 {
 	public InteractionType type;
@@ -75,13 +77,14 @@ public class InteractionPointSerialize
 	public string filename;
 	public double startTime;
 	public double endTime;
+	public int tagId;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
 
 	public static InteractionPointSerialize FromCompat(InteractionPointSerializeCompat compat)
 	{
-		return new InteractionPointSerialize
+		var serialize = new InteractionPointSerialize
 		{
 			type = compat.type,
 			title = compat.title,
@@ -91,7 +94,11 @@ public class InteractionPointSerialize
 			endTime = compat.endTime,
 			returnRayOrigin = compat.returnRayOrigin,
 			returnRayDirection = compat.returnRayDirection,
+			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode those as default(T), 0 in case of an int. -1 means no tag
+			tagId = compat.tagId <= 0 ? -1 : compat.tagId
 		};
+
+		return serialize;
 	}
 }
 
@@ -113,6 +120,7 @@ public struct Timing
 	public float totalUploaded;
 }
 
+//NOTE(Simon): If you change something here, update SaveFile and MetaDataCompat as well
 public struct Metadata
 {
 	public int version;
@@ -125,7 +133,7 @@ public struct Metadata
 	{
 		return new Metadata
 		{
-			version = compat.version,
+			version = SaveFile.VERSION,
 			title = compat.title,
 			description = compat.description,
 			guid = compat.guid,
@@ -372,6 +380,7 @@ public class Editor : MonoBehaviour
 					type = InteractionType.None,
 					startTime = videoController.rawCurrentTime,
 					endTime = videoController.rawCurrentTime + (videoController.videoLength / 10),
+					tagId = -1,
 				};
 
 				lastPlacedPoint = point;
@@ -774,6 +783,7 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = String.Join("\f", newFilenames);
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 						finished = true;
 					}
@@ -790,6 +800,7 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 						finished = true;
 					}
@@ -811,6 +822,7 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 						finished = true;
 					}
@@ -832,6 +844,7 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 						finished = true;
 					}
@@ -847,6 +860,7 @@ public class Editor : MonoBehaviour
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
 						pointToEdit.body += String.Join("\f", editor.answerAnswers);
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -882,6 +896,7 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 						finished = true;
 					}
@@ -916,6 +931,7 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
+						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel;
 						finished = true;
 					}
@@ -1000,9 +1016,9 @@ public class Editor : MonoBehaviour
 			{
 
 				var guid = openPanel.GetComponent<ProjectPanel>().answerGuid;
-				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(guid, SaveFile.metaFilename));
+				var projectFolder = Path.Combine(Application.persistentDataPath, guid);
 
-				if (OpenFile(metaPath))
+				if (OpenFile(projectFolder))
 				{
 					SetEditorActive(true);
 					Destroy(openPanel);
@@ -1027,11 +1043,11 @@ public class Editor : MonoBehaviour
 			if (panel.answered)
 			{
 				var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
-				var metaPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.metaFilename));
+				var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
 				File.Copy(panel.answerPath, videoPath);
 
-				if (OpenFile(metaPath))
+				if (OpenFile(projectFolder))
 				{
 					Destroy(explorerPanel);
 					SetEditorActive(true);
@@ -1437,7 +1453,7 @@ public class Editor : MonoBehaviour
 					case InteractionType.Text:
 					{
 						interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body);
+						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body, point.tagId);
 						break;
 					}
 					case InteractionType.Image:
@@ -1449,7 +1465,7 @@ public class Editor : MonoBehaviour
 						{
 							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
 						}
-						interactionEditor.GetComponent<ImagePanelEditor>().Init(point.title, fullPaths);
+						interactionEditor.GetComponent<ImagePanelEditor>().Init(point.title, fullPaths, point.tagId);
 						break;
 					}
 					case InteractionType.Video:
@@ -1461,20 +1477,20 @@ public class Editor : MonoBehaviour
 					case InteractionType.MultipleChoice:
 					{
 						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'));
+						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'), point.tagId);
 						break;
 					}
 					case InteractionType.Audio:
 					{
 						interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
+						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename), point.tagId);
 						break;
 					}
 					case InteractionType.FindArea:
 					{
 						var areas = Area.ParseFromSave(point.filename, point.body);
 						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas);
+						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas, point.tagId);
 						break;
 					}
 					case InteractionType.MultipleChoiceArea:
@@ -1483,8 +1499,8 @@ public class Editor : MonoBehaviour
 						var correct = Int32.Parse(split[0]);
 						var areaJson = split[1];
 						var areas = Area.ParseFromSave(point.filename, areaJson);
-						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
-						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct);
+						interactionEditor = Instantiate(multipleChoiceAreaPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct, point.tagId);
 						break;
 					}
 					default:
@@ -1873,6 +1889,7 @@ public class Editor : MonoBehaviour
 					filename = point.filename,
 					startTime = point.startTime,
 					endTime = point.endTime,
+					tagId = point.tagId,
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
 				});
@@ -1895,9 +1912,9 @@ public class Editor : MonoBehaviour
 		return true;
 	}
 
-	private bool OpenFile(string metaPath)
+	private bool OpenFile(string projectFolder)
 	{
-		var data = SaveFile.OpenFile(metaPath);
+		var data = SaveFile.OpenFile(projectFolder);
 		meta = data.meta;
 		var videoPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), SaveFile.videoFilename);
 
@@ -1919,8 +1936,9 @@ public class Editor : MonoBehaviour
 		}
 
 		interactionPoints.Clear();
-
-		TagManager.Instance.tags = SaveFile.ReadTags(Path.Combine(Application.persistentDataPath, meta.guid.ToString()));
+		var tagsPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var tags = SaveFile.ReadTags(tagsPath);
+		TagManager.Instance.SetTags(tags);
 
 		foreach (var point in data.points)
 		{
@@ -1936,6 +1954,7 @@ public class Editor : MonoBehaviour
 				type = point.type,
 				filled = true,
 				point = newPoint,
+				tagId = point.tagId,
 				returnRayOrigin = point.returnRayOrigin,
 				returnRayDirection = point.returnRayDirection
 			};

@@ -18,6 +18,9 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public string answerQuestion;
 	public string[] answerAnswers;
 	public int answerCorrect;
+	public int answerTagId;
+
+	public TagPicker tagPicker;
 
 	private int answerCount;
 	private const int MAXANSWERS = 6;
@@ -25,7 +28,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
-	public void Init(string initialTitle, string[] initialAnswers = null)
+	public void Init(string initialTitle, string[] initialAnswers = null, int tagId = -1)
 	{
 		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup2>();
 		answerInputs = new List<InputField>();
@@ -49,8 +52,10 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 			AddAnswer(answer, answerCount == answerCorrect);
 		}
 
-		question.onValueChanged.AddListener(delegate { OnInputChangeColor(question); });
-		addAnswerButton.onClick.AddListener(delegate { OnButtonChangeColor(addAnswerButton); });
+		question.onValueChanged.AddListener(_ => OnInputChangeColor(question));
+		addAnswerButton.onClick.AddListener(() => OnButtonChangeColor(addAnswerButton));
+
+		tagPicker.Init(tagId);
 	}
 
 	public void AddAnswer()
@@ -141,6 +146,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 			}
 			var toggle = toggleGroup.ActiveToggles().First();
 			answerCorrect = toggle.transform.parent.GetSiblingIndex();
+			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

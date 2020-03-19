@@ -73,7 +73,7 @@ public class ProjectPanel : MonoBehaviour
 
 				try
 				{
-					var meta = SaveFile.OpenFile(Path.Combine(directory.FullName, SaveFile.metaFilename)).meta;
+					var meta = SaveFile.OpenFile(directory.FullName).meta;
 					string title;
 					if (meta.version > SaveFile.VERSION)
 					{
@@ -167,16 +167,16 @@ public class ProjectPanel : MonoBehaviour
 	{
 		SetIndex(files.Count - 1);
 
-		var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
+		var projectFolder = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
 
-		if (!Directory.Exists(path))
+		if (!Directory.Exists(projectFolder))
 		{
 			try
 			{
-				Directory.CreateDirectory(path);
-				File.Create(Path.Combine(path, ".editable")).Close();
-				Directory.CreateDirectory(Path.Combine(path, SaveFile.extraPath));
-				Directory.CreateDirectory(Path.Combine(path, SaveFile.miniaturesPath));
+				Directory.CreateDirectory(projectFolder);
+				File.Create(Path.Combine(projectFolder, ".editable")).Close();
+				Directory.CreateDirectory(Path.Combine(projectFolder, SaveFile.extraPath));
+				Directory.CreateDirectory(Path.Combine(projectFolder, SaveFile.miniaturesPath));
 			}
 			catch (Exception e)
 			{
@@ -195,7 +195,7 @@ public class ProjectPanel : MonoBehaviour
 				}
 			};
 
-			SaveFile.WriteFile(path, data);
+			SaveFile.WriteFile(projectFolder, data);
 		}
 		else
 		{

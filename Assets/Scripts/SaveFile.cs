@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
+//NOTE(Simon): If you change something here, update SaveFile and SaveFileDataCompat as well
 public class SaveFileData
 {
 	public Metadata meta;
@@ -16,6 +17,8 @@ public class SaveFileData
 	}
 }
 
+//NOTE(Simon): This is a compatibility structure. The idea is to keep all data in here that has ever been in SaveFileData.
+//NOTE(Simon): SaveFileData converts from this to the current version.
 public class SaveFileDataCompat
 {
 	public MetaDataCompat meta;
@@ -27,6 +30,8 @@ public class SaveFileDataCompat
 	}
 }
 
+//NOTE(Simon): This is a compatibility structure. The idea is to keep all data in here that has ever been in MetaData.
+//NOTE(Simon): MetaData converts from this to the current version.
 [Serializable]
 public class MetaDataCompat
 {
@@ -37,6 +42,8 @@ public class MetaDataCompat
 	public float length;
 }
 
+//NOTE(Simon): This is a compatibility structure. The idea is to keep all data in here that has ever been in InteractionPointSerialize.
+//NOTE(Simon): InteractionPointSerialize converts from this to the current version.
 [Serializable]
 public class InteractionPointSerializeCompat
 {
@@ -46,13 +53,15 @@ public class InteractionPointSerializeCompat
 	public string filename;
 	public double startTime;
 	public double endTime;
+	public int tagId;
+
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
 }
 
 public static class SaveFile
 {
-	public const int VERSION = 3;
+	public const int VERSION = 4;
 
 	public static string metaFilename = "meta.json";
 	public static string videoFilename = "main.mp4";
@@ -62,10 +71,10 @@ public static class SaveFile
 	public static string miniaturesPath = "areaMiniatures";
 
 
-	public static string GetSaveFileContents(string path)
+	public static string GetMetaContents(string projectFolder)
 	{
 		string str;
-		using (var fileContents = File.OpenText(path))
+		using (var fileContents = File.OpenText(Path.Combine(projectFolder, metaFilename)))
 		{
 			str = fileContents.ReadToEnd();
 		}
@@ -116,7 +125,7 @@ public static class SaveFile
 				var metaPath = Path.Combine(dir.FullName, metaFilename);
 				if (File.Exists(metaPath) && new FileInfo(metaPath).Length > 0)
 				{
-					var meta = OpenFile(metaPath).meta;
+					var meta = OpenFile(dir.FullName).meta;
 					if (meta.title == title)
 					{
 						return dir.FullName;
@@ -128,9 +137,9 @@ public static class SaveFile
 		return null;
 	}
 
-	public static SaveFileData OpenFile(string path)
+	public static SaveFileData OpenFile(string projectFolder)
 	{
-		var raw = GetSaveFileContents(path);
+		var raw = GetMetaContents(projectFolder);
 
 		var result = JsonGetValueFromLine(raw, 0);
 		int fileVersion = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
@@ -139,12 +148,12 @@ public static class SaveFile
 		{
 			var saveFileDataCompat = ParseForVersion(raw, fileVersion);
 			var currentSaveFile = ConvertCompatToCurrent(saveFileDataCompat);
-			WriteFile(currentSaveFile);
+			WriteFile(projectFolder, currentSaveFile);
 		}
 
 		var saveFileData = new SaveFileData();
 
-		raw = GetSaveFileContents(path);
+		raw = GetMetaContents(projectFolder);
 		result = JsonGetValueFromLine(raw, 0);
 		saveFileData.meta.version = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
 
@@ -170,9 +179,9 @@ public static class SaveFile
 		return saveFileData;
 	}
 
-	public static List<Tag> ReadTags(string path)
+	public static List<Tag> ReadTags(string projectFolder)
 	{
-		string tagsname = Path.Combine(path, tagsFilename);
+		string tagsname = Path.Combine(projectFolder, tagsFilename);
 
 		List<Tag> tags;
 
@@ -209,7 +218,7 @@ public static class SaveFile
 		return WriteFile(path, data);
 	}
 
-	public static bool WriteFile(string path, SaveFileData data)
+	public static bool WriteFile(string projectFolder, SaveFileData data)
 	{
 		var sb = new StringBuilder();
 		var meta = data.meta;
@@ -255,7 +264,7 @@ public static class SaveFile
 
 		try
 		{
-			string jsonname = Path.Combine(path, metaFilename);
+			string jsonname = Path.Combine(projectFolder, metaFilename);
 			using (var file = File.CreateText(jsonname))
 			{
 				file.Write(sb.ToString());
@@ -270,7 +279,7 @@ public static class SaveFile
 		return true;
 	}
 
-	public static bool WriteTags(string path, List<Tag> tags)
+	public static bool WriteTags(string projectFolder, List<Tag> tags)
 	{
 		var sb = new StringBuilder();
 
@@ -278,7 +287,7 @@ public static class SaveFile
 
 		try
 		{
-			string tagsname = Path.Combine(path, tagsFilename);
+			string tagsname = Path.Combine(projectFolder, tagsFilename);
 			using (var file = File.CreateText(tagsname))
 			{
 				file.Write(sb.ToString());
@@ -377,7 +386,8 @@ public static class SaveFile
 	{
 		switch (version)
 		{
-			case 3: return ParseToCompatV3(raw);
+			case 3: return ParseToCompatV3toV4(raw);
+			case 4: return ParseToCompatV3toV4(raw);
 			default: throw new IndexOutOfRangeException("This save file is deprecated");
 		}
 	}
@@ -397,7 +407,7 @@ public static class SaveFile
 	//NOTE(Simon): These function parse a specific version to the current Compat class.
 	//NOTE(Simon): Add more of these when changing the savefile version.
 	#region Upgraders
-	public static SaveFileDataCompat ParseToCompatV3(string raw)
+	public static SaveFileDataCompat ParseToCompatV3toV4(string raw)
 	{
 		var saveFileData = new SaveFileDataCompat();
 

@@ -21,6 +21,9 @@ public class ImagePanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public List<string> answerURLs;
+	public int answerTagId;
+
+	public TagPicker tagPicker;
 
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
@@ -57,10 +60,10 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 	}
 
-	public void Init(string initialTitle, List<string> initialURLs)
+	public void Init(string initialTitle, List<string> initialURLs, int tagId = -1)
 	{
 		title.text = initialTitle;
-		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+		title.onValueChanged.AddListener(_ => OnInputChange(title));
 
 		if (initialURLs != null)
 		{
@@ -72,6 +75,8 @@ public class ImagePanelEditor : MonoBehaviour
 
 		UpdateAlbumSortButtons();
 		imageEditorState = ImageEditorState.Showing;
+
+		tagPicker.Init(tagId);
 	}
 
 	public void Browse()
@@ -110,6 +115,7 @@ public class ImagePanelEditor : MonoBehaviour
 			{
 				answerURLs.Add(entry.url);
 			}
+			answerTagId = tagPicker.currentTagId;
 		}
 	}
 
