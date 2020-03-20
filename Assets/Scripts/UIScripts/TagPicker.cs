@@ -111,12 +111,14 @@ public class TagPicker : MonoBehaviour
 		if (currentTag == null)
 		{
 			tagItemText.text = "No tag selected";
+			tagItemText.color = Color.black;
 			tagItemColor.color = Color.white;
 			tagItemShape.sprite = null;
 		}
 		else
 		{
 			tagItemText.text = currentTag.name;
+			tagItemText.color = currentTag.color.IdealTextColor();
 			tagItemColor.color = currentTag.color;
 			tagItemShape.sprite = TagManager.Instance.ShapeForIndex(currentTag.shapeIndex);
 		}
