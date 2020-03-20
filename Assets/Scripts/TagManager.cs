@@ -64,6 +64,8 @@ public class TagManager : MonoBehaviour
 			shapeIndex = shapeIndex
 		});
 
+		UnsavedChangesTracker.Instance.unsavedChanges = true;
+
 		return true;
 	}
 
@@ -77,6 +79,8 @@ public class TagManager : MonoBehaviour
 				break;
 			}
 		}
+
+		UnsavedChangesTracker.Instance.unsavedChanges = true;
 	}
 
 	public Tag GetTagById(int tagId)

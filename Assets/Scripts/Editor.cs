@@ -144,12 +144,9 @@ public struct Metadata
 
 public class Editor : MonoBehaviour
 {
-	public EditorState editorState;
+	public static Editor Instance;
 
-	private bool unsavedChanges;
-	private bool forceQuit;
-	public GameObject unsavedChangesPanelPrefab;
-	public GameObject unsavedChangesNotification;
+	public EditorState editorState;
 
 	public GameObject timeTooltipPrefab;
 	public GameObject interactionPointPrefab;
@@ -231,6 +228,7 @@ public class Editor : MonoBehaviour
 
 	private void Awake()
 	{
+		Instance = this;
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
 		UnityEngine.XR.XRSettings.enabled = false;
 		Screen.SetResolution(1600, 900, FullScreenMode.Windowed);
@@ -256,8 +254,6 @@ public class Editor : MonoBehaviour
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
 		VideoControls.videoController = videoController;
-
-		Application.wantsToQuit += OnWantsToQuit;
 
 		//NOTE(Simon): Login if details were remembered
 		{
@@ -297,8 +293,6 @@ public class Editor : MonoBehaviour
 		{
 			UpdateTimeline();
 		}
-
-		unsavedChangesNotification.SetActive(unsavedChanges);
 
 		//Note(Simon): Create a reversed raycast to find positions on the sphere with
 		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -684,7 +678,7 @@ public class Editor : MonoBehaviour
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				lastPlacedPoint.filled = true;
-				unsavedChanges = true;
+				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 
 			if (allowCancel && Input.GetKeyDown(KeyCode.Escape))
@@ -741,7 +735,7 @@ public class Editor : MonoBehaviour
 
 				SetEditorActive(true);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
-				unsavedChanges = true;
+				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -951,7 +945,7 @@ public class Editor : MonoBehaviour
 				{
 					pointToEdit.panel.SetActive(false);
 				}
-				unsavedChanges = true;
+				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 		}
 
@@ -1026,7 +1020,7 @@ public class Editor : MonoBehaviour
 					InitExtrasList();
 					//NOTE(Simon): When opening a project, any previous to-be-deleted-or-copied files are not relevant anymore. So clear them
 					CleanExtras();
-					unsavedChanges = false;
+					UnsavedChangesTracker.Instance.unsavedChanges = false;
 				}
 				else
 				{
@@ -1052,7 +1046,7 @@ public class Editor : MonoBehaviour
 					Destroy(explorerPanel);
 					SetEditorActive(true);
 					Canvass.modalBackground.SetActive(false);
-					unsavedChanges = true;
+					UnsavedChangesTracker.Instance.unsavedChanges = true;
 				}
 				else
 				{
@@ -1227,7 +1221,7 @@ public class Editor : MonoBehaviour
 		{
 			Destroy(point.panel);
 		}
-		unsavedChanges = true;
+		UnsavedChangesTracker.Instance.unsavedChanges = true;
 	}
 
 	private void UpdateTimeline()
@@ -1629,7 +1623,7 @@ public class Editor : MonoBehaviour
 					isDraggingTimelineItem = false;
 					timelineItemBeingDragged = null;
 					timeTooltip.ResetPosition();
-					unsavedChanges = true;
+					UnsavedChangesTracker.Instance.unsavedChanges = true;
 				}
 				else
 				{
@@ -1657,7 +1651,7 @@ public class Editor : MonoBehaviour
 					isResizingTimelineItem = false;
 					timelineItemBeingResized = null;
 					timeTooltip.ResetPosition();
-					unsavedChanges = true;
+					UnsavedChangesTracker.Instance.unsavedChanges = true;
 				}
 				else
 				{
@@ -1743,49 +1737,6 @@ public class Editor : MonoBehaviour
 			color);
 	}
 
-	public bool OnWantsToQuit()
-	{
-		if (forceQuit)
-		{
-			return true;
-		}
-
-		if (unsavedChanges)
-		{
-			var go = Instantiate(unsavedChangesPanelPrefab);
-			go.transform.SetParent(Canvass.main.transform, false);
-			var panel = go.GetComponent<UnsavedChangesPanel>();
-			Canvass.modalBackground.SetActive(true);
-
-			panel.OnSave += () =>
-			{
-				if (SaveToFile(false))
-				{
-					forceQuit = true;
-					Application.Quit();
-				}
-				else
-				{
-					Debug.LogError("Something went wrong while saving the file");
-				}
-			};
-			panel.OnDiscard += () =>
-			{
-				forceQuit = true;
-				Application.Quit();
-			};
-			panel.OnCancel += () =>
-			{
-				Destroy(panel.gameObject);
-				Canvass.modalBackground.SetActive(false);
-			};
-
-			return false;
-		}
-
-		return true;
-	}
-
 	public void OnDrag(BaseEventData e)
 	{
 		if (Input.GetMouseButton(1))
@@ -1865,7 +1816,7 @@ public class Editor : MonoBehaviour
 		tagPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
-	private bool SaveToFile(bool makeThumbnail = true)
+	public bool SaveToFile(bool makeThumbnail = true)
 	{
 		string path = SaveFile.GetPathForTitle(meta.title);
 		string videoPath = Path.Combine(path, SaveFile.videoFilename);
@@ -1907,7 +1858,7 @@ public class Editor : MonoBehaviour
 		SaveFile.WriteTags(path, TagManager.Instance.tags);
 
 		CleanExtras();
-		unsavedChanges = false;
+		UnsavedChangesTracker.Instance.unsavedChanges = false;
 
 		return true;
 	}
