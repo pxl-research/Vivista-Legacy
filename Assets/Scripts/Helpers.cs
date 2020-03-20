@@ -97,3 +97,34 @@ public static class MathHelper
 		return newRay;
 	}
 }
+
+public class JsonHelper
+{
+	public static T[] ToArray<T>(string json)
+	{
+		var wrapper = JsonUtility.FromJson<Wrapper<T>>(json);
+		return wrapper.array;
+	}
+
+	public static string ToJson<T>(T[] array)
+	{
+		var wrapper = new Wrapper<T> { array = array };
+		return JsonUtility.ToJson(wrapper);
+	}
+
+	[Serializable]
+	private class Wrapper<T>
+	{
+		public T[] array;
+	}
+}
+
+public static class ColorHelper
+{
+	public static Color IdealTextColor(this Color backgroundColor)
+	{
+		double luma = 0.299 * backgroundColor.r + 0.587 * backgroundColor.g + 0.114 * backgroundColor.b;
+
+		return luma > 0.5 ? Color.black : Color.white;
+	}
+}
