@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -45,7 +46,8 @@ public class TagPicker : MonoBehaviour
 			Destroy(suggestion.gameObject);
 		}
 
-		var tags = TagManager.Instance.Filter(text);
+		var tags = new List<Tag> {Tag.Default};
+		tags.AddRange(TagManager.Instance.Filter(text));
 
 		for (int i = 0; i < tags.Count; i++)
 		{
@@ -76,6 +78,7 @@ public class TagPicker : MonoBehaviour
 			var labelText = label.AddComponent<Text>();
 			labelText.fontSize = 14;
 			labelText.text = tags[i].name;
+			labelText.color = tags[i].color.IdealTextColor();
 			labelText.alignment = TextAnchor.MiddleLeft;
 			labelText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
@@ -91,6 +94,10 @@ public class TagPicker : MonoBehaviour
 
 			var shapeImage = shape.AddComponent<Image>();
 			shapeImage.sprite = TagManager.Instance.ShapeForIndex(tags[i].shapeIndex);
+			if (tags[i].id == -1)
+			{
+				shapeImage.sprite = null;
+			}
 		}
 		
 	}
@@ -108,19 +115,14 @@ public class TagPicker : MonoBehaviour
 
 	void UpdateTag()
 	{
-		if (currentTag == null)
+		tagItemText.text = currentTag.name;
+		tagItemText.color = currentTag.color.IdealTextColor();
+		tagItemColor.color = currentTag.color;
+		tagItemShape.sprite = TagManager.Instance.ShapeForIndex(currentTag.shapeIndex);
+
+		if (currentTag.id == -1)
 		{
-			tagItemText.text = "No tag selected";
-			tagItemText.color = Color.black;
-			tagItemColor.color = Color.white;
 			tagItemShape.sprite = null;
-		}
-		else
-		{
-			tagItemText.text = currentTag.name;
-			tagItemText.color = currentTag.color.IdealTextColor();
-			tagItemColor.color = currentTag.color;
-			tagItemShape.sprite = TagManager.Instance.ShapeForIndex(currentTag.shapeIndex);
 		}
 	}
 }

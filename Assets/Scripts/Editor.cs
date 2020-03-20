@@ -285,7 +285,7 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
 		foreach (var point in sortedInteractionPoints)
 		{
-			point.point.GetComponent<MeshRenderer>().material.color = Color.white;
+			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagById(point.tagId).color;
 			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		}
 
@@ -337,7 +337,7 @@ public class Editor : MonoBehaviour
 
 			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints")))
 			{
-				hit.collider.GetComponentInParent<MeshRenderer>().material.color = Color.red;
+				hit.collider.GetComponentInParent<SpriteRenderer>().color = Color.red;
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -515,6 +515,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						finished = true;
@@ -531,6 +532,7 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<TextPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						finished = true;
@@ -550,6 +552,7 @@ public class Editor : MonoBehaviour
 						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						finished = true;
@@ -570,6 +573,7 @@ public class Editor : MonoBehaviour
 
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						finished = true;
@@ -586,6 +590,7 @@ public class Editor : MonoBehaviour
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
 						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -621,6 +626,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = jsonMiniatures.ToString();
 						lastPlacedPoint.body = jsonAreas.ToString();
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						panel.GetComponent<FindAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas);
@@ -658,6 +664,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = jsonAreas.ToString();
 						lastPlacedPoint.filename = jsonMiniatures.ToString();
+						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel;
 
 						panel.GetComponent<MultipleChoiceAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
@@ -678,6 +685,7 @@ public class Editor : MonoBehaviour
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				lastPlacedPoint.filled = true;
+				SetInteractionPointTag(lastPlacedPoint);
 				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 
@@ -945,6 +953,7 @@ public class Editor : MonoBehaviour
 				{
 					pointToEdit.panel.SetActive(false);
 				}
+				SetInteractionPointTag(pointToEdit);
 				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 		}
@@ -1720,7 +1729,7 @@ public class Editor : MonoBehaviour
 
 	public void HighlightPoint(InteractionPointEditor point)
 	{
-		point.point.GetComponent<MeshRenderer>().material.color = Color.red;
+		point.point.GetComponent<SpriteRenderer>().color = Color.red;
 	}
 
 	public void DrawLineAtTime(double time, float thickness, Color color)
@@ -1987,16 +1996,9 @@ public class Editor : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 
-			try
-			{
-				newInteractionPoint.panel.SetActive(false);
-			}
-			catch (NullReferenceException e)
-			{
-				Debug.LogErrorFormat($"{e}, {e.Message}");
-			}
-
+			newInteractionPoint.panel.SetActive(false);
 			AddItemToTimeline(newInteractionPoint, true);
+			SetInteractionPointTag(newInteractionPoint);
 		}
 
 		StartCoroutine(UpdatePointPositions());
@@ -2028,6 +2030,17 @@ public class Editor : MonoBehaviour
 				interactionPoint.panel.transform.position = drawLocation;
 			}
 		}
+	}
+
+	private void SetInteractionPointTag(InteractionPointEditor point)
+	{
+		var shape = point.point.GetComponent<SpriteRenderer>();
+		var text = point.point.GetComponentInChildren<TextMesh>();
+		var tag = TagManager.Instance.GetTagById(point.tagId);
+		
+		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
+		shape.color = tag.color;
+		text.color = tag.color.IdealTextColor();
 	}
 
 	private IEnumerator UploadFile()

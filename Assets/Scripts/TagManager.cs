@@ -9,6 +9,15 @@ public class Tag
 	public Color color;
 	public int shapeIndex;
 	public string name;
+
+	public static Tag Default =>
+		new Tag
+		{
+			name = "No tag",
+			color = Color.white,
+			id = -1,
+			shapeIndex = 0
+		};
 }
 
 public class TagManager : MonoBehaviour
@@ -87,7 +96,7 @@ public class TagManager : MonoBehaviour
 	{
 		if (tagId <= 0 || tagId > indexCounter)
 		{
-			return null;
+			return Tag.Default;
 		}
 
 		for (int i = 0; i < tags.Count; i++)
@@ -98,7 +107,7 @@ public class TagManager : MonoBehaviour
 			}
 		}
 
-		return null;
+		return Tag.Default;
 	}
 
 	public Sprite ShapeForIndex(int index)

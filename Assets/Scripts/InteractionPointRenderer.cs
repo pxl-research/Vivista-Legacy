@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class InteractionPoints : MonoBehaviour
+public class InteractionPointRenderer : MonoBehaviour
 {
 	void Start()
 	{
