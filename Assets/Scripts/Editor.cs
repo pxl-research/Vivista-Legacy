@@ -53,7 +53,7 @@ public enum Perspective
 public class InteractionPointEditor
 {
 	public GameObject point;
-	public GameObject timelineRow;
+	public TimelineRow timelineRow;
 	public GameObject panel;
 	public InteractionType type;
 	public string title;
@@ -1206,8 +1206,8 @@ public class Editor : MonoBehaviour
 	private void AddItemToTimeline(InteractionPointEditor point, bool hidden)
 	{
 		var newRow = Instantiate(timelineRowPrefab);
-		point.timelineRow = newRow;
-		newRow.transform.SetParent(timeline);
+		point.timelineRow = newRow.GetComponent<TimelineRow>();
+		point.timelineRow.transform.SetParent(timeline);
 
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
@@ -1216,7 +1216,7 @@ public class Editor : MonoBehaviour
 		interactionPoints.Add(point);
 		if (point.panel != null && hidden)
 		{
-			newRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>().SetState(true);
+			point.timelineRow.view.SetState(true);
 			point.panel.SetActive(false);
 		}
 	}
@@ -1327,14 +1327,14 @@ public class Editor : MonoBehaviour
 
 			for (int i = 0; i < realNumLabels; i++)
 			{
-				var time = (i + numTicksOffScreen) * closestNiceTime;
-				if (time >= 0 && time <= timelineEndTime)
+				var tickTime = (i + numTicksOffScreen) * closestNiceTime;
+				if (tickTime >= 0 && tickTime <= timelineEndTime)
 				{
 					headerLabels[i].enabled = true;
-					headerLabels[i].text = MathHelper.FormatSeconds(time);
-					headerLabels[i].rectTransform.position = new Vector2(TimeToPx(time), headerLabels[i].rectTransform.position.y);
+					headerLabels[i].text = MathHelper.FormatSeconds(tickTime);
+					headerLabels[i].rectTransform.position = new Vector2(TimeToPx(tickTime), headerLabels[i].rectTransform.position.y);
 
-					DrawLineAtTime(time, 1, new Color(0, 0, 0, 47f / 255));
+					DrawLineAtTime(tickTime, 1, new Color(0, 0, 0, 47f / 255));
 				}
 				else
 				{
@@ -1347,8 +1347,8 @@ public class Editor : MonoBehaviour
 		foreach (var point in interactionPoints)
 		{
 			var row = point.timelineRow;
-			var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
-			row.GetComponentInChildren<Text>().text = point.title;
+			var indicatorRect = row.indicator.rectTransform;
+			row.title.text = point.title;
 
 			var zoomedStartTime = point.startTime;
 			var zoomedEndTime = point.endTime;
@@ -1364,8 +1364,8 @@ public class Editor : MonoBehaviour
 				if (point.endTime > timelineWindowEndTime) { zoomedEndTime = timelineWindowEndTime; }
 			}
 
-			imageRect.position = new Vector2(TimeToPx(zoomedStartTime), imageRect.position.y);
-			imageRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), imageRect.sizeDelta.y);
+			indicatorRect.position = new Vector2(TimeToPx(zoomedStartTime), indicatorRect.position.y);
+			indicatorRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), indicatorRect.sizeDelta.y);
 
 		}
 
@@ -1373,9 +1373,9 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Colors
 		foreach (var point in interactionPoints)
 		{
-			var image = point.timelineRow.transform.Find("Content/Image").gameObject.GetComponent<Image>();
+			var indicator = point.timelineRow.indicator;
 
-			image.color = timelineColors[colorIndex];
+			indicator.color = timelineColors[colorIndex];
 			colorIndex = (colorIndex + 1) % timelineColors.Count;
 		}
 
@@ -1393,15 +1393,33 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		//NOTE(Simon): Timeline tag sprites
+		foreach (var point in interactionPoints)
+		{
+			var sprite = point.timelineRow.tagShape;
+			var tag = TagManager.Instance.GetTagById(point.tagId);
+			sprite.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
+			sprite.color = tag.color;
+		}
+
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
 		for (var i = interactionPoints.Count - 1; i >= 0; i--)
 		{
 			var point = interactionPoints[i];
-			//TODO(Simon): See if we can get rid of these name based lookups
-			var edit = point.timelineRow.transform.Find("Content/Edit").gameObject.GetComponent<Button2>();
-			var delete = point.timelineRow.transform.Find("Content/Delete").gameObject.GetComponent<Button2>();
-			var move = point.timelineRow.transform.Find("Content/Move").gameObject.GetComponent<Toggle2>();
-			var view = point.timelineRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>();
+			var edit = point.timelineRow.edit;
+			var delete = point.timelineRow.delete;
+			var move = point.timelineRow.move;
+			var view = point.timelineRow.view;
+
+			var editRect = edit.GetComponent<RectTransform>();
+			var deleteRect = delete.GetComponent<RectTransform>();
+			var moveRect = move.GetComponent<RectTransform>();
+			var viewRect = view.GetComponent<RectTransform>();
+
+			deleteRect.position = new Vector3(timelineOffsetPixels - 20, deleteRect.position.y);
+			viewRect.position = new Vector3(timelineOffsetPixels - 40, viewRect.position.y);
+			editRect.position = new Vector3(timelineOffsetPixels - 60, editRect.position.y);
+			moveRect.position = new Vector3(timelineOffsetPixels - 80, moveRect.position.y);
 
 			if (!point.filled)
 			{
@@ -1563,8 +1581,7 @@ public class Editor : MonoBehaviour
 			Texture2D desiredCursor = null;
 			foreach (var point in interactionPoints)
 			{
-				var row = point.timelineRow;
-				var imageRect = row.transform.GetComponentInChildren<Image>().rectTransform;
+				var imageRect = point.timelineRow.indicator.rectTransform;
 
 				Vector2 rectPixel;
 				RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, Input.mousePosition, null, out rectPixel);
@@ -1643,7 +1660,7 @@ public class Editor : MonoBehaviour
 						timelineItemBeingDragged.startTime = newStart;
 						timelineItemBeingDragged.endTime = newEnd;
 
-						var imageRect = timelineItemBeingDragged.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+						var imageRect = timelineItemBeingDragged.timelineRow.indicator.rectTransform;
 						var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width / 2,
 													imageRect.position.y + imageRect.rect.height / 2);
 
@@ -1670,7 +1687,7 @@ public class Editor : MonoBehaviour
 						if (newStart < timelineItemBeingResized.endTime - 0.2f)
 						{
 							timelineItemBeingResized.startTime = newStart;
-							var imageRect = timelineItemBeingResized.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+							var imageRect = timelineItemBeingResized.timelineRow.indicator.rectTransform;
 							var tooltipPos = new Vector2(imageRect.position.x,
 													imageRect.position.y + imageRect.rect.height / 2);
 
@@ -1683,7 +1700,7 @@ public class Editor : MonoBehaviour
 						if (newEnd > timelineItemBeingResized.startTime + 0.2f)
 						{
 							timelineItemBeingResized.endTime = newEnd;
-							var imageRect = timelineItemBeingResized.timelineRow.transform.GetComponentInChildren<Image>().rectTransform;
+							var imageRect = timelineItemBeingResized.timelineRow.indicator.rectTransform;
 							var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width,
 													imageRect.position.y + imageRect.rect.height / 2);
 
