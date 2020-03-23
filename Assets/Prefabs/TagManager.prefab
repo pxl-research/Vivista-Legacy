@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7662859986511738581
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7662859986511738579}
+  - component: {fileID: 7662859986511738580}
+  m_Layer: 0
+  m_Name: TagManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7662859986511738579
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7662859986511738581}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7662859986511738580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7662859986511738581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e87169149dbfdaf439ecf380fd28bef0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shapes:
+  - {fileID: -8976616514968600313, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: 962806293248896454, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: -8138782370738992367, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: -115080129212707553, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: -5455399344394033347, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: -400089606742243520, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: 5405397178528234592, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: 5341752473459613567, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: -2012704646310039801, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: -1903021783651021885, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  - {fileID: 5356207006763469801, guid: f2440bbb3c6a773489ac232b5c33a458, type: 3}
+  tags: []

@@ -391,12 +391,12 @@ public class IndexPanel : MonoBehaviour
 
 		for (var i = (page - 1) * videosPerPage; i < Mathf.Min(page * videosPerPage, localVideos.Length); i++)
 		{
-			var path = localVideos[i].FullName;
-			var folderInfo = new DirectoryInfo(path);
+			var projectPath = localVideos[i].FullName;
+			var folderInfo = new DirectoryInfo(projectPath);
 
 			try
 			{
-				var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
+				var data = SaveFile.OpenFile(projectPath);
 
 				loadedVideos.videos.Add(new VideoSerialize
 				{

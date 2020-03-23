@@ -27,6 +27,7 @@ public class InteractionPointPlayer
 	public string filename;
 	public double startTime;
 	public double endTime;
+	public int tagId;
 	public bool isSeen;
 
 	public Vector3 returnRayOrigin;
@@ -284,8 +285,8 @@ public class Player : MonoBehaviour
 
 			if (panel.answered)
 			{
-				var metaFilename = Path.Combine(Application.persistentDataPath, Path.Combine(panel.answerVideoId, SaveFile.metaFilename));
-				if (OpenFile(metaFilename))
+				var projectPath = Path.Combine(Application.persistentDataPath, panel.answerVideoId);
+				if (OpenFile(projectPath))
 				{
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
@@ -377,12 +378,16 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	private bool OpenFile(string path)
+	private bool OpenFile(string projectPath)
 	{
-		data = SaveFile.OpenFile(path);
+		data = SaveFile.OpenFile(projectPath);
 
 		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
 		fileLoader.LoadFile(openVideo);
+
+		var tagsPath = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString());
+		var tags = SaveFile.ReadTags(tagsPath);
+		TagManager.Instance.SetTags(tags);
 
 		//NOTE(Simon): Sort all interactionpoints based on their timing
 		data.points.Sort((x, y) => x.startTime != y.startTime
@@ -402,6 +407,7 @@ public class Player : MonoBehaviour
 				filename = point.filename,
 				type = point.type,
 				point = newPoint,
+				tagId = point.tagId,
 				returnRayOrigin = point.returnRayOrigin,
 				returnRayDirection = point.returnRayDirection
 			};
@@ -550,6 +556,19 @@ public class Player : MonoBehaviour
 		point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		point.panel.SetActive(false);
 		interactionPoints.Add(point);
+
+		SetInteractionPointTag(point);
+	}
+
+	private void SetInteractionPointTag(InteractionPointPlayer point)
+	{
+		var shape = point.point.GetComponent<SpriteRenderer>();
+		var text = point.point.GetComponentInChildren<TextMesh>();
+		var tag = TagManager.Instance.GetTagById(point.tagId);
+
+		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
+		shape.color = tag.color;
+		text.color = tag.color.IdealTextColor();
 	}
 
 	private void RemoveInteractionPoint(InteractionPointPlayer point)
