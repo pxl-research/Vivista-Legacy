@@ -1281,6 +1281,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: TimelineContainer
       objectReference: {fileID: 0}
+    - target: {fileID: 114293190899085230, guid: aab3be2d16499724cad8f16cf9eb9366,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114293190899085230, guid: aab3be2d16499724cad8f16cf9eb9366,
+        type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 114338803187610216, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -1632,13 +1642,6 @@ MonoBehaviour:
     type: 3}
   labelPrefab: {fileID: 114245306502253168, guid: 1efc485e7ab1a5d41bb9ec14d2431504,
     type: 3}
-  timelineColors:
-  - {r: 0.6993463, g: 0.41176468, b: 1, a: 1}
-  - {r: 1, g: 0.41176468, b: 0.72972983, a: 1}
-  - {r: 0.36937714, g: 0.89705884, b: 0.36937714, a: 1}
-  - {r: 1, g: 0.7403651, b: 0.41176468, a: 1}
-  - {r: 0.41176468, g: 0.41582143, b: 1, a: 1}
-  - {r: 1, g: 0.9837728, b: 0.41176468, a: 1}
 --- !u!224 &1802637137
 RectTransform:
   m_ObjectHideFlags: 0
