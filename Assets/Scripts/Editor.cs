@@ -213,7 +213,8 @@ public class Editor : MonoBehaviour
 	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingTimelineItem;
 	private bool isResizingStart;
-	private bool isResizingTimeline;
+	private bool isResizingTimelineVertical;
+	private bool isResizingTimelineHorizontal;
 	private TimeTooltip timeTooltip;
 
 	private Metadata meta;
@@ -221,8 +222,6 @@ public class Editor : MonoBehaviour
 	private UploadStatus uploadStatus;
 	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
 
-	public List<Color> timelineColors;
-	private int colorIndex;
 	private int interactionPointCount;
 
 
@@ -1369,14 +1368,11 @@ public class Editor : MonoBehaviour
 
 		}
 
-		colorIndex = 0;
 		//Note(Simon): Colors
 		foreach (var point in interactionPoints)
 		{
-			var indicator = point.timelineRow.indicator;
-
-			indicator.color = timelineColors[colorIndex];
-			colorIndex = (colorIndex + 1) % timelineColors.Count;
+			var tagColor = TagManager.Instance.GetTagById(point.tagId).color;
+			point.timelineRow.indicator.color = tagColor;
 		}
 
 		//NOTE(Simon): Highlight interactionPoint
@@ -1561,7 +1557,7 @@ public class Editor : MonoBehaviour
 			DrawLineAtTime(Seekbar.instance.lastSmoothTime * videoController.videoLength, 3, new Color(0, 0, 0, 100f / 255));
 
 			//NOTE(Simon): Top line. Only draw when inside timeline.
-			var offset = new Vector3(0, -3);
+			var offset = new Vector3(0, 0);
 			if (timeline.localPosition.y < timelineHeader.rect.height - offset.y)
 			{
 				var headerCoords = new Vector3[4];
@@ -1714,22 +1710,34 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Resizing of timeline
 		{
-			if (isResizingTimeline)
+			if (isResizingTimelineVertical)
 			{
 				if (Input.GetMouseButtonUp(0))
 				{
-					isResizingTimeline = false;
+					isResizingTimelineVertical = false;
 					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
 				}
-				timelineContainer.sizeDelta += mouseDelta;
+				var resizeDelta = new Vector2(0, mouseDelta.y);
+				timelineContainer.sizeDelta += resizeDelta;
+			}
+			else if (isResizingTimelineHorizontal)
+			{
+				if (Input.GetMouseButtonUp(0))
+				{
+					isResizingTimelineHorizontal = false;
+					Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+				}
+				
+				var resizeDelta = new Vector2(mouseDelta.x, 0);
+				timelineHeader.GetComponentInChildren<Text>().rectTransform.sizeDelta += resizeDelta;
+				DrawLineAtTime(0, 2, Color.black);
 			}
 			else
 			{
-				var coords = new Vector3[4];
-				timelineContainer.GetWorldCorners(coords);
-
-				if (Input.mousePosition.y > coords[1].y - 2
-					&& Input.mousePosition.y < coords[1].y + 2)
+				var verticalRect = new Rect(new Vector2(0, timelineContainer.rect.height - 4), new Vector2(timelineContainer.rect.width, 4));
+				var horizontalRect = new Rect(new Vector2(timelineOffsetPixels - 2, 0), new Vector2(4, timelineContainer.rect.height - timelineHeader.sizeDelta.y));
+				
+				if (verticalRect.Contains(Input.mousePosition))
 				{
 					if (!Cursors.isOverridingCursor)
 					{
@@ -1737,7 +1745,19 @@ public class Editor : MonoBehaviour
 					}
 					if (Input.GetMouseButtonDown(0))
 					{
-						isResizingTimeline = true;
+						isResizingTimelineVertical = true;
+					}
+				}
+				else if (horizontalRect.Contains(Input.mousePosition))
+				{
+					DrawLineAtTime(0, 2, Color.black);
+					if (!Cursors.isOverridingCursor)
+					{
+						Cursor.SetCursor(Cursors.Instance.CursorResizeHorizontal, new Vector2(15, 15), CursorMode.Auto);
+					}
+					if (Input.GetMouseButtonDown(0))
+					{
+						isResizingTimelineHorizontal = true;
 					}
 				}
 			}
@@ -1758,7 +1778,7 @@ public class Editor : MonoBehaviour
 
 		UILineRenderer.DrawLine(
 			new Vector2(timePx, 0),
-			new Vector2(timePx, containerHeight - headerHeight),
+			new Vector2(timePx, containerHeight - headerHeight + 3),
 			thickness,
 			color);
 	}
