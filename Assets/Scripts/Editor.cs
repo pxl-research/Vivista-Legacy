@@ -227,6 +227,7 @@ public class Editor : MonoBehaviour
 
 	private void Awake()
 	{
+		Physics.autoSimulation = false;
 		Instance = this;
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
 		UnityEngine.XR.XRSettings.enabled = false;

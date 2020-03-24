@@ -82,6 +82,7 @@ public class Player : MonoBehaviour
 	void Awake()
 	{
 		hittables = new List<Hittable>();
+		Physics.autoSimulation = false;
 	}
 
 	void Start()
