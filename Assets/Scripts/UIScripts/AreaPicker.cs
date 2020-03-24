@@ -138,7 +138,8 @@ public class AreaPicker : MonoBehaviour, IDisposable
 			}
 			else if (Physics.Raycast(ray, out hit, 100f))
 			{
-				dragObject.transform.position = hit.point;
+				//NOTE(Simon): "ray.direction * .5f" is a patch for an annoying bug I couldn't figure out.
+				dragObject.transform.position = hit.point + ray.direction * .5f;
 				dirty = true;
 				//NOTE(Simon): indicator is not visible at this point, but still update its position to prevent visual glitch on reappearance
 				indicator.transform.position = hit.point;
