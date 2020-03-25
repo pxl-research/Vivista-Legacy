@@ -1529,26 +1529,37 @@ public class Editor : MonoBehaviour
 				break;
 			}
 
-			if (move.switchedOn)
+			if (point.panel != null)
 			{
-				editorState = EditorState.MovingInteractionPoint;
-				pointToMove = point;
-				break;
+				if (move.switchedOn)
+				{
+					editorState = EditorState.MovingInteractionPoint;
+					pointToMove = point;
+					break;
+				}
+
+				if (move.switchedOff)
+				{
+					editorState = EditorState.Active;
+					pointToMove = null;
+					break;
+				}
 			}
-			if (move.switchedOff)
+			else
 			{
-				editorState = EditorState.Active;
-				pointToMove = null;
-				break;
+				move.SetState(false);
 			}
 
-			if (view.switchedOn)
+			if (point.panel != null)
 			{
-				point.panel.SetActive(false);
-			}
-			else if (view.switchedOff)
-			{
-				point.panel.SetActive(true);
+				if (view.switchedOn)
+				{
+					point.panel.SetActive(false);
+				}
+				else if (view.switchedOff)
+				{
+					point.panel.SetActive(true);
+				}
 			}
 		}
 
