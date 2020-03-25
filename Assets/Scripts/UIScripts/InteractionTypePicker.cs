@@ -46,4 +46,10 @@ public class InteractionTypePicker : MonoBehaviour
 		answered = true;
 		answer = InteractionType.MultipleChoiceArea;
 	}
+
+	public void AnswerMultipleChoiceImage()
+	{
+		answered = true;
+		answer = InteractionType.MultipleChoiceImage;
+	}
 }
