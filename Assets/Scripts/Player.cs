@@ -431,10 +431,6 @@ public class Player : MonoBehaviour
 					foreach (var file in filenames)
 					{
 						string url = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), file));
-						if (!File.Exists(url))
-						{
-							Debug.LogWarningFormat($"File missing: {url}");
-						}
 						urls.Add(url);
 					}
 					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, urls);
@@ -484,6 +480,11 @@ public class Player : MonoBehaviour
 
 					panel.GetComponent<MultipleChoiceAreaPanelSphere>().Init(newInteractionPoint.title, areas, correct);
 					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.MultipleChoiceImage:
+				{
+					throw new NotImplementedException();
 					break;
 				}
 				default:

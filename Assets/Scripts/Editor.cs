@@ -39,7 +39,8 @@ public enum InteractionType
 	MultipleChoice,
 	Audio,
 	FindArea,
-	MultipleChoiceArea
+	MultipleChoiceArea,
+	MultipleChoiceImage
 }
 
 public enum Perspective
@@ -451,6 +452,11 @@ public class Editor : MonoBehaviour
 							interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init("", meta.guid, null, -1);
 							break;
 						}
+						case InteractionType.MultipleChoiceImage:
+						{
+							throw new NotImplementedException();
+							break;
+						}
 						default:
 						{
 							Assert.IsTrue(true, "FFS, you shoulda added it here");
@@ -674,6 +680,11 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
+				case InteractionType.MultipleChoiceImage:
+				{
+					throw new NotImplementedException();
+					break;
+				}
 				default:
 				{
 					throw new ArgumentOutOfRangeException();
@@ -730,6 +741,9 @@ public class Editor : MonoBehaviour
 						break;
 					case InteractionType.MultipleChoiceArea:
 						pointToMove.panel.GetComponent<MultipleChoiceAreaPanel>().Move(pointToMove.point.transform.position);
+						break;
+					case InteractionType.MultipleChoiceImage:
+						throw new NotImplementedException();
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -937,6 +951,11 @@ public class Editor : MonoBehaviour
 						pointToEdit.panel = panel;
 						finished = true;
 					}
+					break;
+				}
+				case InteractionType.MultipleChoiceImage:
+				{
+					throw new NotImplementedException();
 					break;
 				}
 				default:
@@ -1521,6 +1540,11 @@ public class Editor : MonoBehaviour
 						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct, point.tagId);
 						break;
 					}
+					case InteractionType.MultipleChoiceImage:
+					{
+						throw new NotImplementedException();
+						break;
+					}
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1529,6 +1553,7 @@ public class Editor : MonoBehaviour
 				break;
 			}
 
+			//NOTE(Simon): Move interactionPoint
 			if (point.panel != null)
 			{
 				if (move.switchedOn)
@@ -1550,6 +1575,7 @@ public class Editor : MonoBehaviour
 				move.SetState(false);
 			}
 
+			//NOTE(Simon): interaction panel visibility
 			if (point.panel != null)
 			{
 				if (view.switchedOn)
@@ -2041,6 +2067,11 @@ public class Editor : MonoBehaviour
 					newInteractionPoint.panel = panel;
 					break;
 				}
+				case InteractionType.MultipleChoiceImage:
+				{
+					throw new NotImplementedException();
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -2160,6 +2191,7 @@ public class Editor : MonoBehaviour
 	{
 		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
+		//TODO(Simon): Get allExtras, and upload them
 		var extras = new List<string>();
 
 		foreach (var point in interactionPoints)
