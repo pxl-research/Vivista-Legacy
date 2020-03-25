@@ -4,7 +4,6 @@ using System;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class ExplorerPanel : MonoBehaviour
@@ -19,7 +18,6 @@ public class ExplorerPanel : MonoBehaviour
 		public Sprite sprite;
 		public GameObject explorerPanelItem;
 		public EntryType entryType;
-		public bool selected;
 	}
 
 	private enum EntryType
@@ -79,7 +77,6 @@ public class ExplorerPanel : MonoBehaviour
 
 	private static Color normalColor = Color.white;
 	private static Color selectedColor = new Color(210 / 255f, 210 / 255f, 210 / 255f);
-	private static Color highlightColor = new Color(225 / 255f, 225 / 255f, 225 / 255f);
 
 	private string cookiePath;
 
@@ -99,7 +96,6 @@ public class ExplorerPanel : MonoBehaviour
 				startDirectory = File.ReadAllText(cookiePath);
 			}
 
-			//TODO(SImon): Is this bugged? Debugger does weird stuff after stepping over this line.
 			if (!Directory.Exists(startDirectory))
 			{
 				startDirectory = "C:\\";
@@ -289,20 +285,9 @@ public class ExplorerPanel : MonoBehaviour
 			{
 				explorerPanelItem = Instantiate(filenameIconItemPrefab);
 
-				var trigger = explorerPanelItem.GetComponent<EventTrigger>();
+				var button = explorerPanelItem.GetComponent<Button>();
 
-				var enterTrigger = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-				enterTrigger.callback.AddListener(OnItemEnter);
-
-				var exitTrigger = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-				exitTrigger.callback.AddListener(OnItemExit);
-
-				var clickTrigger = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
-				clickTrigger.callback.AddListener(OnItemClick);
-
-				trigger.triggers.Add(enterTrigger);
-				trigger.triggers.Add(exitTrigger);
-				trigger.triggers.Add(clickTrigger);
+				button.onClick.AddListener(() => OnItemClick(explorerPanelItem));
 			}
 
 			bool isFile = entries[i].entryType == EntryType.File;
@@ -311,6 +296,7 @@ public class ExplorerPanel : MonoBehaviour
 			var labels = explorerPanelItem.GetComponentsInChildren<Text>();
 			explorerPanelItem.transform.SetParent(directoryContent.content, false);
 			explorerPanelItem.transform.SetAsLastSibling();
+			explorerPanelItem.GetComponent<Image>().color = normalColor;
 			labels[0].text = entries[i].name;
 			labels[1].text = isDrive ? "" : entries[i].date.ToString("dd/MM/yyyy");
 			labels[2].text = isFile ? PrettyPrintFileType(entries[i].extension) : "";
@@ -410,36 +396,8 @@ public class ExplorerPanel : MonoBehaviour
 		}
 	}
 
-	//NOTE(Simon): If this ever stops working, be sure to disable raycasting on child objects
-	public void OnItemEnter(BaseEventData data)
+	public void OnItemClick(GameObject go)
 	{
-		var go = ((PointerEventData)data).pointerEnter;
-		int index = EntryIndexForGO(go);
-		var entry = entries[index];
-
-		if (!entry.selected)
-		{
-			entry.explorerPanelItem.GetComponent<Image>().color = highlightColor;
-		}
-		lastHoverObject = go;
-	}
-
-	//NOTE(Simon): If this ever stops working, be sure to disable raycasting on child objects
-	public void OnItemExit(BaseEventData data)
-	{
-		int index = EntryIndexForGO(lastHoverObject);
-		var entry = entries[index];
-
-		if (!entry.selected)
-		{
-			entry.explorerPanelItem.GetComponent<Image>().color = Color.white;
-		}
-	}
-
-	//NOTE(Simon): If this ever stops working, be sure to disable raycasting on child objects
-	public void OnItemClick(BaseEventData data)
-	{
-		var go = ((PointerEventData)data).pointerEnter;
 		int index = EntryIndexForGO(go);
 		var entry = entries[index];
 
@@ -466,13 +424,11 @@ public class ExplorerPanel : MonoBehaviour
 		{
 			if (selectedFiles.Contains(entry))
 			{
-				entry.selected = false;
 				entry.explorerPanelItem.GetComponent<Image>().color = normalColor;
 				selectedFiles.Remove(entry);
 			}
 			else
 			{
-				entry.selected = true;
 				entry.explorerPanelItem.GetComponent<Image>().color = selectedColor;
 				selectedFiles.Add(entry);
 			}
@@ -484,14 +440,12 @@ public class ExplorerPanel : MonoBehaviour
 			int count = maxIndex - minIndex + 1;
 			foreach (var file in selectedFiles)
 			{
-				file.selected = false;
 				file.explorerPanelItem.GetComponent<Image>().color = normalColor;
 			}
 			selectedFiles.Clear();
 			selectedFiles.AddRange(entries.GetRange(minIndex, count));
 			foreach (var file in selectedFiles)
 			{
-				file.selected = true;
 				file.explorerPanelItem.GetComponent<Image>().color = selectedColor;
 			}
 		}
@@ -500,7 +454,6 @@ public class ExplorerPanel : MonoBehaviour
 		{
 			foreach (var file in selectedFiles)
 			{
-				file.selected = false;
 				file.explorerPanelItem.GetComponent<Image>().color = normalColor;
 			}
 
@@ -509,7 +462,6 @@ public class ExplorerPanel : MonoBehaviour
 			if (entry.entryType == EntryType.File && selectionMode == SelectionMode.File
 				|| entry.entryType == EntryType.Directory && selectionMode == SelectionMode.Directory)
 			{
-				entry.selected = true;
 				selectedFiles.Add(entry);
 				entry.explorerPanelItem.GetComponent<Image>().color = selectedColor;
 			}
