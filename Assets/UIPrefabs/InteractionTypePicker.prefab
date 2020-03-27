@@ -2210,7 +2210,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 114849243927565466}
-        m_MethodName: AnswerFindArea
+        m_MethodName: AnswerMultipleChoiceImage
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

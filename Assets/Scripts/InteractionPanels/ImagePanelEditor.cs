@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum ImageEditorState
+{
+	Opening,
+	Showing
+}
+
 public class ImagePanelEditor : MonoBehaviour
 {
-	private enum ImageEditorState
-	{
-		Opening,
-		Showing
-	}
-
 	public InputField title;
 	public ExplorerPanel explorerPanelPrefab;
 	public GameObject imageAlbumEntryPrefab;

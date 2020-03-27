@@ -174,6 +174,8 @@ public class Editor : MonoBehaviour
 	public GameObject findAreaPanelEditorPrefab;
 	public GameObject multipleChoiceAreaPanelPrefab;
 	public GameObject multipleChoiceAreaPanelEditorPrefab;
+	public GameObject multipleChoiceImagePanelPrefab;
+	public GameObject multipleChoiceImagePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
@@ -454,7 +456,8 @@ public class Editor : MonoBehaviour
 						}
 						case InteractionType.MultipleChoiceImage:
 						{
-							throw new NotImplementedException();
+							interactionEditor = Instantiate(multipleChoiceImagePanelEditorPrefab, Canvass.main.transform);
+							interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init("", null, -1);
 							break;
 						}
 						default:
@@ -682,7 +685,33 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoiceImage:
 				{
-					throw new NotImplementedException();
+					var editor = interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>();
+					if (editor.answered)
+					{
+						var originalPaths = editor.answerURLs;
+						var newFilenames = new List<string>(originalPaths.Count);
+						var newFullPaths = new List<string>(originalPaths.Count);
+
+						foreach (string originalPath in originalPaths)
+						{
+							var newFilename = CopyNewExtra(lastPlacedPoint, originalPath);
+							var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
+
+							newFilenames.Add(newFilename);
+							newFullPaths.Add(newFullPath);
+						}
+
+						var panel = Instantiate(multipleChoiceImagePanelPrefab);
+						panel.GetComponent<MultipleChoiceImagePanel>().Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
+						panel.GetComponent<MultipleChoiceImagePanel>().Move(lastPlacedPointPos);
+						lastPlacedPoint.title = editor.answerQuestion;
+						lastPlacedPoint.body = editor.answerCorrect.ToString();
+						lastPlacedPoint.filename = String.Join("\f", newFilenames);
+						lastPlacedPoint.tagId = editor.answerTagId;
+						lastPlacedPoint.panel = panel;
+
+						finished = true;
+					}
 					break;
 				}
 				default:
@@ -743,7 +772,7 @@ public class Editor : MonoBehaviour
 						pointToMove.panel.GetComponent<MultipleChoiceAreaPanel>().Move(pointToMove.point.transform.position);
 						break;
 					case InteractionType.MultipleChoiceImage:
-						throw new NotImplementedException();
+						pointToMove.panel.GetComponent<MultipleChoiceImagePanel>().Move(pointToMove.point.transform.position);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -955,7 +984,35 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoiceImage:
 				{
-					throw new NotImplementedException();
+					var editor = interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>();
+					if (editor.answered)
+					{
+						SetExtrasToDeleted(pointToEdit.filename);
+
+						var originalPaths = editor.answerURLs;
+						var newFilenames = new List<string>(originalPaths.Count);
+						var newFullPaths = new List<string>(originalPaths.Count);
+
+						foreach (string originalPath in originalPaths)
+						{
+							var newFilename = CopyNewExtra(pointToEdit, originalPath);
+							var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
+
+							newFilenames.Add(newFilename);
+							newFullPaths.Add(newFullPath);
+						}
+
+						var panel = Instantiate(multipleChoiceImagePanelPrefab);
+						panel.GetComponent<MultipleChoiceImagePanel>().Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
+						panel.GetComponent<MultipleChoiceImagePanel>().Move(pointToEdit.point.transform.position);
+
+						pointToEdit.title = editor.answerQuestion;
+						pointToEdit.body = editor.answerCorrect.ToString();
+						pointToEdit.filename = String.Join("\f", newFilenames);
+						pointToEdit.tagId = editor.answerTagId;
+						pointToEdit.panel = panel;
+						finished = true;
+					}
 					break;
 				}
 				default:
@@ -1282,7 +1339,7 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 10;
+					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 20;
 				}
 			}
 
@@ -1542,7 +1599,15 @@ public class Editor : MonoBehaviour
 					}
 					case InteractionType.MultipleChoiceImage:
 					{
-						throw new NotImplementedException();
+						interactionEditor = Instantiate(multipleChoiceImagePanelEditorPrefab, Canvass.main.transform);
+						var filenames = point.filename.Split('\f');
+						var fullPaths = new List<string>(filenames.Length);
+						foreach (var file in filenames)
+						{
+							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
+						}
+						var correct = Int32.Parse(point.body);
+						interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init(point.title, fullPaths, correct, point.tagId);
 						break;
 					}
 					default:
@@ -2069,7 +2134,23 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoiceImage:
 				{
-					throw new NotImplementedException();
+
+					var panel = Instantiate(multipleChoiceImagePanelPrefab);
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var urls = new List<string>();
+					foreach (var file in filenames)
+					{
+						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
+						if (!File.Exists(url))
+						{
+							Debug.LogWarningFormat($"File missing: {url}");
+						}
+						urls.Add(url);
+					}
+
+					var correct = Int32.Parse(point.body);
+					panel.GetComponent<MultipleChoiceImagePanel>().Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel;
 					break;
 				}
 				default:

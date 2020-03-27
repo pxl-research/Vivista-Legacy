@@ -9,7 +9,6 @@ public class UnsavedChangesTracker : MonoBehaviour
 	public GameObject unsavedChangesPanelPrefab;
 	public GameObject unsavedChangesNotification;
 
-	// Start is called before the first frame update
 	void Start()
 	{
 		Instance = this;
@@ -17,7 +16,6 @@ public class UnsavedChangesTracker : MonoBehaviour
 		Application.wantsToQuit += OnWantsToQuit;
 	}
 
-	// Update is called once per frame
 	void Update()
 	{
 		unsavedChangesNotification.SetActive(unsavedChanges);

@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class MultipleChoicePanel : MonoBehaviour
 {
-
 	public Text question;
 	public string[] answers;
 	public int correctAnswer;

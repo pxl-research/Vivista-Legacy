@@ -28,7 +28,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
-	public void Init(string initialTitle, string[] initialAnswers = null, int tagId = -1)
+	public void Init(string initialQuestion, string[] initialAnswers = null, int tagId = -1)
 	{
 		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup2>();
 		answerInputs = new List<InputField>();
@@ -45,7 +45,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 			Array.Copy(initialAnswers, 1, answers, 0, answers.Length);
 		}
 
-		question.text = initialTitle;
+		question.text = initialQuestion;
 
 		foreach (var answer in answers)
 		{

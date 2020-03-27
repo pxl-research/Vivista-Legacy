@@ -63,10 +63,7 @@ public class MultipleChoiceAreaPanel : MonoBehaviour
 			var entry = go.GetComponent<MultipleChoiceAreaEntry>();
 			entry.toggle.interactable = false;
 
-			if (i == correct)
-			{
-				entry.toggle.SetIsOnWithoutNotify(true);
-			}
+			entry.toggle.SetIsOnWithoutNotify(i == correct);
 			
 			entries.Add(entry);
 			StartCoroutine(entry.SetArea(newAreas[i], fullPath, true));

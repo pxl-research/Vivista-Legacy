@@ -3,29 +3,27 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class MultipleChoiceAreaEntry : MonoBehaviour
+public class MultipleChoiceImageEntry : MonoBehaviour
 {
 	public RawImage preview;
-	public Text numPoints;
+	public Text path;
 	public Button deleteButton;
-	public Button editButton;
 	public Toggle toggle;
-	public string miniatureUrl;
-	public Area area;
+	public string imageUrl;
 
 	private bool initialized;
 	private static Vector2 defaultImageSize = new Vector2(200, 200);
 
-	public IEnumerator SetArea(Area NewArea, string newMiniatureUrl, bool hideButtons = false)
+	public IEnumerator SetUrl(string newImageUrl, bool hideButtons = false)
 	{
 		if (initialized) { yield break; }
-		miniatureUrl = newMiniatureUrl;
-		area = NewArea;
-		numPoints.text = NewArea.vertices.Count + " points";
+		imageUrl = newImageUrl;
+
+		path.text = imageUrl;
 
 		Texture2D texture;
 
-		using (var request = UnityWebRequestTexture.GetTexture("file:///" + miniatureUrl))
+		using (var request = UnityWebRequestTexture.GetTexture("file:///" + imageUrl))
 		{
 			yield return request.SendWebRequest();
 
@@ -56,7 +54,6 @@ public class MultipleChoiceAreaEntry : MonoBehaviour
 		if (hideButtons)
 		{
 			deleteButton.gameObject.SetActive(false);
-			editButton.gameObject.SetActive(false);
 			toggle.interactable = false;
 		}
 		initialized = true;

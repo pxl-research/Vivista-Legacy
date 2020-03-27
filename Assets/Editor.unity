@@ -1225,16 +1225,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: TimelineContainer
       objectReference: {fileID: 0}
-    - target: {fileID: 114293190899085230, guid: aab3be2d16499724cad8f16cf9eb9366,
-        type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114293190899085230, guid: aab3be2d16499724cad8f16cf9eb9366,
-        type: 3}
-      propertyPath: m_RaycastTarget
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 114338803187610216, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
       propertyPath: m_Delegates.Array.data[0].callback.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -1394,11 +1384,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224537262670187468, guid: aab3be2d16499724cad8f16cf9eb9366,
-        type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 224948370479637070, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
@@ -1570,6 +1555,10 @@ MonoBehaviour:
   multipleChoiceAreaPanelPrefab: {fileID: 2343380510708631203, guid: 892a328412fa38048b78679b3c24a6af,
     type: 3}
   multipleChoiceAreaPanelEditorPrefab: {fileID: 5651805418575855432, guid: 6893752a3d96f2c448bdc145d1c9a79a,
+    type: 3}
+  multipleChoiceImagePanelPrefab: {fileID: 2343380510708631203, guid: a025ec2401e35d74a802e9f8e827347b,
+    type: 3}
+  multipleChoiceImagePanelEditorPrefab: {fileID: 1342788681892836441, guid: e5c25242b6238e445b14e706a33cf53a,
     type: 3}
   uploadPanelPrefab: {fileID: 1771621273584302, guid: 1007a2f2cc427de4ca38dfbacd1da109,
     type: 3}

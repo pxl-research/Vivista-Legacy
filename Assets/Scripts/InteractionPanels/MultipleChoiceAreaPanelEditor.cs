@@ -32,6 +32,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
+	//TODO(Simon): Is the correct toggle marked on Init???
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect, int tagId = -1)
 	{
 		guid = newGuid;
@@ -53,12 +54,12 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				var entry = go.GetComponent<MultipleChoiceAreaEntry>();
 				StartCoroutine(entry.SetArea(answerAreas[i], fullPath));
 
-				entry.deleteButton.onClick.RemoveAllListeners();
 				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
-				entry.editButton.onClick.RemoveAllListeners();
 				entry.editButton.onClick.AddListener(() => OnEditArea(go));
 				group.RegisterToggle(entry.toggle);
 				entry.toggle.group = group;
+
+				entry.toggle.SetIsOnWithoutNotify(i == answerCorrect);
 			}
 		}
 		else
@@ -87,9 +88,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				areaPicker.answerArea.miniatureName = filename;
 				StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
 
-				entry.deleteButton.onClick.RemoveAllListeners();
 				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
-				entry.editButton.onClick.RemoveAllListeners();
 				entry.editButton.onClick.AddListener(() => OnEditArea(go));
 				group.RegisterToggle(entry.toggle);
 				entry.toggle.group = group;
