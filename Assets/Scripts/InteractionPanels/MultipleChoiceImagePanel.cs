@@ -9,7 +9,17 @@ public class MultipleChoiceImagePanel : MonoBehaviour
 	public List<string> answers;
 	public int correct;
 	public RectTransform imageList;
+	public List<MultipleChoiceImageEntry> entries;
+
 	public GameObject multipleChoiceImageEntryPrefab;
+
+	public void OnEnable()
+	{
+		for (int i = 0; i < entries.Count; i++)
+		{
+			StartCoroutine(entries[i].SetUrl(answers[i], true));
+		}
+	}
 
 	public void Init(string newQuestion, List<string> newAnswers, int newCorrect)
 	{
@@ -24,8 +34,7 @@ public class MultipleChoiceImagePanel : MonoBehaviour
 			entry.toggle.interactable = false;
 
 			entry.toggle.SetIsOnWithoutNotify(i == correct);
-
-			StartCoroutine(entry.SetUrl(answers[i], true));
+			entries.Add(entry);
 		}
 
 		Update();

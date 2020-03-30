@@ -48,6 +48,7 @@ public class Player : MonoBehaviour
 	public GameObject audioPanelPrefab;
 	public GameObject findAreaPanelPrefab;
 	public GameObject multipleChoiceAreaPanelPrefab;
+	public GameObject multipleChoiceImagePanelPrefab;
 	public GameObject cameraRig;
 	public GameObject projectorPrefab;
 
@@ -425,7 +426,6 @@ public class Player : MonoBehaviour
 				case InteractionType.Image:
 				{
 					var panel = Instantiate(imagePanelPrefab, Canvass.sphereUIPanelWrapper.transform);
-					//NOTE(Simon): All images are concatenated in the filename field, with a separator of '\f'
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
 					foreach (var file in filenames)
@@ -448,7 +448,6 @@ public class Player : MonoBehaviour
 				case InteractionType.MultipleChoice:
 				{
 					var panel = Instantiate(multipleChoicePrefab, Canvass.sphereUIPanelWrapper.transform);
-					//NOTE(Simon): All answers are concatenated in the body field, with a separator of '\f'
 					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
@@ -484,7 +483,17 @@ public class Player : MonoBehaviour
 				}
 				case InteractionType.MultipleChoiceImage:
 				{
-					throw new NotImplementedException();
+					var panel = Instantiate(multipleChoiceImagePanelPrefab, Canvass.sphereUIPanelWrapper.transform);
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var correct = Int32.Parse(newInteractionPoint.body);
+					var urls = new List<string>();
+					foreach (var file in filenames)
+					{
+						string url = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), file));
+						urls.Add(url);
+					}
+					panel.GetComponent<MultipleChoiceImagePanelSphere>().Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel;
 					break;
 				}
 				default:
