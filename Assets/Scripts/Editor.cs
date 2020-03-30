@@ -496,13 +496,15 @@ public class Editor : MonoBehaviour
 			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 			bool finished = false;
 			//NOTE(Simon): Some panels use Esc internally to cancel a child action. We don't want to also cancel the panel in that case.
-			bool allowCancel = false;
+			bool allowCancel = true;
 
 			switch (lastPlacedPoint.type)
 			{
 				case InteractionType.Image:
 				{
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var originalPaths = editor.answerURLs;
@@ -551,6 +553,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
@@ -571,6 +575,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.Audio:
 				{
 					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
@@ -686,6 +692,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.MultipleChoiceImage:
 				{
 					var editor = interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var originalPaths = editor.answerURLs;
@@ -799,12 +807,15 @@ public class Editor : MonoBehaviour
 		if (editorState == EditorState.EditingInteractionPoint)
 		{
 			var finished = false;
+			bool allowCancel = true;
 
 			switch (pointToEdit.type)
 			{
 				case InteractionType.Image:
 				{
 					var editor = interactionEditor.GetComponent<ImagePanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
@@ -854,6 +865,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.Video:
 				{
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor && editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
@@ -876,6 +889,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.Audio:
 				{
 					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor && editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
@@ -918,6 +933,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.FindArea:
 				{
 					var editor = interactionEditor.GetComponent<FindAreaPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var panel = Instantiate(findAreaPanelPrefab);
@@ -950,6 +967,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.MultipleChoiceArea:
 				{
 					var editor = interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						var panel = Instantiate(multipleChoiceAreaPanelPrefab);
@@ -985,6 +1004,8 @@ public class Editor : MonoBehaviour
 				case InteractionType.MultipleChoiceImage:
 				{
 					var editor = interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>();
+					allowCancel = editor.allowCancel;
+
 					if (editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
@@ -1017,6 +1038,13 @@ public class Editor : MonoBehaviour
 				}
 				default:
 					throw new ArgumentOutOfRangeException();
+			}
+
+			if (allowCancel && Input.GetKeyDown(KeyCode.Escape))
+			{
+				pointToEdit = null;
+				Destroy(interactionEditor);
+				SetEditorActive(true);
 			}
 
 			if (finished)

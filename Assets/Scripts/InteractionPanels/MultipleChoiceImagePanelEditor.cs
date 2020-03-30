@@ -14,9 +14,11 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	public List<string> answerURLs;
 	public int answerCorrect;
 	public int answerTagId;
-	
+
 	private const int MAXANSWERS = 6;
 	private ToggleGroup2 toggleGroup;
+
+	public bool allowCancel => explorerPanel == null;
 
 	public TagPicker tagPicker;
 
@@ -54,6 +56,15 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	{
 		if (imageEditorState == ImageEditorState.Opening)
 		{
+			if (explorerPanel != null)
+			{
+				if (Input.GetKeyDown(KeyCode.Escape))
+				{
+					Destroy(explorerPanel.gameObject);
+					imageEditorState = ImageEditorState.Showing;
+				}
+			}
+
 			if (explorerPanel != null && explorerPanel.answered)
 			{
 				foreach (string path in explorerPanel.answerPaths)

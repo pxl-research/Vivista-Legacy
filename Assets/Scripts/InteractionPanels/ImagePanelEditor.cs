@@ -23,6 +23,8 @@ public class ImagePanelEditor : MonoBehaviour
 	public List<string> answerURLs;
 	public int answerTagId;
 
+	public bool allowCancel => explorerPanel == null;
+
 	public TagPicker tagPicker;
 
 	private ExplorerPanel explorerPanel;
@@ -34,6 +36,15 @@ public class ImagePanelEditor : MonoBehaviour
 	{
 		if (imageEditorState == ImageEditorState.Opening)
 		{
+			if (explorerPanel != null)
+			{
+				if (Input.GetKeyDown(KeyCode.Escape))
+				{
+					Destroy(explorerPanel.gameObject);
+					imageEditorState = ImageEditorState.Showing;
+				}
+			}
+
 			if (explorerPanel != null && explorerPanel.answered)
 			{
 				foreach (string path in explorerPanel.answerPaths)

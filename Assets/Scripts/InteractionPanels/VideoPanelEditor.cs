@@ -15,6 +15,8 @@ public class VideoPanelEditor : MonoBehaviour {
 	public string answerURL;
 	public int answerTagId;
 
+	public bool allowCancel => explorerPanel == null;
+
 	public TagPicker tagPicker;
 
 	private ExplorerPanel explorerPanel;
@@ -26,6 +28,14 @@ public class VideoPanelEditor : MonoBehaviour {
 	{
 		if (fileOpening)
 		{
+			if (explorerPanel != null)
+			{
+				if (Input.GetKeyDown(KeyCode.Escape))
+				{
+					Destroy(explorerPanel.gameObject);
+				}
+			}
+
 			if (explorerPanel != null && explorerPanel.answered)
 			{
 				url.text = explorerPanel.answerPath;
