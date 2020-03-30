@@ -1299,7 +1299,7 @@ public class Editor : MonoBehaviour
 
 	private void RemoveItemFromTimeline(InteractionPointEditor point)
 	{
-		Destroy(point.timelineRow);
+		Destroy(point.timelineRow.gameObject);
 		interactionPoints.Remove(point);
 		Destroy(point.point);
 		if (point.panel != null)
@@ -1736,7 +1736,6 @@ public class Editor : MonoBehaviour
 
 			if (!Cursors.isOverridingCursor)
 			{
-				//TODO(Simon): Software cursors make the lag from double buffering less obvious. But is there a better way?
 				Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.ForceSoftware);
 			}
 
