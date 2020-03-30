@@ -68,7 +68,7 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 					areaRenderer.EnableRenderer();
 					areaRenderer.DisableCollider();
 
-					if (i == correct)
+					if (i != correct)
 					{
 						areaRenderer.SetColor(incorrectBackground, incorrectOutline);
 					}
