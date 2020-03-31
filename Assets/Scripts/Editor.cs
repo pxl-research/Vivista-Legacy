@@ -1800,7 +1800,7 @@ public class Editor : MonoBehaviour
 					if (isResizingStart)
 					{
 						var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + PxToRelativeTime(mouseDelta.x));
-						if (newStart < timelineItemBeingResized.endTime - 0.2f)
+						if (newStart < timelineItemBeingResized.endTime - 1f)
 						{
 							timelineItemBeingResized.startTime = newStart;
 							var imageRect = timelineItemBeingResized.timelineRow.indicator.rectTransform;
@@ -1813,7 +1813,7 @@ public class Editor : MonoBehaviour
 					else
 					{
 						var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + PxToRelativeTime(mouseDelta.x));
-						if (newEnd > timelineItemBeingResized.startTime + 0.2f)
+						if (newEnd > timelineItemBeingResized.startTime + 1f)
 						{
 							timelineItemBeingResized.endTime = newEnd;
 							var imageRect = timelineItemBeingResized.timelineRow.indicator.rectTransform;
