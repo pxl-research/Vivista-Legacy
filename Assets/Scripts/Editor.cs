@@ -789,6 +789,7 @@ public class Editor : MonoBehaviour
 
 			if (Input.GetMouseButtonDown(0))
 			{
+				pointToMove.filled = true;
 				pointToMove.returnRayOrigin = ray.origin;
 				pointToMove.returnRayDirection = ray.direction;
 
@@ -1524,32 +1525,21 @@ public class Editor : MonoBehaviour
 
 			if (!point.filled)
 			{
-				edit.interactable = false;
-				move.interactable = false;
+				edit.gameObject.SetActive(false);
+				move.gameObject.SetActive(false);
+				view.gameObject.SetActive(false);
+				delete.gameObject.SetActive(false);
 			}
 			if (point.filled)
 			{
-				edit.interactable = true;
-				move.interactable = true;
+				edit.gameObject.SetActive(true);
+				move.gameObject.SetActive(true);
+				view.gameObject.SetActive(true);
+				delete.gameObject.SetActive(true);
 			}
 
 			if (delete.state == SelectState.Pressed)
 			{
-				//Note(Simon): If it is the last placed one, we might still be editing that one. So extra cleanup is necessary
-				if (i == interactionPoints.Count - 1)
-				{
-					if (editorState == EditorState.FillingPanelDetails)
-					{
-						editorState = EditorState.Active;
-						Destroy(interactionEditor);
-					}
-					if (editorState == EditorState.PickingInteractionType)
-					{
-						editorState = EditorState.Active;
-						Destroy(interactionTypePicker);
-					}
-				}
-
 				//NOTE(Simon): Get filenames for extra files to delete, and add to list.
 				var file = point.filename;
 				if (!String.IsNullOrEmpty(file))
@@ -1569,6 +1559,7 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.EditingInteractionPoint;
 				//NOTE(Simon): Set pointToEdit in global state for usage by the main state machine
 				pointToEdit = point;
+				pointToEdit.filled = false;
 
 				switch (point.type)
 				{
@@ -1653,12 +1644,14 @@ public class Editor : MonoBehaviour
 				{
 					editorState = EditorState.MovingInteractionPoint;
 					pointToMove = point;
+					pointToMove.filled = false;
 					break;
 				}
 
 				if (move.switchedOff)
 				{
 					editorState = EditorState.Active;
+					pointToMove.filled = true;
 					pointToMove = null;
 					break;
 				}
