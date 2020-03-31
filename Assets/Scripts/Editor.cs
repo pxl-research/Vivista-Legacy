@@ -369,14 +369,16 @@ public class Editor : MonoBehaviour
 			if (Input.GetMouseButtonUp(0))
 			{
 				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
+				var startTime = Double.IsNaN(videoController.rawCurrentTime) ? 0 : videoController.rawCurrentTime;
+				var length = Double.IsNaN(videoController.videoLength) ? 10 : videoController.videoLength;
 				var point = new InteractionPointEditor
 				{
 					returnRayOrigin = ray.origin,
 					returnRayDirection = ray.direction,
 					point = newPoint,
 					type = InteractionType.None,
-					startTime = videoController.rawCurrentTime,
-					endTime = videoController.rawCurrentTime + (videoController.videoLength / 10),
+					startTime = startTime,
+					endTime = startTime + (length / 10),
 					tagId = -1,
 				};
 
