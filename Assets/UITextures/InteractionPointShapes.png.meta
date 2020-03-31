@@ -35,6 +35,39 @@ TextureImporter:
   - first:
       213: 5356207006763469801
     second: Shapes_10
+  - first:
+      213: -9097879145267478111
+    second: InteractionPointShapes_0
+  - first:
+      213: 4210332612297676502
+    second: InteractionPointShapes_1
+  - first:
+      213: -6303006865794429876
+    second: InteractionPointShapes_2
+  - first:
+      213: 5573080476631345696
+    second: InteractionPointShapes_3
+  - first:
+      213: 8560640101036081043
+    second: InteractionPointShapes_4
+  - first:
+      213: -6540630752421673372
+    second: InteractionPointShapes_5
+  - first:
+      213: -4397342334119842130
+    second: InteractionPointShapes_6
+  - first:
+      213: 7824498263719902834
+    second: InteractionPointShapes_7
+  - first:
+      213: 5515471159330549976
+    second: InteractionPointShapes_8
+  - first:
+      213: 616917943661334379
+    second: InteractionPointShapes_9
+  - first:
+      213: -6899339843757555408
+    second: InteractionPointShapes_10
   externalObjects: {}
   serializedVersion: 10
   mipmaps:
@@ -65,22 +98,22 @@ TextureImporter:
   textureSettings:
     serializedVersion: 2
     filterMode: 2
-    aniso: -1
+    aniso: 1
     mipBias: -100
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 1
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
+  spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationDetail: -1
@@ -119,11 +152,11 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Shapes_0
+      name: InteractionPointShapes_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 200
+        y: 204
         width: 100
         height: 100
       alignment: 0
@@ -133,18 +166,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 701446cf6d6ac6380800000000000000
-      internalID: -8976616514968600313
+      spriteID: 1a1c5e8be17ddb180800000000000000
+      internalID: -9097879145267478111
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_1
+      name: InteractionPointShapes_1
       rect:
         serializedVersion: 2
-        x: 100
-        y: 200
+        x: 102
+        y: 204
         width: 100
         height: 100
       alignment: 0
@@ -154,18 +187,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6cd6c98f8339c5d00800000000000000
-      internalID: 962806293248896454
+      spriteID: 6d6de3e143b1e6a30800000000000000
+      internalID: 4210332612297676502
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_2
+      name: InteractionPointShapes_2
       rect:
         serializedVersion: 2
-        x: 200
-        y: 200
+        x: 204
+        y: 204
         width: 100
         height: 100
       alignment: 0
@@ -175,18 +208,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 11b04ef0e8c3d0f80800000000000000
-      internalID: -8138782370738992367
+      spriteID: c4c897b76a83788a0800000000000000
+      internalID: -6303006865794429876
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_3
+      name: InteractionPointShapes_3
       rect:
         serializedVersion: 2
-        x: 300
-        y: 200
+        x: 306
+        y: 204
         width: 100
         height: 100
       alignment: 0
@@ -196,18 +229,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f1d02917b37276ef0800000000000000
-      internalID: -115080129212707553
+      spriteID: 02aa6428a2f875d40800000000000000
+      internalID: 5573080476631345696
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_4
+      name: InteractionPointShapes_4
       rect:
         serializedVersion: 2
-        x: 400
-        y: 200
+        x: 408
+        y: 204
         width: 100
         height: 100
       alignment: 0
@@ -217,18 +250,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d37ae7143378a44b0800000000000000
-      internalID: -5455399344394033347
+      spriteID: 39f3830d0d08dc670800000000000000
+      internalID: 8560640101036081043
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_5
+      name: InteractionPointShapes_5
       rect:
         serializedVersion: 2
         x: 0
-        y: 100
+        y: 102
         width: 100
         height: 100
       alignment: 0
@@ -238,18 +271,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0478dc75f98927af0800000000000000
-      internalID: -400089606742243520
+      spriteID: 46609e20cf20b35a0800000000000000
+      internalID: -6540630752421673372
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_6
+      name: InteractionPointShapes_6
       rect:
         serializedVersion: 2
-        x: 100
-        y: 100
+        x: 102
+        y: 102
         width: 100
         height: 100
       alignment: 0
@@ -259,18 +292,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 06cf2184814d30b40800000000000000
-      internalID: 5405397178528234592
+      spriteID: eaeeffaf17089f2c0800000000000000
+      internalID: -4397342334119842130
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_7
+      name: InteractionPointShapes_7
       rect:
         serializedVersion: 2
-        x: 200
-        y: 100
+        x: 204
+        y: 102
         width: 100
         height: 100
       alignment: 0
@@ -280,18 +313,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f7fdf92a297b12a40800000000000000
-      internalID: 5341752473459613567
+      spriteID: 27e7fa207b3369c60800000000000000
+      internalID: 7824498263719902834
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_8
+      name: InteractionPointShapes_8
       rect:
         serializedVersion: 2
-        x: 300
-        y: 100
+        x: 306
+        y: 102
         width: 100
         height: 100
       alignment: 0
@@ -301,18 +334,18 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 70f69e6b9cf6114e0800000000000000
-      internalID: -2012704646310039801
+      spriteID: 8d03fc41cc3ea8c40800000000000000
+      internalID: 5515471159330549976
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_9
+      name: InteractionPointShapes_9
       rect:
         serializedVersion: 2
-        x: 400
-        y: 100
+        x: 408
+        y: 102
         width: 100
         height: 100
       alignment: 0
@@ -322,14 +355,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3cb86a935cb1795e0800000000000000
-      internalID: -1903021783651021885
+      spriteID: b6f8f77e99bbf8800800000000000000
+      internalID: 616917943661334379
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Shapes_10
+      name: InteractionPointShapes_10
       rect:
         serializedVersion: 2
         x: 0
@@ -343,8 +376,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9eb489de4e1155a40800000000000000
-      internalID: 5356207006763469801
+      spriteID: 031c12467fe9040a0800000000000000
+      internalID: -6899339843757555408
       vertices: []
       indices: 
       edges: []
