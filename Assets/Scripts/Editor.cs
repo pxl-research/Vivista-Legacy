@@ -1489,10 +1489,17 @@ public class Editor : MonoBehaviour
 		{
 			foreach (var point in interactionPoints)
 			{
-				if (RectTransformUtility.RectangleContainsScreenPoint(point.timelineRow.GetComponent<RectTransform>(), Input.mousePosition)
+				var rect = point.timelineRow.GetComponent<RectTransform>();
+				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
 					&& !isDraggingTimelineItem && !isResizingTimelineItem)
 				{
 					HighlightPoint(point);
+					var worldCorners = new Vector3[4];
+					rect.GetWorldCorners(worldCorners);
+					var start = new Vector2(worldCorners[0].x, (worldCorners[0].y + worldCorners[1].y) / 2);
+					var end = new Vector2(worldCorners[2].x - 3, (worldCorners[2].y + worldCorners[3].y) / 2);
+					var thickness = worldCorners[1].y  - worldCorners[0].y;
+					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
 				}
 			}
 		}
