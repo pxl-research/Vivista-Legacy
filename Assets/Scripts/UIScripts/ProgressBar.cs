@@ -18,6 +18,11 @@ public class ProgressBar : MonoBehaviour
 
 	public void SetProgress(float progress)
 	{
+		if (float.IsNaN(progress))
+		{
+			progress = 0;
+		}
+
 		progressbar.offsetMax = new Vector2(-(progressbarWidth - (progressbarWidth * progress)), progressbar.offsetMax.y);
 		progressPercent.text = $"{progress * 100:F1}%";
 	}

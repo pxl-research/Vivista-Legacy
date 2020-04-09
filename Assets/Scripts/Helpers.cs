@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 
 public static class MathHelper
@@ -126,5 +128,24 @@ public static class ColorHelper
 		double luma = 0.299 * backgroundColor.r + 0.587 * backgroundColor.g + 0.114 * backgroundColor.b;
 
 		return luma > 0.5 ? Color.black : Color.white;
+	}
+}
+
+public static class ExplorerHelper
+{
+	public static void ShowPathInExplorer(string path)
+	{
+#if UNITY_STANDALONE_WIN
+		path = path.Replace('/', '\\');
+		Process.Start("explorer.exe", $"/select,\"{path}\"");
+#endif
+
+#if UNITY_STANDALONE_OSX
+		Process.Start("open", "-R " + path);
+#endif
+
+#if UNITY_STANDALONE_LINUX
+		Process.Start("xdg-open", path);
+#endif
 	}
 }

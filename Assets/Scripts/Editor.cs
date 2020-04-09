@@ -180,6 +180,7 @@ public class Editor : MonoBehaviour
 	public GameObject loginPanelPrefab;
 	public GameObject explorerPanelPrefab;
 	public GameObject tagPanelPrefab;
+	public GameObject exportPanelPrefab;
 
 	private GameObject interactionTypePicker;
 	private GameObject interactionEditor;
@@ -1209,7 +1210,7 @@ public class Editor : MonoBehaviour
 			if (filePanel != null && filePanel.GetComponent<ProjectPanel>().answered)
 			{
 				var panel = filePanel.GetComponent<ProjectPanel>();
-				panel.Init(true);
+				panel.Init(true, meta.title);
 				meta.title = panel.answerTitle;
 
 				if (!SaveToFile())
@@ -1977,7 +1978,7 @@ public class Editor : MonoBehaviour
 	{
 		filePanel = Instantiate(filePanelPrefab);
 		filePanel.transform.SetParent(Canvass.main.transform, false);
-		filePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true);
+		filePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true, meta.title);
 		Canvass.modalBackground.SetActive(true);
 		if (!uploading)
 		{
@@ -2001,6 +2002,13 @@ public class Editor : MonoBehaviour
 
 		tagPanel = Instantiate(tagPanelPrefab);
 		tagPanel.transform.SetParent(Canvass.main.transform, false);
+	}
+
+	public void ShowExportPanel()
+	{
+		var exportPanel = Instantiate(exportPanelPrefab, Canvass.main.transform, false).GetComponent<ExportPanel>();
+		exportPanel.Init(meta.guid);
+		Canvass.modalBackground.SetActive(true);
 	}
 
 	public bool SaveToFile(bool makeThumbnail = true)
@@ -2034,7 +2042,7 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		SaveFile.WriteFile(data);
+		bool success = SaveFile.WriteFile(data);
 
 		if (makeThumbnail)
 		{
@@ -2047,7 +2055,7 @@ public class Editor : MonoBehaviour
 		CleanExtras();
 		UnsavedChangesTracker.Instance.unsavedChanges = false;
 
-		return true;
+		return success;
 	}
 
 	private bool OpenFile(string projectFolder)
@@ -2060,7 +2068,7 @@ public class Editor : MonoBehaviour
 
 		if (!File.Exists(videoPath))
 		{
-			InitExplorerPanel("*.mp4", "Choose a video or photo to enrich");
+			InitExplorerPanel("*.mp4", "Choose a video to enrich");
 			openPanel.SetActive(false);
 			editorState = EditorState.PickingVideo;
 			return false;
@@ -2534,14 +2542,7 @@ public class Editor : MonoBehaviour
 	{
 		string path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
-#if UNITY_STANDALONE_WIN
-		path = path.Replace('/', '\\');
-		Process.Start("explorer.exe", $"/select,\"{path}\"");
-#endif
-
-#if UNITY_STANDALONE_OSX
-		Process.Start("open", "-R " + path);
-#endif
+		ExplorerHelper.ShowPathInExplorer(path);
 	}
 
 	public static string GenerateExtraGuid()

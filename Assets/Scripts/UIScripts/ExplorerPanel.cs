@@ -4,6 +4,7 @@ using System;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class ExplorerPanel : MonoBehaviour
@@ -33,6 +34,12 @@ public class ExplorerPanel : MonoBehaviour
 		Directory
 	}
 
+	public enum ExplorerMode
+	{
+		Save,
+		Open
+	}
+
 	public enum SortedBy
 	{
 		Name,
@@ -48,6 +55,7 @@ public class ExplorerPanel : MonoBehaviour
 	private string searchPattern;
 	private bool multiSelect;
 	private SelectionMode selectionMode;
+	private ExplorerMode explorerMode;
 
 	public InputField currentPath;
 	public Button upButton;
@@ -58,6 +66,8 @@ public class ExplorerPanel : MonoBehaviour
 	public Button sortSizeButton;
 	public InputField filenameField;
 	public Text title;
+	public Text extension;
+	public Button answerButton;
 
 	public Sprite iconDirectory, iconFile, iconDrive;
 
@@ -86,6 +96,48 @@ public class ExplorerPanel : MonoBehaviour
 	//NOTE(Simon): If you provide "" as startDirectory, startDirectory will default to the last location from where a file was selected
 	public void Init(string startDirectory = "C:\\", string searchPattern = "*", string title = "Select file", SelectionMode mode = SelectionMode.File, bool multiSelect = false)
 	{
+		InitCommon(startDirectory);
+
+		explorerMode = ExplorerMode.Open;
+
+		selectionMode = mode;
+		this.searchPattern = searchPattern;
+		this.title.text = title;
+		this.multiSelect = multiSelect;
+
+		answerButton.GetComponentInChildren<Text>().text = "Open";
+
+		UpdateDir();
+	}
+
+	public void InitSaveAs(string startDirectory = "C:\\", string defaultExtension = "", string searchPattern = "*", string title = "Select file")
+	{
+		InitCommon(startDirectory);
+
+		explorerMode = ExplorerMode.Save;
+
+		selectionMode = SelectionMode.File;
+		this.searchPattern = searchPattern;
+		this.title.text = title;
+		this.multiSelect = false;
+
+		answerButton.GetComponentInChildren<Text>().text = "Save As";
+		EventSystem.current.SetSelectedGameObject(filenameField.gameObject);
+
+		if (!String.IsNullOrEmpty(defaultExtension))
+		{
+			var rect = filenameField.GetComponent<RectTransform>();
+			rect.anchorMax = new Vector2(extension.GetComponent<RectTransform>().anchorMin.x, rect.anchorMax.y);
+
+			extension.gameObject.SetActive(true);
+			extension.text = defaultExtension;
+		}
+
+		UpdateDir();
+	}
+
+	private void InitCommon(string startDirectory)
+	{
 		cookiePath = Path.Combine(Application.persistentDataPath, ".explorer");
 
 		startDirectory = Environment.ExpandEnvironmentVariables(startDirectory);
@@ -107,16 +159,11 @@ public class ExplorerPanel : MonoBehaviour
 		entries = new List<ExplorerEntry>();
 		inactiveExplorerPanelItems = new Queue<GameObject>();
 
-		selectionMode = mode;
-		this.searchPattern = searchPattern;
-		this.title.text = title;
-		this.multiSelect = multiSelect;
-
 		answered = false;
 		osType = Environment.OSVersion.Platform.ToString();
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
 
-		UpdateDir();
+		filenameField.onValueChanged.AddListener(_ => OnFilenameFieldChanged());
 	}
 
 	public void DirUp()
@@ -228,6 +275,12 @@ public class ExplorerPanel : MonoBehaviour
 
 		foreach (var directory in directories)
 		{
+			if (directory.Attributes.HasFlag(FileAttributes.System) ||
+				directory.Attributes.HasFlag(FileAttributes.Hidden))
+			{
+				continue;
+			}
+
 			var entry = new ExplorerEntry
 			{
 				name = directory.Name,
@@ -242,6 +295,12 @@ public class ExplorerPanel : MonoBehaviour
 
 		foreach (var file in filteredFiles)
 		{
+			if (file.Attributes.HasFlag(FileAttributes.System) ||
+				file.Attributes.HasFlag(FileAttributes.Hidden))
+			{
+				continue;
+			}
+
 			var entry = new ExplorerEntry
 			{
 				name = file.Name,
@@ -350,48 +409,84 @@ public class ExplorerPanel : MonoBehaviour
 
 	private void Answer()
 	{
-		var pathList = new List<string>();
-		foreach (var file in selectedFiles)
+		answered = true;
+
+		if (explorerMode == ExplorerMode.Open)
 		{
-			pathList.Add(file.fullPath);
+			var pathList = new List<string>();
+			foreach (var file in selectedFiles)
+			{
+				pathList.Add(file.fullPath);
+			}
+
+			answerPath = pathList[0];
+			answerPaths = pathList;
+		}
+		else if (explorerMode == ExplorerMode.Save)
+		{
+			if (selectedFiles.Count > 0)
+			{
+				answerPath = selectedFiles[0].fullPath;
+			}
+			else
+			{
+				answerPath = Path.Combine(currentDirectory, filenameField.text + extension.text);
+			}
+
+			try
+			{
+				string _ = Path.GetFullPath(answerPath);
+			}
+			catch
+			{
+				//NOTE(Simon): If Path.GetFullPath() fails, it means the path is invalid. e.g. has banned characters, is an empty string, etc.
+				answered = false;
+			}
 		}
 
-		answered = true;
-		answerPath = pathList[0];
-		answerPaths = pathList;
 		File.WriteAllText(cookiePath, currentDirectory);
 	}
 
 	public void OpenButtonClicked()
 	{
-		if (selectedFiles.Count > 0)
+		if (explorerMode == ExplorerMode.Open)
 		{
-			bool error = false;
-			foreach (var file in selectedFiles)
+			if (selectedFiles.Count > 0)
 			{
-				if (selectionMode == SelectionMode.File)
+				bool error = false;
+				foreach (var file in selectedFiles)
 				{
-					if (!File.Exists(file.fullPath))
+					if (selectionMode == SelectionMode.File)
 					{
-						error = true;
+						if (!File.Exists(file.fullPath))
+						{
+							error = true;
+						}
+					}
+					else if (selectionMode == SelectionMode.Directory)
+					{
+						if (!Directory.Exists(file.fullPath))
+						{
+							error = true;
+						}
 					}
 				}
-				else if (selectionMode == SelectionMode.Directory)
+
+				if (!error)
 				{
-					if (!Directory.Exists(file.fullPath))
-					{
-						error = true;
-					}
+					Answer();
+				}
+				else
+				{
+					Debug.LogError("File or Directory does not exist");
 				}
 			}
-
-			if (!error)
+		}
+		else if (explorerMode == ExplorerMode.Save)
+		{
+			if (!String.IsNullOrWhiteSpace(filenameField.text))
 			{
 				Answer();
-			}
-			else
-			{
-				Debug.LogError("File or Directory does not exist");
 			}
 		}
 	}
@@ -478,10 +573,20 @@ public class ExplorerPanel : MonoBehaviour
 			i++;
 		}
 
-		filenameField.text = fileNames.ToString();
+		filenameField.SetTextWithoutNotify(fileNames.ToString());
 
 		lastClickTime = Time.unscaledTime;
 		lastClickIndex = index;
+	}
+
+	public void OnFilenameFieldChanged()
+	{
+		foreach (var file in selectedFiles)
+		{
+			file.explorerPanelItem.GetComponent<Image>().color = normalColor;
+		}
+
+		selectedFiles.Clear();
 	}
 
 	int EntryIndexForGO(GameObject go)
@@ -531,6 +636,11 @@ public class ExplorerPanel : MonoBehaviour
 			{".aif", "Audio" },
 			{".ogg", "Audio" },
 		};
+
+		if (extension.Length <= 1)
+		{
+			return "";
+		}
 
 		var extensionLower = extension.ToLowerInvariant();
 

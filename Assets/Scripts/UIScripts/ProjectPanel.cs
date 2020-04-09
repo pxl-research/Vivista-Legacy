@@ -43,7 +43,7 @@ public class ProjectPanel : MonoBehaviour
 	private int lastClickIndex;
 	private float lastClickDelta;
 
-	public void Init(bool isSaveFileDialog)
+	public void Init(bool isSaveFileDialog, string preSelect = "")
 	{
 		//NOTE(Simon): Window setup. Display controls belonging to either open or save window.
 		{
@@ -59,8 +59,6 @@ public class ProjectPanel : MonoBehaviour
 				saveButton.gameObject.SetActive(false);
 			}
 		}
-
-		SetIndex(-1);
 
 		var directories = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
 		foreach (var directory in directories)
@@ -107,6 +105,8 @@ public class ProjectPanel : MonoBehaviour
 				files.Add(newFileItem);
 			}
 		}
+
+		SetIndex(IndexForName(preSelect));
 	}
 
 	void Update()
@@ -315,5 +315,21 @@ public class ProjectPanel : MonoBehaviour
 		{
 			thumb.texture = logo;
 		}
+	}
+
+	public int IndexForName(string name)
+	{
+		if (!String.IsNullOrEmpty(name))
+		{
+			for (int i = 0; i < files.Count; i++)
+			{
+				if (files[i].title == name)
+				{
+					return i;
+				}
+			}
+		}
+
+		return -1;
 	}
 }
