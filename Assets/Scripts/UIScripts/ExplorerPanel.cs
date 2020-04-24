@@ -367,9 +367,101 @@ public class ExplorerPanel : MonoBehaviour
 			entries[i].explorerPanelItem = explorerPanelItem;
 		}
 
-		// scroll to top
 		Canvas.ForceUpdateCanvases();
+		//NOTE(Simon): scroll to top
 		directoryContent.verticalNormalizedPosition = 1;
+	}
+
+	private void FillSidebar()
+	{
+		sidebar.gameObject.SetActive(false);
+		if (Application.platform == RuntimePlatform.WindowsEditor ||
+			Application.platform == RuntimePlatform.WindowsPlayer)
+		{
+			sidebar.gameObject.SetActive(true);
+
+			sidebarItems.Add(NewSidebarFolder("Desktop", Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)));
+			sidebarItems.Add(NewSidebarFolder("Documents", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)));
+			sidebarItems.Add(NewSidebarFolder("Downloads", Environment.ExpandEnvironmentVariables("%userprofile%\\Downloads")));
+			sidebarItems.Add(NewSidebarFolder("Music", Environment.GetFolderPath(Environment.SpecialFolder.MyMusic)));
+			sidebarItems.Add(NewSidebarFolder("Pictures", Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)));
+			sidebarItems.Add(NewSidebarFolder("Videos", Environment.GetFolderPath(Environment.SpecialFolder.MyVideos)));
+
+			sidebarItems.Add(NewSidebarItem(""));
+
+			var drives = Directory.GetLogicalDrives();
+			foreach (var drive in drives)
+			{
+				sidebarItems.Add(NewSidebarDrive(NativeCalls.GetDriveName(drive), drive));
+			}
+		}
+	}
+
+	private GameObject NewSidebarItem(string name)
+	{
+		var newItem = new GameObject("SidebarItem");
+		newItem.transform.SetParent(sidebar.transform, false);
+
+		var rect = newItem.AddComponent<RectTransform>();
+		rect.sizeDelta = new Vector2(200, 25);
+
+		var textGo = new GameObject("Name");
+		textGo.transform.SetParent(newItem.transform, false);
+
+		var textRect = textGo.AddComponent<RectTransform>();
+		textRect.anchorMin = Vector2.zero;
+		textRect.anchorMax = Vector2.one;
+		textRect.offsetMin = new Vector2(10, 0);
+		textRect.offsetMax = Vector2.zero;
+
+		var text = textGo.AddComponent<Text>();
+		text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+		text.color = Color.black;
+		text.text = name;
+		text.alignment = TextAnchor.MiddleLeft;
+
+		//NOTE(Simon): If no name, assume it's a divider. So don't make it interactable
+		if (!String.IsNullOrEmpty(name))
+		{
+			var button = newItem.gameObject.AddComponent<Button>();
+			button.transition = Selectable.Transition.ColorTint;
+			button.colors = new ColorBlock
+			{
+				normalColor = selectedColor,
+				pressedColor = normalColor,
+				selectedColor = selectedColor,
+				highlightedColor = new Color(normalColor.r, normalColor.g, normalColor.b, .8f),
+				colorMultiplier = 1f,
+				fadeDuration = 0f
+			};
+
+			var image = newItem.gameObject.AddComponent<Image>();
+			button.targetGraphic = image;
+		}
+
+		return newItem;
+	}
+
+	private GameObject NewSidebarFolder(string name, string path)
+	{
+		var item = NewSidebarItem(name);
+		if (!String.IsNullOrEmpty(path))
+		{
+			var button = item.GetComponentInChildren<Button>();
+			button.onClick.AddListener(() => OnDirectoryClick(path));
+		}
+		return item;
+	}
+
+	private GameObject NewSidebarDrive(string name, string path)
+	{
+		var item = NewSidebarItem(name);
+		if (!String.IsNullOrEmpty(path))
+		{
+			var button = item.GetComponentInChildren<Button>();
+			button.onClick.AddListener(() => OnDriveClick(path));
+		}
+		return item;
 	}
 
 	private void OnDirectoryClick(string path)
