@@ -1,171 +1,160 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
-using ICSharpCode.SharpZipLib.Zip;
 
 public class ImportPanel : MonoBehaviour 
 {
 	public bool answered;
-	public string sourcePath;
-	public string destinationFolder;
-	public string destinationPath;
-	public string filename;
 
-	public Text text;
+	public Button importButton;
 	public ProgressBar progressbar;
 
-	private static readonly object importLock = new object();
-	private static readonly object unpackLock = new object();
-	private float copyProgress;
-	private float unpackProgress;
+	private ExplorerPanel explorerPanel;
+
+	private float progress;
 	private bool unpacking;
 
-	public void Init(string sourcePath)
+	//NOTE(Simon): Cache persistentDataPath, because we need it in a non-main thread
+	private string persistentDataPath;
+
+	private void Start()
 	{
-		if (sourcePath == "")
-		{
-			Debug.LogError("No filename received");
-			Destroy(this);
-			return;
-		}
-
-		this.sourcePath = sourcePath;
-		filename = Path.GetFileName(sourcePath);
-
-		if (File.Exists(sourcePath))
-		{
-			destinationFolder = Application.persistentDataPath;
-			destinationPath = Path.Combine(destinationFolder, filename);
-			new Thread(CopyFile).Start();
-		}
+		importButton.onClick.AddListener(OnStartImport);
+		persistentDataPath = Application.persistentDataPath;
 	}
 
 	public void Update () 
 	{
-		float threadLocalCopyProgress;
-		float threadLocalUnpackProgress;
-		lock (importLock)
+		if (explorerPanel != null)
 		{
-			threadLocalCopyProgress = copyProgress;
-		}
-		lock (unpackLock)
-		{
-			threadLocalUnpackProgress = unpackProgress;
-		}
-
-		if (threadLocalCopyProgress == 1f && !unpacking)
-		{
-			unpacking = true;
-			new Thread(UnpackFile).Start();
-		}
-		if (threadLocalUnpackProgress == 1f)
-		{
-			answered = true;
-		}
-
-		text.GetComponent<Text>().text = !unpacking ? "Copying..." : "Unpacking...";
-		progressbar.SetProgress((threadLocalCopyProgress + threadLocalUnpackProgress) / 2f);
-	}
-
-	public void CopyFile()
-	{
-		var buffer = new byte[4 * 1024 * 1024];
-
-		using (var source = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
-		{
-			long fileLength = source.Length;
-			using (var dest = new FileStream(destinationPath, FileMode.Create, FileAccess.Write))
+			if (explorerPanel.answered)
 			{
-				long totalBytes = 0;
-				int currentBlockSize;
-
-				while ((currentBlockSize = source.Read(buffer, 0, buffer.Length)) > 0)
+				if (File.Exists(explorerPanel.answerPath))
 				{
-					totalBytes += currentBlockSize;
-					float percentage = (float)totalBytes / fileLength;
-
-					dest.Write(buffer, 0, currentBlockSize);
-
-					lock (importLock)
-					{
-						copyProgress = percentage;
-					}
+					new Thread(() => UnpackFile(explorerPanel.answerPath)).Start();
 				}
 
-				lock (importLock)
-				{
-					copyProgress = 1f;
-				}
-			}
-		}
-	}
-
-	public void UnpackFile()
-	{
-		long bytesWritten = 0;
-		long bytesToWrite = 0;
-
-		using (var source = new ZipInputStream(File.OpenRead(destinationPath)))
-		{
-			ZipEntry entry;
-			while ((entry = source.GetNextEntry()) != null)
-			{
-				bytesToWrite += entry.Size;
+				Destroy(explorerPanel.gameObject);
 			}
 		}
 
-		using (var source = new ZipInputStream(File.OpenRead(destinationPath)))
+		if (unpacking)
 		{
-			ZipEntry entry;
-			while ((entry = source.GetNextEntry()) != null)
+			progressbar.SetProgress(progress);
+		}
+	}
+
+	public void OnStartImport()
+	{
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel, Canvass.main.transform, false);
+		explorerPanel.Init("%HOMEPATH%\\Downloads", "*.zip", "Select the zip-file you downloaded earlier");
+	}
+
+	//NOTE(Simon): First unpack to random destination. Then read savefile, and copy to correct folder (or overwrite if existing)
+	public void UnpackFile(string zipPath)
+	{
+		unpacking = true;
+		long bytesUnpacked = 0;
+		long bytesToUnpack = 0;
+		long bytesCopied = 0;
+		long bytesToCopy = 0;
+
+		string tempDestFolder = Path.Combine(persistentDataPath, Guid.NewGuid().ToString());
+
+		using (var source = new ZipArchive(File.OpenRead(zipPath),ZipArchiveMode.Read))
+		{
+			foreach (var entry in source.Entries)
 			{
-				string destDir = Path.Combine(destinationFolder, Path.GetDirectoryName(entry.Name));
-				string destFile = Path.Combine(destinationFolder, entry.Name);
-				string destFilename = Path.GetFileName(entry.Name);
+				bytesToUnpack += entry.Length;
+			}
+		}
+
+		using (var source = new ZipArchive(File.OpenRead(zipPath),ZipArchiveMode.Read))
+		{
+			foreach (var entry in source.Entries)
+			{
+				string destDir = Path.Combine(tempDestFolder, Path.GetDirectoryName(entry.FullName));
+				string destFile = Path.Combine(tempDestFolder, entry.FullName);
 
 				if (destDir.Length > 0)
 				{
 					Directory.CreateDirectory(destDir);
 				}
 
-				if (destFilename != String.Empty)
+				using (var writer = File.Create(destFile))
+				using (var entryStream = entry.Open())
 				{
-					using (var writer = File.Create(destFile))
+					var buffer = new byte[80 * 1024];
+					int read;
+					do
 					{
-						int size = 2048;
-						var data = new byte[size];
-						while (true)
-						{
-							size = source.Read(data, 0, data.Length);
-							if (size > 0)
-							{
-								writer.Write(data, 0, size);
-							}
-							else
-							{
-								break;
-							}
-							bytesWritten += size;
-
-							lock (unpackLock)
-							{
-								unpackProgress = (float)bytesWritten / bytesToWrite;
-							}
-						}
-					}
+						read = entryStream.Read(buffer, 0, buffer.Length);
+						writer.Write(buffer, 0, read);
+						bytesUnpacked += read;
+						progress = (float) (bytesUnpacked) / bytesToUnpack / 2;
+					} while (read > 0);
 				}
 			}
 		}
 
-		//NOTE(Simon): Delete  source and dest zip files after unpacking
-		//File.Delete(sourcePath);
-		File.Delete(destinationPath);
 
-		lock (unpackLock)
+		var savefileData = SaveFile.OpenFile(tempDestFolder);
+		var realGuid = savefileData.meta.guid;
+		var realDestFolder = Path.Combine(persistentDataPath, realGuid.ToString());
+
+		bytesToCopy += SaveFile.DirectorySize(new DirectoryInfo(tempDestFolder));
+
+		if (!Directory.Exists(realDestFolder))
 		{
-			unpackProgress = 1f;
+			Directory.Move(tempDestFolder, realDestFolder);
 		}
+		else
+		{
+			var files = Directory.GetFiles(tempDestFolder);
+			foreach (var file in files)
+			{
+				var filename = Path.GetFileName(file);
+				var fileInRealDest = Path.Combine(realDestFolder, filename);
+				var fileInTempDest = Path.Combine(tempDestFolder, filename);
+
+				//NOTE(Simon): If file already exists in real destination, first delete. So Move() is safe.
+				File.Delete(fileInRealDest);
+				File.Move(fileInTempDest, fileInRealDest);
+
+				bytesCopied += new FileInfo(fileInRealDest).Length;
+				progress = (float) (bytesUnpacked + bytesCopied) / (bytesToUnpack + bytesToCopy);
+			}
+
+			var dirs = Directory.GetDirectories(tempDestFolder);
+			foreach (var dir in dirs)
+			{
+				var dirname = new DirectoryInfo(dir).Name;
+				//NOTE(Simon): Make sure directory exists
+				Directory.CreateDirectory(Path.Combine(realDestFolder, dirname));
+
+				var dirFiles = Directory.GetFiles(Path.Combine(tempDestFolder, dir));
+				foreach (var file in dirFiles)
+				{
+					var filename = Path.GetFileName(file);
+					var fileInRealDest = Path.Combine(realDestFolder, dirname, filename);
+					var fileInTempDest = Path.Combine(tempDestFolder, dirname, filename);
+
+					File.Delete(fileInRealDest);
+					File.Move(fileInTempDest, fileInRealDest);
+					
+					bytesCopied += new FileInfo(fileInRealDest).Length;
+					progress = (float) (bytesUnpacked + bytesCopied) / (bytesToUnpack + bytesToCopy);
+				}
+			}
+		}
+
+		Directory.Delete(tempDestFolder, true);
+
+		progress = 1f;
+		answered = true;
+		unpacking = false;
 	}
 }

@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class VideoPanelEditor : MonoBehaviour {
 
 	public Button done;
-	public ExplorerPanel explorerPanelPrefab;
 
 	public InputField url;
 	public InputField title;
@@ -83,7 +82,7 @@ public class VideoPanelEditor : MonoBehaviour {
 	{
 		var searchPattern = "*.mp4;*.webm;*.m4v";
 
-		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select video");
 

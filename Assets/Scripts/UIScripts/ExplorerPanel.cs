@@ -69,9 +69,12 @@ public class ExplorerPanel : MonoBehaviour
 	public Text extension;
 	public Button answerButton;
 
+	public RectTransform sidebar;
+
 	public Sprite iconDirectory, iconFile, iconDrive;
 
 	private List<ExplorerEntry> selectedFiles = new List<ExplorerEntry>();
+	private List<GameObject> sidebarItems = new List<GameObject>();
 
 	private static string osType;
 	private string currentDirectory;
@@ -86,7 +89,7 @@ public class ExplorerPanel : MonoBehaviour
 	private Queue<GameObject> inactiveExplorerPanelItems;
 
 	private static Color normalColor = Color.white;
-	private static Color selectedColor = new Color(210 / 255f, 210 / 255f, 210 / 255f);
+	private static Color selectedColor = new Color(216 / 255f, 216 / 255f, 216 / 255f);
 
 	private string cookiePath;
 
@@ -162,6 +165,8 @@ public class ExplorerPanel : MonoBehaviour
 		answered = false;
 		osType = Environment.OSVersion.Platform.ToString();
 		sortNameButton.GetComponentInChildren<Text>().text = "Name ↓";
+
+		FillSidebar();
 
 		filenameField.onValueChanged.AddListener(_ => OnFilenameFieldChanged());
 	}
@@ -476,8 +481,6 @@ public class ExplorerPanel : MonoBehaviour
 
 		var drives = Directory.GetLogicalDrives();
 
-		currentPath.text = "Select Drive";
-
 		ClearItems();
 		foreach (string drive in drives)
 		{
@@ -492,7 +495,7 @@ public class ExplorerPanel : MonoBehaviour
 		FillItems();
 	}
 
-	private void DriveClick(string path)
+	private void OnDriveClick(string path)
 	{
 		currentDirectory = path;
 		UpdateDir();
@@ -604,7 +607,7 @@ public class ExplorerPanel : MonoBehaviour
 			}
 			else if (entry.entryType == EntryType.Drive)
 			{
-				DriveClick(entry.fullPath);
+				OnDriveClick(entry.fullPath);
 			}
 		}
 		else if (multiSelect && controlHeld)
@@ -639,18 +642,19 @@ public class ExplorerPanel : MonoBehaviour
 		//NOTE(Simon): Plain single click
 		else
 		{
-			foreach (var file in selectedFiles)
+			foreach (var e in entries)
 			{
-				file.explorerPanelItem.GetComponent<Image>().color = normalColor;
+				e.explorerPanelItem.GetComponent<Image>().color = normalColor;
 			}
 
 			selectedFiles.Clear();
+
+			entry.explorerPanelItem.GetComponent<Image>().color = selectedColor;
 
 			if (entry.entryType == EntryType.File && selectionMode == SelectionMode.File
 				|| entry.entryType == EntryType.Directory && selectionMode == SelectionMode.Directory)
 			{
 				selectedFiles.Add(entry);
-				entry.explorerPanelItem.GetComponent<Image>().color = selectedColor;
 			}
 		}
 
@@ -756,4 +760,5 @@ public class ExplorerPanel : MonoBehaviour
 		sortDateButton.GetComponentInChildren<Text>().text = "Date";
 		sortSizeButton.GetComponentInChildren<Text>().text = "Type";
 	}
+
 }

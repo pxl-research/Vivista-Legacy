@@ -16,8 +16,6 @@ public enum ExportMode
 
 public class ExportPanel : MonoBehaviour
 {
-	public GameObject explorerPanelPrefab;
-
 	public Toggle fullToggle;
 	public Toggle minimalToggle;
 	public Toggle allowEdit;
@@ -37,8 +35,7 @@ public class ExportPanel : MonoBehaviour
 
 	private bool exporting;
 	private bool done;
-	private long totalFileSize;
-	private long totalWritten;
+	private float progress;
 
 	void Start()
 	{
@@ -73,8 +70,6 @@ public class ExportPanel : MonoBehaviour
 
 		if (exporting)
 		{
-			float progress = (float)totalWritten / totalFileSize;
-			
 			progressBar.SetProgress(progress);
 		}
 
@@ -95,7 +90,7 @@ public class ExportPanel : MonoBehaviour
 			}
 		}
 
-		explorerPanel = Instantiate(explorerPanelPrefab, Canvass.main.transform, false).GetComponent<ExplorerPanel>();
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel, Canvass.main.transform, false).GetComponent<ExplorerPanel>();
 		explorerPanel.InitSaveAs("", ".zip", "*.zip", "Enter a file name");
 
 		exportButton.interactable = false;
@@ -106,6 +101,8 @@ public class ExportPanel : MonoBehaviour
 		var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 		exporting = true;
 		var files = new List<string>();
+		long totalFileSize = 0;;
+		long totalWritten = 0;
 
 		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, "extra")));
 		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, "areaMiniatures")));
@@ -125,11 +122,13 @@ public class ExportPanel : MonoBehaviour
 			files.Add(Path.Combine(projectPath, ".editable"));
 		}
 
+		//NOTE(Simon): If zip exists, delete the original, so we don't keep old archive entries around
+		File.Delete(destFile);
+
 		foreach (var file in files)
 		{
 			totalFileSize += new FileInfo(file).Length;
 		}
-
 		using (var dest = new ZipArchive(File.OpenWrite(destFile), ZipArchiveMode.Create))
 		{
 			foreach (string file in files)
@@ -149,6 +148,7 @@ public class ExportPanel : MonoBehaviour
 						read = stream.Read(buffer, 0, buffer.Length);
 						entryStream.Write(buffer, 0, read);
 						totalWritten += read;
+						progress = (float)totalWritten / totalFileSize;
 					} while (read > 0);
 				}
 			}

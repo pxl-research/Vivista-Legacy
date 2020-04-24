@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -28,6 +29,9 @@ public class ProjectPanel : MonoBehaviour
 	public Button deleteButton;
 	public Button openButton;
 	public Button saveButton;
+	public Button importButton;
+
+	private ImportPanel importPanel;
 
 	public GameObject filenameItemPrefab;
 
@@ -38,6 +42,7 @@ public class ProjectPanel : MonoBehaviour
 	private List<FileItem> files = new List<FileItem>();
 	private int selectedIndex = -1;
 	private bool isNew;
+	private bool isRenaming;
 	private bool isSaving;
 
 	private int lastClickIndex;
@@ -60,51 +65,9 @@ public class ProjectPanel : MonoBehaviour
 			}
 		}
 
-		var directories = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
-		foreach (var directory in directories)
-		{
-			var editable = File.Exists(Path.Combine(directory.FullName, ".editable"));
-			if (editable)
-			{
-				FileItem newFileItem;
-				var filenameListItem = Instantiate(filenameItemPrefab);
+		importButton.onClick.AddListener(StartImport);
 
-				try
-				{
-					var meta = SaveFile.OpenFile(directory.FullName).meta;
-					string title;
-					if (meta.version > SaveFile.VERSION)
-					{
-						title = $"Project version too high. Please update the Editor: {directory.Name}";
-						filenameListItem.GetComponentInChildren<Text>().color = Color.red;
-					}
-					else
-					{
-						title = meta.title;
-					}
-
-					newFileItem = new FileItem { title = title, guid = directory.Name };
-
-				}
-				catch (FileNotFoundException e)
-				{
-					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name };
-					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
-				}
-				catch (Exception e)
-				{
-					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name };
-					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
-					Debug.LogError(e);
-				}
-
-				filenameListItem.transform.SetParent(fileList, false);
-				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
-				newFileItem.listItem = filenameListItem;
-
-				files.Add(newFileItem);
-			}
-		}
+		StartCoroutine(PeriodicRefresh());
 
 		SetIndex(IndexForName(preSelect));
 	}
@@ -143,7 +106,18 @@ public class ProjectPanel : MonoBehaviour
 				lastClickDelta = 0;
 			}
 		}
+
 		lastClickDelta += Time.deltaTime;
+
+		if (importPanel != null)
+		{
+			if (importPanel.answered)
+			{
+				Destroy(importPanel.gameObject);
+				RefreshProjectList();
+				transform.localScale = new Vector3(1, 1, 1);
+			}
+		}
 	}
 
 	public void NewStart()
@@ -165,6 +139,7 @@ public class ProjectPanel : MonoBehaviour
 
 	public void NewStop(string title)
 	{
+		isNew = false;
 		SetIndex(files.Count - 1);
 
 		var projectFolder = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
@@ -207,6 +182,8 @@ public class ProjectPanel : MonoBehaviour
 	{
 		if (selectedIndex != -1)
 		{
+			isRenaming = true;
+
 			var label = files[selectedIndex].listItem.GetComponentInChildren<Text>();
 			var input = files[selectedIndex].listItem.GetComponentInChildren<InputField>(true);
 
@@ -220,6 +197,8 @@ public class ProjectPanel : MonoBehaviour
 
 	public void RenameStop(string newTitle)
 	{
+		isRenaming = false;
+
 		var label = files[selectedIndex].listItem.GetComponentInChildren<Text>(true);
 		var input = files[selectedIndex].listItem.GetComponentInChildren<InputField>();
 		input.onEndEdit.RemoveListener(RenameStop);
@@ -232,16 +211,21 @@ public class ProjectPanel : MonoBehaviour
 		if (isNew)
 		{
 			NewStop(newTitle);
-			isNew = false;
 		}
 		else if (selectedIndex != -1)
 		{
 			var path = Path.Combine(Application.persistentDataPath, files[selectedIndex].guid);
 
-			var data = SaveFile.OpenFile(Path.Combine(path, SaveFile.metaFilename));
+			var data = SaveFile.OpenFile(path);
 			data.meta.title = newTitle;
-			SaveFile.WriteFile(data);
+			SaveFile.WriteFile(path, data);
 		}
+	}
+
+	public void StartImport()
+	{
+		importPanel = Instantiate(UIPanels.Instance.importPanel, Canvass.main.transform, false);
+		transform.localScale = new Vector3(0, 0, 0);
 	}
 
 	public void Delete()
@@ -331,5 +315,74 @@ public class ProjectPanel : MonoBehaviour
 		}
 
 		return -1;
+	}
+
+	public void RefreshProjectList()
+	{
+		files.Clear();
+
+		foreach (Transform item in fileList.transform)
+		{
+			Destroy(item.gameObject);
+		}
+
+		var directories = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
+		foreach (var directory in directories)
+		{
+			var editable = File.Exists(Path.Combine(directory.FullName, ".editable"));
+			if (editable)
+			{
+				FileItem newFileItem;
+				var filenameListItem = Instantiate(filenameItemPrefab);
+
+				try
+				{
+					var meta = SaveFile.OpenFile(directory.FullName).meta;
+					string title;
+					if (meta.version > SaveFile.VERSION)
+					{
+						title = $"Project version too high. Please update the Editor: {directory.Name}";
+						filenameListItem.GetComponentInChildren<Text>().color = Color.red;
+					}
+					else
+					{
+						title = meta.title;
+					}
+
+					newFileItem = new FileItem { title = title, guid = directory.Name };
+
+				}
+				catch (FileNotFoundException e)
+				{
+					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name };
+					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
+				}
+				catch (Exception e)
+				{
+					newFileItem = new FileItem { title = "<b>corrupted file: " + directory.Name + "</b>", guid = directory.Name };
+					filenameListItem.GetComponentInChildren<Text>().color = Color.red;
+					Debug.LogError(e);
+				}
+
+				filenameListItem.transform.SetParent(fileList, false);
+				filenameListItem.GetComponentInChildren<Text>().text = newFileItem.title;
+				newFileItem.listItem = filenameListItem;
+
+				files.Add(newFileItem);
+			}
+		}
+	}
+
+	public IEnumerator PeriodicRefresh()
+	{
+		while (true)
+		{
+			if (!isRenaming)
+			{
+				RefreshProjectList();
+			}
+
+			yield return new WaitForSeconds(5);
+		}
 	}
 }

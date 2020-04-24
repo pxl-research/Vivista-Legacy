@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class AudioPanelEditor : MonoBehaviour
 {
 	public Button done;
-	public ExplorerPanel explorerPanelPrefab;
 
 	public InputField url;
 	public InputField title;
@@ -95,7 +94,7 @@ public class AudioPanelEditor : MonoBehaviour
 	{
 		 var searchPattern = "*.mp3;*.wav;*.aif;*.ogg";
 
-		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select audio");
 

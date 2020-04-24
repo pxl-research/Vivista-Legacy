@@ -23,7 +23,6 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	public TagPicker tagPicker;
 
 	public MultipleChoiceImageEntry multipleChoiceImageEntryPrefab;
-	public ExplorerPanel explorerPanelPrefab;
 
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
@@ -97,7 +96,7 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	{
 		var searchPattern = "*.jpg;*.jpeg;*.bmp;*.png";
 
-		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", ExplorerPanel.SelectionMode.File, true);
 

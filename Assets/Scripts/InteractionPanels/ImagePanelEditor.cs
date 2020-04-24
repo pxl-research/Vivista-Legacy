@@ -12,7 +12,6 @@ public enum ImageEditorState
 public class ImagePanelEditor : MonoBehaviour
 {
 	public InputField title;
-	public ExplorerPanel explorerPanelPrefab;
 	public GameObject imageAlbumEntryPrefab;
 	public RectTransform imageAlbumList;
 
@@ -94,7 +93,7 @@ public class ImagePanelEditor : MonoBehaviour
 	{
 		var searchPattern = "*.jpg;*.jpeg;*.bmp;*.png";
 
-		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, "Select image", ExplorerPanel.SelectionMode.File, true);
 

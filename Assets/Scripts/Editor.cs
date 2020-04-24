@@ -178,7 +178,6 @@ public class Editor : MonoBehaviour
 	public GameObject multipleChoiceImagePanelEditorPrefab;
 	public GameObject uploadPanelPrefab;
 	public GameObject loginPanelPrefab;
-	public GameObject explorerPanelPrefab;
 	public GameObject tagPanelPrefab;
 	public GameObject exportPanelPrefab;
 
@@ -188,7 +187,7 @@ public class Editor : MonoBehaviour
 	private GameObject openPanel;
 	private GameObject uploadPanel;
 	private GameObject loginPanel;
-	private GameObject explorerPanel;
+	private ExplorerPanel explorerPanel;
 	private GameObject tagPanel;
 
 	public RectTransform timelineContainer;
@@ -244,8 +243,7 @@ public class Editor : MonoBehaviour
 		interactionPointTemp.name = "Temp InteractionPoint";
 		interactionPoints = new List<InteractionPointEditor>();
 
-		var tooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform);
-		timeTooltip = tooltip.GetComponent<TimeTooltip>();
+		timeTooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimeTooltip>();
 		timeTooltip.ResetPosition();
 
 		prevMousePosition = Input.mousePosition;
@@ -253,7 +251,7 @@ public class Editor : MonoBehaviour
 		SetEditorActive(false);
 		meta = new Metadata();
 
-		InitOpenFilePanel();
+		InitOpenProjectPanel();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
@@ -1149,18 +1147,16 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.PickingVideo)
 		{
-			var panel = explorerPanel.GetComponent<ExplorerPanel>();
-
-			if (panel.answered)
+			if (explorerPanel.answered)
 			{
 				var videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 				var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
-				File.Copy(panel.answerPath, videoPath);
+				File.Copy(explorerPanel.answerPath, videoPath);
 
 				if (OpenFile(projectFolder))
 				{
-					Destroy(explorerPanel);
+					Destroy(explorerPanel.gameObject);
 					SetEditorActive(true);
 					Canvass.modalBackground.SetActive(false);
 					UnsavedChangesTracker.Instance.unsavedChanges = true;
@@ -1257,7 +1253,7 @@ public class Editor : MonoBehaviour
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
 #endif
 		{
-			InitOpenFilePanel();
+			InitOpenProjectPanel();
 		}
 
 #if UNITY_EDITOR
@@ -1958,7 +1954,7 @@ public class Editor : MonoBehaviour
 		Canvass.modalBackground.SetActive(true);
 	}
 
-	public void InitOpenFilePanel()
+	public void InitOpenProjectPanel()
 	{
 		openPanel = Instantiate(filePanelPrefab);
 		openPanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: false);
@@ -1988,9 +1984,9 @@ public class Editor : MonoBehaviour
 
 	public void InitExplorerPanel(string searchPattern, string title)
 	{
-		explorerPanel = Instantiate(explorerPanelPrefab);
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
-		explorerPanel.GetComponent<ExplorerPanel>().Init("", searchPattern, title);
+		explorerPanel.Init("", searchPattern, title);
 	}
 
 	public void ShowTagPanel()
