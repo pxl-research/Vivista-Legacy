@@ -10,7 +10,7 @@ public static class NativeCalls
 		var buffer = new StringBuilder(261);
 		if (GetVolumeInformation(path, buffer, buffer.Capacity, out uint volSer, out uint macCompLen, out var flags, null, 0))
 		{
-			return buffer.Length == 0 ? path : buffer.ToString();
+			return buffer.Length == 0 ? $"Local Disk ({path})" : $"{buffer} ({path})";
 		}
 		else
 		{
