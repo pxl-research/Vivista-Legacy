@@ -149,7 +149,7 @@ public class ProjectPanel : MonoBehaviour
 			try
 			{
 				Directory.CreateDirectory(projectFolder);
-				File.Create(Path.Combine(projectFolder, ".editable")).Close();
+				File.Create(Path.Combine(projectFolder, SaveFile.editableFilename)).Close();
 				Directory.CreateDirectory(Path.Combine(projectFolder, SaveFile.extraPath));
 				Directory.CreateDirectory(Path.Combine(projectFolder, SaveFile.miniaturesPath));
 			}
@@ -329,7 +329,7 @@ public class ProjectPanel : MonoBehaviour
 		var directories = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
 		foreach (var directory in directories)
 		{
-			var editable = File.Exists(Path.Combine(directory.FullName, ".editable"));
+			var editable = File.Exists(Path.Combine(directory.FullName, SaveFile.editableFilename));
 			if (editable)
 			{
 				FileItem newFileItem;

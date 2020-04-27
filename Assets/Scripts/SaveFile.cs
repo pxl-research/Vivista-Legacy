@@ -67,6 +67,7 @@ public static class SaveFile
 	public static string videoFilename = "main.mp4";
 	public static string thumbFilename = "thumb.jpg";
 	public static string tagsFilename = "tags.json";
+	public static string editableFilename = ".editable";
 	public static string extraPath = "extra";
 	public static string miniaturesPath = "areaMiniatures";
 
@@ -100,7 +101,7 @@ public static class SaveFile
 		var dirNames = new Dictionary<string, Guid>();
 		foreach (var dir in dirs)
 		{
-			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
+			if (File.Exists(Path.Combine(dir.FullName, editableFilename)))
 			{
 				var metaPath = Path.Combine(dir.FullName, metaFilename);
 				if (new FileInfo(metaPath).Length > 0)
@@ -120,7 +121,7 @@ public static class SaveFile
 
 		foreach (var dir in dirs)
 		{
-			if (File.Exists(Path.Combine(dir.FullName, ".editable")))
+			if (File.Exists(Path.Combine(dir.FullName, editableFilename)))
 			{
 				var metaPath = Path.Combine(dir.FullName, metaFilename);
 				if (File.Exists(metaPath) && new FileInfo(metaPath).Length > 0)

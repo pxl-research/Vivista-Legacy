@@ -104,22 +104,22 @@ public class ExportPanel : MonoBehaviour
 		long totalFileSize = 0;;
 		long totalWritten = 0;
 
-		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, "extra")));
-		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, "areaMiniatures")));
-		files.Add(Path.Combine(projectPath, "meta.json"));
-		files.Add(Path.Combine(projectPath, "tags.json"));
+		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, SaveFile.extraPath)));
+		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, SaveFile.miniaturesPath)));
+		files.Add(Path.Combine(projectPath, SaveFile.metaFilename));
+		files.Add(Path.Combine(projectPath, SaveFile.tagsFilename));
 
 		//NOTE(Simon): If mode is "full", also include the base video and thumb image
 		if (mode.HasFlag(ExportMode.Full))
 		{
-			files.Add(Path.Combine(projectPath, "thumb.jpg"));
-			files.Add(Path.Combine(projectPath, "main.mp4"));
+			files.Add(Path.Combine(projectPath, SaveFile.thumbFilename));
+			files.Add(Path.Combine(projectPath, SaveFile.videoFilename));
 		}
 
 		//NOTE(Simon): If mode is "editable", also include the editable file
 		if (mode.HasFlag(ExportMode.AllowEdit))
 		{
-			files.Add(Path.Combine(projectPath, ".editable"));
+			files.Add(Path.Combine(projectPath, SaveFile.editableFilename));
 		}
 
 		//NOTE(Simon): If zip exists, delete the original, so we don't keep old archive entries around
