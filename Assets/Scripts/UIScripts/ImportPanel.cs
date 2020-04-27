@@ -122,7 +122,7 @@ public class ImportPanel : MonoBehaviour
 			var realGuid = savefileData.meta.guid;
 			var realDestFolder = Path.Combine(persistentDataPath, realGuid.ToString());
 
-			if (realGuid == Editor.Instance.currentProjectGuid)
+			if (Editor.Instance != null && realGuid == Editor.Instance.currentProjectGuid)
 			{
 				isCurrentProject = true;
 			}
