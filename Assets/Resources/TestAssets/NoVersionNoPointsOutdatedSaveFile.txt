@@ -1,6 +1,0 @@
-uuid:0558fbf1-fcef-4105-9666-68214ee72949,
-title:Education,
-description:,
-perspective:Perspective360,
-length:1210.81,
-[[]]
