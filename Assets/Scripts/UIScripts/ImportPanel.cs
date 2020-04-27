@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Threading;
@@ -64,97 +65,131 @@ public class ImportPanel : MonoBehaviour
 
 		string tempDestFolder = Path.Combine(persistentDataPath, Guid.NewGuid().ToString());
 
+		bool corrupt = false;
+		bool fullImport = false;
+		bool isCurrentProject = false;
+
 		using (var source = new ZipArchive(File.OpenRead(zipPath),ZipArchiveMode.Read))
 		{
+			var filenames = new List<string>();
 			foreach (var entry in source.Entries)
 			{
-				bytesToUnpack += entry.Length;
+				filenames.Add(entry.Name);
 			}
-		}
 
-		using (var source = new ZipArchive(File.OpenRead(zipPath),ZipArchiveMode.Read))
-		{
-			foreach (var entry in source.Entries)
+			if (!filenames.Contains(SaveFile.metaFilename)) {corrupt = true;}
+			if (filenames.Contains(SaveFile.videoFilename)) {fullImport = true;}
+			if (fullImport && !filenames.Contains(SaveFile.thumbFilename)) {corrupt = true;}
+
+			if (!corrupt)
 			{
-				string destDir = Path.Combine(tempDestFolder, Path.GetDirectoryName(entry.FullName));
-				string destFile = Path.Combine(tempDestFolder, entry.FullName);
-
-				if (destDir.Length > 0)
+				foreach (var entry in source.Entries)
 				{
-					Directory.CreateDirectory(destDir);
+					bytesToUnpack += entry.Length;
 				}
 
-				using (var writer = File.Create(destFile))
-				using (var entryStream = entry.Open())
+				foreach (var entry in source.Entries)
 				{
-					var buffer = new byte[80 * 1024];
-					int read;
-					do
+					string destDir = Path.Combine(tempDestFolder, Path.GetDirectoryName(entry.FullName));
+					string destFile = Path.Combine(tempDestFolder, entry.FullName);
+
+					if (destDir.Length > 0)
 					{
-						read = entryStream.Read(buffer, 0, buffer.Length);
-						writer.Write(buffer, 0, read);
-						bytesUnpacked += read;
-						progress = (float) (bytesUnpacked) / bytesToUnpack / 2;
-					} while (read > 0);
+						Directory.CreateDirectory(destDir);
+					}
+
+					using (var writer = File.Create(destFile))
+					using (var entryStream = entry.Open())
+					{
+						//NOTE(Simon): 80kB is the buffer size used in .NET's CopyTo()
+						var buffer = new byte[80 * 1024];
+						int read;
+						do
+						{
+							read = entryStream.Read(buffer, 0, buffer.Length);
+							writer.Write(buffer, 0, read);
+							bytesUnpacked += read;
+							progress = (float) (bytesUnpacked) / bytesToUnpack / 2;
+						} while (read > 0);
+					}
 				}
 			}
 		}
 
-
-		var savefileData = SaveFile.OpenFile(tempDestFolder);
-		var realGuid = savefileData.meta.guid;
-		var realDestFolder = Path.Combine(persistentDataPath, realGuid.ToString());
-
-		bytesToCopy += SaveFile.DirectorySize(new DirectoryInfo(tempDestFolder));
-
-		if (!Directory.Exists(realDestFolder))
+		if (!corrupt)
 		{
-			Directory.Move(tempDestFolder, realDestFolder);
-		}
-		else
-		{
-			var files = Directory.GetFiles(tempDestFolder);
-			foreach (var file in files)
+			var savefileData = SaveFile.OpenFile(tempDestFolder);
+			var realGuid = savefileData.meta.guid;
+			var realDestFolder = Path.Combine(persistentDataPath, realGuid.ToString());
+
+			if (realGuid == Editor.Instance.currentProjectGuid)
 			{
-				var filename = Path.GetFileName(file);
-				var fileInRealDest = Path.Combine(realDestFolder, filename);
-				var fileInTempDest = Path.Combine(tempDestFolder, filename);
-
-				//NOTE(Simon): If file already exists in real destination, first delete. So Move() is safe.
-				File.Delete(fileInRealDest);
-				File.Move(fileInTempDest, fileInRealDest);
-
-				bytesCopied += new FileInfo(fileInRealDest).Length;
-				progress = (float) (bytesUnpacked + bytesCopied) / (bytesToUnpack + bytesToCopy);
+				isCurrentProject = true;
 			}
 
-			var dirs = Directory.GetDirectories(tempDestFolder);
-			foreach (var dir in dirs)
+			if (!isCurrentProject)
 			{
-				var dirname = new DirectoryInfo(dir).Name;
-				//NOTE(Simon): Make sure directory exists
-				Directory.CreateDirectory(Path.Combine(realDestFolder, dirname));
+				bytesToCopy += SaveFile.DirectorySize(new DirectoryInfo(tempDestFolder));
 
-				var dirFiles = Directory.GetFiles(Path.Combine(tempDestFolder, dir));
-				foreach (var file in dirFiles)
+				if (!Directory.Exists(realDestFolder))
 				{
-					var filename = Path.GetFileName(file);
-					var fileInRealDest = Path.Combine(realDestFolder, dirname, filename);
-					var fileInTempDest = Path.Combine(tempDestFolder, dirname, filename);
+					Directory.Move(tempDestFolder, realDestFolder);
+				}
+				else
+				{
+					var files = Directory.GetFiles(tempDestFolder);
+					foreach (var file in files)
+					{
+						var filename = Path.GetFileName(file);
+						var fileInRealDest = Path.Combine(realDestFolder, filename);
+						var fileInTempDest = Path.Combine(tempDestFolder, filename);
 
-					File.Delete(fileInRealDest);
-					File.Move(fileInTempDest, fileInRealDest);
-					
-					bytesCopied += new FileInfo(fileInRealDest).Length;
-					progress = (float) (bytesUnpacked + bytesCopied) / (bytesToUnpack + bytesToCopy);
+						//NOTE(Simon): If file already exists in real destination, first delete. So Move() is safe.
+						File.Delete(fileInRealDest);
+						File.Move(fileInTempDest, fileInRealDest);
+
+						bytesCopied += new FileInfo(fileInRealDest).Length;
+						progress = (float) (bytesUnpacked + bytesCopied) / (bytesToUnpack + bytesToCopy);
+					}
+
+					var dirs = Directory.GetDirectories(tempDestFolder);
+					foreach (var dir in dirs)
+					{
+						var dirname = new DirectoryInfo(dir).Name;
+						//NOTE(Simon): Make sure directory exists
+						Directory.CreateDirectory(Path.Combine(realDestFolder, dirname));
+
+						var dirFiles = Directory.GetFiles(Path.Combine(tempDestFolder, dir));
+						foreach (var file in dirFiles)
+						{
+							var filename = Path.GetFileName(file);
+							var fileInRealDest = Path.Combine(realDestFolder, dirname, filename);
+							var fileInTempDest = Path.Combine(tempDestFolder, dirname, filename);
+
+							File.Delete(fileInRealDest);
+							File.Move(fileInTempDest, fileInRealDest);
+
+							bytesCopied += new FileInfo(fileInRealDest).Length;
+							progress = (float) (bytesUnpacked + bytesCopied) / (bytesToUnpack + bytesToCopy);
+						}
+					}
 				}
 			}
+
+			Directory.Delete(tempDestFolder, true);
 		}
 
-		Directory.Delete(tempDestFolder, true);
+		if (corrupt)
+		{
+			Toasts.AddToast(10.0f, "Import failed. File is corrupt");
+		}
+		else if (isCurrentProject)
+		{
+			Toasts.AddToast(10.0f, "Import failed. Same as currently opened project.");
+		}
 
 		progress = 1f;
-		answered = true;
 		unpacking = false;
+		answered = true;
 	}
 }

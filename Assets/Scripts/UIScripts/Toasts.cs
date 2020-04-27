@@ -17,6 +17,7 @@ public class Toasts : MonoBehaviour
 	private static GameObject prefab;
 	private static RectTransform holder;
 	private static Queue<Toast> toasts = new Queue<Toast>();
+	private static Queue<Toast> newToasts = new Queue<Toast>();
 	
 	void Start()
 	{
@@ -26,6 +27,17 @@ public class Toasts : MonoBehaviour
 
 	void Update () 
 	{
+		//NOTE(Simon): Decouple toast GO creation from AddToast(), so that AddToast() is thread safe (Instantiate can only be called from main thread)
+		while (newToasts.Count > 0)
+		{
+			var newToast = newToasts.Dequeue();
+			var toast = Instantiate(prefab);
+			toast.transform.SetParent(holder.transform, false);
+			toast.GetComponentInChildren<Text>().text = newToast.text;
+			newToast.gameObject = toast;
+			toasts.Enqueue(newToast);
+		}
+
 		if (toasts.Count > 0)
 		{
 			foreach (var toast in toasts)
@@ -45,15 +57,10 @@ public class Toasts : MonoBehaviour
 	{
 		if (holder != null)
 		{
-			var toast = Instantiate(prefab);
-			toast.transform.SetParent(holder.transform, false);
-			toast.GetComponentInChildren<Text>().text = text;
-
-			toasts.Enqueue(new Toast
+			newToasts.Enqueue(new Toast
 			{
 				secondsRemaining = seconds,
-				text = text,
-				gameObject = toast
+				text = text
 			});
 		}
 		else

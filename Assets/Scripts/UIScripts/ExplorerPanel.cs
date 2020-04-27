@@ -430,6 +430,12 @@ public class ExplorerPanel : MonoBehaviour
 		{
 			var button = newItem.gameObject.AddComponent<Button>();
 			button.transition = Selectable.Transition.ColorTint;
+
+			//NOTE(Simon): Prevents "selected" state, where you can't highlight a button by hovering.
+			var nav = button.navigation;
+			nav.mode = Navigation.Mode.None;
+			button.navigation = nav;
+
 			button.colors = new ColorBlock
 			{
 				normalColor = selectedColor,

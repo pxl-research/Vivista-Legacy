@@ -149,6 +149,8 @@ public class Editor : MonoBehaviour
 
 	public EditorState editorState;
 
+	public Guid currentProjectGuid => meta.guid;
+
 	public GameObject timeTooltipPrefab;
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
