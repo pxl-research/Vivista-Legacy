@@ -38,6 +38,7 @@ public class MultipleChoiceImagePanel : MonoBehaviour
 		}
 
 		Update();
+		OnEnable();
 	}
 
 	void Update()
