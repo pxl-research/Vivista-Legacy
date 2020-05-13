@@ -78,6 +78,8 @@ public class ExplorerPanel : MonoBehaviour
 
 	private static string osType;
 	private string currentDirectory;
+	private FileSystemWatcher fileWatcher;
+	private bool shouldUpdate;
 	private List<ExplorerEntry> entries;
 	private bool sortAscending = true;
 	private SortedBy sortedBy = SortedBy.Name;
@@ -111,6 +113,15 @@ public class ExplorerPanel : MonoBehaviour
 		answerButton.GetComponentInChildren<Text>().text = "Open";
 
 		UpdateDir();
+	}
+
+	public void Update()
+	{
+		if (shouldUpdate)
+		{
+			UpdateDir();
+			shouldUpdate = false;
+		}
 	}
 
 	public void InitSaveAs(string startDirectory = "C:\\", string defaultExtension = "", string searchPattern = "*", string title = "Select file")
@@ -246,6 +257,20 @@ public class ExplorerPanel : MonoBehaviour
 
 	private void UpdateDir()
 	{
+		ClearItems();
+
+		if (fileWatcher == null)
+		{
+			fileWatcher = new FileSystemWatcher(currentDirectory);
+			fileWatcher.Changed += OnFileEvent;
+			fileWatcher.Created += OnFileEvent;
+			fileWatcher.Deleted += OnFileEvent;
+			fileWatcher.Renamed += OnFileEvent;
+			fileWatcher.EnableRaisingEvents = true;
+		}
+
+		fileWatcher.Path = currentDirectory;
+
 		var dirinfo = new DirectoryInfo(currentDirectory);
 		var filteredFiles = new List<FileInfo>();
 		var patterns = searchPattern.Split(';');
@@ -275,8 +300,6 @@ public class ExplorerPanel : MonoBehaviour
 		{
 			filteredFiles.Sort((x, y) => direction * x.Length.CompareTo(y.Length));
 		}
-
-		ClearItems();
 
 		foreach (var directory in directories)
 		{
@@ -321,6 +344,11 @@ public class ExplorerPanel : MonoBehaviour
 		}
 
 		FillItems();
+	}
+
+	private void OnFileEvent(object o, FileSystemEventArgs args)
+	{
+		shouldUpdate = true;
 	}
 
 	private void ClearItems()
