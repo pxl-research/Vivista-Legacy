@@ -27,7 +27,8 @@ public enum EditorState
 	PickingVideo,
 	PickingPerspective,
 	SavingThenUploading,
-	LoggingIn
+	LoggingIn,
+	Exporting
 }
 
 public enum InteractionType
@@ -191,6 +192,7 @@ public class Editor : MonoBehaviour
 	private GameObject loginPanel;
 	private ExplorerPanel explorerPanel;
 	private GameObject tagPanel;
+	private ExportPanel exportPanel;
 
 	public RectTransform timelineContainer;
 	public RectTransform timeline;
@@ -1248,6 +1250,23 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		if (editorState == EditorState.Exporting)
+		{
+			//NOTE(Simon): Some panels use Esc internally to cancel a child action. We don't want to also cancel the panel in that case.
+			bool allowCancel = true;
+
+			if (exportPanel != null)
+			{
+				allowCancel = exportPanel.allowCancel;
+			}
+
+			if (allowCancel && Input.GetKeyDown(KeyCode.Escape))
+			{
+				Destroy(exportPanel.gameObject);
+				Canvass.modalBackground.SetActive(false);
+				editorState = EditorState.Active;
+			}
+		}
 
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
@@ -2004,9 +2023,10 @@ public class Editor : MonoBehaviour
 
 	public void ShowExportPanel()
 	{
-		var exportPanel = Instantiate(exportPanelPrefab, Canvass.main.transform, false).GetComponent<ExportPanel>();
+		exportPanel = Instantiate(exportPanelPrefab, Canvass.main.transform, false).GetComponent<ExportPanel>();
 		exportPanel.Init(meta.guid);
 		Canvass.modalBackground.SetActive(true);
+		editorState = EditorState.Exporting;
 	}
 
 	public bool SaveToFile(bool makeThumbnail = true)

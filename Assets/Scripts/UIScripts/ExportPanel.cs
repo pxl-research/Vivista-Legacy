@@ -33,6 +33,7 @@ public class ExportPanel : MonoBehaviour
 
 	private Guid projectGuid;
 
+	public bool allowCancel => explorerPanel == null;
 	private bool exporting;
 	private bool done;
 	private float progress;
@@ -66,6 +67,12 @@ public class ExportPanel : MonoBehaviour
 				new Thread(() => OnExportStart(answer, projectFolder, exportMode)).Start();
 				Destroy(explorerPanel.gameObject);
 			}
+
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				Destroy(explorerPanel.gameObject);
+				exportButton.interactable = true;
+			}
 		}
 
 		if (exporting)
@@ -76,6 +83,7 @@ public class ExportPanel : MonoBehaviour
 		if (done)
 		{
 			Destroy(gameObject);
+			Editor.Instance.editorState = EditorState.Active;
 			Canvass.modalBackground.SetActive(false);
 		}
 	}
