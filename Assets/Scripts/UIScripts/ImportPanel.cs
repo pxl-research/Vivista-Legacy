@@ -13,6 +13,8 @@ public class ImportPanel : MonoBehaviour
 	public Button importButton;
 	public ProgressBar progressbar;
 
+	public bool allowCancel => explorerPanel == null && !unpacking;
+
 	private ExplorerPanel explorerPanel;
 
 	private float progress;
@@ -38,6 +40,11 @@ public class ImportPanel : MonoBehaviour
 					new Thread(() => UnpackFile(explorerPanel.answerPath)).Start();
 				}
 
+				Destroy(explorerPanel.gameObject);
+			}
+
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
 				Destroy(explorerPanel.gameObject);
 			}
 		}

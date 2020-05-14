@@ -116,6 +116,12 @@ public class ProjectPanel : MonoBehaviour
 				RefreshProjectList();
 				transform.localScale = new Vector3(1, 1, 1);
 			}
+
+			if (importPanel.allowCancel && Input.GetKeyDown(KeyCode.Escape))
+			{
+				Destroy(importPanel.gameObject);
+				transform.localScale = new Vector3(1, 1, 1);
+			}
 		}
 	}
 
