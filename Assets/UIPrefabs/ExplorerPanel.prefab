@@ -33,7 +33,7 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -214,7 +214,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &224875203713604960
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2245,7 +2245,6 @@ MonoBehaviour:
   answered: 0
   answerPath: 
   answerPaths: []
-  currentPath: {fileID: 114464950717016572}
   upButton: {fileID: 114229869532063982}
   directoryContent: {fileID: 114227798301933418}
   filenameIconItemPrefab: {fileID: 1907134910470618, guid: ce42c251b67604b51988ebab27ff3f6e,
@@ -2253,6 +2252,7 @@ MonoBehaviour:
   sortDateButton: {fileID: 114719158747510456}
   sortNameButton: {fileID: 114662052288850076}
   sortSizeButton: {fileID: 8437358918701958569}
+  currentPathField: {fileID: 114464950717016572}
   filenameField: {fileID: 114169401102271664}
   title: {fileID: 114501290723418172}
   extension: {fileID: 508361315177409955}

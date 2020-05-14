@@ -57,13 +57,13 @@ public class ExplorerPanel : MonoBehaviour
 	private SelectionMode selectionMode;
 	private ExplorerMode explorerMode;
 
-	public InputField currentPath;
 	public Button upButton;
 	public ScrollRect directoryContent;
 	public GameObject filenameIconItemPrefab;
 	public Button sortDateButton;
 	public Button sortNameButton;
 	public Button sortSizeButton;
+	public InputField currentPathField;
 	public InputField filenameField;
 	public Text title;
 	public Text extension;
@@ -86,7 +86,6 @@ public class ExplorerPanel : MonoBehaviour
 
 	private float lastClickTime;
 	private int lastClickIndex;
-	private GameObject lastHoverObject;
 
 	private Queue<GameObject> inactiveExplorerPanelItems;
 
@@ -95,7 +94,14 @@ public class ExplorerPanel : MonoBehaviour
 
 	private string cookiePath;
 
-	//TODO(Simon): Show disks on side (on windows)
+	public void Update()
+	{
+		if (shouldUpdate)
+		{
+			UpdateDir();
+			shouldUpdate = false;
+		}
+	}
 
 	//NOTE(Simon): search pattern should be in default windows wildcard style: e.g. "*.zip" for zipfiles, "a.*" for all filetypes with name "a"
 	//NOTE(Simon): If you provide "" as startDirectory, startDirectory will default to the last location from where a file was selected
@@ -113,15 +119,6 @@ public class ExplorerPanel : MonoBehaviour
 		answerButton.GetComponentInChildren<Text>().text = "Open";
 
 		UpdateDir();
-	}
-
-	public void Update()
-	{
-		if (shouldUpdate)
-		{
-			UpdateDir();
-			shouldUpdate = false;
-		}
 	}
 
 	public void InitSaveAs(string startDirectory = "C:\\", string defaultExtension = "", string searchPattern = "*", string title = "Select file")
@@ -180,6 +177,7 @@ public class ExplorerPanel : MonoBehaviour
 		FillSidebar();
 
 		filenameField.onValueChanged.AddListener(_ => OnFilenameFieldChanged());
+		currentPathField.onEndEdit.AddListener(_ => OnPathFieldChanged());
 	}
 
 	public void DirUp()
@@ -282,7 +280,7 @@ public class ExplorerPanel : MonoBehaviour
 		}
 
 		var directories = dirinfo.GetDirectories();
-		currentPath.text = currentDirectory;
+		currentPathField.text = currentDirectory;
 
 		int direction = sortAscending ? 1 : -1;
 
@@ -717,6 +715,23 @@ public class ExplorerPanel : MonoBehaviour
 		}
 
 		selectedFiles.Clear();
+	}
+
+	public void OnPathFieldChanged()
+	{
+		var newPath = currentPathField.text;
+
+		newPath = Path.GetFullPath(Environment.ExpandEnvironmentVariables(newPath));
+
+		if (Directory.Exists(newPath))
+		{
+			currentDirectory = newPath;
+			UpdateDir();
+		}
+		else
+		{
+			currentPathField.text = currentDirectory;
+		}
 	}
 
 	int EntryIndexForGO(GameObject go)
