@@ -1,10 +1,12 @@
 ﻿using System.IO;
 using System.Collections.Generic;
 using System;
+using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class ExplorerPanel : MonoBehaviour
@@ -17,7 +19,7 @@ public class ExplorerPanel : MonoBehaviour
 		public string extension;
 		public long size;
 		public Sprite sprite;
-		public GameObject explorerPanelItem;
+		public ExplorerPanelItem explorerPanelItem;
 		public EntryType entryType;
 	}
 
@@ -83,11 +85,12 @@ public class ExplorerPanel : MonoBehaviour
 	private List<ExplorerEntry> entries;
 	private bool sortAscending = true;
 	private SortedBy sortedBy = SortedBy.Name;
+	private Coroutine imageLoadsInProgress;
 
 	private float lastClickTime;
 	private int lastClickIndex;
 
-	private Queue<GameObject> inactiveExplorerPanelItems;
+	private Queue<ExplorerPanelItem> inactiveExplorerPanelItems;
 
 	private static Color normalColor = Color.white;
 	private static Color selectedColor = new Color(216 / 255f, 216 / 255f, 216 / 255f);
@@ -168,7 +171,7 @@ public class ExplorerPanel : MonoBehaviour
 		currentDirectory = new DirectoryInfo(startDirectory).FullName;
 
 		entries = new List<ExplorerEntry>();
-		inactiveExplorerPanelItems = new Queue<GameObject>();
+		inactiveExplorerPanelItems = new Queue<ExplorerPanelItem>();
 
 		answered = false;
 		osType = Environment.OSVersion.Platform.ToString();
@@ -354,7 +357,12 @@ public class ExplorerPanel : MonoBehaviour
 		foreach (var item in entries)
 		{
 			inactiveExplorerPanelItems.Enqueue(item.explorerPanelItem);
-			item.explorerPanelItem.SetActive(false);
+			item.explorerPanelItem.gameObject.SetActive(false);
+		}
+
+		if (imageLoadsInProgress != null)
+		{
+			StopCoroutine(imageLoadsInProgress);
 		}
 
 		entries.Clear();
@@ -364,39 +372,42 @@ public class ExplorerPanel : MonoBehaviour
 	{
 		for (int i = 0; i < entries.Count; i++)
 		{
-			GameObject explorerPanelItem = null;
+			ExplorerPanelItem explorerPanelItem = null;
 			if (inactiveExplorerPanelItems.Count > 0)
 			{
 				explorerPanelItem = inactiveExplorerPanelItems.Dequeue();
-				explorerPanelItem.SetActive(true);
+				explorerPanelItem.gameObject.SetActive(true);
 			}
 
 			if (explorerPanelItem == null)
 			{
-				explorerPanelItem = Instantiate(filenameIconItemPrefab);
+				explorerPanelItem = Instantiate(filenameIconItemPrefab).GetComponent<ExplorerPanelItem>();
 
-				var button = explorerPanelItem.GetComponent<Button>();
+				var it = explorerPanelItem;
 
-				button.onClick.AddListener(() => OnItemClick(explorerPanelItem));
+				it.button.onClick.AddListener(() => OnItemClick(explorerPanelItem));
 			}
 
 			bool isFile = entries[i].entryType == EntryType.File;
 			bool isDrive = entries[i].entryType == EntryType.Drive;
 
-			var labels = explorerPanelItem.GetComponentsInChildren<Text>();
 			explorerPanelItem.transform.SetParent(directoryContent.content, false);
 			explorerPanelItem.transform.SetAsLastSibling();
-			explorerPanelItem.GetComponent<Image>().color = normalColor;
-			labels[0].text = entries[i].name;
-			labels[1].text = isDrive ? "" : entries[i].date.ToString("dd/MM/yyyy");
-			labels[2].text = isFile ? PrettyPrintFileType(entries[i].extension) : "";
-			labels[3].text = isFile ? PrettyPrintFileSize(entries[i].size) : "";
+			
+			var item = explorerPanelItem.GetComponent<ExplorerPanelItem>();
+			item.background.color = normalColor;
+			item.filename.text = entries[i].name;
+			item.date.text = isDrive ? "" : entries[i].date.ToString("dd/MM/yyyy");
+			item.fileType.text = isFile ? PrettyPrintFileType(entries[i].extension) : "";
+			item.fileSize.text = isFile ? PrettyPrintFileSize(entries[i].size) : "";
 			//TODO(Simon): Get resolution
-			labels[4].text = "";
-			explorerPanelItem.GetComponentsInChildren<Image>()[1].sprite = entries[i].sprite;
+			item.fileResolution.text = "";
+			item.icon.texture = entries[i].sprite.texture;
 
 			entries[i].explorerPanelItem = explorerPanelItem;
 		}
+
+		imageLoadsInProgress = StartCoroutine(LoadFileThumbnail(entries));
 
 		Canvas.ForceUpdateCanvases();
 		//NOTE(Simon): scroll to top
@@ -499,6 +510,36 @@ public class ExplorerPanel : MonoBehaviour
 			button.onClick.AddListener(() => OnDriveClick(path));
 		}
 		return item;
+	}
+
+	private IEnumerator LoadFileThumbnail(List<ExplorerEntry> entries)
+	{
+		foreach (var entry in entries)
+		{
+			if (entry.entryType == EntryType.File && IsImage(entry.extension))
+			{
+				using (var request = UnityWebRequestTexture.GetTexture("file://" + entry.fullPath, false))
+				{
+					yield return request.SendWebRequest();
+
+					var texture = DownloadHandlerTexture.GetContent(request);
+
+					var icon = entry.explorerPanelItem.icon;
+
+					float widthRatio = texture.width / 30f;
+					float heightRatio = texture.height / 20f;
+					float biggestRatio = Mathf.Max(heightRatio, widthRatio);
+					var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
+
+					yield return new WaitForEndOfFrame();
+					TextureScale.Point(texture, (int)newSize.x, (int)newSize.y);
+
+					icon.texture = texture;
+					icon.color = Color.white;
+					icon.rectTransform.sizeDelta = newSize;
+				}
+			}
+		}
 	}
 
 	private void OnDirectoryClick(string path)
@@ -618,9 +659,9 @@ public class ExplorerPanel : MonoBehaviour
 		}
 	}
 
-	public void OnItemClick(GameObject go)
+	public void OnItemClick(ExplorerPanelItem item)
 	{
-		int index = EntryIndexForGO(go);
+		int index = EntryIndexForGO(item);
 		var entry = entries[index];
 
 		bool controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
@@ -734,11 +775,11 @@ public class ExplorerPanel : MonoBehaviour
 		}
 	}
 
-	int EntryIndexForGO(GameObject go)
+	int EntryIndexForGO(ExplorerPanelItem item)
 	{
 		for (int i = 0; i < entries.Count; i++)
 		{
-			if (entries[i].explorerPanelItem == go)
+			if (entries[i].explorerPanelItem == item)
 			{
 				return i;
 			}
@@ -801,6 +842,12 @@ public class ExplorerPanel : MonoBehaviour
 		}
 
 		return fileType;
+	}
+
+	public static bool IsImage(string extension)
+	{
+		var types = new List<string> {".jpg", ".jpeg", ".bmp", ".png"};
+		return types.Contains(extension.ToLowerInvariant());
 	}
 
 	public void ResetSortButtonLabels()
