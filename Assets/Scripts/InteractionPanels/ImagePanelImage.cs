@@ -37,12 +37,7 @@ public class ImagePanelImage : MonoBehaviour
 			}
 
 			var image = GetComponentInChildren<RawImage>();
-
-			float heightRatio = texture.height / defaultImageSize.y;
-			float widthRatio = texture.width / defaultImageSize.x;
-			float biggestRatio = Mathf.Max(heightRatio, widthRatio);
-
-			var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
+			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), defaultImageSize);
 
 			image.rectTransform.sizeDelta = newSize;
 			image.texture = texture;

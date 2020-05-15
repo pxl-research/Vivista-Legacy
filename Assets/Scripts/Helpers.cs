@@ -98,6 +98,14 @@ public static class MathHelper
 		newRay.direction = -ray.direction;
 		return newRay;
 	}
+
+	public static Vector2 ScaleRatio(Vector2 orignalSize, Vector2 targetSize)
+	{
+		float widthRatio = orignalSize.x / targetSize.x;
+		float heightRatio = orignalSize.y / targetSize.y;
+		float biggestRatio = Mathf.Max(heightRatio, widthRatio);
+		return new Vector2(orignalSize.x / biggestRatio, orignalSize.y/ biggestRatio);
+	}
 }
 
 public class JsonHelper

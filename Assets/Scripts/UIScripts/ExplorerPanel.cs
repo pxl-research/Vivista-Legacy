@@ -94,6 +94,7 @@ public class ExplorerPanel : MonoBehaviour
 
 	private static Color normalColor = Color.white;
 	private static Color selectedColor = new Color(216 / 255f, 216 / 255f, 216 / 255f);
+	private static Vector2 thumbnailMaxSize = new Vector2(30, 20);
 
 	private string cookiePath;
 
@@ -404,6 +405,11 @@ public class ExplorerPanel : MonoBehaviour
 			item.fileResolution.text = "";
 			item.icon.texture = entries[i].sprite.texture;
 
+			var texture = item.icon.texture;
+			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), thumbnailMaxSize);
+
+			item.icon.rectTransform.sizeDelta = newSize;
+
 			entries[i].explorerPanelItem = explorerPanelItem;
 		}
 
@@ -514,7 +520,6 @@ public class ExplorerPanel : MonoBehaviour
 
 	private IEnumerator LoadFileThumbnail(List<ExplorerEntry> entries)
 	{
-		Vector2 desiredSize = new Vector2(30, 20);
 		foreach (var entry in entries)
 		{
 			var icon = entry.explorerPanelItem.icon;
@@ -526,11 +531,7 @@ public class ExplorerPanel : MonoBehaviour
 					yield return request.SendWebRequest();
 
 					var texture = DownloadHandlerTexture.GetContent(request);
-
-					float widthRatio = texture.width / desiredSize.x;
-					float heightRatio = texture.height / desiredSize.y;
-					float biggestRatio = Mathf.Max(heightRatio, widthRatio);
-					var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
+					var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), thumbnailMaxSize);
 
 					yield return new WaitForEndOfFrame();
 					TextureScale.Point(texture, (int)newSize.x, (int)newSize.y);
@@ -539,16 +540,6 @@ public class ExplorerPanel : MonoBehaviour
 					icon.color = Color.white;
 					icon.rectTransform.sizeDelta = newSize;
 				}
-			}
-			else
-			{
-				var texture = icon.texture;
-				float widthRatio = texture.width / desiredSize.x;
-				float heightRatio = texture.height / desiredSize.y;
-				float biggestRatio = Mathf.Max(heightRatio, widthRatio);
-				var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
-
-				icon.rectTransform.sizeDelta = newSize;
 			}
 		}
 	}
