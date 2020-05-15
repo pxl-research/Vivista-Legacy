@@ -409,12 +409,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   background: {fileID: 114697586730628274}
   button: {fileID: 7283501270456167762}
+  iconHolder: {fileID: 224518667482701438}
   icon: {fileID: 5507539415909622167}
   filename: {fileID: 114278522778416022}
   date: {fileID: 114686312160130318}
   fileType: {fileID: 2317329915489750543}
   fileSize: {fileID: 3236439573123618733}
   fileResolution: {fileID: 5079992184749213761}
+  explorerPanel: {fileID: 0}
 --- !u!1 &2641215422722386258
 GameObject:
   m_ObjectHideFlags: 0

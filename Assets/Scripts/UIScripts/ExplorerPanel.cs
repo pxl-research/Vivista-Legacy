@@ -70,6 +70,8 @@ public class ExplorerPanel : MonoBehaviour
 	public Text title;
 	public Text extension;
 	public Button answerButton;
+	public RawImage previewImage;
+	public RectTransform previewHolder;
 
 	public RectTransform sidebar;
 
@@ -91,6 +93,7 @@ public class ExplorerPanel : MonoBehaviour
 	private int lastClickIndex;
 
 	private Queue<ExplorerPanelItem> inactiveExplorerPanelItems;
+	private Queue<Texture> texturesToDestroy = new Queue<Texture>();
 
 	private static Color normalColor = Color.white;
 	private static Color selectedColor = new Color(216 / 255f, 216 / 255f, 216 / 255f);
@@ -104,6 +107,11 @@ public class ExplorerPanel : MonoBehaviour
 		{
 			UpdateDir();
 			shouldUpdate = false;
+		}
+
+		while (texturesToDestroy.Count > 0)
+		{
+			Destroy(texturesToDestroy.Dequeue());
 		}
 	}
 
@@ -355,15 +363,23 @@ public class ExplorerPanel : MonoBehaviour
 
 	private void ClearItems()
 	{
+		if (imageLoadsInProgress != null)
+		{
+			StopCoroutine(imageLoadsInProgress);
+		}
+
+		foreach (var entry in entries)
+		{
+			if (entry.entryType == EntryType.File && IsImage(entry.extension))
+			{
+				texturesToDestroy.Enqueue(entry.explorerPanelItem.icon.texture);
+			}
+		}
+
 		foreach (var item in entries)
 		{
 			inactiveExplorerPanelItems.Enqueue(item.explorerPanelItem);
 			item.explorerPanelItem.gameObject.SetActive(false);
-		}
-
-		if (imageLoadsInProgress != null)
-		{
-			StopCoroutine(imageLoadsInProgress);
 		}
 
 		entries.Clear();
@@ -404,6 +420,7 @@ public class ExplorerPanel : MonoBehaviour
 			//TODO(Simon): Get resolution
 			item.fileResolution.text = "";
 			item.icon.texture = entries[i].sprite.texture;
+			item.explorerPanel = this;
 
 			var texture = item.icon.texture;
 			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), thumbnailMaxSize);
@@ -526,15 +543,16 @@ public class ExplorerPanel : MonoBehaviour
 
 			if (entry.entryType == EntryType.File && IsImage(entry.extension))
 			{
+				//NOTE(Simon): Cancel any remaining request, if the previous coroutine was cancelled partway through
 				using (var request = UnityWebRequestTexture.GetTexture("file://" + entry.fullPath, false))
 				{
 					yield return request.SendWebRequest();
 
 					var texture = DownloadHandlerTexture.GetContent(request);
-					var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), thumbnailMaxSize);
+					var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), entry.explorerPanelItem.iconHolder.rect.size);
 
 					yield return new WaitForEndOfFrame();
-					TextureScale.Point(texture, (int)newSize.x, (int)newSize.y);
+					TextureScale.Point(texture, (int) newSize.x, (int) newSize.y);
 
 					icon.texture = texture;
 					icon.color = Color.white;
@@ -542,6 +560,37 @@ public class ExplorerPanel : MonoBehaviour
 				}
 			}
 		}
+	}
+
+	public IEnumerator ShowPreview(int index)
+	{
+		var entry = entries[index - inactiveExplorerPanelItems.Count];
+		if (entry.entryType == EntryType.File && IsImage(entry.extension))
+		{
+			texturesToDestroy.Enqueue(previewImage.texture);
+
+			using (var request = UnityWebRequestTexture.GetTexture("file://" + entry.fullPath, false))
+			{
+				yield return request.SendWebRequest();
+
+				var texture = DownloadHandlerTexture.GetContent(request);
+				var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), previewHolder.rect.size);
+
+				TextureScale.Point(texture, (int) newSize.x, (int) newSize.y);
+
+				texturesToDestroy.Enqueue(previewImage.texture);
+				previewImage.texture = texture;
+				previewImage.color = Color.white;
+				previewImage.rectTransform.sizeDelta = newSize;
+
+				previewHolder.gameObject.SetActive(true);
+			}
+		}
+	}
+
+	public void HidePreview()
+	{
+		previewHolder.gameObject.SetActive(false);
 	}
 
 	private void OnDirectoryClick(string path)
