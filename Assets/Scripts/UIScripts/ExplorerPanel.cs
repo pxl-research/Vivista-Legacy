@@ -514,8 +514,11 @@ public class ExplorerPanel : MonoBehaviour
 
 	private IEnumerator LoadFileThumbnail(List<ExplorerEntry> entries)
 	{
+		Vector2 desiredSize = new Vector2(30, 20);
 		foreach (var entry in entries)
 		{
+			var icon = entry.explorerPanelItem.icon;
+
 			if (entry.entryType == EntryType.File && IsImage(entry.extension))
 			{
 				using (var request = UnityWebRequestTexture.GetTexture("file://" + entry.fullPath, false))
@@ -524,10 +527,8 @@ public class ExplorerPanel : MonoBehaviour
 
 					var texture = DownloadHandlerTexture.GetContent(request);
 
-					var icon = entry.explorerPanelItem.icon;
-
-					float widthRatio = texture.width / 30f;
-					float heightRatio = texture.height / 20f;
+					float widthRatio = texture.width / desiredSize.x;
+					float heightRatio = texture.height / desiredSize.y;
 					float biggestRatio = Mathf.Max(heightRatio, widthRatio);
 					var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
 
@@ -538,6 +539,16 @@ public class ExplorerPanel : MonoBehaviour
 					icon.color = Color.white;
 					icon.rectTransform.sizeDelta = newSize;
 				}
+			}
+			else
+			{
+				var texture = icon.texture;
+				float widthRatio = texture.width / desiredSize.x;
+				float heightRatio = texture.height / desiredSize.y;
+				float biggestRatio = Mathf.Max(heightRatio, widthRatio);
+				var newSize = new Vector2(texture.width / biggestRatio, texture.height / biggestRatio);
+
+				icon.rectTransform.sizeDelta = newSize;
 			}
 		}
 	}
