@@ -95,26 +95,6 @@ public static class SaveFile
 		return data;
 	}
 
-	public static Dictionary<string, Guid> GetAllSavefileNames()
-	{
-		var dirs = new DirectoryInfo(Application.persistentDataPath).GetDirectories();
-		var dirNames = new Dictionary<string, Guid>();
-		foreach (var dir in dirs)
-		{
-			if (File.Exists(Path.Combine(dir.FullName, editableFilename)))
-			{
-				var metaPath = Path.Combine(dir.FullName, metaFilename);
-				if (new FileInfo(metaPath).Length > 0)
-				{
-					var meta = OpenFile(metaPath).meta;
-					dirNames.Add(meta.title, meta.guid);
-				}
-			}
-		}
-
-		return dirNames;
-	}
-
 	public static string GetPathForTitle(string title)
 	{
 		var dirs = new DirectoryInfo(Application.persistentDataPath).GetDirectories();

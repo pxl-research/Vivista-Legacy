@@ -316,20 +316,7 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Active)
 		{
-			//TODO(Kristof): Can this be moved to VideoPanel?
-			var ignoreRaycast = false;
-			if (Input.GetMouseButtonDown(0) && Physics.Raycast(ray, out hit, 100, LayerMask.GetMask("UI")))
-			{
-				var panel = hit.transform.gameObject.GetComponentInParent<VideoPanel>();
-				if (panel)
-				{
-					panel.TogglePlay();
-				}
-				ignoreRaycast = true;
-			}
-
-			if (!ignoreRaycast
-				&& Input.GetMouseButtonDown(0)
+			if (Input.GetMouseButtonDown(0)
 				&& !EventSystem.current.IsPointerOverGameObject()
 				&& !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
 			{
