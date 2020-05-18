@@ -47,3 +47,15 @@ MonoBehaviour:
     type: 3}
   importPanel: {fileID: 114097691587724992, guid: ab1e51d6045d291478d98eb7f5074836,
     type: 3}
+  projectPanel: {fileID: 114817662322081396, guid: e9605cc224446ba428e1e03756bc7d4f,
+    type: 3}
+  uploadPanel: {fileID: 114646683466016890, guid: 1007a2f2cc427de4ca38dfbacd1da109,
+    type: 3}
+  interactionTypePicker: {fileID: 114849243927565466, guid: 0544ab251798224459926a98a7465706,
+    type: 3}
+  loginPanel: {fileID: 114898137989419864, guid: 298cea5983329894e976e326980058bc,
+    type: 3}
+  exportPanel: {fileID: 8646513899837860779, guid: ea5360ea1bb0add4fbac7b045d81ee07,
+    type: 3}
+  tagPanel: {fileID: 8492929646453990575, guid: d32f2958c4f214c48880afca02996939,
+    type: 3}

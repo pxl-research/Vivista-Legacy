@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,7 +10,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
-using Object = UnityEngine.Object;
 
 public enum EditorState
 {
@@ -160,38 +158,14 @@ public class Editor : MonoBehaviour
 	private InteractionPointEditor pointToEdit;
 	private InteractionPointEditor lastPlacedPoint;
 
-	public GameObject interactionTypePrefab;
-
-	public GameObject filePanelPrefab;
-	public GameObject textPanelPrefab;
-	public GameObject textPanelEditorPrefab;
-	public GameObject audioPanelPrefab;
-	public GameObject audioPanelEditorPrefab;
-	public GameObject imagePanelPrefab;
-	public GameObject imagePanelEditorPrefab;
-	public GameObject videoPanelPrefab;
-	public GameObject videoPanelEditorPrefab;
-	public GameObject multipleChoicePanelPrefab;
-	public GameObject multipleChoicePanelEditorPrefab;
-	public GameObject findAreaPanelPrefab;
-	public GameObject findAreaPanelEditorPrefab;
-	public GameObject multipleChoiceAreaPanelPrefab;
-	public GameObject multipleChoiceAreaPanelEditorPrefab;
-	public GameObject multipleChoiceImagePanelPrefab;
-	public GameObject multipleChoiceImagePanelEditorPrefab;
-	public GameObject uploadPanelPrefab;
-	public GameObject loginPanelPrefab;
-	public GameObject tagPanelPrefab;
-	public GameObject exportPanelPrefab;
-
-	private GameObject interactionTypePicker;
+	private InteractionTypePicker interactionTypePicker;
 	private GameObject interactionEditor;
-	private GameObject filePanel;
-	private GameObject openPanel;
-	private GameObject uploadPanel;
-	private GameObject loginPanel;
+	private GameObject savePanel;
+	private ProjectPanel projectPanel;
+	private UploadPanel uploadPanel;
+	private LoginPanel loginPanel;
 	private ExplorerPanel explorerPanel;
-	private GameObject tagPanel;
+	private TagPanel tagPanel;
 	private ExportPanel exportPanel;
 
 	public RectTransform timelineContainer;
@@ -376,7 +350,7 @@ public class Editor : MonoBehaviour
 				AddItemToTimeline(point, false);
 				SetInteractionPointTag(point);
 
-				interactionTypePicker = Instantiate(interactionTypePrefab, Canvass.main.transform, false);
+				interactionTypePicker = Instantiate(UIPanels.Instance.interactionTypePicker, Canvass.main.transform, false);
 
 				editorState = EditorState.PickingInteractionType;
 				ResetInteractionPointTemp();
@@ -398,7 +372,7 @@ public class Editor : MonoBehaviour
 		{
 			if (interactionTypePicker != null)
 			{
-				var picker = interactionTypePicker.GetComponent<InteractionTypePicker>();
+				var picker = interactionTypePicker;
 				if (picker.answered)
 				{
 					lastPlacedPoint.type = picker.answer;
@@ -407,49 +381,49 @@ public class Editor : MonoBehaviour
 					{
 						case InteractionType.Image:
 						{
-							interactionEditor = Instantiate(imagePanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.imagePanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<ImagePanelEditor>().Init("", null);
 							break;
 						}
 						case InteractionType.Text:
 						{
-							interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.textPanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<TextPanelEditor>().Init("", "");
 							break;
 						}
 						case InteractionType.Video:
 						{
-							interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.videoPanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<VideoPanelEditor>().Init("", "");
 							break;
 						}
 						case InteractionType.MultipleChoice:
 						{
-							interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.multipleChoicePanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init("");
 							break;
 						}
 						case InteractionType.Audio:
 						{
-							interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.audioPanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<AudioPanelEditor>().Init("", "");
 							break;
 						}
 						case InteractionType.FindArea:
 						{
-							interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.findAreaPanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<FindAreaPanelEditor>().Init("", meta.guid, null);
 							break;
 						}
 						case InteractionType.MultipleChoiceArea:
 						{
-							interactionEditor = Instantiate(multipleChoiceAreaPanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.multipleChoiceAreaPanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init("", meta.guid, null, -1);
 							break;
 						}
 						case InteractionType.MultipleChoiceImage:
 						{
-							interactionEditor = Instantiate(multipleChoiceImagePanelEditorPrefab, Canvass.main.transform);
+							interactionEditor = Instantiate(UIPanels.Instance.multipleChoiceImagePanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init("", null, -1);
 							break;
 						}
@@ -460,7 +434,7 @@ public class Editor : MonoBehaviour
 						}
 					}
 
-					Destroy(interactionTypePicker);
+					Destroy(interactionTypePicker.gameObject);
 					editorState = EditorState.FillingPanelDetails;
 				}
 			}
@@ -473,7 +447,7 @@ public class Editor : MonoBehaviour
 			{
 				RemoveItemFromTimeline(lastPlacedPoint);
 				lastPlacedPoint = null;
-				Destroy(interactionTypePicker);
+				Destroy(interactionTypePicker.gameObject);
 				SetEditorActive(true);
 			}
 
@@ -513,14 +487,14 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newFullPaths);
-						panel.GetComponent<ImagePanel>().Move(lastPlacedPointPos);
+						var panel = Instantiate(UIPanels.Instance.imagePanel);
+						panel.Init(editor.answerTitle, newFullPaths);
+						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
 					}
@@ -531,13 +505,13 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
-						panel.GetComponent<TextPanel>().Move(lastPlacedPointPos);
+						var panel = Instantiate(UIPanels.Instance.textPanel);
+						panel.Init(editor.answerTitle, editor.answerBody);
+						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
 					}
@@ -553,13 +527,13 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, newFullPath);
-						panel.GetComponent<VideoPanel>().Move(lastPlacedPointPos);
+						var panel = Instantiate(UIPanels.Instance.videoPanel);
+						panel.Init(editor.answerTitle, newFullPath);
+						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
 					}
@@ -575,14 +549,14 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(audioPanelPrefab);
-						panel.GetComponent<AudioPanel>().Init(editor.answerTitle, newFullPath);
-						panel.GetComponent<AudioPanel>().Move(lastPlacedPointPos);
+						var panel = Instantiate(UIPanels.Instance.audioPanel);
+						panel.Init(editor.answerTitle, newFullPath);
+						panel.Move(lastPlacedPointPos);
 
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
 					}
@@ -593,17 +567,17 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(multipleChoicePanelPrefab);
+						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel);
 						lastPlacedPoint.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
 						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, lastPlacedPoint.body.Split('\f'));
-						panel.GetComponent<MultipleChoicePanel>().Move(lastPlacedPointPos);
+						panel.Init(editor.answerQuestion, lastPlacedPoint.body.Split('\f'));
+						panel.Move(lastPlacedPointPos);
 
 						finished = true;
 					}
@@ -616,7 +590,7 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(findAreaPanelPrefab);
+						var panel = Instantiate(UIPanels.Instance.findAreaPanel);
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
 						var jsonMiniatures = new StringBuilder();
@@ -635,10 +609,10 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.filename = jsonMiniatures.ToString();
 						lastPlacedPoint.body = jsonAreas.ToString();
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
-						panel.GetComponent<FindAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas);
-						panel.GetComponent<FindAreaPanel>().Move(lastPlacedPointPos);
+						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
+						panel.Move(lastPlacedPointPos);
 
 						finished = true;
 					}
@@ -650,7 +624,7 @@ public class Editor : MonoBehaviour
 					allowCancel = editor.allowCancel;
 					if (editor.answered)
 					{
-						var panel = Instantiate(multipleChoiceAreaPanelPrefab);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
 
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
@@ -673,10 +647,10 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.body = jsonAreas.ToString();
 						lastPlacedPoint.filename = jsonMiniatures.ToString();
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
-						panel.GetComponent<MultipleChoiceAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
-						panel.GetComponent<MultipleChoiceAreaPanel>().Move(lastPlacedPointPos);
+						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
+						panel.Move(lastPlacedPointPos);
 
 						finished = true;
 					}
@@ -702,14 +676,14 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(multipleChoiceImagePanelPrefab);
-						panel.GetComponent<MultipleChoiceImagePanel>().Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
-						panel.GetComponent<MultipleChoiceImagePanel>().Move(lastPlacedPointPos);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
+						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
+						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerQuestion;
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.tagId = editor.answerTagId;
-						lastPlacedPoint.panel = panel;
+						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
 					}
@@ -827,14 +801,14 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(imagePanelPrefab);
-						panel.GetComponent<ImagePanel>().Init(editor.answerTitle, newFullPaths);
-						panel.GetComponent<ImagePanel>().Move(pointToEdit.point.transform.position);
+						var panel = Instantiate(UIPanels.Instance.imagePanel);
+						panel.Init(editor.answerTitle, newFullPaths);
+						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = String.Join("\f", newFilenames);
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -844,14 +818,14 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(textPanelPrefab);
-						panel.GetComponent<TextPanel>().Init(editor.answerTitle, editor.answerBody);
-						panel.GetComponent<TextPanel>().Move(pointToEdit.point.transform.position);
+						var panel = Instantiate(UIPanels.Instance.textPanel);
+						panel.Init(editor.answerTitle, editor.answerBody);
+						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -868,14 +842,14 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(videoPanelPrefab);
-						panel.GetComponent<VideoPanel>().Init(editor.answerTitle, newFullPath);
-						panel.GetComponent<VideoPanel>().Move(pointToEdit.point.transform.position);
+						var panel = Instantiate(UIPanels.Instance.videoPanel);
+						panel.Init(editor.answerTitle, newFullPath);
+						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -892,14 +866,14 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(audioPanelPrefab);
-						panel.GetComponent<AudioPanel>().Init(editor.answerTitle, newFullPath);
-						panel.GetComponent<AudioPanel>().Move(pointToEdit.point.transform.position);
+						var panel = Instantiate(UIPanels.Instance.audioPanel);
+						panel.Init(editor.answerTitle, newFullPath);
+						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -909,17 +883,17 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(multipleChoicePanelPrefab);
+						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel);
 						pointToEdit.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
 						pointToEdit.body += String.Join("\f", editor.answerAnswers);
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.GetComponent<MultipleChoicePanel>().Move(pointToEdit.point.transform.position);
-						panel.GetComponent<MultipleChoicePanel>().Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
+						panel.Move(pointToEdit.point.transform.position);
+						panel.Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
 						finished = true;
 					}
 					break;
@@ -931,9 +905,9 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(findAreaPanelPrefab);
-						panel.GetComponent<FindAreaPanel>().Move(pointToEdit.point.transform.position);
-						panel.GetComponent<FindAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas);
+						var panel = Instantiate(UIPanels.Instance.findAreaPanel);
+						panel.Move(pointToEdit.point.transform.position);
+						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
 
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
@@ -953,7 +927,7 @@ public class Editor : MonoBehaviour
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -965,9 +939,9 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(multipleChoiceAreaPanelPrefab);
-						panel.GetComponent<MultipleChoiceAreaPanel>().Move(pointToEdit.point.transform.position);
-						panel.GetComponent<MultipleChoiceAreaPanel>().Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
+						panel.Move(pointToEdit.point.transform.position);
+						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
 
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
@@ -990,7 +964,7 @@ public class Editor : MonoBehaviour
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -1017,15 +991,15 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(multipleChoiceImagePanelPrefab);
-						panel.GetComponent<MultipleChoiceImagePanel>().Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
-						panel.GetComponent<MultipleChoiceImagePanel>().Move(pointToEdit.point.transform.position);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
+						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
+						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerQuestion;
 						pointToEdit.body = editor.answerCorrect.ToString();
 						pointToEdit.filename = String.Join("\f", newFilenames);
 						pointToEdit.tagId = editor.answerTagId;
-						pointToEdit.panel = panel;
+						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
 					break;
@@ -1058,9 +1032,9 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Saving)
 		{
-			if (filePanel.GetComponent<ProjectPanel>().answered)
+			if (savePanel.GetComponent<ProjectPanel>().answered)
 			{
-				var panel = filePanel.GetComponent<ProjectPanel>();
+				var panel = savePanel.GetComponent<ProjectPanel>();
 
 				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file.
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
@@ -1099,30 +1073,30 @@ public class Editor : MonoBehaviour
 				Toasts.AddToast(5, "File saved!");
 
 				SetEditorActive(true);
-				Destroy(filePanel);
+				Destroy(savePanel);
 				Canvass.modalBackground.SetActive(false);
 			}
 
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				SetEditorActive(true);
-				Destroy(filePanel);
+				Destroy(savePanel);
 				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
 		if (editorState == EditorState.Opening)
 		{
-			if (openPanel.GetComponent<ProjectPanel>().answered)
+			if (projectPanel.answered)
 			{
 
-				var guid = openPanel.GetComponent<ProjectPanel>().answerGuid;
+				var guid = projectPanel.answerGuid;
 				var projectFolder = Path.Combine(Application.persistentDataPath, guid);
 
 				if (OpenFile(projectFolder))
 				{
 					SetEditorActive(true);
-					Destroy(openPanel);
+					Destroy(projectPanel.gameObject);
 					Canvass.modalBackground.SetActive(false);
 					InitExtrasList();
 					//NOTE(Simon): When opening a project, any previous to-be-deleted-or-copied files are not relevant anymore. So clear them
@@ -1167,10 +1141,10 @@ public class Editor : MonoBehaviour
 				InitLoginPanel();
 			}
 
-			if (loginPanel.GetComponent<LoginPanel>().answered)
+			if (loginPanel.answered)
 			{
-				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
-				Destroy(loginPanel);
+				userToken = loginPanel.answerToken;
+				Destroy(loginPanel.gameObject);
 				Canvass.modalBackground.SetActive(false);
 				editorState = EditorState.Active;
 			}
@@ -1180,7 +1154,7 @@ public class Editor : MonoBehaviour
 				if (loginPanel != null)
 				{
 					Canvass.modalBackground.SetActive(false);
-					Destroy(loginPanel);
+					Destroy(loginPanel.gameObject);
 				}
 
 				editorState = EditorState.Active;
@@ -1189,15 +1163,15 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.SavingThenUploading)
 		{
-			if (loginPanel != null && loginPanel.GetComponent<LoginPanel>().answered)
+			if (loginPanel != null && loginPanel.answered)
 			{
-				userToken = loginPanel.GetComponent<LoginPanel>().answerToken;
-				Destroy(loginPanel);
-				InitSavePanel();
+				userToken = loginPanel.answerToken;
+				Destroy(loginPanel.gameObject);
+				InitSaveProjectPanel();
 			}
-			if (filePanel != null && filePanel.GetComponent<ProjectPanel>().answered)
+			if (savePanel != null && savePanel.GetComponent<ProjectPanel>().answered)
 			{
-				var panel = filePanel.GetComponent<ProjectPanel>();
+				var panel = savePanel.GetComponent<ProjectPanel>();
 				panel.Init(true, meta.title);
 				meta.title = panel.answerTitle;
 
@@ -1209,7 +1183,7 @@ public class Editor : MonoBehaviour
 
 				Toasts.AddToast(5, "File saved!");
 
-				Destroy(filePanel);
+				Destroy(savePanel);
 				InitUploadPanel();
 			}
 			if (uploadPanel != null)
@@ -1224,12 +1198,12 @@ public class Editor : MonoBehaviour
 				{
 					if (loginPanel != null)
 					{
-						Destroy(loginPanel);
+						Destroy(loginPanel.gameObject);
 					}
 
-					if (filePanel != null)
+					if (savePanel != null)
 					{
-						Destroy(filePanel);
+						Destroy(savePanel);
 					}
 
 					Canvass.modalBackground.SetActive(false);
@@ -1271,7 +1245,7 @@ public class Editor : MonoBehaviour
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) && AreFileOpsAllowed())
 #endif
 		{
-			InitSavePanel();
+			InitSaveProjectPanel();
 		}
 
 #if UNITY_EDITOR
@@ -1580,13 +1554,13 @@ public class Editor : MonoBehaviour
 				{
 					case InteractionType.Text:
 					{
-						interactionEditor = Instantiate(textPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.textPanelEditor, Canvass.main.transform).gameObject;
 						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body, point.tagId);
 						break;
 					}
 					case InteractionType.Image:
 					{
-						interactionEditor = Instantiate(imagePanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.imagePanelEditor, Canvass.main.transform).gameObject;
 						var filenames = point.filename.Split('\f');
 						var fullPaths = new List<string>(filenames.Length);
 						foreach (var file in filenames)
@@ -1598,26 +1572,26 @@ public class Editor : MonoBehaviour
 					}
 					case InteractionType.Video:
 					{
-						interactionEditor = Instantiate(videoPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.videoPanelEditor, Canvass.main.transform).gameObject;
 						interactionEditor.GetComponent<VideoPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
 					}
 					case InteractionType.MultipleChoice:
 					{
-						interactionEditor = Instantiate(multipleChoicePanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.multipleChoicePanelEditor, Canvass.main.transform).gameObject;
 						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'), point.tagId);
 						break;
 					}
 					case InteractionType.Audio:
 					{
-						interactionEditor = Instantiate(audioPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.audioPanelEditor, Canvass.main.transform).gameObject;
 						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename), point.tagId);
 						break;
 					}
 					case InteractionType.FindArea:
 					{
 						var areas = Area.ParseFromSave(point.filename, point.body);
-						interactionEditor = Instantiate(findAreaPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.findAreaPanelEditor, Canvass.main.transform).gameObject;
 						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas, point.tagId);
 						break;
 					}
@@ -1627,13 +1601,13 @@ public class Editor : MonoBehaviour
 						var correct = Int32.Parse(split[0]);
 						var areaJson = split[1];
 						var areas = Area.ParseFromSave(point.filename, areaJson);
-						interactionEditor = Instantiate(multipleChoiceAreaPanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.multipleChoiceAreaPanelEditor, Canvass.main.transform).gameObject;
 						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct, point.tagId);
 						break;
 					}
 					case InteractionType.MultipleChoiceImage:
 					{
-						interactionEditor = Instantiate(multipleChoiceImagePanelEditorPrefab, Canvass.main.transform);
+						interactionEditor = Instantiate(UIPanels.Instance.multipleChoiceImagePanelEditor, Canvass.main.transform).gameObject;
 						var filenames = point.filename.Split('\f');
 						var fullPaths = new List<string>(filenames.Length);
 						foreach (var file in filenames)
@@ -1948,7 +1922,7 @@ public class Editor : MonoBehaviour
 		}
 		else
 		{
-			InitSavePanel();
+			InitSaveProjectPanel();
 			editorState = EditorState.SavingThenUploading;
 		}
 	}
@@ -1957,7 +1931,7 @@ public class Editor : MonoBehaviour
 	{
 		uploadStatus = new UploadStatus();
 		uploadStatus.coroutine = StartCoroutine(UploadFile());
-		uploadPanel = Instantiate(uploadPanelPrefab);
+		uploadPanel = Instantiate(UIPanels.Instance.uploadPanel);
 		uploadPanel.transform.SetParent(Canvass.main.transform, false);
 		videoController.Pause();
 		Canvass.modalBackground.SetActive(true);
@@ -1965,9 +1939,9 @@ public class Editor : MonoBehaviour
 
 	public void InitOpenProjectPanel()
 	{
-		openPanel = Instantiate(filePanelPrefab);
-		openPanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: false);
-		openPanel.transform.SetParent(Canvass.main.transform, false);
+		projectPanel = Instantiate(UIPanels.Instance.projectPanel);
+		projectPanel.Init(isSaveFileDialog: false);
+		projectPanel.transform.SetParent(Canvass.main.transform, false);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Opening;
 	}
@@ -1975,15 +1949,15 @@ public class Editor : MonoBehaviour
 	public void InitLoginPanel()
 	{
 		Canvass.modalBackground.SetActive(true);
-		loginPanel = Instantiate(loginPanelPrefab);
+		loginPanel = Instantiate(UIPanels.Instance.loginPanel);
 		loginPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
-	public void InitSavePanel(bool uploading = false)
+	public void InitSaveProjectPanel(bool uploading = false)
 	{
-		filePanel = Instantiate(filePanelPrefab);
-		filePanel.transform.SetParent(Canvass.main.transform, false);
-		filePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true, meta.title);
+		savePanel = Instantiate(UIPanels.Instance.projectPanel).gameObject;
+		savePanel.transform.SetParent(Canvass.main.transform, false);
+		savePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true, meta.title);
 		Canvass.modalBackground.SetActive(true);
 		if (!uploading)
 		{
@@ -2005,13 +1979,13 @@ public class Editor : MonoBehaviour
 			return;
 		}
 
-		tagPanel = Instantiate(tagPanelPrefab);
+		tagPanel = Instantiate(UIPanels.Instance.tagPanel);
 		tagPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
 	public void ShowExportPanel()
 	{
-		exportPanel = Instantiate(exportPanelPrefab, Canvass.main.transform, false).GetComponent<ExportPanel>();
+		exportPanel = Instantiate(UIPanels.Instance.exportPanel, Canvass.main.transform, false);
 		exportPanel.Init(meta.guid);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Exporting;
@@ -2075,7 +2049,7 @@ public class Editor : MonoBehaviour
 		if (!File.Exists(videoPath))
 		{
 			InitExplorerPanel("*.mp4", "Choose a video to enrich");
-			openPanel.SetActive(false);
+			projectPanel.gameObject.SetActive(false);
 			editorState = EditorState.PickingVideo;
 			return false;
 		}
@@ -2115,14 +2089,14 @@ public class Editor : MonoBehaviour
 			{
 				case InteractionType.Text:
 				{
-					var panel = Instantiate(textPanelPrefab);
-					panel.GetComponent<TextPanel>().Init(newInteractionPoint.title, newInteractionPoint.body);
-					newInteractionPoint.panel = panel;
+					var panel = Instantiate(UIPanels.Instance.textPanel);
+					panel.Init(newInteractionPoint.title, newInteractionPoint.body);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.Image:
 				{
-					var panel = Instantiate(imagePanelPrefab);
+					var panel = Instantiate(UIPanels.Instance.imagePanel);
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
 					foreach (var file in filenames)
@@ -2135,41 +2109,41 @@ public class Editor : MonoBehaviour
 						urls.Add(url);
 					}
 
-					panel.GetComponent<ImagePanel>().Init(newInteractionPoint.title, urls);
-					newInteractionPoint.panel = panel;
+					panel.Init(newInteractionPoint.title, urls);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.Video:
 				{
-					var panel = Instantiate(videoPanelPrefab);
+					var panel = Instantiate(UIPanels.Instance.videoPanel);
 					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
 
-					panel.GetComponent<VideoPanel>().Init(newInteractionPoint.title, url);
-					newInteractionPoint.panel = panel;
+					panel.Init(newInteractionPoint.title, url);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.MultipleChoice:
 				{
-					var panel = Instantiate(multipleChoicePanelPrefab);
-					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
-					newInteractionPoint.panel = panel;
+					var panel = Instantiate(UIPanels.Instance.multipleChoicePanel);
+					panel.Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.Audio:
 				{
-					var panel = Instantiate(audioPanelPrefab);
+					var panel = Instantiate(UIPanels.Instance.audioPanel);
 					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
-					panel.GetComponent<AudioPanel>().Init(newInteractionPoint.title, url);
-					newInteractionPoint.panel = panel;
+					panel.Init(newInteractionPoint.title, url);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.FindArea:
 				{
-					var panel = Instantiate(findAreaPanelPrefab);
+					var panel = Instantiate(UIPanels.Instance.findAreaPanel);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, newInteractionPoint.body);
 
-					panel.GetComponent<FindAreaPanel>().Init(newInteractionPoint.title, meta.guid, areas);
-					newInteractionPoint.panel = panel;
+					panel.Init(newInteractionPoint.title, meta.guid, areas);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.MultipleChoiceArea:
@@ -2177,17 +2151,17 @@ public class Editor : MonoBehaviour
 					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
 					var correct = Int32.Parse(split[0]);
 					var areaJson = split[1];
-					var panel = Instantiate(multipleChoiceAreaPanelPrefab);
+					var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, areaJson);
 
-					panel.GetComponent<MultipleChoiceAreaPanel>().Init(newInteractionPoint.title, meta.guid, areas, correct);
-					newInteractionPoint.panel = panel;
+					panel.Init(newInteractionPoint.title, meta.guid, areas, correct);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.MultipleChoiceImage:
 				{
 
-					var panel = Instantiate(multipleChoiceImagePanelPrefab);
+					var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
 					foreach (var file in filenames)
@@ -2201,8 +2175,8 @@ public class Editor : MonoBehaviour
 					}
 
 					var correct = Int32.Parse(point.body);
-					panel.GetComponent<MultipleChoiceImagePanel>().Init(newInteractionPoint.title, urls, correct);
-					newInteractionPoint.panel = panel;
+					panel.Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				default:
@@ -2502,7 +2476,7 @@ public class Editor : MonoBehaviour
 		if (uploadStatus.done)
 		{
 			editorState = EditorState.Active;
-			Destroy(uploadPanel);
+			Destroy(uploadPanel.gameObject);
 			//TODO(Simon): temp fix. Make proper
 			try
 			{
@@ -2518,21 +2492,21 @@ public class Editor : MonoBehaviour
 		else if (uploadStatus.failed)
 		{
 			editorState = EditorState.Active;
-			Destroy(uploadPanel);
+			Destroy(uploadPanel.gameObject);
 			uploadStatus.request.Dispose();
 			Canvass.modalBackground.SetActive(false);
 			Toasts.AddToast(5, uploadStatus.error);
 		}
 		else
 		{
-			uploadPanel.GetComponent<UploadPanel>().UpdatePanel(uploadStatus);
+			uploadPanel.UpdatePanel(uploadStatus);
 		}
 
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
 			SetEditorActive(true);
 			StopCoroutine(uploadStatus.coroutine);
-			Destroy(uploadPanel);
+			Destroy(uploadPanel.gameObject);
 			uploadStatus.request.Dispose();
 			Canvass.modalBackground.SetActive(false);
 			Toasts.AddToast(5, "Upload cancelled");

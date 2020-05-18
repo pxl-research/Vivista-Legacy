@@ -1564,10 +1564,6 @@ MonoBehaviour:
     type: 3}
   interactionPointPrefab: {fileID: 1057334565152188, guid: 799a1f08d99508c44a9ae065c5405a54,
     type: 3}
-  interactionTypePrefab: {fileID: 1814512052045966, guid: 0544ab251798224459926a98a7465706,
-    type: 3}
-  filePanelPrefab: {fileID: 1468846993820600, guid: e9605cc224446ba428e1e03756bc7d4f,
-    type: 3}
   textPanelPrefab: {fileID: 1668577469885678, guid: 68aee9630d16f3847ae9673fad651082,
     type: 3}
   textPanelEditorPrefab: {fileID: 1343544309744014, guid: 5c435d4d02e1c3a4f95af60a1b75a7f5,
@@ -1599,14 +1595,6 @@ MonoBehaviour:
   multipleChoiceImagePanelPrefab: {fileID: 2343380510708631203, guid: a025ec2401e35d74a802e9f8e827347b,
     type: 3}
   multipleChoiceImagePanelEditorPrefab: {fileID: 1342788681892836441, guid: e5c25242b6238e445b14e706a33cf53a,
-    type: 3}
-  uploadPanelPrefab: {fileID: 1771621273584302, guid: 1007a2f2cc427de4ca38dfbacd1da109,
-    type: 3}
-  loginPanelPrefab: {fileID: 1961878947762782, guid: 298cea5983329894e976e326980058bc,
-    type: 3}
-  tagPanelPrefab: {fileID: 8492929646453990573, guid: d32f2958c4f214c48880afca02996939,
-    type: 3}
-  exportPanelPrefab: {fileID: 7218376046664249195, guid: ea5360ea1bb0add4fbac7b045d81ee07,
     type: 3}
   timelineContainer: {fileID: 1223360285}
   timeline: {fileID: 670066640}
