@@ -119,7 +119,7 @@ public class VideoController : MonoBehaviour
 		}
 
 		Graphics.SetRenderTarget(screenshots.targetTexture);
-		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24, false);
+		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24, false, true);
 		tex.ReadPixels(new Rect(0, 0, screenshots.texture.width, screenshots.texture.height), 0, 0);
 		TextureScale.Bilinear(tex, (int)screenshotParams.width, (int)screenshotParams.height);
 
