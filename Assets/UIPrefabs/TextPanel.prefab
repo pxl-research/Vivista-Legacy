@@ -229,28 +229,29 @@ MonoBehaviour:
     m_LineSpacing: 1.2
   m_Text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam malesuada
     felis mi, vitae viverra ante hendrerit quis. Nunc dolor erat, pellentesque sit
-    amet ligula sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet sapien
-    fermentum bibendum.
+    amet ligula sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet
+    sapien fermentum bibendum.
 
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam malesuada felis
-    mi, vitae viverra ante hendrerit quis. Nunc dolor erat, pellentesque sit amet
-    ligula sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet sapien
-    fermentum bibendum.
+    Lorem ipsum dolor sit amet, consectetur adipiscing
+    elit. Aliquam malesuada felis mi, vitae viverra ante hendrerit quis. Nunc dolor
+    erat, pellentesque sit amet ligula sit amet, pharetra vestibulum est. Fusce efficitur
+    erat sit amet sapien fermentum bibendum.
 
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam malesuada felis
-    mi, vitae viverra ante hendrerit quis. Nunc dolor erat, pellentesque sit amet
-    ligula sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet sapien
-    fermentum bibendum.
+    Lorem ipsum dolor sit amet, consectetur
+    adipiscing elit. Aliquam malesuada felis mi, vitae viverra ante hendrerit quis.
+    Nunc dolor erat, pellentesque sit amet ligula sit amet, pharetra vestibulum est.
+    Fusce efficitur erat sit amet sapien fermentum bibendum.
 
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam malesuada felis
-    mi, vitae viverra ante hendrerit quis. Nunc dolor erat, pellentesque sit amet
-    ligula sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet sapien
-    fermentum bibendum.
+    Lorem ipsum dolor
+    sit amet, consectetur adipiscing elit. Aliquam malesuada felis mi, vitae viverra
+    ante hendrerit quis. Nunc dolor erat, pellentesque sit amet ligula sit amet,
+    pharetra vestibulum est. Fusce efficitur erat sit amet sapien fermentum bibendum.
 
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam malesuada felis
-    mi, vitae viverra ante hendrerit quis. Nunc dolor erat, pellentesque sit amet
-    ligula sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet sapien
-    fermentum bibendum.'
+    Lorem
+    ipsum dolor sit amet, consectetur adipiscing elit. Aliquam malesuada felis mi,
+    vitae viverra ante hendrerit quis. Nunc dolor erat, pellentesque sit amet ligula
+    sit amet, pharetra vestibulum est. Fusce efficitur erat sit amet sapien fermentum
+    bibendum.'
 --- !u!1 &1668577469885678
 GameObject:
   m_ObjectHideFlags: 0
@@ -290,7 +291,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 1020.6024, y: 639.0487}
-  m_SizeDelta: {x: 400, y: 500}
+  m_SizeDelta: {x: 400, y: 300}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!223 &223007370763551410
 Canvas:
@@ -676,8 +677,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1168976181199535352}
   m_HandleRect: {fileID: 9209009445061241712}
   m_Direction: 2
-  m_Value: 1.0000013
-  m_Size: 0.5891959
+  m_Value: 1.0000002
+  m_Size: 0.33793968
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -799,7 +800,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8457077018702517264}
   m_HandleRect: {fileID: 8939503629063445493}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -1130,7 +1131,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00024414062}
+  m_AnchoredPosition: {x: 0.00024414062, y: 0.00012207031}
   m_SizeDelta: {x: 370, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &5312943940548357532
