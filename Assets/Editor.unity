@@ -987,6 +987,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1988716303}
     m_Modifications:
+    - target: {fileID: 1572399019717964, guid: 952afe5089bbb844f9d3402123092fb5, type: 3}
+      propertyPath: m_Name
+      value: PlayerInfo
+      objectReference: {fileID: 0}
     - target: {fileID: 114933417644068934, guid: 952afe5089bbb844f9d3402123092fb5,
         type: 3}
       propertyPath: compassBackground
@@ -997,16 +1001,6 @@ PrefabInstance:
       propertyPath: compassForeground
       value: 
       objectReference: {fileID: 154816409}
-    - target: {fileID: 224009011589476856, guid: 952afe5089bbb844f9d3402123092fb5,
-        type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 224009011589476856, guid: 952afe5089bbb844f9d3402123092fb5,
-        type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 224035420433341334, guid: 952afe5089bbb844f9d3402123092fb5,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1045,6 +1039,21 @@ PrefabInstance:
     - target: {fileID: 224035420433341334, guid: 952afe5089bbb844f9d3402123092fb5,
         type: 3}
       propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224035420433341334, guid: 952afe5089bbb844f9d3402123092fb5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224035420433341334, guid: 952afe5089bbb844f9d3402123092fb5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224035420433341334, guid: 952afe5089bbb844f9d3402123092fb5,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 224035420433341334, guid: 952afe5089bbb844f9d3402123092fb5,
@@ -1096,16 +1105,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 224473555433699382, guid: 952afe5089bbb844f9d3402123092fb5,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 224538786021987510, guid: 952afe5089bbb844f9d3402123092fb5,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 952afe5089bbb844f9d3402123092fb5, type: 3}
@@ -1563,38 +1562,6 @@ MonoBehaviour:
   timeTooltipPrefab: {fileID: 1003459771833592, guid: 74931ff51af60fa4dbc4257009bfff93,
     type: 3}
   interactionPointPrefab: {fileID: 1057334565152188, guid: 799a1f08d99508c44a9ae065c5405a54,
-    type: 3}
-  textPanelPrefab: {fileID: 1668577469885678, guid: 68aee9630d16f3847ae9673fad651082,
-    type: 3}
-  textPanelEditorPrefab: {fileID: 1343544309744014, guid: 5c435d4d02e1c3a4f95af60a1b75a7f5,
-    type: 3}
-  audioPanelPrefab: {fileID: 1797258654988972, guid: 7d8483ca8ca899748adcafd4415e90bb,
-    type: 3}
-  audioPanelEditorPrefab: {fileID: 1468043211349640, guid: 56edd3143bf4456499aa65b936479992,
-    type: 3}
-  imagePanelPrefab: {fileID: 1038783283685624, guid: 6cc2491e61c3586478649fe6623f4a24,
-    type: 3}
-  imagePanelEditorPrefab: {fileID: 1075775492185780, guid: 701caaecd7e918c47b0be31b70396586,
-    type: 3}
-  videoPanelPrefab: {fileID: 1040955220156240, guid: a8ca42a5d03382b4e8c646309adefc2f,
-    type: 3}
-  videoPanelEditorPrefab: {fileID: 1339106022732690, guid: 088ff0bf21aca5b4b877f84b8ee6303e,
-    type: 3}
-  multipleChoicePanelPrefab: {fileID: 1109307375659294, guid: a2977775f7c5758409be40913249cd74,
-    type: 3}
-  multipleChoicePanelEditorPrefab: {fileID: 1371653262795046, guid: 490cba79c51692144af8e4c1380585b4,
-    type: 3}
-  findAreaPanelPrefab: {fileID: 2343380510708631203, guid: 056a37bbbdc43f141b11c4eb09f06a91,
-    type: 3}
-  findAreaPanelEditorPrefab: {fileID: 5651805418575855432, guid: 1e365db0f2a1aff4d986fdc42a98b3eb,
-    type: 3}
-  multipleChoiceAreaPanelPrefab: {fileID: 2343380510708631203, guid: 892a328412fa38048b78679b3c24a6af,
-    type: 3}
-  multipleChoiceAreaPanelEditorPrefab: {fileID: 5651805418575855432, guid: 6893752a3d96f2c448bdc145d1c9a79a,
-    type: 3}
-  multipleChoiceImagePanelPrefab: {fileID: 2343380510708631203, guid: a025ec2401e35d74a802e9f8e827347b,
-    type: 3}
-  multipleChoiceImagePanelEditorPrefab: {fileID: 1342788681892836441, guid: e5c25242b6238e445b14e706a33cf53a,
     type: 3}
   timelineContainer: {fileID: 1223360285}
   timeline: {fileID: 670066640}

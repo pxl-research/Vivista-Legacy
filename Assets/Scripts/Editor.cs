@@ -154,6 +154,7 @@ public class Editor : MonoBehaviour
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
+	private List<InteractionPointEditor> sortedInteractionPoints;
 	private InteractionPointEditor pointToMove;
 	private InteractionPointEditor pointToEdit;
 	private InteractionPointEditor lastPlacedPoint;
@@ -186,6 +187,7 @@ public class Editor : MonoBehaviour
 	private float timelineOffsetTime;
 	private float timelineOffsetPixels;
 	private float timelineWidthPixels;
+	private bool timelineLabelsDirty;
 
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
@@ -220,9 +222,12 @@ public class Editor : MonoBehaviour
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPointTemp.name = "Temp InteractionPoint";
 		interactionPoints = new List<InteractionPointEditor>();
+		sortedInteractionPoints = new List<InteractionPointEditor>();
 
 		timeTooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimeTooltip>();
 		timeTooltip.ResetPosition();
+
+		timelineLabelsDirty = true;
 
 		prevMousePosition = Input.mousePosition;
 
@@ -255,8 +260,9 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		//TODO(Simon): this is a hack to fix a bug. Sort sorts in place. So the sorted list gets passed to all kinds of places where we need an unsorted list.
-		var sortedInteractionPoints = new List<InteractionPointEditor>(interactionPoints);
+		//TODO(Simon): this is a hack to fix a bug. Sort sorts in place. So the sorted list got passed to all kinds of places where we need an unsorted list.
+		sortedInteractionPoints.Clear();
+		sortedInteractionPoints.AddRange(interactionPoints);
 		sortedInteractionPoints.Sort((x, y) => x.startTime != y.startTime
 			? x.startTime.CompareTo(y.startTime)
 			: x.endTime.CompareTo(y.endTime));
@@ -265,7 +271,7 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
 		foreach (var point in sortedInteractionPoints)
 		{
-			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagById(point.tagId).color;
+			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
 			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		}
 
@@ -1357,6 +1363,7 @@ public class Editor : MonoBehaviour
 			if (Mathf.Abs(timelineZoom - timelineZoomTarget) > 0.0025)
 			{
 				timelineZoom = Mathf.Lerp(timelineZoom, timelineZoomTarget, 0.15f);
+				timelineLabelsDirty = true;
 			}
 			else
 			{
@@ -1384,6 +1391,7 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Timeline labels
+		if (timelineLabelsDirty)
 		{
 			if (Single.IsNaN(zoomedLength))
 			{
@@ -1428,6 +1436,7 @@ public class Editor : MonoBehaviour
 					headerLabels[i].enabled = false;
 				}
 			}
+			timelineLabelsDirty = false;
 		}
 
 		//Note(Simon): Render timeline items
@@ -1459,7 +1468,7 @@ public class Editor : MonoBehaviour
 		//Note(Simon): Colors
 		foreach (var point in interactionPoints)
 		{
-			var tagColor = TagManager.Instance.GetTagById(point.tagId).color;
+			var tagColor = TagManager.Instance.GetTagColorById(point.tagId);
 			point.timelineRow.indicator.color = tagColor;
 		}
 
@@ -1488,9 +1497,8 @@ public class Editor : MonoBehaviour
 		foreach (var point in interactionPoints)
 		{
 			var sprite = point.timelineRow.tagShape;
-			var tag = TagManager.Instance.GetTagById(point.tagId);
-			sprite.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
-			sprite.color = tag.color;
+			sprite.sprite = TagManager.Instance.GetTagShapeById(point.tagId);
+			sprite.color = TagManager.Instance.GetTagColorById(point.tagId);
 		}
 
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
@@ -1910,6 +1918,7 @@ public class Editor : MonoBehaviour
 		{
 			var pointerEvent = (PointerEventData)e;
 			timelineOffsetTime += PxToRelativeTime(pointerEvent.delta.x) * 2;
+			timelineLabelsDirty = true;
 		}
 	}
 

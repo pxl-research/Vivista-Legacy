@@ -10,6 +10,7 @@ public class Tag
 	public int shapeIndex;
 	public string name;
 
+	public static Color defaultColor = Color.white;
 	public static Tag Default =>
 		new Tag
 		{
@@ -108,6 +109,42 @@ public class TagManager : MonoBehaviour
 		}
 
 		return Tag.Default;
+	}
+
+	public Color GetTagColorById(int tagId)
+	{
+		if (tagId <= 0 || tagId > indexCounter)
+		{
+			return Tag.defaultColor;
+		}
+
+		for (int i = 0; i < tags.Count; i++)
+		{
+			if (tags[i].id == tagId)
+			{
+				return tags[i].color;
+			}
+		}
+
+		return Tag.defaultColor;
+	}
+
+	public Sprite GetTagShapeById(int tagId)
+	{
+		if (tagId <= 0 || tagId > indexCounter)
+		{
+			return ShapeForIndex(0);
+		}
+
+		for (int i = 0; i < tags.Count; i++)
+		{
+			if (tags[i].id == tagId)
+			{
+				return ShapeForIndex(tags[i].shapeIndex);
+			}
+		}
+
+		return ShapeForIndex(0);
 	}
 
 	public Sprite ShapeForIndex(int index)

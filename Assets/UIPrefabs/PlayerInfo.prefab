@@ -485,6 +485,7 @@ MonoBehaviour:
   amount: 0
   iconPlay: {fileID: 2800000, guid: 33656b95c6241cb4686736a803d137bb, type: 3}
   iconPause: {fileID: 2800000, guid: 774f22a79df44f448a8a813691361142, type: 3}
+  buttonImage: {fileID: 3551086981286667684}
 --- !u!114 &3551086981286667684
 MonoBehaviour:
   m_ObjectHideFlags: 0

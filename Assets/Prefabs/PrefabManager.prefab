@@ -59,3 +59,35 @@ MonoBehaviour:
     type: 3}
   tagPanel: {fileID: 8492929646453990575, guid: d32f2958c4f214c48880afca02996939,
     type: 3}
+  textPanel: {fileID: 114804670035395096, guid: 68aee9630d16f3847ae9673fad651082,
+    type: 3}
+  textPanelEditor: {fileID: 114857279946337036, guid: 5c435d4d02e1c3a4f95af60a1b75a7f5,
+    type: 3}
+  audioPanel: {fileID: 114908752627805184, guid: 7d8483ca8ca899748adcafd4415e90bb,
+    type: 3}
+  audioPanelEditor: {fileID: 114455846673542934, guid: 56edd3143bf4456499aa65b936479992,
+    type: 3}
+  imagePanel: {fileID: 114646830587721148, guid: 6cc2491e61c3586478649fe6623f4a24,
+    type: 3}
+  imagePanelEditor: {fileID: 114701697738338926, guid: 701caaecd7e918c47b0be31b70396586,
+    type: 3}
+  videoPanel: {fileID: 114091602651246342, guid: a8ca42a5d03382b4e8c646309adefc2f,
+    type: 3}
+  videoPanelEditor: {fileID: 114778135010508762, guid: 088ff0bf21aca5b4b877f84b8ee6303e,
+    type: 3}
+  multipleChoicePanel: {fileID: 114556635543492542, guid: a2977775f7c5758409be40913249cd74,
+    type: 3}
+  multipleChoicePanelEditor: {fileID: 114461006918833054, guid: 490cba79c51692144af8e4c1380585b4,
+    type: 3}
+  findAreaPanel: {fileID: 3396625980517646927, guid: 056a37bbbdc43f141b11c4eb09f06a91,
+    type: 3}
+  findAreaPanelEditor: {fileID: 5651805418575855430, guid: 1e365db0f2a1aff4d986fdc42a98b3eb,
+    type: 3}
+  multipleChoiceAreaPanel: {fileID: 2859842850602605189, guid: 892a328412fa38048b78679b3c24a6af,
+    type: 3}
+  multipleChoiceAreaPanelEditor: {fileID: 5308059142758430682, guid: 6893752a3d96f2c448bdc145d1c9a79a,
+    type: 3}
+  multipleChoiceImagePanel: {fileID: 8384481404466831820, guid: a025ec2401e35d74a802e9f8e827347b,
+    type: 3}
+  multipleChoiceImagePanelEditor: {fileID: 1342452400986974951, guid: e5c25242b6238e445b14e706a33cf53a,
+    type: 3}

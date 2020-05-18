@@ -17,6 +17,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 	public GameObject compassForeground;
 	public Text timeText;
 	public Text blipCounter;
+	private bool isEditor;
 
 	public bool hovering = false;
 	public float minSeekbarHeight = 0.1f;
@@ -56,6 +57,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		activeBlips = new List<GameObject>();
 		inactiveBlips = new Stack<GameObject>();
 		blipCounter = compass.GetComponentInChildren<Text>();
+		isEditor = SceneManager.GetActiveScene().name.Equals("Editor");
 	}
 
 	public static void ReattachCompass()
@@ -104,7 +106,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 		// TODO(Lander): Actually make use of the start position, and no hardcoded values
 		float rotation = (XRSettings.enabled ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
-		if (!SceneManager.GetActiveScene().name.Equals("Editor") && compass.transform.parent != Canvass.seekbar)
+		if (!isEditor && compass.transform.parent != Canvass.seekbar)
 		{
 			rotation -= 90;
 		}

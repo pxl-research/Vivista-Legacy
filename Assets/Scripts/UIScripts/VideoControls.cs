@@ -3,22 +3,19 @@ using UnityEngine.UI;
 
 public class VideoControls : MonoBehaviour
 {
-
 	public float amount;
 	public Texture iconPlay;
 	public Texture iconPause;
 
+	public RawImage buttonImage;
+
 	public static VideoController videoController;
 
-	// Update is called once per frame
 	void Update()
 	{
 		GetComponent<BoxCollider>().enabled = transform.root.GetComponent<Canvas>().enabled;
 
-		if (gameObject.name.Equals("TogglePlay"))
-		{
-			GetComponent<RawImage>().texture = videoController.playing ? iconPause : iconPlay;
-		}
+		buttonImage.texture = videoController.playing ? iconPause : iconPlay;
 	}
 
 	public void Skip()
