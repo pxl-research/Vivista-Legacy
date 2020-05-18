@@ -97,7 +97,7 @@ public class ExplorerPanel : MonoBehaviour
 
 	private static Color normalColor = Color.white;
 	private static Color selectedColor = new Color(216 / 255f, 216 / 255f, 216 / 255f);
-	private static Vector2 thumbnailMaxSize = new Vector2(30, 20);
+	private float zoom;
 
 	private string cookiePath;
 
@@ -111,7 +111,14 @@ public class ExplorerPanel : MonoBehaviour
 
 		while (texturesToDestroy.Count > 0)
 		{
-			Destroy(texturesToDestroy.Dequeue());
+			var texture = texturesToDestroy.Dequeue();
+			//NOTE(Simon): These three icons are assets, so do not destroy them
+			if (texture != iconDirectory.texture 
+				&& texture != iconFile.texture 
+				&& texture != iconDirectory.texture)
+			{
+				Destroy(texture);
+			}
 		}
 	}
 
@@ -131,6 +138,7 @@ public class ExplorerPanel : MonoBehaviour
 		answerButton.GetComponentInChildren<Text>().text = "Open";
 
 		UpdateDir();
+		HidePreview();
 	}
 
 	public void InitSaveAs(string startDirectory = "C:\\", string defaultExtension = "", string searchPattern = "*", string title = "Select file")
@@ -421,9 +429,10 @@ public class ExplorerPanel : MonoBehaviour
 			item.fileResolution.text = "";
 			item.icon.texture = entries[i].sprite.texture;
 			item.explorerPanel = this;
+			item.SetHeight(zoom);
 
 			var texture = item.icon.texture;
-			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), thumbnailMaxSize);
+			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), item.iconHolder.rect.size);
 
 			item.icon.rectTransform.sizeDelta = newSize;
 
@@ -719,6 +728,8 @@ public class ExplorerPanel : MonoBehaviour
 		bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift);
 		bool doubleclick = lastClickIndex == index && (Time.unscaledTime - lastClickTime) < 0.5f;
 
+		bool resetDoubleClick = false;
+
 		if (doubleclick)
 		{
 			if (entry.entryType == EntryType.File && selectionMode == SelectionMode.File)
@@ -733,6 +744,8 @@ public class ExplorerPanel : MonoBehaviour
 			{
 				OnDriveClick(entry.fullPath);
 			}
+
+			resetDoubleClick = true;
 		}
 		else if (multiSelect && controlHeld)
 		{
@@ -795,8 +808,8 @@ public class ExplorerPanel : MonoBehaviour
 
 		filenameField.SetTextWithoutNotify(fileNames.ToString());
 
-		lastClickTime = Time.unscaledTime;
-		lastClickIndex = index;
+		lastClickTime = resetDoubleClick ? 0 : Time.unscaledTime;
+		lastClickIndex = resetDoubleClick ? -1 : index;
 	}
 
 	public void OnFilenameFieldChanged()
@@ -826,7 +839,26 @@ public class ExplorerPanel : MonoBehaviour
 		}
 	}
 
-	int EntryIndexForGO(ExplorerPanelItem item)
+	public void OnZoomStep(float value)
+	{
+		zoom = value;
+		for (int i = 0; i < entries.Count; i++)
+		{
+			entries[i].explorerPanelItem.SetHeight(value);
+		}
+	}
+
+	public void OnZoomEnd()
+	{
+		if (imageLoadsInProgress != null)
+		{
+			StopCoroutine(imageLoadsInProgress);
+		}
+
+		imageLoadsInProgress = StartCoroutine(LoadFileThumbnail(entries));
+	}
+
+	private int EntryIndexForGO(ExplorerPanelItem item)
 	{
 		for (int i = 0; i < entries.Count; i++)
 		{
