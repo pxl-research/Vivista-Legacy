@@ -387,6 +387,7 @@ public class Editor : MonoBehaviour
 
 				lastPlacedPoint = point;
 				AddItemToTimeline(point, false);
+				SetInteractionPointTag(point);
 
 				interactionTypePicker = Instantiate(interactionTypePrefab, Canvass.main.transform, false);
 
