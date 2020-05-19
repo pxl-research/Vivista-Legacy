@@ -239,6 +239,7 @@ public class Player : MonoBehaviour
 					bool pointActive = videoController.currentTime >= interactionPoints[i].startTime 
 									&& videoController.currentTime <= interactionPoints[i].endTime;
 					interactionPoints[i].point.SetActive(pointActive);
+					interactionPoints[i].point.transform.GetChild(1).gameObject.SetActive(!interactionPoints[i].isSeen);
 				}
 
 				//NOTE(Simon): Interact with inactive interactionpoints
@@ -525,8 +526,8 @@ public class Player : MonoBehaviour
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
 		activeInteractionPoint = point;
 		point.isSeen = true;
-		point.point.GetComponentInChildren<TextMesh>().color = Color.black;
-		point.point.GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f, 1);
+		//point.point.GetComponentInChildren<TextMesh>().color = Color.black;
+		//point.point.GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f, 1);
 
 		videoController.Pause();
 

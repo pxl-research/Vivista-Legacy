@@ -221,6 +221,8 @@ public class Editor : MonoBehaviour
 	{
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPointTemp.name = "Temp InteractionPoint";
+
+
 		interactionPoints = new List<InteractionPointEditor>();
 		sortedInteractionPoints = new List<InteractionPointEditor>();
 
