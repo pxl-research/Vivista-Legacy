@@ -54,7 +54,7 @@
                 float2 uv = i.uv - 0.5;
                 float modTime = fmod(_Time[1] / 2, 1.);
 
-                float sdf = step(1., 1. - (sdCircle(uv, modTime / 2)));
+                float sdf = step(1, 1 - (sdCircle(uv, modTime / 2)));
 
                 float col = sdf * (1. - modTime);
                 col = smoothstep(0, 0.6, col);
