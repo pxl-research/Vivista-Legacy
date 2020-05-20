@@ -5,6 +5,11 @@ public class InteractionTypePicker : MonoBehaviour
 	public bool answered = false;
 	public InteractionType answer;
 
+	public void OnEnable()
+	{
+		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
+	}
+
 	public void AnswerImage()
 	{
 		answered = true;

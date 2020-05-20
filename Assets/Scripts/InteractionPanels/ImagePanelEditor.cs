@@ -31,6 +31,11 @@ public class ImagePanelEditor : MonoBehaviour
 
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
+	public void OnEnable()
+	{
+		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
+	}
+
 	void Update()
 	{
 		if (imageEditorState == ImageEditorState.Opening)

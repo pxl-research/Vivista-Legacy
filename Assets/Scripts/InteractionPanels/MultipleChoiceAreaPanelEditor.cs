@@ -32,7 +32,11 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
-	//TODO(Simon): Is the correct toggle marked on Init???
+	public void OnEnable()
+	{
+		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
+	}
+
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect, int tagId = -1)
 	{
 		guid = newGuid;

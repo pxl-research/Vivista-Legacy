@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
@@ -105,6 +106,38 @@ public static class MathHelper
 		float heightRatio = orignalSize.y / targetSize.y;
 		float biggestRatio = Mathf.Max(heightRatio, widthRatio);
 		return new Vector2(orignalSize.x / biggestRatio, orignalSize.y/ biggestRatio);
+	}
+
+	public static float smoothstep(float edge0, float edge1, float x)
+	{
+		x = Mathf.Clamp01((x - edge0) / (edge1 - edge0));
+		return x * x * (3 - 2 * x);
+	}
+
+	public static float smootherstep(float edge0, float edge1, float x)
+	{
+		x = Mathf.Clamp01((x - edge0) / (edge1 - edge0));
+		return x * x * x * (x * (x * 6 - 15) + 10);
+	}
+}
+
+public class UIAnimation
+{
+	public static float animationLength = 0.25f;
+
+	public static IEnumerator FadeIn(RectTransform transform, CanvasGroup canvas)
+	{
+		float animTime = 0;
+		float scaleOffset = .8f;
+		while (animTime < animationLength)
+		{
+			animTime += Mathf.Clamp01(Time.deltaTime);
+			float step = MathHelper.smootherstep(0, animationLength, animTime);
+			float scale = scaleOffset + (step * .2f);
+			transform.localScale = new Vector3(scale, scale, 1);
+			canvas.alpha = step;
+			yield return new WaitForEndOfFrame();
+		}
 	}
 }
 

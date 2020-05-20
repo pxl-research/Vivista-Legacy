@@ -1012,6 +1012,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5651805418575855431}
   - component: {fileID: 5651805418575855430}
+  - component: {fileID: 1309924897925541220}
   m_Layer: 5
   m_Name: FindAreaPanelEditor
   m_TagString: Untagged
@@ -1062,6 +1063,18 @@ MonoBehaviour:
   answerTitle: 
   answerTagId: 0
   tagPicker: {fileID: 8860962043441976162}
+--- !u!225 &1309924897925541220
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5651805418575855432}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &5651805418620340932
 GameObject:
   m_ObjectHideFlags: 0

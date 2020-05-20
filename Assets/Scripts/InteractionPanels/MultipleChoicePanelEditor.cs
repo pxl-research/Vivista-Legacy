@@ -28,6 +28,11 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
+	public void OnEnable()
+	{
+		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
+	}
+
 	public void Init(string initialQuestion, string[] initialAnswers = null, int tagId = -1)
 	{
 		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup2>();
