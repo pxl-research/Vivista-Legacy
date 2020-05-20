@@ -161,7 +161,7 @@ public class Editor : MonoBehaviour
 
 	private InteractionTypePicker interactionTypePicker;
 	private GameObject interactionEditor;
-	private GameObject savePanel;
+	private ProjectPanel savePanel;
 	private ProjectPanel projectPanel;
 	private UploadPanel uploadPanel;
 	private LoginPanel loginPanel;
@@ -1040,13 +1040,11 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.Saving)
 		{
-			if (savePanel.GetComponent<ProjectPanel>().answered)
+			if (savePanel.answered)
 			{
-				var panel = savePanel.GetComponent<ProjectPanel>();
-
 				//NOTE(Simon): If file already exists, we need to get the associated Guid in order to save to the correct file.
 				//NOTE(cont.): Could be possible that user overwrites an existing file *different* from the existing file already open
-				var newGuid = new Guid(panel.answerGuid);
+				var newGuid = new Guid(savePanel.answerGuid);
 
 				// NOTE(Lander): When the guid changes, overwrite extra and main.mp4
 				if (newGuid != meta.guid && meta.guid != Guid.Empty)
@@ -1070,7 +1068,7 @@ public class Editor : MonoBehaviour
 				}
 
 				meta.guid = newGuid;
-				meta.title = panel.answerTitle;
+				meta.title = savePanel.answerTitle;
 
 				if (!SaveToFile())
 				{
@@ -1081,14 +1079,14 @@ public class Editor : MonoBehaviour
 				Toasts.AddToast(5, "File saved!");
 
 				SetEditorActive(true);
-				Destroy(savePanel);
+				Destroy(savePanel.gameObject);
 				Canvass.modalBackground.SetActive(false);
 			}
 
 			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				SetEditorActive(true);
-				Destroy(savePanel);
+				Destroy(savePanel.gameObject);
 				Canvass.modalBackground.SetActive(false);
 			}
 		}
@@ -1097,7 +1095,6 @@ public class Editor : MonoBehaviour
 		{
 			if (projectPanel.answered)
 			{
-
 				var guid = projectPanel.answerGuid;
 				var projectFolder = Path.Combine(Application.persistentDataPath, guid);
 
@@ -1116,6 +1113,13 @@ public class Editor : MonoBehaviour
 					//TODO(Simon): Figure out a way to differentiate between a real error, and when the video is not copied yet.
 					Debug.LogError("Something went wrong while loading the file");
 				}
+			}
+
+			//NOTE(Simon): Don't allow dismissal if no project is opened yet
+			if (Input.GetKeyDown(KeyCode.Escape) && meta.title != null)
+			{
+				Destroy(projectPanel.gameObject);
+				Canvass.modalBackground.SetActive(false);
 			}
 		}
 
@@ -1177,11 +1181,10 @@ public class Editor : MonoBehaviour
 				Destroy(loginPanel.gameObject);
 				InitSaveProjectPanel();
 			}
-			if (savePanel != null && savePanel.GetComponent<ProjectPanel>().answered)
+			if (savePanel != null && savePanel.answered)
 			{
-				var panel = savePanel.GetComponent<ProjectPanel>();
-				panel.Init(true, meta.title);
-				meta.title = panel.answerTitle;
+				savePanel.Init(true, meta.title);
+				meta.title = savePanel.answerTitle;
 
 				if (!SaveToFile())
 				{
@@ -1191,7 +1194,7 @@ public class Editor : MonoBehaviour
 
 				Toasts.AddToast(5, "File saved!");
 
-				Destroy(savePanel);
+				Destroy(savePanel.gameObject);
 				InitUploadPanel();
 			}
 			if (uploadPanel != null)
@@ -1211,7 +1214,7 @@ public class Editor : MonoBehaviour
 
 					if (savePanel != null)
 					{
-						Destroy(savePanel);
+						Destroy(savePanel.gameObject);
 					}
 
 					Canvass.modalBackground.SetActive(false);
@@ -1966,9 +1969,9 @@ public class Editor : MonoBehaviour
 
 	public void InitSaveProjectPanel(bool uploading = false)
 	{
-		savePanel = Instantiate(UIPanels.Instance.projectPanel).gameObject;
+		savePanel = Instantiate(UIPanels.Instance.projectPanel);
 		savePanel.transform.SetParent(Canvass.main.transform, false);
-		savePanel.GetComponent<ProjectPanel>().Init(isSaveFileDialog: true, meta.title);
+		savePanel.Init(isSaveFileDialog: true, meta.title);
 		Canvass.modalBackground.SetActive(true);
 		if (!uploading)
 		{
