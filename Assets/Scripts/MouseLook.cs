@@ -56,8 +56,9 @@ public class MouseLook : MonoBehaviour
 			{
 				if (Input.GetMouseButton(1) && !EventSystem.current.IsPointerOverGameObject())
 				{
-					mouseRotX = mouseRotX + (mouseDelta.x * sensivity);
-					mouseRotY = mouseRotY + (mouseDelta.y * sensivity);
+					float zoomFactor = Camera.main.fieldOfView / 120f;
+					mouseRotX += mouseDelta.x * sensivity * zoomFactor;
+					mouseRotY += mouseDelta.y * sensivity * zoomFactor;
 					mouseRotX = ClampAngle(mouseRotX, minX, maxX);
 					mouseRotY = ClampAngle(mouseRotY, minY, maxY);
 
@@ -65,6 +66,11 @@ public class MouseLook : MonoBehaviour
 					var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
 
 					transform.localRotation = originalRotation * newRotx * newRoty;
+				}
+
+				if (Input.mouseScrollDelta.y != 0 && !EventSystem.current.IsPointerOverGameObject())
+				{
+					Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 40, 120);
 				}
 			}
 		}

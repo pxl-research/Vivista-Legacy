@@ -305,11 +305,6 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.PlacingInteractionPoint;
 			}
 
-			if (Input.mouseScrollDelta.y != 0 && !EventSystem.current.IsPointerOverGameObject())
-			{
-				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
-			}
-
 			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints")))
 			{
 				hit.collider.GetComponentInParent<SpriteRenderer>().color = Color.red;
