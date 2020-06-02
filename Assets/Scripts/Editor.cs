@@ -1316,13 +1316,14 @@ public class Editor : MonoBehaviour
 		}
 
 		//Note(Simon): Zoom timeline
+		if (!(isDraggingTimelineItem || isResizingTimelineItem))
 		{
 			if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 			{
 				//NOTE(Simon): Zoom only when Ctrl is pressed. Else scroll list.
 				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
 				{
-					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 0;
+					DisableTimelineScroll();
 					if (Input.mouseScrollDelta.y > 0)
 					{
 						timelineZoomTarget = Mathf.Clamp01(timelineZoomTarget * 0.9f);
@@ -1334,7 +1335,7 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					timelineContainer.GetComponentInChildren<ScrollRect>().scrollSensitivity = 20;
+					EnableTimelineScroll();
 				}
 			}
 
@@ -1677,13 +1678,14 @@ public class Editor : MonoBehaviour
 		{
 			foreach (var point in interactionPoints)
 			{
-				var imageRect = point.timelineRow.indicator.rectTransform;
+				var indicatorRect = point.timelineRow.indicator.rectTransform;
 
-				RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, Input.mousePosition, null, out var rectPixel);
+				RectTransformUtility.ScreenPointToLocalPointInRectangle(indicatorRect, Input.mousePosition, null, out var rectPixel);
 				var leftAreaX = 5;
-				var rightAreaX = imageRect.rect.width - 5;
+				var rightAreaX = indicatorRect.rect.width - 5;
 
-				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
+				//NOTE(Simon): Show correct cursor
+				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(indicatorRect, Input.mousePosition)
 					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 				{
 					if (isDraggingTimelineItem)
@@ -1706,7 +1708,7 @@ public class Editor : MonoBehaviour
 
 				//NOTE(Simon) Check if conditions are met to start a resize or drag operation on a timeline item
 				if (!isDraggingTimelineItem && !isResizingTimelineItem
-					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(imageRect, Input.mousePosition)
+					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(indicatorRect, Input.mousePosition)
 					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 				{
 					if (rectPixel.x < leftAreaX)
@@ -1726,6 +1728,8 @@ public class Editor : MonoBehaviour
 						isDraggingTimelineItem = true;
 						timelineItemBeingDragged = point;
 					}
+
+					DisableTimelineScroll();
 					break;
 				}
 			}
@@ -1739,6 +1743,7 @@ public class Editor : MonoBehaviour
 					timelineItemBeingDragged = null;
 					timeTooltip.ResetPosition();
 					UnsavedChangesTracker.Instance.unsavedChanges = true;
+					EnableTimelineScroll();
 				}
 				else
 				{
@@ -1767,6 +1772,7 @@ public class Editor : MonoBehaviour
 					timelineItemBeingResized = null;
 					timeTooltip.ResetPosition();
 					UnsavedChangesTracker.Instance.unsavedChanges = true;
+					EnableTimelineScroll();
 				}
 				else
 				{
@@ -1898,6 +1904,16 @@ public class Editor : MonoBehaviour
 			timelineOffsetTime += PxToRelativeTime(pointerEvent.delta.x) * 2;
 			timelineLabelsDirty = true;
 		}
+	}
+
+	public void DisableTimelineScroll()
+	{
+		timelineContainer.GetComponentInChildren<ScrollRect>().vertical = false;
+	}
+
+	public void EnableTimelineScroll()
+	{
+		timelineContainer.GetComponentInChildren<ScrollRect>().vertical = true;
 	}
 
 	public void InitUpload()
