@@ -18,7 +18,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public string answerQuestion;
 	public string[] answerAnswers;
 	public int answerCorrect;
-	public int answerTagId;
 
 	public TagPicker tagPicker;
 
@@ -151,7 +150,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 			}
 			var toggle = toggleGroup.ActiveToggles().First();
 			answerCorrect = toggle.transform.parent.GetSiblingIndex();
-			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

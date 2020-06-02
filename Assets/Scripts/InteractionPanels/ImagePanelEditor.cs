@@ -20,7 +20,6 @@ public class ImagePanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public List<string> answerURLs;
-	public int answerTagId;
 
 	public bool allowCancel => explorerPanel == null;
 
@@ -130,7 +129,6 @@ public class ImagePanelEditor : MonoBehaviour
 			{
 				answerURLs.Add(entry.url);
 			}
-			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

@@ -11,7 +11,6 @@ public class TextPanelEditor : MonoBehaviour
 	public bool answered;
 	public string answerTitle;
 	public string answerBody;
-	public int answerTagId;
 
 	public TagPicker tagPicker;
 
@@ -68,7 +67,6 @@ public class TextPanelEditor : MonoBehaviour
 			answered = true;
 			answerTitle = title.text;
 			answerBody = body.text;
-			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

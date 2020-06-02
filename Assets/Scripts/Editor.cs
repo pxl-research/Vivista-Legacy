@@ -488,7 +488,6 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -505,7 +504,6 @@ public class Editor : MonoBehaviour
 						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -527,7 +525,6 @@ public class Editor : MonoBehaviour
 						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -550,7 +547,6 @@ public class Editor : MonoBehaviour
 
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -567,7 +563,6 @@ public class Editor : MonoBehaviour
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
 						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -603,7 +598,6 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = jsonMiniatures.ToString();
 						lastPlacedPoint.body = jsonAreas.ToString();
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
@@ -641,7 +635,6 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = jsonAreas.ToString();
 						lastPlacedPoint.filename = jsonMiniatures.ToString();
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
@@ -677,7 +670,6 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerQuestion;
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
-						lastPlacedPoint.tagId = editor.answerTagId;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -692,6 +684,7 @@ public class Editor : MonoBehaviour
 
 			if (finished)
 			{
+				lastPlacedPoint.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				lastPlacedPoint.filled = true;
@@ -800,7 +793,6 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = String.Join("\f", newFilenames);
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -817,7 +809,6 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -841,7 +832,6 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -865,7 +855,6 @@ public class Editor : MonoBehaviour
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -881,7 +870,6 @@ public class Editor : MonoBehaviour
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
 						pointToEdit.body += String.Join("\f", editor.answerAnswers);
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -919,7 +907,6 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -956,7 +943,6 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = jsonAreas.ToString();
 						pointToEdit.filename = jsonMiniatures.ToString();
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -991,7 +977,6 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerQuestion;
 						pointToEdit.body = editor.answerCorrect.ToString();
 						pointToEdit.filename = String.Join("\f", newFilenames);
-						pointToEdit.tagId = editor.answerTagId;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -1009,15 +994,18 @@ public class Editor : MonoBehaviour
 			}
 
 			if (finished)
-			{
-				var wasPanelHidden = pointToEdit.timelineRow.transform.Find("Content/View").gameObject.GetComponent<Toggle2>().isOn;
+			{ 
+				pointToEdit.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
+
+				var wasPanelHidden = pointToEdit.timelineRow.view.isOn;
 				if (wasPanelHidden)
 				{
 					pointToEdit.panel.SetActive(false);
 				}
+
 				SetInteractionPointTag(pointToEdit);
 				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}

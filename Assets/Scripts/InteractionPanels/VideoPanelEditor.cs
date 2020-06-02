@@ -12,7 +12,6 @@ public class VideoPanelEditor : MonoBehaviour {
 	public bool answered;
 	public string answerTitle;
 	public string answerURL;
-	public int answerTagId;
 
 	public bool allowCancel => explorerPanel == null;
 
@@ -79,7 +78,6 @@ public class VideoPanelEditor : MonoBehaviour {
 			answered = true;
 			answerURL = url.text;
 			answerTitle = title.text;
-			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

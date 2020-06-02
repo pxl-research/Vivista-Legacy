@@ -19,7 +19,6 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public List<Area> answerAreas;
 	public int answerCorrect;
-	public int answerTagId;
 	
 	public bool allowCancel => areaPicker == null;
 
@@ -187,7 +186,6 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 		{
 			answered = true;
 			answerTitle = title.text;
-			answerTagId = tagPicker.currentTagId;
 		}
 	}
 

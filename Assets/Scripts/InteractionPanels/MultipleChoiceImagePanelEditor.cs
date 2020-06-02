@@ -13,7 +13,6 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	public string answerQuestion;
 	public List<string> answerURLs;
 	public int answerCorrect;
-	public int answerTagId;
 
 	private const int MAXANSWERS = 6;
 	private ToggleGroup2 toggleGroup;
@@ -179,7 +178,6 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 			{
 				answerURLs.Add(entry.imageUrl);
 			}
-			answerTagId = tagPicker.currentTagId;
 		}
 	}
 
