@@ -321,11 +321,7 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = hit.point;
-				interactionPointTemp.transform.position = drawLocation;
-
-				interactionPointTemp.transform.LookAt(Camera.main.transform);
-				interactionPointTemp.transform.localEulerAngles = new Vector3(0, interactionPointTemp.transform.localEulerAngles.y + 180, 0);
+				SetInteractionpointPosition(interactionPointTemp, hit.point);
 			}
 
 			if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -427,12 +423,12 @@ public class Editor : MonoBehaviour
 						case InteractionType.MultipleChoiceImage:
 						{
 							interactionEditor = Instantiate(UIPanels.Instance.multipleChoiceImagePanelEditor, Canvass.main.transform).gameObject;
-							interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init("", null, -1);
+							interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init("", null);
 							break;
 						}
 						default:
 						{
-							Assert.IsTrue(true, "FFS, you shoulda added it here");
+							Debug.LogError("FFS, you shoulda added it here");
 							break;
 						}
 					}
@@ -440,10 +436,6 @@ public class Editor : MonoBehaviour
 					Destroy(interactionTypePicker.gameObject);
 					editorState = EditorState.FillingPanelDetails;
 				}
-			}
-			else
-			{
-				Debug.LogError("interactionTypePicker is null");
 			}
 
 			if (Input.GetKeyDown(KeyCode.Escape))
@@ -720,37 +712,35 @@ public class Editor : MonoBehaviour
 		{
 			if (Physics.Raycast(ray, out hit, 100))
 			{
-				var drawLocation = hit.point;
-				pointToMove.point.transform.position = drawLocation;
-
-				pointToMove.point.transform.LookAt(Camera.main.transform);
-				pointToMove.point.transform.localEulerAngles = new Vector3(0, pointToMove.point.transform.localEulerAngles.y + 180, 0);
+				SetInteractionpointPosition(pointToMove.point, hit.point);
+				var trans = pointToMove.point.transform;
+				transform.position = hit.point;
 
 				switch (pointToMove.type)
 				{
 					case InteractionType.Text:
-						pointToMove.panel.GetComponent<TextPanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<TextPanel>().Move(trans.position);
 						break;
 					case InteractionType.Image:
-						pointToMove.panel.GetComponent<ImagePanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<ImagePanel>().Move(trans.position);
 						break;
 					case InteractionType.Video:
-						pointToMove.panel.GetComponent<VideoPanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<VideoPanel>().Move(trans.position);
 						break;
 					case InteractionType.MultipleChoice:
-						pointToMove.panel.GetComponent<MultipleChoicePanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<MultipleChoicePanel>().Move(trans.position);
 						break;
 					case InteractionType.Audio:
-						pointToMove.panel.GetComponent<AudioPanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<AudioPanel>().Move(trans.position);
 						break;
 					case InteractionType.FindArea:
-						pointToMove.panel.GetComponent<FindAreaPanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<FindAreaPanel>().Move(trans.position);
 						break;
 					case InteractionType.MultipleChoiceArea:
-						pointToMove.panel.GetComponent<MultipleChoiceAreaPanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<MultipleChoiceAreaPanel>().Move(trans.position);
 						break;
 					case InteractionType.MultipleChoiceImage:
-						pointToMove.panel.GetComponent<MultipleChoiceImagePanel>().Move(pointToMove.point.transform.position);
+						pointToMove.panel.GetComponent<MultipleChoiceImagePanel>().Move(trans.position);
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -2211,21 +2201,22 @@ public class Editor : MonoBehaviour
 		{
 			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
 
-			RaycastHit hit;
-
-			if (Physics.Raycast(ray, out hit, 100))
+			if (Physics.Raycast(ray, out var hit, 100))
 			{
-				var drawLocation = hit.point;
-				var trans = interactionPoint.point.transform;
-
-				trans.position = drawLocation;
-				trans.LookAt(Camera.main.transform);
-				//NOTE(Kristof): Turn it around so it actually faces the camera
-				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
-
-				interactionPoint.panel.transform.position = drawLocation;
+				SetInteractionpointPosition(interactionPoint.point, hit.point);
+				interactionPoint.panel.transform.position = hit.point;
 			}
 		}
+	}
+
+	private void SetInteractionpointPosition(GameObject point, Vector3 pos)
+	{
+		var trans = point.transform;
+		trans.position = pos;
+
+		trans.LookAt(Camera.main.transform);
+		var angles = trans.localEulerAngles;
+		trans.localEulerAngles = new Vector3(-angles.x, angles.y - 180, 0);
 	}
 
 	private void SetInteractionPointTag(InteractionPointEditor point)

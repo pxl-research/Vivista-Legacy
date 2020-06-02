@@ -49,7 +49,8 @@ public class MouseLook : MonoBehaviour
 		//NOTE(Simon): Do use mouselook if in editor and correct editorstate
 		if (!UnityEngine.XR.XRSettings.enabled)
 		{
-			if (forceActive || editor == null || (editor.editorState == EditorState.Active
+			if (forceActive || editor == null || 
+									  (editor.editorState == EditorState.Active
 									|| editor.editorState == EditorState.Inactive
 									|| editor.editorState == EditorState.MovingInteractionPoint
 									|| editor.editorState == EditorState.PlacingInteractionPoint))
