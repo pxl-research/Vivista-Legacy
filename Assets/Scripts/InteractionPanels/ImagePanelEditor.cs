@@ -23,8 +23,6 @@ public class ImagePanelEditor : MonoBehaviour
 
 	public bool allowCancel => explorerPanel == null;
 
-	public TagPicker tagPicker;
-
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
 
@@ -74,7 +72,7 @@ public class ImagePanelEditor : MonoBehaviour
 		}
 	}
 
-	public void Init(string initialTitle, List<string> initialURLs, int tagId = -1)
+	public void Init(string initialTitle, List<string> initialURLs)
 	{
 		title.text = initialTitle;
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
@@ -89,8 +87,6 @@ public class ImagePanelEditor : MonoBehaviour
 
 		UpdateAlbumSortButtons();
 		imageEditorState = ImageEditorState.Showing;
-
-		tagPicker.Init(tagId);
 	}
 
 	public void Browse()

@@ -12,8 +12,6 @@ public class TextPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public string answerBody;
 
-	public TagPicker tagPicker;
-
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -39,12 +37,10 @@ public class TextPanelEditor : MonoBehaviour
 		bodyRect.sizeDelta = new Vector2(bodyRect.sizeDelta.x, UIHelper.CalculateInputFieldHeight(body, 10));
 	}
 
-	public void Init(string initialTitle, string initialBody, int tagId = -1)
+	public void Init(string initialTitle, string initialBody)
 	{
 		title.text = initialTitle;
 		body.text = initialBody;
-
-		tagPicker.Init(tagId);
 	}
 
 	public void Answer()

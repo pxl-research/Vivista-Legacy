@@ -19,8 +19,6 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 
 	public bool allowCancel => explorerPanel == null;
 
-	public TagPicker tagPicker;
-
 	public MultipleChoiceImageEntry multipleChoiceImageEntryPrefab;
 
 	private ExplorerPanel explorerPanel;
@@ -33,7 +31,7 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
 	}
 
-	public void Init(string initialTitle, List<string> initialAnswers, int initialCorrect = -1, int tagId = -1)
+	public void Init(string initialTitle, List<string> initialAnswers, int initialCorrect = -1)
 	{
 		entries = new List<MultipleChoiceImageEntry>();
 		question.text = initialTitle;
@@ -51,8 +49,6 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 		question.onValueChanged.AddListener(_ => OnInputChangeColor(question));
 
 		toggleGroup.onToggleGroupChanged.AddListener(OnSelectCorrectImage);
-
-		tagPicker.Init(tagId);
 	}
 
 	void Update()

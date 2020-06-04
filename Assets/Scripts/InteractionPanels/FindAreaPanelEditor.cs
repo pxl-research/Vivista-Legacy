@@ -43,8 +43,6 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	public bool allowCancel => areaPicker == null;
 
-	public TagPicker tagPicker;
-
 	private bool editing;
 	private GameObject editingGo;
 
@@ -57,7 +55,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
 	}
 
-	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int tagId = -1)
+	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
 		guid = newGuid;
 		title.text = newTitle;
@@ -86,8 +84,6 @@ public class FindAreaPanelEditor : MonoBehaviour
 		{
 			answerAreas = new List<Area>();
 		}
-
-		tagPicker.Init(tagId);
 	}
 
 	void Update()

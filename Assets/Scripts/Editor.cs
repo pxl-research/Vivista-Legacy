@@ -94,7 +94,7 @@ public class InteractionPointSerialize
 			endTime = compat.endTime,
 			returnRayOrigin = compat.returnRayOrigin,
 			returnRayDirection = compat.returnRayDirection,
-			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode those as default(T), 0 in case of an int. -1 means no tag
+			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode missing items as default(T), 0 in this case. -1 means no tag
 			tagId = compat.tagId <= 0 ? -1 : compat.tagId
 		};
 
@@ -432,6 +432,8 @@ public class Editor : MonoBehaviour
 							break;
 						}
 					}
+
+					interactionEditor.GetComponentInChildren<TagPicker>().Init(-1);
 
 					Destroy(interactionTypePicker.gameObject);
 					editorState = EditorState.FillingPanelDetails;
@@ -1542,7 +1544,7 @@ public class Editor : MonoBehaviour
 					case InteractionType.Text:
 					{
 						interactionEditor = Instantiate(UIPanels.Instance.textPanelEditor, Canvass.main.transform).gameObject;
-						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body, point.tagId);
+						interactionEditor.GetComponent<TextPanelEditor>().Init(point.title, point.body);
 						break;
 					}
 					case InteractionType.Image:
@@ -1554,7 +1556,7 @@ public class Editor : MonoBehaviour
 						{
 							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
 						}
-						interactionEditor.GetComponent<ImagePanelEditor>().Init(point.title, fullPaths, point.tagId);
+						interactionEditor.GetComponent<ImagePanelEditor>().Init(point.title, fullPaths);
 						break;
 					}
 					case InteractionType.Video:
@@ -1566,20 +1568,20 @@ public class Editor : MonoBehaviour
 					case InteractionType.MultipleChoice:
 					{
 						interactionEditor = Instantiate(UIPanels.Instance.multipleChoicePanelEditor, Canvass.main.transform).gameObject;
-						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'), point.tagId);
+						interactionEditor.GetComponent<MultipleChoicePanelEditor>().Init(point.title, point.body.Split('\f'));
 						break;
 					}
 					case InteractionType.Audio:
 					{
 						interactionEditor = Instantiate(UIPanels.Instance.audioPanelEditor, Canvass.main.transform).gameObject;
-						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename), point.tagId);
+						interactionEditor.GetComponent<AudioPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
 						break;
 					}
 					case InteractionType.FindArea:
 					{
 						var areas = Area.ParseFromSave(point.filename, point.body);
 						interactionEditor = Instantiate(UIPanels.Instance.findAreaPanelEditor, Canvass.main.transform).gameObject;
-						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas, point.tagId);
+						interactionEditor.GetComponent<FindAreaPanelEditor>().Init(point.title, meta.guid, areas);
 						break;
 					}
 					case InteractionType.MultipleChoiceArea:
@@ -1589,7 +1591,7 @@ public class Editor : MonoBehaviour
 						var areaJson = split[1];
 						var areas = Area.ParseFromSave(point.filename, areaJson);
 						interactionEditor = Instantiate(UIPanels.Instance.multipleChoiceAreaPanelEditor, Canvass.main.transform).gameObject;
-						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct, point.tagId);
+						interactionEditor.GetComponent<MultipleChoiceAreaPanelEditor>().Init(point.title, meta.guid, areas, correct);
 						break;
 					}
 					case InteractionType.MultipleChoiceImage:
@@ -1602,12 +1604,14 @@ public class Editor : MonoBehaviour
 							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
 						}
 						var correct = Int32.Parse(point.body);
-						interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init(point.title, fullPaths, correct, point.tagId);
+						interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init(point.title, fullPaths, correct);
 						break;
 					}
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
+
+				interactionEditor.GetComponentInChildren<TagPicker>().Init(point.tagId);
 
 				Destroy(point.panel);
 				break;

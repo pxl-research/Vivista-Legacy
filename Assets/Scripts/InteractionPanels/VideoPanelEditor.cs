@@ -15,8 +15,6 @@ public class VideoPanelEditor : MonoBehaviour {
 
 	public bool allowCancel => explorerPanel == null;
 
-	public TagPicker tagPicker;
-
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
@@ -47,15 +45,13 @@ public class VideoPanelEditor : MonoBehaviour {
 		}
 	}
 
-	public void Init(string initialTitle, string initialUrl, int tagId = -1)
+	public void Init(string initialTitle, string initialUrl)
 	{
 		title.text = initialTitle;
 		url.text = initialUrl;
 
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		url.onValueChanged.AddListener(_ => OnInputChange(url));
-
-		tagPicker.Init(tagId);
 	}
 
 	public void Answer()

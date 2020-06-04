@@ -22,8 +22,6 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	
 	public bool allowCancel => areaPicker == null;
 
-	public TagPicker tagPicker;
-
 	private bool editing;
 	private GameObject editingGo;
 
@@ -36,7 +34,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
 	}
 
-	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect, int tagId = -1)
+	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect)
 	{
 		guid = newGuid;
 		title.text = newTitle;
@@ -71,8 +69,6 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 		}
 
 		group.onToggleGroupChanged.AddListener(OnSelectCorrectArea);
-
-		tagPicker.Init(tagId);
 	}
 
 	void Update()

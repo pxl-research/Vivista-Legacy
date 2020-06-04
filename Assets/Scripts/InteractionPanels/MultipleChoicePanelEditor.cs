@@ -19,8 +19,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	public string[] answerAnswers;
 	public int answerCorrect;
 
-	public TagPicker tagPicker;
-
 	private int answerCount;
 	private const int MAXANSWERS = 6;
 	private ToggleGroup2 toggleGroup;
@@ -32,7 +30,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		StartCoroutine(UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>()));
 	}
 
-	public void Init(string initialQuestion, string[] initialAnswers = null, int tagId = -1)
+	public void Init(string initialQuestion, string[] initialAnswers = null)
 	{
 		toggleGroup = layoutPanelTransform.GetComponent<ToggleGroup2>();
 		answerInputs = new List<InputField>();
@@ -58,8 +56,6 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 		question.onValueChanged.AddListener(_ => OnInputChangeColor(question));
 		addAnswerButton.onClick.AddListener(() => OnButtonChangeColor(addAnswerButton));
-
-		tagPicker.Init(tagId);
 	}
 
 	public void AddAnswer()
