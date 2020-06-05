@@ -28,6 +28,7 @@ public class InteractionPointPlayer
 	public double startTime;
 	public double endTime;
 	public int tagId;
+	public bool mandatory;
 	public bool isSeen;
 
 	public Vector3 returnRayOrigin;
@@ -411,6 +412,7 @@ public class Player : MonoBehaviour
 				type = point.type,
 				point = newPoint,
 				tagId = point.tagId,
+				mandatory = point.mandatory,
 				returnRayOrigin = point.returnRayOrigin,
 				returnRayDirection = point.returnRayDirection
 			};

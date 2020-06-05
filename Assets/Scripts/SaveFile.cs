@@ -54,6 +54,7 @@ public class InteractionPointSerializeCompat
 	public double startTime;
 	public double endTime;
 	public int tagId;
+	public bool mandatory;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;

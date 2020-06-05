@@ -62,6 +62,7 @@ public class InteractionPointEditor
 	public double startTime;
 	public double endTime;
 	public int tagId;
+	public bool mandatory;
 	public bool filled;
 
 	public Vector3 returnRayOrigin;
@@ -78,6 +79,7 @@ public class InteractionPointSerialize
 	public double startTime;
 	public double endTime;
 	public int tagId;
+	public bool mandatory;
 
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
@@ -95,7 +97,8 @@ public class InteractionPointSerialize
 			returnRayOrigin = compat.returnRayOrigin,
 			returnRayDirection = compat.returnRayDirection,
 			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode missing items as default(T), 0 in this case. -1 means no tag
-			tagId = compat.tagId <= 0 ? -1 : compat.tagId
+			tagId = compat.tagId <= 0 ? -1 : compat.tagId,
+			mandatory = compat.mandatory,
 		};
 
 		return serialize;
@@ -434,6 +437,7 @@ public class Editor : MonoBehaviour
 					}
 
 					interactionEditor.GetComponentInChildren<TagPicker>().Init(-1);
+					interactionEditor.GetComponentInChildren<MandatoryPanel>().Init(false);
 
 					Destroy(interactionTypePicker.gameObject);
 					editorState = EditorState.FillingPanelDetails;
@@ -687,6 +691,7 @@ public class Editor : MonoBehaviour
 			if (finished)
 			{
 				lastPlacedPoint.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
+				lastPlacedPoint.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				lastPlacedPoint.filled = true;
@@ -998,6 +1003,7 @@ public class Editor : MonoBehaviour
 			if (finished)
 			{ 
 				pointToEdit.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
+				pointToEdit.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
@@ -1310,6 +1316,11 @@ public class Editor : MonoBehaviour
 	{
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
+		//NOTE(Simon): This happens when a video isn't fully loaded yet. So don't update timeline until it is.
+		if (float.IsNaN(timelineEndTime))
+		{
+			return;
+		}
 
 		//Note(Simon): Init if not set yet.
 		if (timelineWindowEndTime == 0)
@@ -1612,6 +1623,7 @@ public class Editor : MonoBehaviour
 				}
 
 				interactionEditor.GetComponentInChildren<TagPicker>().Init(point.tagId);
+				interactionEditor.GetComponentInChildren<MandatoryPanel>().Init(point.mandatory);
 
 				Destroy(point.panel);
 				break;
@@ -2023,6 +2035,7 @@ public class Editor : MonoBehaviour
 					startTime = point.startTime,
 					endTime = point.endTime,
 					tagId = point.tagId,
+					mandatory = point.mandatory,
 					returnRayOrigin = point.returnRayOrigin,
 					returnRayDirection = point.returnRayDirection,
 				});
@@ -2088,6 +2101,7 @@ public class Editor : MonoBehaviour
 				filled = true,
 				point = newPoint,
 				tagId = point.tagId,
+				mandatory = point.mandatory,
 				returnRayOrigin = point.returnRayOrigin,
 				returnRayDirection = point.returnRayDirection
 			};
