@@ -61,6 +61,7 @@ public class Player : MonoBehaviour
 	private int interactionPointCount;
 
 	private List<InteractionPointPlayer> interactionPoints;
+	private List<InteractionPointPlayer> mandatoryInteractionPoints;
 	private List<GameObject> videoPositions;
 	private FileLoader fileLoader;
 	private VideoController videoController;
@@ -75,6 +76,8 @@ public class Player : MonoBehaviour
 	private bool isSeekbarOutOfView;
 	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
+
+	float mandatoryPauseFadeTime = 1f;
 
 	private const float timeToInteract = 0.75f;
 	private bool isInteractingWithPoint;
@@ -99,9 +102,11 @@ public class Player : MonoBehaviour
 		trackedControllerRight.OnRotate += RotateCamera;
 
 		interactionPoints = new List<InteractionPointPlayer>();
+		mandatoryInteractionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
+		videoController.OnSeek += OnSeek;
 		VideoControls.videoController = videoController;
 		OpenFilePanel();
 
@@ -279,6 +284,36 @@ public class Player : MonoBehaviour
 				if (videoController.playing && activeInteractionPoint != null)
 				{
 					DeactivateActiveInteractionPoint();
+				}
+			}
+
+			//NOTE(Simon): Handle mandatory interactionPoints
+			{
+				double timeToNextPause = Double.MaxValue; 
+				//NOTE(Simon): Find the next unseen mandatory interaction
+				for (int i = 0; i < mandatoryInteractionPoints.Count; i++)
+				{
+					if (!mandatoryInteractionPoints[i].isSeen && mandatoryInteractionPoints[i].endTime > videoController.currentTime)
+					{
+						timeToNextPause = mandatoryInteractionPoints[i].endTime - videoController.currentTime;
+						break;
+					}
+				}
+
+				//NOTE(Simon): Set the playbackspeed. Speed will get lower the closer to the next pause we are.
+				if (timeToNextPause < mandatoryPauseFadeTime)
+				{
+					float speed = (float)(timeToNextPause / mandatoryPauseFadeTime);
+					if (timeToNextPause < .05f)
+					{
+						speed = 0;
+					}
+
+					videoController.SetPlaybackSpeed(speed);
+				}
+				else
+				{
+					videoController.SetPlaybackSpeed(1f);
 				}
 			}
 		}
@@ -503,8 +538,16 @@ public class Player : MonoBehaviour
 					throw new ArgumentOutOfRangeException();
 			}
 
+			if (newInteractionPoint.mandatory)
+			{
+				mandatoryInteractionPoints.Add(newInteractionPoint);
+			}
+
 			AddInteractionPoint(newInteractionPoint);
 		}
+
+		mandatoryInteractionPoints.Sort((x, y) => x.endTime.CompareTo(y.endTime));
+
 		StartCoroutine(UpdatePointPositions());
 
 		return true;
@@ -607,6 +650,11 @@ public class Player : MonoBehaviour
 		seekbarCollider.enabled = active;
 	}
 
+	public void OnSeek()
+	{
+		throw new NotImplementedException();
+	}
+
 	public void OnVideoBrowserHologramUp()
 	{
 		if (videoList == null)
@@ -654,6 +702,7 @@ public class Player : MonoBehaviour
 			RemoveInteractionPoint(interactionPoints[j]);
 		}
 		interactionPoints.Clear();
+		mandatoryInteractionPoints.Clear();
 		interactionPointCount = 0;
 
 		OpenFilePanel();

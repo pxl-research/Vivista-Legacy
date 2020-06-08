@@ -26,7 +26,6 @@ public class VideoControls : MonoBehaviour
 	public void Toggle()
 	{
 		videoController.TogglePlay();
-		VideoController.autoResume = videoController.playing;
 	}
 
 	public void OnHoverStart()

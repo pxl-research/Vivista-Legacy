@@ -30,6 +30,9 @@ public class VideoController : MonoBehaviour
 	public double videoLength;
 	public double currentFractionalTime;
 
+	public delegate void SeekEvent();
+	public SeekEvent OnSeek;
+
 	public ScreenshotParams screenshotParams;
 
 	public VideoState videoState;
@@ -49,8 +52,6 @@ public class VideoController : MonoBehaviour
 			return -1;
 		}
 	}
-
-	public static bool autoResume;
 
 	void Start()
 	{
@@ -142,6 +143,12 @@ public class VideoController : MonoBehaviour
 	public void Seek(float fractionalTime)
 	{
 		video.time = fractionalTime * videoLength;
+		OnSeek?.Invoke();
+	}
+
+	public void SetPlaybackSpeed(float speed)
+	{
+		video.playbackSpeed = speed;
 	}
 
 	public double TimeForFraction(float fractionalTime)
