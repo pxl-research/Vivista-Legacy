@@ -650,9 +650,20 @@ public class Player : MonoBehaviour
 		seekbarCollider.enabled = active;
 	}
 
-	public void OnSeek()
+	public void OnSeek(double time)
 	{
-		throw new NotImplementedException();
+		var desiredTime = time;
+		//NOTE(Simon): Find the first unseen mandatory interaction, and set desiredTime to its endTime if we have seeked beyond that endTime
+		for (int i = 0; i < mandatoryInteractionPoints.Count; i++)
+		{
+			if (!mandatoryInteractionPoints[i].isSeen && mandatoryInteractionPoints[i].endTime < desiredTime)
+			{
+				desiredTime = mandatoryInteractionPoints[i].endTime - 0.1;
+				break;
+			}
+		}
+
+		videoController.SeekNoTriggers(desiredTime);
 	}
 
 	public void OnVideoBrowserHologramUp()

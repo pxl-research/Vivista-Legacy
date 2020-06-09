@@ -124,7 +124,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 		var fractionalTime = pos / max;
 
-		videoController.Seek(fractionalTime);
+		videoController.SeekFractional(fractionalTime);
 	}
 
 	public GameObject CreateBlip()
