@@ -1367,6 +1367,7 @@ public class Editor : MonoBehaviour
 		if (timelineZoom >= 1)
 		{
 			timelineOffsetTime = 0;
+			timelineLabelsDirty = true;
 		}
 
 		float zoomedLength;
@@ -1383,7 +1384,6 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Timeline labels
-		if (timelineLabelsDirty)
 		{
 			if (Single.IsNaN(zoomedLength))
 			{
@@ -1399,15 +1399,19 @@ public class Editor : MonoBehaviour
 			var realNumLabels = (maxNumLabels - lowerNumLabels) > (upperNumLabels - maxNumLabels) ? lowerNumLabels : upperNumLabels;
 			realNumLabels += 2;
 
-			while (headerLabels.Count < realNumLabels)
+			if (timelineLabelsDirty)
 			{
-				var label = Instantiate(labelPrefab, timelineHeader.transform);
-				headerLabels.Add(label);
-			}
-			while (headerLabels.Count > realNumLabels)
-			{
-				Destroy(headerLabels[headerLabels.Count - 1].gameObject);
-				headerLabels.RemoveAt(headerLabels.Count - 1);
+				while (headerLabels.Count < realNumLabels)
+				{
+					var label = Instantiate(labelPrefab, timelineHeader.transform);
+					headerLabels.Add(label);
+				}
+
+				while (headerLabels.Count > realNumLabels)
+				{
+					Destroy(headerLabels[headerLabels.Count - 1].gameObject);
+					headerLabels.RemoveAt(headerLabels.Count - 1);
+				}
 			}
 
 			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / closestNiceTime);
@@ -1417,10 +1421,12 @@ public class Editor : MonoBehaviour
 				var tickTime = (i + numTicksOffScreen) * closestNiceTime;
 				if (tickTime >= 0 && tickTime <= timelineEndTime)
 				{
-					headerLabels[i].enabled = true;
-					headerLabels[i].text = MathHelper.FormatSeconds(tickTime);
-					headerLabels[i].rectTransform.position = new Vector2(TimeToPx(tickTime), headerLabels[i].rectTransform.position.y);
-
+					if (timelineLabelsDirty)
+					{
+						headerLabels[i].enabled = true;
+						headerLabels[i].text = MathHelper.FormatSeconds(tickTime);
+						headerLabels[i].rectTransform.position = new Vector2(TimeToPx(tickTime), headerLabels[i].rectTransform.position.y);
+					}
 					DrawLineAtTime(tickTime, 1, new Color(0, 0, 0, 47f / 255));
 				}
 				else
@@ -1850,6 +1856,7 @@ public class Editor : MonoBehaviour
 					//NOTE(Simon): Clamp timeline size to 100px of either side of screen, so it can't go offscreen
 					rect.sizeDelta = new Vector2(Mathf.Clamp(rect.sizeDelta.x + mouseDelta.x, 100, Screen.width - 100), rect.sizeDelta.y);
 					DrawLineAtTime(0, 2, Color.black, -3);
+					timelineLabelsDirty = true;
 				}
 				else
 				{
