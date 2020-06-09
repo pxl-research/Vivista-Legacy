@@ -692,6 +692,7 @@ public class Editor : MonoBehaviour
 			{
 				lastPlacedPoint.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				lastPlacedPoint.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
+				lastPlacedPoint.timelineRow.mandatory.isOn = lastPlacedPoint.mandatory;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				lastPlacedPoint.filled = true;
@@ -1004,6 +1005,7 @@ public class Editor : MonoBehaviour
 			{ 
 				pointToEdit.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				pointToEdit.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
+				pointToEdit.timelineRow.mandatory.isOn = pointToEdit.mandatory;
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
@@ -1298,6 +1300,9 @@ public class Editor : MonoBehaviour
 			point.timelineRow.view.SetState(true);
 			point.panel.SetActive(false);
 		}
+
+		point.timelineRow.mandatory.isOn = point.mandatory;
+		point.timelineRow.mandatory.onValueChanged.AddListener(x => OnMandatoryChanged(point, x));
 	}
 
 	private void RemoveItemFromTimeline(InteractionPointEditor point)
@@ -1507,16 +1512,19 @@ public class Editor : MonoBehaviour
 			var delete = point.timelineRow.delete;
 			var move = point.timelineRow.move;
 			var view = point.timelineRow.view;
+			var mandatory = point.timelineRow.mandatory;
 
 			var editRect = edit.GetComponent<RectTransform>();
 			var deleteRect = delete.GetComponent<RectTransform>();
 			var moveRect = move.GetComponent<RectTransform>();
 			var viewRect = view.GetComponent<RectTransform>();
+			var mandatoryRect = mandatory.GetComponent<RectTransform>();
 
 			deleteRect.position = new Vector3(timelineOffsetPixels - 20, deleteRect.position.y);
 			viewRect.position = new Vector3(timelineOffsetPixels - 40, viewRect.position.y);
 			editRect.position = new Vector3(timelineOffsetPixels - 60, editRect.position.y);
 			moveRect.position = new Vector3(timelineOffsetPixels - 80, moveRect.position.y);
+			mandatoryRect.position = new Vector3(timelineOffsetPixels - 100, mandatoryRect.position.y);
 
 			if (!point.filled)
 			{
@@ -1524,6 +1532,7 @@ public class Editor : MonoBehaviour
 				move.gameObject.SetActive(false);
 				view.gameObject.SetActive(false);
 				delete.gameObject.SetActive(false);
+				mandatory.gameObject.SetActive(false);
 			}
 			if (point.filled)
 			{
@@ -1531,6 +1540,7 @@ public class Editor : MonoBehaviour
 				move.gameObject.SetActive(true);
 				view.gameObject.SetActive(true);
 				delete.gameObject.SetActive(true);
+				mandatory.gameObject.SetActive(true);
 			}
 
 			if (delete.state == SelectState.Pressed)
@@ -1917,6 +1927,12 @@ public class Editor : MonoBehaviour
 			new Vector2(timePx, containerHeight - headerHeight + 3 + topOffset),
 			thickness,
 			color);
+	}
+
+	public void OnMandatoryChanged(InteractionPointEditor point, bool mandatory)
+	{
+		point.mandatory = mandatory;
+		UnsavedChangesTracker.Instance.unsavedChanges = true;
 	}
 
 	public void OnDrag(BaseEventData e)
