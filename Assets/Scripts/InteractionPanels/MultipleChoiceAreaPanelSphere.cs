@@ -120,8 +120,6 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 
 			areaRenderer.gameObject.SetActive(false);
 		}
-
-		UnityEngine.Debug.Log($"Area collider generation time: {watch.Elapsed.TotalMilliseconds} ms");
 	}
 
 	public void OnStartFindArea()

@@ -77,7 +77,10 @@ public class Player : MonoBehaviour
 	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
 
-	float mandatoryPauseFadeTime = 1f;
+	private float mandatoryPauseFadeTime = 1f;
+	private bool mandatoryPauseActive;
+	public GameObject mandatoryPauseMessage;
+	public GameObject mandatoryPauseMessageVR;
 
 	private const float timeToInteract = 0.75f;
 	private bool isInteractingWithPoint;
@@ -310,9 +313,20 @@ public class Player : MonoBehaviour
 					}
 
 					videoController.SetPlaybackSpeed(speed);
+					if (!mandatoryPauseActive)
+					{
+						ShowMandatoryInteractionMessage();
+						mandatoryPauseActive = true;
+					}
 				}
 				else
 				{
+					if (mandatoryPauseActive)
+					{
+						mandatoryPauseActive = false;
+						HideMandatoryInteractionMessage();
+					}
+
 					videoController.SetPlaybackSpeed(1f);
 				}
 			}
@@ -717,6 +731,30 @@ public class Player : MonoBehaviour
 		interactionPointCount = 0;
 
 		OpenFilePanel();
+	}
+
+	public void ShowMandatoryInteractionMessage()
+	{
+		if (XRSettings.enabled)
+		{
+			mandatoryPauseMessageVR.SetActive(true);
+		}
+		else
+		{
+			mandatoryPauseMessage.SetActive(true);
+		}
+	}
+
+	public void HideMandatoryInteractionMessage()
+	{
+		if (XRSettings.enabled)
+		{
+			mandatoryPauseMessageVR.SetActive(false);
+		}
+		else
+		{
+			mandatoryPauseMessage.SetActive(false);
+		}
 	}
 
 	public Controller[] GetControllers()
