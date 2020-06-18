@@ -100,24 +100,25 @@ public class ImportPanel : MonoBehaviour
 					string destDir = Path.Combine(tempDestFolder, Path.GetDirectoryName(entry.FullName));
 					string destFile = Path.Combine(tempDestFolder, entry.FullName);
 
-					if (destDir.Length > 0)
-					{
-						Directory.CreateDirectory(destDir);
-					}
+					bool isFile = !String.IsNullOrEmpty(entry.Name);
+					Directory.CreateDirectory(destDir);
 
-					using (var writer = File.Create(destFile))
-					using (var entryStream = entry.Open())
+					if (isFile)
 					{
-						//NOTE(Simon): 80kB is the buffer size used in .NET's CopyTo()
-						var buffer = new byte[80 * 1024];
-						int read;
-						do
+						using (var writer = File.Create(destFile))
+						using (var entryStream = entry.Open())
 						{
-							read = entryStream.Read(buffer, 0, buffer.Length);
-							writer.Write(buffer, 0, read);
-							bytesUnpacked += read;
-							progress = (float) (bytesUnpacked) / bytesToUnpack / 2;
-						} while (read > 0);
+							//NOTE(Simon): 80kB is the buffer size used in .NET's CopyTo()
+							var buffer = new byte[80 * 1024];
+							int read;
+							do
+							{
+								read = entryStream.Read(buffer, 0, buffer.Length);
+								writer.Write(buffer, 0, read);
+								bytesUnpacked += read;
+								progress = (float) (bytesUnpacked) / bytesToUnpack / 2;
+							} while (read > 0);
+						}
 					}
 				}
 			}
