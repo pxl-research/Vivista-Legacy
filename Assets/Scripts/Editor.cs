@@ -2129,8 +2129,16 @@ public class Editor : MonoBehaviour
 				returnRayDirection = point.returnRayDirection
 			};
 
+			bool isValidPoint = true;
+
 			switch (newInteractionPoint.type)
 			{
+				case InteractionType.None:
+				{
+					isValidPoint = false;
+					Debug.Log("InteractionPoint with Type None encountered");
+					break;
+				}
 				case InteractionType.Text:
 				{
 					var panel = Instantiate(UIPanels.Instance.textPanel);
@@ -2224,12 +2232,22 @@ public class Editor : MonoBehaviour
 					break;
 				}
 				default:
-					throw new ArgumentOutOfRangeException();
+				{
+					isValidPoint = false;
+					break;
+				}
 			}
 
-			newInteractionPoint.panel.SetActive(false);
-			AddItemToTimeline(newInteractionPoint, true);
-			SetInteractionPointTag(newInteractionPoint);
+			if (isValidPoint)
+			{
+				newInteractionPoint.panel.SetActive(false);
+				AddItemToTimeline(newInteractionPoint, true);
+				SetInteractionPointTag(newInteractionPoint);
+			}
+			else
+			{
+				Destroy(newPoint);
+			}
 		}
 
 		StartCoroutine(UpdatePointPositions());

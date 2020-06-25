@@ -466,8 +466,16 @@ public class Player : MonoBehaviour
 				returnRayDirection = point.returnRayDirection
 			};
 
+			bool isValidPoint = true;
+
 			switch (newInteractionPoint.type)
 			{
+				case InteractionType.None:
+				{
+					isValidPoint = false;
+					Debug.Log("InteractionPoint with Type None encountered");
+					break;
+				}
 				case InteractionType.Text:
 				{
 					var panel = Instantiate(textPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
@@ -549,15 +557,26 @@ public class Player : MonoBehaviour
 					break;
 				}
 				default:
-					throw new ArgumentOutOfRangeException();
+				{
+					isValidPoint = false;
+					Debug.Log("Invalid interactionPoint encountered");
+					break;
+				}
 			}
 
-			if (newInteractionPoint.mandatory)
+			if (isValidPoint)
 			{
-				mandatoryInteractionPoints.Add(newInteractionPoint);
-			}
+				if (newInteractionPoint.mandatory)
+				{
+					mandatoryInteractionPoints.Add(newInteractionPoint);
+				}
 
-			AddInteractionPoint(newInteractionPoint);
+				AddInteractionPoint(newInteractionPoint);
+			}
+			else
+			{
+				Destroy(newPoint);
+			}
 		}
 
 		mandatoryInteractionPoints.Sort((x, y) => x.endTime.CompareTo(y.endTime));
