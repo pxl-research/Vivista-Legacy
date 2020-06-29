@@ -1613,6 +1613,7 @@ public class Editor : MonoBehaviour
 					}
 					case InteractionType.MultipleChoiceArea:
 					{
+						//NOTE(Simon): Split with count only accepts an array of separators
 						var split = point.body.Split(new[] { '\f' }, 2);
 						var correct = Int32.Parse(split[0]);
 						var areaJson = split[1];
@@ -2049,19 +2050,22 @@ public class Editor : MonoBehaviour
 		{
 			foreach (var point in interactionPoints)
 			{
-				data.points.Add(new InteractionPointSerialize
+				if (point.type != InteractionType.None)
 				{
-					type = point.type,
-					title = point.title,
-					body = point.body,
-					filename = point.filename,
-					startTime = point.startTime,
-					endTime = point.endTime,
-					tagId = point.tagId,
-					mandatory = point.mandatory,
-					returnRayOrigin = point.returnRayOrigin,
-					returnRayDirection = point.returnRayDirection,
-				});
+					data.points.Add(new InteractionPointSerialize
+					{
+						type = point.type,
+						title = point.title,
+						body = point.body,
+						filename = point.filename,
+						startTime = point.startTime,
+						endTime = point.endTime,
+						tagId = point.tagId,
+						mandatory = point.mandatory,
+						returnRayOrigin = point.returnRayOrigin,
+						returnRayDirection = point.returnRayDirection,
+					});
+				}
 			}
 		}
 
