@@ -996,6 +996,7 @@ public class Editor : MonoBehaviour
 
 			if (allowCancel && Input.GetKeyDown(KeyCode.Escape))
 			{
+				pointToEdit.filled = true;
 				pointToEdit = null;
 				Destroy(interactionEditor);
 				SetEditorActive(true);
