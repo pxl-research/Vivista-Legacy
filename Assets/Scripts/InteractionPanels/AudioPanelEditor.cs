@@ -91,7 +91,7 @@ public class AudioPanelEditor : MonoBehaviour
 
 	public void Browse()
 	{
-		 var searchPattern = "*.mp3;*.wav;*.aif;*.ogg";
+		 var searchPattern = "*.wav;*.aif;*.ogg";
 
 		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
 		explorerPanel.transform.SetParent(Canvass.main.transform, false);
