@@ -23,7 +23,7 @@ public class TagPanel : MonoBehaviour
 		newName.onValueChanged.AddListener(OnEditName);
 
 		var tags = TagManager.Instance.tags;
-		
+
 		for (int i = 0; i < tags.Count; i++)
 		{
 			AddTagItem(tags[i].name, tags[i].color, tags[i].shapeIndex);
@@ -32,11 +32,8 @@ public class TagPanel : MonoBehaviour
 
 	public void OnColorPicker(Image image)
 	{
-		if (colorPicker != null)
-		{
-			Destroy(colorPicker);
-		}
-
+		DestroyActivePickers();
+		
 		colorPicker = Instantiate(colorPickerPrefab);
 		colorPicker.transform.SetParent(Canvass.main.transform);
 		colorPicker.GetComponent<SimpleColorPicker>().Init(image);
@@ -44,10 +41,7 @@ public class TagPanel : MonoBehaviour
 
 	public void OnShapePicker(Image image)
 	{
-		if (colorPicker != null)
-		{
-			Destroy(shapePicker);
-		}
+		DestroyActivePickers();
 
 		shapePicker = Instantiate(shapePickerPrefab);
 		shapePicker.transform.SetParent(Canvass.main.transform);
@@ -56,6 +50,8 @@ public class TagPanel : MonoBehaviour
 
 	public void OnAdd()
 	{
+		DestroyActivePickers();
+
 		var name = newName.text;
 		var color = newColor.color;
 		var shapeName = newShape.image.sprite.name;
@@ -98,5 +94,18 @@ public class TagPanel : MonoBehaviour
 	public void Close()
 	{
 		Destroy(gameObject);
+	}
+
+	private void DestroyActivePickers()
+	{
+		if (colorPicker != null)
+		{
+			Destroy(colorPicker);
+		}
+		if (shapePicker != null)
+		{
+			Destroy(shapePicker);
+		}
+
 	}
 }
