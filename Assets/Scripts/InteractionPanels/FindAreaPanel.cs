@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class FindAreaPanel : MonoBehaviour
@@ -32,19 +31,6 @@ public class FindAreaPanel : MonoBehaviour
 		}
 	}
 
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
-	}
-
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
 		title.text = newTitle;
@@ -62,7 +48,5 @@ public class FindAreaPanel : MonoBehaviour
 			entries.Add(entry);
 			StartCoroutine(entry.SetArea(area, fullPath, true));
 		}
-
-		Update();
 	}
 }

@@ -1,20 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using UnityEngine.SceneManagement;
 
 public class AudioPanel : MonoBehaviour
 {
 	public Text title;
 	public AudioControl audioControl;
-
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
 
 	public void Init(string newTitle, string fullPath)
 	{
@@ -32,10 +23,5 @@ public class AudioPanel : MonoBehaviour
 		audioControl.Init(fullPath);
 
 		title.text = newTitle;
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 }

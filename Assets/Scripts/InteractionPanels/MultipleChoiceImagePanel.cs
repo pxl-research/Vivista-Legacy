@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MultipleChoiceImagePanel : MonoBehaviour
@@ -37,20 +36,6 @@ public class MultipleChoiceImagePanel : MonoBehaviour
 			entries.Add(entry);
 		}
 
-		Update();
 		OnEnable();
-	}
-
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 }

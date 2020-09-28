@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -26,11 +25,6 @@ public class VideoPanel : MonoBehaviour
 		progressBar.value = time;
 		progressBar.maxValue = length;
 		timeDisplay.text = $"{MathHelper.FormatSeconds(time)} / {MathHelper.FormatSeconds(length)}";
-
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
 	}
 
 	public void Init(string newTitle, string fullPath)
@@ -68,11 +62,6 @@ public class VideoPanel : MonoBehaviour
 		videoPlayer.targetTexture = videoRenderTexture;
 		videoSurface.texture = videoRenderTexture;
 		videoSurface.color = Color.white;
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 
 	private void OnEnable()

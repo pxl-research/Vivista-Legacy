@@ -181,6 +181,7 @@ public class Editor : MonoBehaviour
 	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
 	private FileLoader fileLoader;
+	private InteractionPointEditor hoverPoint;
 	private float timelineStartTime;
 	private float timelineWindowStartTime;
 	private float timelineWindowEndTime;
@@ -202,6 +203,7 @@ public class Editor : MonoBehaviour
 	private bool isResizingTimelineVertical;
 	private bool isResizingTimelineHorizontal;
 	private TimeTooltip timeTooltip;
+	public RectTransform timelineFirstColumnWidth;
 
 	private Metadata meta;
 	private string userToken = "";
@@ -488,9 +490,8 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(UIPanels.Instance.imagePanel);
+						var panel = Instantiate(UIPanels.Instance.imagePanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPaths);
-						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
@@ -505,9 +506,8 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.textPanel);
+						var panel = Instantiate(UIPanels.Instance.textPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, editor.answerBody);
-						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = editor.answerBody;
 						lastPlacedPoint.panel = panel.gameObject;
@@ -526,9 +526,8 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(UIPanels.Instance.videoPanel);
+						var panel = Instantiate(UIPanels.Instance.videoPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPath);
-						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.panel = panel.gameObject;
@@ -547,9 +546,8 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(UIPanels.Instance.audioPanel);
+						var panel = Instantiate(UIPanels.Instance.audioPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPath);
-						panel.Move(lastPlacedPointPos);
 
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = newPath;
@@ -564,7 +562,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel);
+						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel, Canvass.main.transform);
 						lastPlacedPoint.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
@@ -573,7 +571,6 @@ public class Editor : MonoBehaviour
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
 						panel.Init(editor.answerQuestion, lastPlacedPoint.body.Split('\f'));
-						panel.Move(lastPlacedPointPos);
 
 						finished = true;
 					}
@@ -586,7 +583,7 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.findAreaPanel);
+						var panel = Instantiate(UIPanels.Instance.findAreaPanel, Canvass.main.transform);
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
 						var jsonMiniatures = new StringBuilder();
@@ -607,7 +604,6 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.panel = panel.gameObject;
 
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
-						panel.Move(lastPlacedPointPos);
 
 						finished = true;
 					}
@@ -619,7 +615,7 @@ public class Editor : MonoBehaviour
 					allowCancel = editor.allowCancel;
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel, Canvass.main.transform);
 
 						var areas = editor.answerAreas;
 						var jsonAreas = new StringBuilder();
@@ -644,7 +640,6 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.panel = panel.gameObject;
 
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
-						panel.Move(lastPlacedPointPos);
 
 						finished = true;
 					}
@@ -670,9 +665,8 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel, Canvass.main.transform);
 						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
-						panel.Move(lastPlacedPointPos);
 						lastPlacedPoint.title = editor.answerQuestion;
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
@@ -716,36 +710,6 @@ public class Editor : MonoBehaviour
 				SetInteractionpointPosition(pointToMove.point, hit.point);
 				var trans = pointToMove.point.transform;
 				transform.position = hit.point;
-
-				switch (pointToMove.type)
-				{
-					case InteractionType.Text:
-						pointToMove.panel.GetComponent<TextPanel>().Move(trans.position);
-						break;
-					case InteractionType.Image:
-						pointToMove.panel.GetComponent<ImagePanel>().Move(trans.position);
-						break;
-					case InteractionType.Video:
-						pointToMove.panel.GetComponent<VideoPanel>().Move(trans.position);
-						break;
-					case InteractionType.MultipleChoice:
-						pointToMove.panel.GetComponent<MultipleChoicePanel>().Move(trans.position);
-						break;
-					case InteractionType.Audio:
-						pointToMove.panel.GetComponent<AudioPanel>().Move(trans.position);
-						break;
-					case InteractionType.FindArea:
-						pointToMove.panel.GetComponent<FindAreaPanel>().Move(trans.position);
-						break;
-					case InteractionType.MultipleChoiceArea:
-						pointToMove.panel.GetComponent<MultipleChoiceAreaPanel>().Move(trans.position);
-						break;
-					case InteractionType.MultipleChoiceImage:
-						pointToMove.panel.GetComponent<MultipleChoiceImagePanel>().Move(trans.position);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
 			}
 
 			if (Input.GetMouseButtonDown(0))
@@ -797,7 +761,6 @@ public class Editor : MonoBehaviour
 
 						var panel = Instantiate(UIPanels.Instance.imagePanel);
 						panel.Init(editor.answerTitle, newFullPaths);
-						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = String.Join("\f", newFilenames);
@@ -813,7 +776,6 @@ public class Editor : MonoBehaviour
 					{
 						var panel = Instantiate(UIPanels.Instance.textPanel);
 						panel.Init(editor.answerTitle, editor.answerBody);
-						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.body = editor.answerBody;
@@ -836,7 +798,6 @@ public class Editor : MonoBehaviour
 
 						var panel = Instantiate(UIPanels.Instance.videoPanel);
 						panel.Init(editor.answerTitle, newFullPath);
-						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
@@ -859,7 +820,6 @@ public class Editor : MonoBehaviour
 
 						var panel = Instantiate(UIPanels.Instance.audioPanel);
 						panel.Init(editor.answerTitle, newFullPath);
-						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = newPath;
@@ -881,7 +841,6 @@ public class Editor : MonoBehaviour
 						pointToEdit.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.Move(pointToEdit.point.transform.position);
 						panel.Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
 						finished = true;
 					}
@@ -895,7 +854,6 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(UIPanels.Instance.findAreaPanel);
-						panel.Move(pointToEdit.point.transform.position);
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
 
 						var areas = editor.answerAreas;
@@ -928,7 +886,6 @@ public class Editor : MonoBehaviour
 					if (editor.answered)
 					{
 						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
-						panel.Move(pointToEdit.point.transform.position);
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
 
 						var areas = editor.answerAreas;
@@ -980,7 +937,6 @@ public class Editor : MonoBehaviour
 
 						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
 						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
-						panel.Move(pointToEdit.point.transform.position);
 
 						pointToEdit.title = editor.answerQuestion;
 						pointToEdit.body = editor.answerCorrect.ToString();
@@ -1304,6 +1260,10 @@ public class Editor : MonoBehaviour
 
 		point.timelineRow.mandatory.isOn = point.mandatory;
 		point.timelineRow.mandatory.onValueChanged.AddListener(x => OnMandatoryChanged(point, x));
+
+		float fudgeFactor = 10;
+		float offset = point.timelineRow.tagShape.rectTransform.sizeDelta.x + fudgeFactor;
+		point.timelineRow.title.rectTransform.sizeDelta = new Vector2(timelineFirstColumnWidth.sizeDelta.x - offset, point.timelineRow.title.rectTransform.sizeDelta.y);
 	}
 
 	private void RemoveItemFromTimeline(InteractionPointEditor point)
@@ -1385,7 +1345,7 @@ public class Editor : MonoBehaviour
 			timelineWindowStartTime = windowMiddle - zoomedLength / 2;
 			timelineWindowEndTime = windowMiddle + zoomedLength / 2;
 
-			timelineOffsetPixels = timelineHeader.GetComponentInChildren<Text>().rectTransform.rect.width;
+			timelineOffsetPixels = timelineFirstColumnWidth.rect.width;
 			timelineWidthPixels = timelineContainer.rect.width - timelineOffsetPixels;
 		}
 
@@ -1476,23 +1436,60 @@ public class Editor : MonoBehaviour
 			point.timelineRow.indicator.color = tagColor;
 		}
 
-		//NOTE(Simon): Highlight interactionPoint
+		//NOTE(Simon): Highlight interactionPoint on hover
 		//TODO(Simon): Show preview when hovering over timelineRow
 		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 		{
 			foreach (var point in interactionPoints)
 			{
-				var rect = point.timelineRow.GetComponent<RectTransform>();
+				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
+				var rect = point.timelineRow.title.GetComponent<RectTransform>();
 				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
 					&& !isDraggingTimelineItem && !isResizingTimelineItem)
 				{
 					HighlightPoint(point);
 					var worldCorners = new Vector3[4];
-					rect.GetWorldCorners(worldCorners);
+					rectBackground.GetWorldCorners(worldCorners);
 					var start = new Vector2(worldCorners[0].x, (worldCorners[0].y + worldCorners[1].y) / 2);
 					var end = new Vector2(worldCorners[2].x - 3, (worldCorners[2].y + worldCorners[3].y) / 2);
-					var thickness = worldCorners[1].y  - worldCorners[0].y;
+					var thickness = worldCorners[1].y - worldCorners[0].y;
+					//NOTE(Simon): Show a darker brackground on hover
 					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
+
+					//NOTE(Simon): Show panel with content on hover
+					if (hoverPoint == null)
+					{
+						point.panel.SetActive(true);
+					}
+					point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
+
+					if (Input.GetMouseButtonDown(0))
+					{
+						if (hoverPoint == point)
+						{
+							hoverPoint.panel.SetActive(false);
+							hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
+							hoverPoint = null;
+						}
+						else
+						{
+							if (hoverPoint != null)
+							{
+								hoverPoint.panel.SetActive(false);
+								hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
+							}
+							hoverPoint = point;
+							hoverPoint.panel.SetActive(true);
+							hoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
+						}
+					}
+				}
+				else
+				{
+					if (hoverPoint == null)
+					{
+						point.panel.SetActive(false);
+					}
 				}
 			}
 		}
@@ -1864,9 +1861,16 @@ public class Editor : MonoBehaviour
 						desiredCursor = null;
 					}
 
-					var rect = timelineHeader.GetComponentInChildren<Text>().rectTransform;
 					//NOTE(Simon): Clamp timeline size to 100px of either side of screen, so it can't go offscreen
-					rect.sizeDelta = new Vector2(Mathf.Clamp(rect.sizeDelta.x + mouseDelta.x, 100, Screen.width - 100), rect.sizeDelta.y);
+					timelineFirstColumnWidth.sizeDelta = new Vector2(Mathf.Clamp(timelineFirstColumnWidth.sizeDelta.x + mouseDelta.x, 100, Screen.width - 100), timelineFirstColumnWidth.sizeDelta.y);
+					for (int i = 0; i < interactionPoints.Count; i++)
+					{
+						var point = interactionPoints[i];
+						float fudgeFactor = 10;
+						float offset = point.timelineRow.tagShape.rectTransform.sizeDelta.x + fudgeFactor;
+						point.timelineRow.title.rectTransform.sizeDelta = new Vector2(timelineFirstColumnWidth.sizeDelta.x - offset, point.timelineRow.title.rectTransform.sizeDelta.y);
+					}
+
 					DrawLineAtTime(0, 2, Color.black, -3);
 					timelineLabelsDirty = true;
 				}
@@ -2146,14 +2150,14 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.Text:
 				{
-					var panel = Instantiate(UIPanels.Instance.textPanel);
+					var panel = Instantiate(UIPanels.Instance.textPanel, Canvass.main.transform);
 					panel.Init(newInteractionPoint.title, newInteractionPoint.body);
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.Image:
 				{
-					var panel = Instantiate(UIPanels.Instance.imagePanel);
+					var panel = Instantiate(UIPanels.Instance.imagePanel, Canvass.main.transform);
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
 					foreach (var file in filenames)
@@ -2172,7 +2176,7 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.Video:
 				{
-					var panel = Instantiate(UIPanels.Instance.videoPanel);
+					var panel = Instantiate(UIPanels.Instance.videoPanel, Canvass.main.transform);
 					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
 
 					panel.Init(newInteractionPoint.title, url);
@@ -2181,14 +2185,14 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoice:
 				{
-					var panel = Instantiate(UIPanels.Instance.multipleChoicePanel);
+					var panel = Instantiate(UIPanels.Instance.multipleChoicePanel, Canvass.main.transform);
 					panel.Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
 				case InteractionType.Audio:
 				{
-					var panel = Instantiate(UIPanels.Instance.audioPanel);
+					var panel = Instantiate(UIPanels.Instance.audioPanel, Canvass.main.transform);
 					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
 					panel.Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel.gameObject;
@@ -2196,7 +2200,7 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.FindArea:
 				{
-					var panel = Instantiate(UIPanels.Instance.findAreaPanel);
+					var panel = Instantiate(UIPanels.Instance.findAreaPanel, Canvass.main.transform);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, newInteractionPoint.body);
 
 					panel.Init(newInteractionPoint.title, meta.guid, areas);
@@ -2208,7 +2212,7 @@ public class Editor : MonoBehaviour
 					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
 					var correct = Int32.Parse(split[0]);
 					var areaJson = split[1];
-					var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
+					var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel, Canvass.main.transform);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, areaJson);
 
 					panel.Init(newInteractionPoint.title, meta.guid, areas, correct);
@@ -2218,7 +2222,7 @@ public class Editor : MonoBehaviour
 				case InteractionType.MultipleChoiceImage:
 				{
 
-					var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
+					var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel, Canvass.main.transform);
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
 					foreach (var file in filenames)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MultipleChoicePanel : MonoBehaviour
@@ -24,14 +23,6 @@ public class MultipleChoicePanel : MonoBehaviour
 	private readonly Color lightGreyColour = new Color(0.78f, 0.78f, 0.78f);
 	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
-
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
 
 	public void Init(string newQuestion, string[] newAnswers)
 	{
@@ -62,11 +53,6 @@ public class MultipleChoicePanel : MonoBehaviour
 		checkAnswerButton = button.GetComponent<Button>();
 		checkAnswerButton.interactable = false;
 		checkAnswerButton.onClick.AddListener(CheckAnswer);
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 
 	public void ToggleValueChanged(GameObject toggleGo)

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ImagePanel : MonoBehaviour
@@ -53,14 +52,6 @@ public class ImagePanel : MonoBehaviour
 		imagePanelContent.offsetMax = new Vector2(imagePanelContent.offsetMax.x, 0);
 	}
 
-	public void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
-
 	private void AddNewImage(string url)
 	{
 		var newImage = Instantiate(imagePanelImagePrefab, imagePanelContent, false);
@@ -107,10 +98,5 @@ public class ImagePanel : MonoBehaviour
 	{
 		prevButton.gameObject.SetActive(imageIndex != 0);
 		nextButton.gameObject.SetActive(imageIndex != images.Count - 1);
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
 	}
 }
