@@ -192,7 +192,7 @@ public class Editor : MonoBehaviour
 	private float timelineOffsetPixels;
 	private float timelineWidthPixels;
 	private bool timelineLabelsDirty;
-    private bool timelineRowPreviewActive;
+	private bool timelineRowPreviewActive;
 
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
@@ -760,7 +760,7 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(UIPanels.Instance.imagePanel);
+						var panel = Instantiate(UIPanels.Instance.imagePanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPaths);
 
 						pointToEdit.title = editor.answerTitle;
@@ -775,7 +775,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.textPanel);
+						var panel = Instantiate(UIPanels.Instance.textPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, editor.answerBody);
 
 						pointToEdit.title = editor.answerTitle;
@@ -797,7 +797,7 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(UIPanels.Instance.videoPanel);
+						var panel = Instantiate(UIPanels.Instance.videoPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPath);
 
 						pointToEdit.title = editor.answerTitle;
@@ -819,7 +819,7 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(UIPanels.Instance.audioPanel);
+						var panel = Instantiate(UIPanels.Instance.audioPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPath);
 
 						pointToEdit.title = editor.answerTitle;
@@ -834,7 +834,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel);
+						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel, Canvass.main.transform);
 						pointToEdit.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
@@ -854,7 +854,7 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.findAreaPanel);
+						var panel = Instantiate(UIPanels.Instance.findAreaPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
 
 						var areas = editor.answerAreas;
@@ -886,7 +886,7 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
 
 						var areas = editor.answerAreas;
@@ -936,7 +936,7 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel);
+						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel, Canvass.main.transform);
 						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
 
 						pointToEdit.title = editor.answerQuestion;
@@ -960,7 +960,7 @@ public class Editor : MonoBehaviour
 			}
 
 			if (finished)
-			{ 
+			{
 				pointToEdit.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				pointToEdit.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
 				pointToEdit.timelineRow.mandatory.isOn = pointToEdit.mandatory;
@@ -968,7 +968,7 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
 
-                var wasPanelHidden = timelineRowPreviewActive;
+				var wasPanelHidden = timelineRowPreviewActive;
 				if (wasPanelHidden)
 				{
 					pointToEdit.panel.SetActive(false);
@@ -1255,7 +1255,7 @@ public class Editor : MonoBehaviour
 		interactionPoints.Add(point);
 		if (point.panel != null && hidden)
 		{
-            timelineRowPreviewActive = false;
+			timelineRowPreviewActive = false;
 			point.panel.SetActive(false);
 		}
 
@@ -1446,8 +1446,8 @@ public class Editor : MonoBehaviour
 				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
 				var rect = point.timelineRow.title.GetComponent<RectTransform>();
 				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
-					&& !isDraggingTimelineItem && !isResizingTimelineItem 
-                    && editorState != EditorState.EditingInteractionPoint && point.panel != null)
+					&& !isDraggingTimelineItem && !isResizingTimelineItem
+					&& editorState != EditorState.EditingInteractionPoint && point.panel != null)
 				{
 					HighlightPoint(point);
 					var worldCorners = new Vector3[4];
@@ -1462,39 +1462,39 @@ public class Editor : MonoBehaviour
 					if (hoverPoint == null)
 					{
 						point.panel.SetActive(true);
-                        timelineRowPreviewActive = true;
-                    }
-                    point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
+						timelineRowPreviewActive = true;
+					}
+					point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
 
-                    if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
+					if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
 					{
-                        if (hoverPoint == point)
+						if (hoverPoint == point)
 						{
-                            timelineRowPreviewActive = false;
+							timelineRowPreviewActive = false;
 							hoverPoint.panel.SetActive(false);
 							hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
 							hoverPoint = null;
-                        }
+						}
 						else
 						{
 							if (hoverPoint != null)
 							{
-                                timelineRowPreviewActive = false;
+								timelineRowPreviewActive = false;
 								hoverPoint.panel.SetActive(false);
 								hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
 							}
 							hoverPoint = point;
-                            timelineRowPreviewActive = true;
+							timelineRowPreviewActive = true;
 							hoverPoint.panel.SetActive(true);
 							hoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
-                        }
+						}
 					}
 				}
 				else
 				{
 					if (hoverPoint == null && point.panel != null)
 					{
-                        timelineRowPreviewActive = false;
+						timelineRowPreviewActive = false;
 						point.panel.SetActive(false);
 					}
 				}
@@ -1671,7 +1671,7 @@ public class Editor : MonoBehaviour
 			}
 
 			//NOTE(Simon): interaction panel visibility
-            //NOTE(Jitse): this can possibly be removed
+			//NOTE(Jitse): this can possibly be removed
 			/*if (point.panel != null)
 			{
                 //if (view.switchedOn)
@@ -2301,7 +2301,7 @@ public class Editor : MonoBehaviour
 		var shape = point.point.GetComponent<SpriteRenderer>();
 		var text = point.point.GetComponentInChildren<TextMesh>();
 		var tag = TagManager.Instance.GetTagById(point.tagId);
-		
+
 		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
 		shape.color = tag.color;
 		text.color = tag.color.IdealTextColor();
