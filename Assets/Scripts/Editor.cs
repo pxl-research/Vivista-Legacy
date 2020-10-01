@@ -306,7 +306,8 @@ public class Editor : MonoBehaviour
 		{
 			if (Input.GetMouseButtonDown(0)
 				&& !EventSystem.current.IsPointerOverGameObject()
-				&& !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+				&& !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+				&& !timelineRowPreviewActive)
 			{
 				editorState = EditorState.PlacingInteractionPoint;
 			}
@@ -1458,6 +1459,22 @@ public class Editor : MonoBehaviour
 					//NOTE(Simon): Show a darker brackground on hover
 					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
 
+					//NOTE(Jitse): Show which answer is correct in a MultipleChoicePanel preview
+					//NOTE(cont.): and also make the preview not interactable. (Is this the best way to do this, though?)
+					if (point.panel.name.Equals("MultipleChoicePanel(Clone)"))
+					{
+						var answers = point.panel.GetComponent<MultipleChoicePanel>().answerPanel.GetComponentsInChildren<Toggle>();
+						for (int i = 0; i < answers.Length; i++)
+						{
+							answers[i].interactable = false;
+							if (i == point.panel.GetComponent<MultipleChoicePanel>().correctAnswer)
+							{
+								answers[i].isOn = true;
+								answers[i].image.color = new Color(1, 0.8f, 0.42f);
+							}
+						}
+					}
+
 					//NOTE(Simon): Show panel with content on hover
 					if (hoverPoint == null)
 					{
@@ -1669,22 +1686,6 @@ public class Editor : MonoBehaviour
 			{
 				move.SetState(false);
 			}
-
-			//NOTE(Simon): interaction panel visibility
-			//NOTE(Jitse): this can possibly be removed
-			/*if (point.panel != null)
-			{
-                //if (view.switchedOn)
-                if (!timelineRowPreviewActive)
-                {
-					point.panel.SetActive(false);
-				}
-                //else if (view.switchedOff)
-                else
-                {
-					point.panel.SetActive(true);
-				}
-			}*/
 		}
 
 		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and separator lines.
