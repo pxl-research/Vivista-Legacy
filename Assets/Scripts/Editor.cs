@@ -1446,7 +1446,8 @@ public class Editor : MonoBehaviour
 				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
 				var rect = point.timelineRow.title.GetComponent<RectTransform>();
 				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
-					&& !isDraggingTimelineItem && !isResizingTimelineItem && point.panel != null)
+					&& !isDraggingTimelineItem && !isResizingTimelineItem 
+                    && editorState != EditorState.EditingInteractionPoint && point.panel != null)
 				{
 					HighlightPoint(point);
 					var worldCorners = new Vector3[4];
@@ -1491,7 +1492,7 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					if (hoverPoint == null)
+					if (hoverPoint == null && point.panel != null)
 					{
                         timelineRowPreviewActive = false;
 						point.panel.SetActive(false);
