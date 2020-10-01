@@ -192,6 +192,7 @@ public class Editor : MonoBehaviour
 	private float timelineOffsetPixels;
 	private float timelineWidthPixels;
 	private bool timelineLabelsDirty;
+    private bool timelineRowPreviewActive;
 
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
@@ -967,7 +968,7 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
 
-				var wasPanelHidden = pointToEdit.timelineRow.view.isOn;
+                var wasPanelHidden = timelineRowPreviewActive;
 				if (wasPanelHidden)
 				{
 					pointToEdit.panel.SetActive(false);
@@ -1254,7 +1255,7 @@ public class Editor : MonoBehaviour
 		interactionPoints.Add(point);
 		if (point.panel != null && hidden)
 		{
-			point.timelineRow.view.SetState(true);
+            timelineRowPreviewActive = false;
 			point.panel.SetActive(false);
 		}
 
@@ -1445,7 +1446,7 @@ public class Editor : MonoBehaviour
 				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
 				var rect = point.timelineRow.title.GetComponent<RectTransform>();
 				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
-					&& !isDraggingTimelineItem && !isResizingTimelineItem)
+					&& !isDraggingTimelineItem && !isResizingTimelineItem && point.panel != null)
 				{
 					HighlightPoint(point);
 					var worldCorners = new Vector3[4];
@@ -1460,34 +1461,39 @@ public class Editor : MonoBehaviour
 					if (hoverPoint == null)
 					{
 						point.panel.SetActive(true);
-					}
-					point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
+                        timelineRowPreviewActive = true;
+                    }
+                    point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
 
-					if (Input.GetMouseButtonDown(0))
+                    if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
 					{
-						if (hoverPoint == point)
+                        if (hoverPoint == point)
 						{
+                            timelineRowPreviewActive = false;
 							hoverPoint.panel.SetActive(false);
 							hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
 							hoverPoint = null;
-						}
+                        }
 						else
 						{
 							if (hoverPoint != null)
 							{
+                                timelineRowPreviewActive = false;
 								hoverPoint.panel.SetActive(false);
 								hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
 							}
 							hoverPoint = point;
+                            timelineRowPreviewActive = true;
 							hoverPoint.panel.SetActive(true);
 							hoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
-						}
+                        }
 					}
 				}
 				else
 				{
 					if (hoverPoint == null)
 					{
+                        timelineRowPreviewActive = false;
 						point.panel.SetActive(false);
 					}
 				}
@@ -1509,26 +1515,22 @@ public class Editor : MonoBehaviour
 			var edit = point.timelineRow.edit;
 			var delete = point.timelineRow.delete;
 			var move = point.timelineRow.move;
-			var view = point.timelineRow.view;
 			var mandatory = point.timelineRow.mandatory;
 
 			var editRect = edit.GetComponent<RectTransform>();
 			var deleteRect = delete.GetComponent<RectTransform>();
 			var moveRect = move.GetComponent<RectTransform>();
-			var viewRect = view.GetComponent<RectTransform>();
 			var mandatoryRect = mandatory.GetComponent<RectTransform>();
 
 			deleteRect.position = new Vector3(timelineOffsetPixels - 20, deleteRect.position.y);
-			viewRect.position = new Vector3(timelineOffsetPixels - 40, viewRect.position.y);
-			editRect.position = new Vector3(timelineOffsetPixels - 60, editRect.position.y);
-			moveRect.position = new Vector3(timelineOffsetPixels - 80, moveRect.position.y);
-			mandatoryRect.position = new Vector3(timelineOffsetPixels - 100, mandatoryRect.position.y);
+			editRect.position = new Vector3(timelineOffsetPixels - 40, editRect.position.y);
+			moveRect.position = new Vector3(timelineOffsetPixels - 60, moveRect.position.y);
+			mandatoryRect.position = new Vector3(timelineOffsetPixels - 80, mandatoryRect.position.y);
 
 			if (!point.filled)
 			{
 				edit.gameObject.SetActive(false);
 				move.gameObject.SetActive(false);
-				view.gameObject.SetActive(false);
 				delete.gameObject.SetActive(false);
 				mandatory.gameObject.SetActive(false);
 			}
@@ -1536,7 +1538,6 @@ public class Editor : MonoBehaviour
 			{
 				edit.gameObject.SetActive(true);
 				move.gameObject.SetActive(true);
-				view.gameObject.SetActive(true);
 				delete.gameObject.SetActive(true);
 				mandatory.gameObject.SetActive(true);
 			}
@@ -1669,17 +1670,20 @@ public class Editor : MonoBehaviour
 			}
 
 			//NOTE(Simon): interaction panel visibility
-			if (point.panel != null)
+            //NOTE(Jitse): this can possibly be removed
+			/*if (point.panel != null)
 			{
-				if (view.switchedOn)
-				{
+                //if (view.switchedOn)
+                if (!timelineRowPreviewActive)
+                {
 					point.panel.SetActive(false);
 				}
-				else if (view.switchedOff)
-				{
+                //else if (view.switchedOff)
+                else
+                {
 					point.panel.SetActive(true);
 				}
-			}
+			}*/
 		}
 
 		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and separator lines.

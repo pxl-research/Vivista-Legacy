@@ -9,6 +9,6 @@ public class TimelineRow : MonoBehaviour
 	public Button2 edit;
 	public Button2 delete;
 	public Toggle2 move;
-	public Toggle2 view;
+	//public Toggle2 view;
 	public Toggle mandatory;
 }
