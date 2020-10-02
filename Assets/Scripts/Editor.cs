@@ -279,8 +279,11 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
 		foreach (var point in sortedInteractionPoints)
 		{
-			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
-			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
+			if (point.point.GetComponent<SpriteRenderer>() != null)
+			{
+				point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
+				point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
+			}
 		}
 
 		if (videoController.videoLoaded)
@@ -1448,7 +1451,8 @@ public class Editor : MonoBehaviour
 				var rect = point.timelineRow.title.GetComponent<RectTransform>();
 				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
 					&& !isDraggingTimelineItem && !isResizingTimelineItem
-					&& editorState != EditorState.EditingInteractionPoint && point.panel != null)
+					&& editorState == EditorState.Active
+					&& point.panel != null)
 				{
 					HighlightPoint(point);
 					var worldCorners = new Vector3[4];
@@ -1458,22 +1462,6 @@ public class Editor : MonoBehaviour
 					var thickness = worldCorners[1].y - worldCorners[0].y;
 					//NOTE(Simon): Show a darker brackground on hover
 					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
-
-					//NOTE(Jitse): Show which answer is correct in a MultipleChoicePanel preview
-					//NOTE(cont.): and also make the preview not interactable. (Is this the best way to do this, though?)
-					if (point.panel.name.Equals("MultipleChoicePanel(Clone)"))
-					{
-						var answers = point.panel.GetComponent<MultipleChoicePanel>().answerPanel.GetComponentsInChildren<Toggle>();
-						for (int i = 0; i < answers.Length; i++)
-						{
-							answers[i].interactable = false;
-							if (i == point.panel.GetComponent<MultipleChoicePanel>().correctAnswer)
-							{
-								answers[i].isOn = true;
-								answers[i].image.color = new Color(1, 0.8f, 0.42f);
-							}
-						}
-					}
 
 					//NOTE(Simon): Show panel with content on hover
 					if (hoverPoint == null)

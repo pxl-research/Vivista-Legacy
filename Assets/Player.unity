@@ -1185,7 +1185,7 @@ MonoBehaviour:
     type: 3}
   videoPanelPrefab: {fileID: 1618883816622818, guid: a7569052434276940bf2d28f857fae28,
     type: 3}
-  multipleChoicePrefab: {fileID: 1239167622065546, guid: 9447c148fb69ee64aa39b0c210c85d28,
+  multipleChoicePrefab: {fileID: 6057561751080927480, guid: 9447c148fb69ee64aa39b0c210c85d28,
     type: 3}
   audioPanelPrefab: {fileID: 1649633668173102, guid: b6223426cd3205f439a5fadd0023ed2b,
     type: 3}
@@ -1521,7 +1521,13 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!21 &796152093
+--- !u!1 &806806993 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 107946, guid: dc06161b6d97feb419f45f03b62e14b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 1175540860}
+  m_PrefabAsset: {fileID: 0}
+--- !u!21 &823994071
 Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
@@ -1632,12 +1638,6 @@ Material:
     - _UOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _VAxis: {r: 0, g: 0, b: 0, a: 0}
     - _VOrigin: {r: 0, g: 0, b: 0, a: 0}
---- !u!1 &806806993 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 107946, guid: dc06161b6d97feb419f45f03b62e14b9,
-    type: 3}
-  m_PrefabInstance: {fileID: 1175540860}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &853160130
 GameObject:
   m_ObjectHideFlags: 0
@@ -3528,6 +3528,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 796152093}
+      objectReference: {fileID: 823994071}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 90327f67b40b91e439ac4274a7d43b8e, type: 3}
