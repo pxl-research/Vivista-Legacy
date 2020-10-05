@@ -37,6 +37,7 @@ public class AudioControl : MonoBehaviour
 		audioSource.Stop();
 		clip = null;
 		this.url = url;
+		StartCoroutine(GetAudioClip(url));
 	}
 
 	void Update()
@@ -91,7 +92,6 @@ public class AudioControl : MonoBehaviour
 				clip.LoadAudioData();
 				audioSource.clip = clip;
 				ShowAudioPlayTime();
-				audioSource.Play();
 
 				fullClipLength = clip.length;
 			}

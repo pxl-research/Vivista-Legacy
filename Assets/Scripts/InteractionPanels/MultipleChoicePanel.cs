@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +10,6 @@ public class MultipleChoicePanel : MonoBehaviour
 	public RectTransform answerPanel;
 
 	public GameObject answerTogglePrefab;
-	public GameObject answerCheckButtonPrefab;
 
 	public Sprite crossImage;
 
@@ -19,13 +17,19 @@ public class MultipleChoicePanel : MonoBehaviour
 	private Button checkAnswerButton;
 	private int selectedIndex;
 
-	private readonly Color orangeColour = new Color(1, 0.8f, 0.42f);
 	private readonly Color lightGreyColour = new Color(0.78f, 0.78f, 0.78f);
 	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
 	public void Init(string newQuestion, string[] newAnswers)
 	{
+		var existingToggles = answerPanel.GetComponentsInChildren<Toggle>();
+
+		for (int i = 0; i < existingToggles.Length; i++)
+		{
+			DestroyImmediate(existingToggles[i].gameObject);
+		}
+
 		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
 		question.text = newQuestion;
 		correctAnswer = Convert.ToInt32(newAnswers[0]);

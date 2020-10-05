@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class MultipleChoiceAreaEntry : MonoBehaviour
 {
 	public RawImage preview;
-	public Text numPoints;
 	public Button deleteButton;
 	public Button editButton;
 	public Toggle toggle;
@@ -21,7 +20,6 @@ public class MultipleChoiceAreaEntry : MonoBehaviour
 		if (initialized) { yield break; }
 		miniatureUrl = newMiniatureUrl;
 		area = NewArea;
-		numPoints.text = NewArea.vertices.Count + " points";
 
 		Texture2D texture;
 

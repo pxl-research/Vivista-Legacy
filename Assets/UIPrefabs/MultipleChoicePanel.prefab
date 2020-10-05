@@ -9,8 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224402507233652754}
-  - component: {fileID: 223651274930340976}
-  - component: {fileID: 114062534352090042}
   - component: {fileID: 114556635543492542}
   m_Layer: 5
   m_Name: MultipleChoicePanel
@@ -18,7 +16,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &224402507233652754
 RectTransform:
   m_ObjectHideFlags: 0
@@ -37,46 +35,8 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 400}
+  m_SizeDelta: {x: 500, y: 435}
   m_Pivot: {x: 0, y: 0}
---- !u!223 &223651274930340976
-Canvas:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1109307375659294}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_RenderMode: 2
-  m_Camera: {fileID: 0}
-  m_PlaneDistance: 100
-  m_PixelPerfect: 0
-  m_ReceivesEvents: 1
-  m_OverrideSorting: 0
-  m_OverridePixelPerfect: 0
-  m_SortingBucketNormalizedSize: 0
-  m_AdditionalShaderChannelsFlag: 0
-  m_SortingLayerID: -862591857
-  m_SortingOrder: 0
-  m_TargetDisplay: 0
---- !u!114 &114062534352090042
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1109307375659294}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!114 &114556635543492542
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -94,8 +54,6 @@ MonoBehaviour:
   correctAnswer: 0
   answerPanel: {fileID: 224620793713276950}
   answerTogglePrefab: {fileID: 1895423656925944, guid: e345a930e554c394b8eda0ce1bab8d73,
-    type: 3}
-  answerCheckButtonPrefab: {fileID: 1309263382649292, guid: f384f30236bdfdd459b8dff861c47388,
     type: 3}
   crossImage: {fileID: 21300000, guid: 741e6d3a4a96b8c44a0c6c455b5a7f02, type: 3}
 --- !u!1 &1163410064057112
@@ -186,8 +144,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
-    m_Right: 0
+    m_Left: 10
+    m_Right: 10
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 1
@@ -355,8 +313,8 @@ MonoBehaviour:
     m_FontSize: 20
     m_FontStyle: 1
     m_BestFit: 1
-    m_MinSize: 0
-    m_MaxSize: 40
+    m_MinSize: 10
+    m_MaxSize: 25
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1

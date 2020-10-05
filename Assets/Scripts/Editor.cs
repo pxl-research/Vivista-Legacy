@@ -764,7 +764,7 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(UIPanels.Instance.imagePanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<ImagePanel>();
 						panel.Init(editor.answerTitle, newFullPaths);
 
 						pointToEdit.title = editor.answerTitle;
@@ -779,7 +779,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<TextPanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.textPanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<TextPanel>();
 						panel.Init(editor.answerTitle, editor.answerBody);
 
 						pointToEdit.title = editor.answerTitle;
@@ -801,7 +801,7 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(UIPanels.Instance.videoPanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<VideoPanel>();
 						panel.Init(editor.answerTitle, newFullPath);
 
 						pointToEdit.title = editor.answerTitle;
@@ -823,7 +823,7 @@ public class Editor : MonoBehaviour
 						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
 						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
 
-						var panel = Instantiate(UIPanels.Instance.audioPanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<AudioPanel>();
 						panel.Init(editor.answerTitle, newFullPath);
 
 						pointToEdit.title = editor.answerTitle;
@@ -838,7 +838,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<MultipleChoicePanelEditor>();
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.multipleChoicePanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<MultipleChoicePanel>();
 						pointToEdit.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						pointToEdit.body = editor.answerCorrect + "\f";
@@ -858,7 +858,7 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.findAreaPanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<FindAreaPanel>();
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas);
 
 						var areas = editor.answerAreas;
@@ -890,7 +890,7 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var panel = Instantiate(UIPanels.Instance.multipleChoiceAreaPanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<MultipleChoiceAreaPanel>(); ;
 						panel.Init(editor.answerTitle, meta.guid, editor.answerAreas, editor.answerCorrect);
 
 						var areas = editor.answerAreas;
@@ -940,7 +940,7 @@ public class Editor : MonoBehaviour
 							newFullPaths.Add(newFullPath);
 						}
 
-						var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel, Canvass.main.transform);
+						var panel = pointToEdit.panel.GetComponent<MultipleChoiceImagePanel>();
 						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
 
 						pointToEdit.title = editor.answerQuestion;
@@ -1647,7 +1647,6 @@ public class Editor : MonoBehaviour
 				interactionEditor.GetComponentInChildren<TagPicker>().Init(point.tagId);
 				interactionEditor.GetComponentInChildren<MandatoryPanel>().Init(point.mandatory);
 
-				Destroy(point.panel);
 				break;
 			}
 

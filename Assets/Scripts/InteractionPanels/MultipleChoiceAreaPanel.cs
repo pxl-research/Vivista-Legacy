@@ -34,6 +34,14 @@ public class MultipleChoiceAreaPanel : MonoBehaviour
 
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect)
 	{
+
+		for (int i = 0; i < entries.Count; i++)
+		{
+			Destroy(entries[i].gameObject);
+		}
+
+		entries.Clear();
+
 		title.text = newTitle;
 		areas = newAreas;
 		guid = newGuid;
@@ -41,18 +49,13 @@ public class MultipleChoiceAreaPanel : MonoBehaviour
 
 		for (int i = 0; i < newAreas.Count; i++)
 		{
-			var filename = newAreas[i].miniatureName;
-			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
-			var fullPath = Path.Combine(path, filename);
-
 			var go = Instantiate(multipleChoiceAreaEntryPrefab, areaList);
 			var entry = go.GetComponent<MultipleChoiceAreaEntry>();
 			entry.toggle.interactable = false;
 
 			entry.toggle.SetIsOnWithoutNotify(i == correct);
-			
+
 			entries.Add(entry);
-			StartCoroutine(entry.SetArea(newAreas[i], fullPath, true));
 		}
 	}
 }

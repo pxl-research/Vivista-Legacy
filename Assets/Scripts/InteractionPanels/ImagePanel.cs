@@ -27,7 +27,16 @@ public class ImagePanel : MonoBehaviour
 
 	public void Init(string newTitle, List<string> urls)
 	{
+		for (int i = 0; i < images.Count; i++)
+		{
+			Destroy(images[i].gameObject);
+		}
+
+		images.Clear();
+
+		prevButton.onClick.RemoveAllListeners();
 		prevButton.onClick.AddListener(PrevImage);
+		nextButton.onClick.RemoveAllListeners();
 		nextButton.onClick.AddListener(NextImage);
 
 		title.text = newTitle;

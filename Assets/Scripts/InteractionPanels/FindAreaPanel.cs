@@ -33,20 +33,23 @@ public class FindAreaPanel : MonoBehaviour
 
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
+
+		for (int i = 0; i < entries.Count; i++)
+		{
+			Destroy(entries[i].gameObject);
+		}
+
+		entries.Clear();
+
 		title.text = newTitle;
 		areas = newAreas;
 		guid = newGuid;
 
-		foreach (var area in newAreas)
+		for (int i = 0; i < newAreas.Count; i++)
 		{
-			var filename = area.miniatureName;
-			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
-			var fullPath = Path.Combine(path, filename);
-
 			var go = Instantiate(areaEntryPrefab, areaList);
 			var entry = go.GetComponent<AreaEntry>();
 			entries.Add(entry);
-			StartCoroutine(entry.SetArea(area, fullPath, true));
 		}
 	}
 }

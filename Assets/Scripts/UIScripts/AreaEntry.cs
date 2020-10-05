@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class AreaEntry : MonoBehaviour
 {
 	public RawImage preview;
-	public Text numPoints;
 	public Button deleteButton;
 	public Button editButton;
 	public string miniatureUrl;
@@ -21,7 +20,6 @@ public class AreaEntry : MonoBehaviour
 		if (initialized) { yield break; }
 		miniatureUrl = newMiniatureUrl;
 		area = newArea;
-		numPoints.text = newArea.vertices.Count + " points";
 
 		Texture2D texture;
 
