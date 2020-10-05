@@ -13,10 +13,6 @@ public class MultipleChoicePanel : MonoBehaviour
 
 	public Sprite crossImage;
 
-	private ToggleGroup toggleGroup;
-	private Button checkAnswerButton;
-	private int selectedIndex;
-
 	private readonly Color lightGreyColour = new Color(0.78f, 0.78f, 0.78f);
 	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
@@ -30,7 +26,6 @@ public class MultipleChoicePanel : MonoBehaviour
 			DestroyImmediate(existingToggles[i].gameObject);
 		}
 
-		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
 		question.text = newQuestion;
 		correctAnswer = Convert.ToInt32(newAnswers[0]);
 		answers = new string[newAnswers.Length - 1];
@@ -45,7 +40,6 @@ public class MultipleChoicePanel : MonoBehaviour
 			var toggle = toggleGo.GetComponent<Toggle>();
 			toggle.isOn = false;
 			toggle.interactable = false;
-			toggle.group = toggleGroup;
 
 			//NOTE(Kristof): First child is answer number, second child is answer text
 			var textComponents = toggleGo.transform.GetComponentsInChildren<Text>();

@@ -181,7 +181,7 @@ public class Editor : MonoBehaviour
 	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
 	private FileLoader fileLoader;
-	private InteractionPointEditor hoverPoint;
+	private InteractionPointEditor pinnedHoverPoint;
 	private float timelineStartTime;
 	private float timelineWindowStartTime;
 	private float timelineWindowEndTime;
@@ -192,7 +192,6 @@ public class Editor : MonoBehaviour
 	private float timelineOffsetPixels;
 	private float timelineWidthPixels;
 	private bool timelineLabelsDirty;
-	private bool timelineRowPreviewActive;
 
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
@@ -279,11 +278,8 @@ public class Editor : MonoBehaviour
 		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
 		foreach (var point in sortedInteractionPoints)
 		{
-			if (point.point.GetComponent<SpriteRenderer>() != null)
-			{
-				point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
-				point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
-			}
+			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
+			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		}
 
 		if (videoController.videoLoaded)
@@ -310,7 +306,7 @@ public class Editor : MonoBehaviour
 			if (Input.GetMouseButtonDown(0)
 				&& !EventSystem.current.IsPointerOverGameObject()
 				&& !(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-				&& !timelineRowPreviewActive)
+				&& pinnedHoverPoint == null)
 			{
 				editorState = EditorState.PlacingInteractionPoint;
 			}
@@ -972,11 +968,7 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
 
-				var wasPanelHidden = timelineRowPreviewActive;
-				if (wasPanelHidden)
-				{
-					pointToEdit.panel.SetActive(false);
-				}
+				pointToEdit.panel.SetActive(false);
 
 				SetInteractionPointTag(pointToEdit);
 				UnsavedChangesTracker.Instance.unsavedChanges = true;
@@ -1259,7 +1251,6 @@ public class Editor : MonoBehaviour
 		interactionPoints.Add(point);
 		if (point.panel != null && hidden)
 		{
-			timelineRowPreviewActive = false;
 			point.panel.SetActive(false);
 		}
 
@@ -1455,6 +1446,7 @@ public class Editor : MonoBehaviour
 					&& point.panel != null)
 				{
 					HighlightPoint(point);
+
 					var worldCorners = new Vector3[4];
 					rectBackground.GetWorldCorners(worldCorners);
 					var start = new Vector2(worldCorners[0].x, (worldCorners[0].y + worldCorners[1].y) / 2);
@@ -1463,43 +1455,39 @@ public class Editor : MonoBehaviour
 					//NOTE(Simon): Show a darker brackground on hover
 					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
 
-					//NOTE(Simon): Show panel with content on hover
-					if (hoverPoint == null)
+					//NOTE(Simon): If none are pinned, show currently hovered point
+					if (pinnedHoverPoint == null)
 					{
 						point.panel.SetActive(true);
-						timelineRowPreviewActive = true;
 					}
+
 					point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
 
 					if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
 					{
-						if (hoverPoint == point)
+						if (pinnedHoverPoint == point)
 						{
-							timelineRowPreviewActive = false;
-							hoverPoint.panel.SetActive(false);
-							hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
-							hoverPoint = null;
+							pinnedHoverPoint.panel.SetActive(false);
+							pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
+							pinnedHoverPoint = null;
 						}
 						else
 						{
-							if (hoverPoint != null)
+							if (pinnedHoverPoint != null)
 							{
-								timelineRowPreviewActive = false;
-								hoverPoint.panel.SetActive(false);
-								hoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
+								pinnedHoverPoint.panel.SetActive(false);
+								pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
 							}
-							hoverPoint = point;
-							timelineRowPreviewActive = true;
-							hoverPoint.panel.SetActive(true);
-							hoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
+							pinnedHoverPoint = point;
+							pinnedHoverPoint.panel.SetActive(true);
+							pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
 						}
 					}
 				}
 				else
 				{
-					if (hoverPoint == null && point.panel != null)
+					if (pinnedHoverPoint == null && point.panel != null)
 					{
-						timelineRowPreviewActive = false;
 						point.panel.SetActive(false);
 					}
 				}
