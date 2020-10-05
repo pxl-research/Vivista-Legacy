@@ -1467,20 +1467,13 @@ public class Editor : MonoBehaviour
 					{
 						if (pinnedHoverPoint == point)
 						{
-							pinnedHoverPoint.panel.SetActive(false);
-							pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
-							pinnedHoverPoint = null;
+							UnpinPoint();
 						}
 						else
 						{
-							if (pinnedHoverPoint != null)
-							{
-								pinnedHoverPoint.panel.SetActive(false);
-								pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
-							}
-							pinnedHoverPoint = point;
-							pinnedHoverPoint.panel.SetActive(true);
-							pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
+							UnpinPoint();
+
+							PinPoint(point);
 						}
 					}
 				}
@@ -1554,6 +1547,8 @@ public class Editor : MonoBehaviour
 
 			if (edit.state == SelectState.Pressed && editorState != EditorState.EditingInteractionPoint)
 			{
+				UnpinPoint();
+
 				editorState = EditorState.EditingInteractionPoint;
 				//NOTE(Simon): Set pointToEdit in global state for usage by the main state machine
 				pointToEdit = point;
@@ -1639,27 +1634,21 @@ public class Editor : MonoBehaviour
 			}
 
 			//NOTE(Simon): Move interactionPoint
-			if (point.panel != null)
+			if (move.switchedOn)
 			{
-				if (move.switchedOn)
-				{
-					editorState = EditorState.MovingInteractionPoint;
-					pointToMove = point;
-					pointToMove.filled = false;
-					break;
-				}
+				UnpinPoint();
 
-				if (move.switchedOff)
-				{
-					editorState = EditorState.Active;
-					pointToMove.filled = true;
-					pointToMove = null;
-					break;
-				}
+				editorState = EditorState.MovingInteractionPoint;
+				pointToMove = point;
+				pointToMove.filled = false;
+				break;
 			}
-			else
+			if (move.switchedOff)
 			{
-				move.SetState(false);
+				editorState = EditorState.Active;
+				pointToMove.filled = true;
+				pointToMove = null;
+				break;
 			}
 		}
 
@@ -1895,6 +1884,23 @@ public class Editor : MonoBehaviour
 		{
 			Cursor.SetCursor(desiredCursor, desiredCursor == null ? Vector2.zero : new Vector2(15, 15), CursorMode.ForceSoftware);
 		}
+	}
+
+	private void UnpinPoint()
+	{
+		if (pinnedHoverPoint != null)
+		{
+			pinnedHoverPoint.panel.SetActive(false);
+			pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
+			pinnedHoverPoint = null;
+		}
+	}
+
+	private void PinPoint(InteractionPointEditor point)
+	{
+		pinnedHoverPoint = point;
+		pinnedHoverPoint.panel.SetActive(true);
+		pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Bold;
 	}
 
 	public void HighlightPoint(InteractionPointEditor point)
