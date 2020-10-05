@@ -12,7 +12,6 @@ public class MultipleChoicePanelSphere : MonoBehaviour
 	public RectTransform answerPanel;
 
 	public GameObject answerTogglePrefab;
-	public GameObject answerCheckButtonPrefab;
 
 	public Sprite crossImage;
 
@@ -45,8 +44,8 @@ public class MultipleChoicePanelSphere : MonoBehaviour
 
 			//NOTE(Kristof): First child is answer number, second child is answer text
 			var textComponents = toggleGo.transform.GetComponentsInChildren<Text>();
-			textComponents[0].text = $"{index + 1}) {answer}" ;
-			textComponents[0].color = Color.white;
+			textComponents[0].text = $"{index + 1})";
+			textComponents[1].text = answer;
 		}
 
 		answerButton.interactable = false;
