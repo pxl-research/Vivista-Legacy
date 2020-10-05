@@ -26,3 +26,4 @@ The software consists of an editor to create interactive videos, a server where 
 - Simon Verbeke
 - Lander Ghekiere
 - Kristof Heyndels
+- Jitse Wierdsma 
