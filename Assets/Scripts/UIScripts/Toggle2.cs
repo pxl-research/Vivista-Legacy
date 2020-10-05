@@ -4,12 +4,12 @@ using UnityEngine.UI;
 public class Toggle2 : Toggle
 {
 	private bool WasOn;
-	
+
 	public bool switchedOn;
 	public bool switchedOff;
 
 	public SelectState state
-	{ 
+	{
 		get
 		{
 			switch (currentSelectionState)

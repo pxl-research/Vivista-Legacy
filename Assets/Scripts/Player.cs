@@ -508,7 +508,7 @@ public class Player : MonoBehaviour
 				case InteractionType.MultipleChoice:
 				{
 					var panel = Instantiate(multipleChoicePrefab, Canvass.sphereUIPanelWrapper.transform);
-					panel.GetComponent<MultipleChoicePanel>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
+					panel.GetComponent<MultipleChoicePanelSphere>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
 				}

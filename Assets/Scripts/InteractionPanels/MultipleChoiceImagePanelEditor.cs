@@ -121,7 +121,17 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	{
 		var entry = go.GetComponent<MultipleChoiceImageEntry>();
 		entries.Remove(entry);
+		toggleGroup.UnregisterToggle(go.GetComponentInChildren<Toggle>());
 		Destroy(go);
+
+		var toggles = toggleGroup.GetAllToggles();
+		for (int i = 0; i < toggles.Count; i++)
+		{
+			if (toggles[i].isOn)
+			{
+				answerCorrect = i;
+			}
+		}
 	}
 
 	public void OnSelectCorrectImage(Toggle toggle)

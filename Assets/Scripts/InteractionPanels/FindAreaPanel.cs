@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class FindAreaPanel : MonoBehaviour
@@ -32,37 +31,25 @@ public class FindAreaPanel : MonoBehaviour
 		}
 	}
 
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
-	}
-
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
+
+		for (int i = 0; i < entries.Count; i++)
+		{
+			Destroy(entries[i].gameObject);
+		}
+
+		entries.Clear();
+
 		title.text = newTitle;
 		areas = newAreas;
 		guid = newGuid;
 
-		foreach (var area in newAreas)
+		for (int i = 0; i < newAreas.Count; i++)
 		{
-			var filename = area.miniatureName;
-			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
-			var fullPath = Path.Combine(path, filename);
-
 			var go = Instantiate(areaEntryPrefab, areaList);
 			var entry = go.GetComponent<AreaEntry>();
 			entries.Add(entry);
-			StartCoroutine(entry.SetArea(area, fullPath, true));
 		}
-
-		Update();
 	}
 }

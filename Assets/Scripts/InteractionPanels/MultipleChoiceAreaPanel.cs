@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MultipleChoiceAreaPanel : MonoBehaviour
@@ -33,21 +32,16 @@ public class MultipleChoiceAreaPanel : MonoBehaviour
 		}
 	}
 
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
-	}
-
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect)
 	{
+
+		for (int i = 0; i < entries.Count; i++)
+		{
+			Destroy(entries[i].gameObject);
+		}
+
+		entries.Clear();
+
 		title.text = newTitle;
 		areas = newAreas;
 		guid = newGuid;
@@ -55,20 +49,13 @@ public class MultipleChoiceAreaPanel : MonoBehaviour
 
 		for (int i = 0; i < newAreas.Count; i++)
 		{
-			var filename = newAreas[i].miniatureName;
-			var path = Path.Combine(Application.persistentDataPath, newGuid.ToString(), SaveFile.miniaturesPath);
-			var fullPath = Path.Combine(path, filename);
-
 			var go = Instantiate(multipleChoiceAreaEntryPrefab, areaList);
 			var entry = go.GetComponent<MultipleChoiceAreaEntry>();
 			entry.toggle.interactable = false;
 
 			entry.toggle.SetIsOnWithoutNotify(i == correct);
-			
-			entries.Add(entry);
-			StartCoroutine(entry.SetArea(newAreas[i], fullPath, true));
-		}
 
-		Update();
+			entries.Add(entry);
+		}
 	}
 }

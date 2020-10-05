@@ -1,20 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.IO;
-using UnityEngine.SceneManagement;
 
 public class AudioPanel : MonoBehaviour
 {
 	public Text title;
 	public AudioControl audioControl;
-
-	void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
-	}
+	private string fullPath;
+	private bool dirty;
 
 	public void Init(string newTitle, string fullPath)
 	{
@@ -25,17 +18,21 @@ public class AudioPanel : MonoBehaviour
 
 		if (!File.Exists(fullPath))
 		{
-			Toasts.AddToast(5, "Corrupted video, ABORT ABORT ABORT");
+			Toasts.AddToast(5, "Corrupted audio, ABORT ABORT ABORT");
 			return;
 		}
 
-		audioControl.Init(fullPath);
-
+		this.fullPath = fullPath;
 		title.text = newTitle;
+		dirty = true;
 	}
 
-	public void Move(Vector3 position)
+	public void OnEnable()
 	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
+		if (dirty)
+		{
+			audioControl.Init(fullPath);
+			dirty = false;
+		}
 	}
 }

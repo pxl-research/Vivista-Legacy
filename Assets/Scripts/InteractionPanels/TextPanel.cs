@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TextPanel : MonoBehaviour
@@ -11,18 +10,5 @@ public class TextPanel : MonoBehaviour
 	{
 		title.text = newTitle;
 		body.text = newBody;
-	}
-
-	public void Move(Vector3 position)
-	{
-		GetComponent<Canvas>().GetComponent<RectTransform>().position = position;
-	}
-
-	public void Update()
-	{
-		if (SceneManager.GetActiveScene().name == "Editor")
-		{
-			GetComponent<Canvas>().transform.rotation = Camera.main.transform.rotation;
-		}
 	}
 }

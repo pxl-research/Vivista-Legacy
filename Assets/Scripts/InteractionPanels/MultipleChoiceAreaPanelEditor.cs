@@ -13,7 +13,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	public GameObject resizePanel;
 	private AreaPicker areaPicker;
 	public RectTransform areaList;
-	private ToggleGroup2 group;
+	private ToggleGroup2 toggleGroup;
 
 	public bool answered;
 	public string answerTitle;
@@ -40,7 +40,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 		title.text = newTitle;
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		answerCorrect = newCorrect;
-		group = gameObject.AddComponent<ToggleGroup2>();
+		toggleGroup = gameObject.AddComponent<ToggleGroup2>();
 
 		if (newAreas != null)
 		{
@@ -57,8 +57,8 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
 				entry.editButton.onClick.AddListener(() => OnEditArea(go));
-				group.RegisterToggle(entry.toggle);
-				entry.toggle.group = group;
+				toggleGroup.RegisterToggle(entry.toggle);
+				entry.toggle.group = toggleGroup;
 
 				entry.toggle.SetIsOnWithoutNotify(i == answerCorrect);
 			}
@@ -68,7 +68,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 			answerAreas = new List<Area>();
 		}
 
-		group.onToggleGroupChanged.AddListener(OnSelectCorrectArea);
+		toggleGroup.onToggleGroupChanged.AddListener(OnSelectCorrectArea);
 	}
 
 	void Update()
@@ -89,8 +89,8 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
 				entry.editButton.onClick.AddListener(() => OnEditArea(go));
-				group.RegisterToggle(entry.toggle);
-				entry.toggle.group = group;
+				toggleGroup.RegisterToggle(entry.toggle);
+				entry.toggle.group = toggleGroup;
 
 				answerAreas.Add(areaPicker.answerArea);
 			}
@@ -117,10 +117,20 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 	public void OnDeleteArea(GameObject go)
 	{
 		var entry = go.GetComponent<MultipleChoiceAreaEntry>();
-		group.UnregisterToggle(entry.toggle);
+		toggleGroup.UnregisterToggle(entry.toggle);
 		File.Delete(entry.miniatureUrl);
 		answerAreas.Remove(entry.area);
+		toggleGroup.UnregisterToggle(go.GetComponentInChildren<Toggle>());
 		Destroy(go);
+
+		var toggles = toggleGroup.GetAllToggles();
+		for (int i = 0; i < toggles.Count; i++)
+		{
+			if (toggles[i].isOn)
+			{
+				answerCorrect = i;
+			}
+		}
 	}
 
 	public void OnEditArea(GameObject go)
@@ -139,7 +149,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 	public void OnSelectCorrectArea(Toggle toggle)
 	{
-		var toggles = group.GetAllToggles();
+		var toggles = toggleGroup.GetAllToggles();
 		for (int i = 0; i < toggles.Count; i++)
 		{
 			if (toggles[i].isOn)
@@ -168,9 +178,9 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 			errors = true;
 		}
 
-		if (!group.AnyTogglesOn())
+		if (!toggleGroup.AnyTogglesOn())
 		{
-			var toggles = group.GetAllToggles();
+			var toggles = toggleGroup.GetAllToggles();
 			for (int i = 0; i < toggles.Count; i++)
 			{
 				toggles[i].image.color = errorColor;
