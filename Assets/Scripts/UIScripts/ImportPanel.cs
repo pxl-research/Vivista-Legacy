@@ -184,7 +184,10 @@ public class ImportPanel : MonoBehaviour
 				}
 			}
 
-			Directory.Delete(tempDestFolder, true);
+			if (Directory.Exists(tempDestFolder))
+			{
+				Directory.Delete(tempDestFolder, true);
+			}
 		}
 
 		if (corrupt)
