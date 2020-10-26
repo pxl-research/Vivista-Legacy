@@ -39,7 +39,8 @@ public enum InteractionType
 	Audio,
 	FindArea,
 	MultipleChoiceArea,
-	MultipleChoiceImage
+	MultipleChoiceImage,
+	Object3D
 }
 
 public enum Perspective
@@ -432,6 +433,12 @@ public class Editor : MonoBehaviour
 							interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init("", null);
 							break;
 						}
+						case InteractionType.Object3D:
+						{
+							interactionEditor = Instantiate(UIPanels.Instance.object3DPanelEditor, Canvass.main.transform).gameObject;
+							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", "");
+							break;
+						}
 						default:
 						{
 							Debug.LogError("FFS, you shoulda added it here");
@@ -671,6 +678,26 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerQuestion;
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
+						lastPlacedPoint.panel = panel.gameObject;
+
+						finished = true;
+					}
+					break;
+				}
+				case InteractionType.Object3D:
+				{
+					var editor = interactionEditor.GetComponent<Object3DPanelEditor>();
+					allowCancel = editor.allowCancel;
+
+					if (editor.answered)
+					{
+						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
+						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
+
+						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
+						panel.Init(editor.answerTitle, newFullPath);
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.filename = newPath;
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -942,6 +969,28 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerQuestion;
 						pointToEdit.body = editor.answerCorrect.ToString();
 						pointToEdit.filename = String.Join("\f", newFilenames);
+						pointToEdit.panel = panel.gameObject;
+						finished = true;
+					}
+					break;
+				}
+				case InteractionType.Object3D:
+				{
+					var editor = interactionEditor.GetComponent<Object3DPanelEditor>();
+					allowCancel = editor.allowCancel;
+
+					if (editor && editor.answered)
+					{
+						SetExtrasToDeleted(pointToEdit.filename);
+
+						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
+						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
+
+						var panel = pointToEdit.panel.GetComponent<Object3DPanel>();
+						panel.Init(editor.answerTitle, newFullPath);
+
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.filename = newPath;
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -1623,6 +1672,12 @@ public class Editor : MonoBehaviour
 						interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init(point.title, fullPaths, correct);
 						break;
 					}
+					case InteractionType.Object3D:
+					{
+						interactionEditor = Instantiate(UIPanels.Instance.object3DPanelEditor, Canvass.main.transform).gameObject;
+						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
+						break;
+					}
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -2224,6 +2279,15 @@ public class Editor : MonoBehaviour
 
 					var correct = Int32.Parse(point.body);
 					panel.Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel.gameObject;
+					break;
+				}
+				case InteractionType.Object3D:
+				{
+					var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
+					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
+
+					panel.Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}

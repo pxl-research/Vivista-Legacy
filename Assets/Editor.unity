@@ -2002,6 +2002,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5216618106651781666, guid: 0cab7f5bbaadd8043a1815cb7676b360,
+        type: 3}
+      propertyPath: object3DPanel
+      value: 
+      objectReference: {fileID: 2095248425756486628, guid: 99258356db64d464ab25d34c05633094,
+        type: 3}
+    - target: {fileID: 5216618106651781666, guid: 0cab7f5bbaadd8043a1815cb7676b360,
+        type: 3}
+      propertyPath: object3DPanelEditor
+      value: 
+      objectReference: {fileID: 6041408431869790420, guid: aa67ff4d97d042440a1703dd655df6fa,
+        type: 3}
     - target: {fileID: 5216618106651781667, guid: 0cab7f5bbaadd8043a1815cb7676b360,
         type: 3}
       propertyPath: m_Name

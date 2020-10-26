@@ -50,6 +50,7 @@ public class Player : MonoBehaviour
 	public GameObject findAreaPanelPrefab;
 	public GameObject multipleChoiceAreaPanelPrefab;
 	public GameObject multipleChoiceImagePanelPrefab;
+	public GameObject object3DPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject projectorPrefab;
 
@@ -553,6 +554,14 @@ public class Player : MonoBehaviour
 						urls.Add(url);
 					}
 					panel.GetComponent<MultipleChoiceImagePanelSphere>().Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Object3D:
+				{
+					var panel = Instantiate(object3DPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
+					string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), newInteractionPoint.filename);
+					panel.GetComponent<Object3DPanelSphere>().Init(newInteractionPoint.title, url);
 					newInteractionPoint.panel = panel;
 					break;
 				}
