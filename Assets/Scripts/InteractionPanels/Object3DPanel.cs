@@ -7,15 +7,14 @@ using UnityEngine.UI;
 public class Object3DPanel : MonoBehaviour
 {
 	public Text title;
+	public Transform objectRenderer;
 
 	private object object3d;
-
-	public void Update()
-	{
-	}
 
 	public void Init(string newTitle, string fullPath)
 	{
 		title.text = newTitle;
+
+
 	}
 }
