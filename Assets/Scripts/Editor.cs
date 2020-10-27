@@ -436,7 +436,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.Object3D:
 						{
 							interactionEditor = Instantiate(UIPanels.Instance.object3DPanelEditor, Canvass.main.transform).gameObject;
-							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", "");
+							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", new List<string>(), "");
 							break;
 						}
 						default:
@@ -691,13 +691,26 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var newPath = CopyNewExtra(lastPlacedPoint, editor.answerURL);
-						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
+						var originalPaths = editor.answerURLs;
+						var newFilenames = new List<string>(originalPaths.Count);
+						var newFullPaths = new List<string>(originalPaths.Count);
+
+						foreach (string originalPath in originalPaths)
+						{
+							if (originalPath != "")
+							{
+								var newFilename = CopyNewExtra(lastPlacedPoint, originalPath);
+								var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
+
+								newFilenames.Add(newFilename);
+								newFullPaths.Add(newFullPath);
+							}
+						}
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						panel.Init(editor.answerTitle, newFullPath);
+						panel.Init(editor.answerTitle, newFullPaths);
 						lastPlacedPoint.title = editor.answerTitle;
-						lastPlacedPoint.filename = newPath;
+						lastPlacedPoint.filename = string.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -983,14 +996,27 @@ public class Editor : MonoBehaviour
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
-						var newPath = CopyNewExtra(pointToEdit, editor.answerURL);
-						var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newPath);
+						var originalPaths = editor.answerURLs;
+						var newFilenames = new List<string>(originalPaths.Count);
+						var newFullPaths = new List<string>(originalPaths.Count);
+
+						foreach (string originalPath in originalPaths)
+						{
+							if (originalPath != "")
+							{
+								var newFilename = CopyNewExtra(pointToEdit, originalPath);
+								var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
+
+								newFilenames.Add(newFilename);
+								newFullPaths.Add(newFullPath);
+							}
+						}
 
 						var panel = pointToEdit.panel.GetComponent<Object3DPanel>();
-						panel.Init(editor.answerTitle, newFullPath);
+						panel.Init(editor.answerTitle, newFullPaths);
 
 						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = newPath;
+						pointToEdit.filename = string.Join("\f", newFilenames);
 						pointToEdit.panel = panel.gameObject;
 						finished = true;
 					}
@@ -1675,7 +1701,22 @@ public class Editor : MonoBehaviour
 					case InteractionType.Object3D:
 					{
 						interactionEditor = Instantiate(UIPanels.Instance.object3DPanelEditor, Canvass.main.transform).gameObject;
-						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, Path.Combine(Application.persistentDataPath, meta.guid.ToString(), point.filename));
+						var filenames = point.filename.Split('\f');
+						var fullPaths = new List<string>(filenames.Length);
+						var object3dName = "";
+						foreach (var file in filenames)
+						{
+							//NOTE(Jitse): Remove file extension and folder from string to get object name.
+							if (object3dName == "")
+							{
+								Debug.Log("file: " + file + "\nsubstring: " + file.Substring(file.IndexOf("\\") + 1));
+								object3dName = file.Substring(file.IndexOf("\\") + 1);
+								object3dName = object3dName.Substring(0, object3dName.IndexOf("."));
+							}
+							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
+						}
+						Debug.Log("name: " + object3dName);
+						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, fullPaths, object3dName);
 						break;
 					}
 					default:
@@ -2285,9 +2326,19 @@ public class Editor : MonoBehaviour
 				case InteractionType.Object3D:
 				{
 					var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-					string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newInteractionPoint.filename);
-
-					panel.Init(newInteractionPoint.title, url);
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var urls = new List<string>();
+					foreach (var file in filenames)
+					{
+						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
+						if (!File.Exists(url))
+						{
+							Debug.LogWarningFormat($"File missing: {url}");
+						}
+						urls.Add(url);
+					}
+						
+					panel.Init(newInteractionPoint.title, urls);
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
