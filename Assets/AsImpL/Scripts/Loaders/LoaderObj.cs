@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace AsImpL
 {
@@ -163,21 +164,21 @@ namespace AsImpL
             {
                 for (int j = 1; j < p.Length; j++)
                 {
-                    string[] c = p[j].Trim().Split("/".ToCharArray());
+                    string[] c = p[j].Split('/');
                     DataSet.FaceIndices fi = new DataSet.FaceIndices();
                     // vertex
-                    int vi = int.Parse(c[0]);
+                    int vi = FastIntParse(c[0]);
                     fi.vertIdx = vi - 1;
                     // uv
                     if (c.Length > 1 && c[1] != "")
                     {
-                        int vu = int.Parse(c[1]);
+                        int vu = FastIntParse(c[1]);
                         fi.uvIdx = vu - 1;
                     }
                     // normal
                     if (c.Length > 2 && c[2] != "")
                     {
-                        int vn = int.Parse(c[2]);
+                        int vn = FastIntParse(c[2]);
                         fi.normIdx = vn - 1;
                     }
                     else
@@ -193,21 +194,21 @@ namespace AsImpL
                 int uvCount = dataSet.uvList.Count;
                 for (int j = 1; j < p.Length; j++)
                 {
-                    string[] c = p[j].Trim().Split("/".ToCharArray());
+                    string[] c = p[j].Split('/');
                     DataSet.FaceIndices fi = new DataSet.FaceIndices();
                     // vertex
-                    int vi = int.Parse(c[0]);
+                    int vi = FastIntParse(c[0]);
                     fi.vertIdx = vertexCount + vi;
                     // uv
                     if (c.Length > 1 && c[1] != "")
                     {
-                        int vu = int.Parse(c[1]);
+                        int vu = FastIntParse(c[1]);
                         fi.uvIdx = uvCount + vu;
                     }
                     // normal
                     if (c.Length > 2 && c[2] != "")
                     {
-                        int vn = int.Parse(c[2]);
+                        int vn = FastIntParse(c[2]);
                         fi.normIdx = vertexCount + vn;
                     }
                     else
@@ -224,16 +225,9 @@ namespace AsImpL
         /// Convert coordinates according to import options.
         /// </summary>
         private Vector3 ConvertVec3(float x, float y, float z)
-        {
-            if (Scaling != 1f)
-            {
-                x *= Scaling;
-                y *= Scaling;
-                z *= Scaling;
-            }
-            if (ConvertVertAxis) return new Vector3(x, z, y);
-            return new Vector3(x, y, -z);
-        }
+		{
+			return ConvertVertAxis ? new Vector3(x, z, y) : new Vector3(x, y, -z);
+		}
 
 
         /// <summary>
@@ -241,7 +235,7 @@ namespace AsImpL
         /// </summary>
         /// <param name="floatString">String with the number to be parsed</param>
         /// <returns>The parsed floating point number.</returns>
-        private float ParseFloat(string floatString)
+        private static float ParseFloat(string floatString)
         {
             return float.Parse(floatString, CultureInfo.InvariantCulture.NumberFormat);
         }
@@ -254,14 +248,13 @@ namespace AsImpL
         /// <returns>Execution is splitted into steps to not freeze the caller method.</returns>
         protected IEnumerator ParseGeometryData(string objDataText)
         {
-            string[] lines = objDataText.Split("\n".ToCharArray());
+            string[] lines = objDataText.Split('\n');
 
             bool isFirstInGroup = true;
             bool isFaceIndexPlus = true;
 
             objLoadingProgress.message = "Parsing geometry data...";
-            // store separators, used multiple times
-            char[] separators = new char[] { ' ', '\t' };
+
             for (int i = 0; i < lines.Length; i++)
             {
                 // update progress only sometimes
@@ -271,13 +264,14 @@ namespace AsImpL
                     yield return null;
                 }
 
-                string line = lines[i].Trim();
+                string line = Clean(lines[i]);
+
 
                 if (line.Length > 0 && line[0] == '#')
                 { // comment line
                     continue;
                 }
-                string[] p = line.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+                string[] p = line.Split(' ');
                 if (p.Length == 0)
                 { // empty line
                     continue;
@@ -286,7 +280,7 @@ namespace AsImpL
                 string parameters = null;
                 if (line.Length > p[0].Length)
                 {
-                    parameters = line.Substring(p[0].Length + 1).Trim();
+                    parameters = line.Substring(p[0].Length + 1);
                 }
 
                 switch (p[0])
@@ -300,7 +294,7 @@ namespace AsImpL
                         dataSet.AddGroup(parameters);
                         break;
                     case "v":
-                        dataSet.AddVertex(ConvertVec3(ParseFloat(p[1]), ParseFloat(p[2]), ParseFloat(p[3])));
+                        dataSet.AddVertex(ConvertVec3(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3])));
                         if (p.Length >= 7)
                         {
                             // 7 for "v x y z r g b"
@@ -308,14 +302,14 @@ namespace AsImpL
                             // w is the weight required for rational curves and surfaces. It is
                             // not required for non - rational curves and surfaces.If you do not
                             // specify a value for w, the default is 1.0. [http://paulbourke.net/dataformats/obj/]
-                            dataSet.AddColor(new Color(ParseFloat(p[4]), ParseFloat(p[5]), ParseFloat(p[6]), 1f));
+                            dataSet.AddColor(new Color(FastFloatParse(p[4]), FastFloatParse(p[5]), FastFloatParse(p[6]), 1f));
                         }
                         break;
                     case "vt":
-                        dataSet.AddUV(new Vector2(ParseFloat(p[1]), ParseFloat(p[2])));
+                        dataSet.AddUV(new Vector2(FastFloatParse(p[1]), FastFloatParse(p[2])));
                         break;
                     case "vn":
-                        dataSet.AddNormal(ConvertVec3(ParseFloat(p[1]), ParseFloat(p[2]), ParseFloat(p[3])));
+                        dataSet.AddNormal(ConvertVec3(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3])));
                         break;
                     case "f":
                         {
@@ -324,8 +318,8 @@ namespace AsImpL
                             if (isFirstInGroup)
                             {
                                 isFirstInGroup = false;
-                                string[] c = p[1].Trim().Split("/".ToCharArray());
-                                isFaceIndexPlus = (int.Parse(c[0]) >= 0);
+                                string[] c = p[1].Trim().Split('/');
+                                isFaceIndexPlus = (FastIntParse(c[0]) >= 0);
                             }
                             GetFaceIndicesByOneFaceLine(face, p, isFaceIndexPlus);
                             if (numVerts == 3)
@@ -406,7 +400,7 @@ namespace AsImpL
         private void ParseMaterialData(string data)
         {
             objLoadingProgress.message = "Parsing material data...";
-            string[] lines = data.Split("\n".ToCharArray());
+            string[] lines = data.Split('\n');
             materialData = new List<MaterialData>();
             ParseMaterialData(lines, materialData);
         }
@@ -457,13 +451,13 @@ namespace AsImpL
                             current.emissiveColor = StringsToColor(p);
                             break;
                         case "Ns": // Specular exponent --> shininess
-                            current.shininess = ParseFloat(p[1]);
+                            current.shininess = FastFloatParse(p[1]);
                             break;
                         case "d": // dissolve into the background (1=opaque, 0=transparent)
-                            current.overallAlpha = p.Length > 1 && p[1] != "" ? ParseFloat(p[1]) : 1.0f;
+                            current.overallAlpha = p.Length > 1 && p[1] != "" ? FastFloatParse(p[1]) : 1.0f;
                             break;
                         case "Tr": // Transparency
-                            current.overallAlpha = p.Length > 1 && p[1] != "" ? 1.0f - ParseFloat(p[1]) : 1.0f;
+                            current.overallAlpha = p.Length > 1 && p[1] != "" ? 1.0f - FastFloatParse(p[1]) : 1.0f;
                             break;
                         case "map_KD":
                         case "map_Kd": // Color texture, diffuse reflectivity
@@ -498,7 +492,7 @@ namespace AsImpL
                             }
                             break;
                         case "illum": // Illumination model. 1 - diffuse, 2 - specular (not used)
-                            current.illumType = int.Parse(p[1]);
+                            current.illumType = FastIntParse(p[1]);
                             break;
                         case "refl": // reflection map (replaced with Unity environment reflection)
                             if (!string.IsNullOrEmpty(parameters))
@@ -618,7 +612,7 @@ namespace AsImpL
 
         private Color StringsToColor(string[] p)
         {
-            return new Color(ParseFloat(p[1]), ParseFloat(p[2]), ParseFloat(p[3]));
+            return new Color(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3]));
         }
 
 
@@ -677,6 +671,70 @@ namespace AsImpL
                 valueNumMin = numMin;
                 valueNumMax = numMax;
             }
+        }
+
+
+        /// <summary>
+        /// Modified from https://codereview.stackexchange.com/a/76891. Faster than float.Parse
+        /// </summary>
+        public static float FastFloatParse(string input)
+        {
+            if (input.Contains("e") || input.Contains("E"))
+                return float.Parse(input, CultureInfo.InvariantCulture);
+
+            float result = 0;
+            int pos = 0;
+            int len = input.Length;
+
+            if (len == 0) return float.NaN;
+            char c = input[0];
+            float sign = 1;
+            if (c == '-')
+            {
+                sign = -1;
+                ++pos;
+                if (pos >= len) return float.NaN;
+            }
+
+            while (true) // breaks inside on pos >= len or non-digit character
+            {
+                if (pos >= len) return sign * result;
+                c = input[pos++];
+                if (c < '0' || c > '9') break;
+                result = (result * 10.0f) + (c - '0');
+            }
+
+            if (c != '.' && c != ',') return float.NaN;
+            float exp = 0.1f;
+            while (pos < len)
+            {
+                c = input[pos++];
+                if (c < '0' || c > '9') return float.NaN;
+                result += (c - '0') * exp;
+                exp *= 0.1f;
+            }
+            return sign * result;
+        }
+
+        /// <summary>
+        /// Modified from http://cc.davelozinski.com/c-sharp/fastest-way-to-convert-a-string-to-an-int. Faster than int.Parse
+        /// </summary>
+        public static int FastIntParse(string input)
+        {
+            int result = 0;
+            bool isNegative = (input[0] == '-');
+
+            for (int i = (isNegative) ? 1 : 0; i < input.Length; i++)
+                result = result * 10 + (input[i] - '0');
+            return (isNegative) ? -result : result;
+        }
+
+        public static string Clean(string str)
+        {
+            string rstr = str.Replace('\t', ' ');
+            while (rstr.Contains("  "))
+                rstr = rstr.Replace("  ", " ");
+            return rstr.Trim();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -465,11 +466,11 @@ namespace AsImpL
             //Debug.Log( "Importing sub object:" + objData.Name );
 
             // count vertices needed for all the faces and map face indices to new vertices
-            Dictionary<string, int> vIdxCount = new Dictionary<string, int>();
+            Dictionary<long, int> vIdxCount = new Dictionary<long, int>();
             int vcount = 0;
             foreach (DataSet.FaceIndices fi in objData.allFaces)
             {
-                string key = DataSet.GetFaceIndicesKey(fi);
+                var key = DataSet.GetFaceIndicesKey(fi);
                 int idx;
                 // avoid duplicates
                 if (!vIdxCount.TryGetValue(key, out idx))
@@ -477,7 +478,7 @@ namespace AsImpL
                     vIdxCount.Add(key, vcount);
                     vcount++;
                 }
-            }
+			}
 
             int arraySize = conv2sided ? vcount * 2 : vcount;
 
@@ -490,7 +491,7 @@ namespace AsImpL
 
             foreach (DataSet.FaceIndices fi in objData.allFaces)
             {
-                string key = DataSet.GetFaceIndicesKey(fi);
+                var key = DataSet.GetFaceIndicesKey(fi);
                 int k = vIdxCount[key];
                 newVertices[k] = currDataSet.vertList[fi.vertIdx];
                 if (conv2sided)
@@ -586,7 +587,7 @@ namespace AsImpL
             for (int s = 0; s < n; s++)
             {
                 DataSet.FaceIndices fi = objData.faceGroups[0].faces[s];
-                string key = DataSet.GetFaceIndicesKey(fi);
+                var key = DataSet.GetFaceIndicesKey(fi);
                 indices[s] = vIdxCount[key];
             }
             if (conv2sided)

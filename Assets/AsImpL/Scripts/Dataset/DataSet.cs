@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace AsImpL
@@ -18,17 +19,17 @@ namespace AsImpL
         /// <summary>
         /// List of vertices
         /// </summary>
-        public List<Vector3> vertList = new List<Vector3>();
+        public List<Vector3> vertList = new List<Vector3>(UInt16.MaxValue);
 
         /// <summary>
         /// List of texture coordinates (UV)
         /// </summary>
-        public List<Vector2> uvList = new List<Vector2>();
+        public List<Vector2> uvList = new List<Vector2>(UInt16.MaxValue);
 
         /// <summary>
         /// List of normals
         /// </summary>
-        public List<Vector3> normalList = new List<Vector3>();
+        public List<Vector3> normalList = new List<Vector3>(UInt16.MaxValue);
 
         /// <summary>
         /// List of colors
@@ -72,9 +73,11 @@ namespace AsImpL
         /// </summary>
         /// <param name="fi">face indices structure</param>
         /// <returns></returns>
-        public static string GetFaceIndicesKey(FaceIndices fi)
+        public static long GetFaceIndicesKey(FaceIndices fi)
         {
-            return fi.vertIdx.ToString() + "/" + fi.uvIdx.ToString() + "/" + fi.normIdx.ToString();
+            return fi.vertIdx * 27733 + fi.uvIdx * 1621 + fi.normIdx;
+            //return new Tuple<int, int, int>(fi.vertIdx, fi.uvIdx, fi.normIdx);
+            //return fi.vertIdx.ToString() + "/" + fi.uvIdx.ToString() + "/" + fi.normIdx.ToString();
         }
 
 
