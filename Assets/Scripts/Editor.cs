@@ -1344,6 +1344,10 @@ public class Editor : MonoBehaviour
 		Destroy(point.point);
 		if (point.panel != null)
 		{
+			if (point.type == InteractionType.Object3D)
+			{
+				//TODO(Jitse): Delete the 3D model that's part of the to be deleted panel
+			}
 			Destroy(point.panel);
 		}
 		UnsavedChangesTracker.Instance.unsavedChanges = true;
