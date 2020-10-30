@@ -436,7 +436,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.Object3D:
 						{
 							interactionEditor = Instantiate(UIPanels.Instance.object3DPanelEditor, Canvass.main.transform).gameObject;
-							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", new List<string>(), "");
+							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", "", "");
 							break;
 						}
 						default:
@@ -691,26 +691,37 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var originalPaths = editor.answerURLs;
-						var newFilenames = new List<string>(originalPaths.Count);
-						var newFullPaths = new List<string>(originalPaths.Count);
+						var originalObjPath = editor.answerObjUrl;
+						string newObjFilename = "";
+						string newObjFullPath = "";
 
-						foreach (string originalPath in originalPaths)
+						string newFilename = "";
+
+						/*foreach (string originalPath in originalPaths)
 						{
 							if (originalPath != "")
 							{
-								var newFilename = CopyNewExtra(lastPlacedPoint, originalPath);
+								var fileType = Path.GetExtension(originalPath);
+								if (fileType == ".mtl")
+								{
+									var fileDir = newFilename.Substring(0, newFilename.Length - newFilename.Substring(newFilename.LastIndexOf("\\")).Length);
+									newFilename = CopyNewExtraMtl(lastPlacedPoint, originalPath, fileDir);
+								}
+								else if (fileType == ".obj")
+								{
+									newFilename = CopyNewExtraObj(lastPlacedPoint, originalPath);
+								}
 								var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
 
 								newFilenames.Add(newFilename);
 								newFullPaths.Add(newFullPath);
 							}
-						}
+						}*/
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						panel.Init(editor.answerTitle, newFullPaths);
+						//panel.Init(editor.answerTitle, newFullPaths);
 						lastPlacedPoint.title = editor.answerTitle;
-						lastPlacedPoint.filename = string.Join("\f", newFilenames);
+						//lastPlacedPoint.filename = string.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -996,7 +1007,7 @@ public class Editor : MonoBehaviour
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
-						var originalPaths = editor.answerURLs;
+						/*var originalPaths = editor.answerURLs;
 						var newFilenames = new List<string>(originalPaths.Count);
 						var newFullPaths = new List<string>(originalPaths.Count);
 
@@ -1018,7 +1029,7 @@ public class Editor : MonoBehaviour
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = string.Join("\f", newFilenames);
 						pointToEdit.panel = panel.gameObject;
-						finished = true;
+						finished = true;*/
 					}
 					break;
 				}
@@ -1720,7 +1731,7 @@ public class Editor : MonoBehaviour
 							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
 						}
 						Debug.Log("name: " + object3dName);
-						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, fullPaths, object3dName);
+						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, "", object3dName);
 						break;
 					}
 					default:
@@ -2645,6 +2656,46 @@ public class Editor : MonoBehaviour
 			File.Copy(sourcePath, destPath);
 		}
 
+		allExtras.Add(newFilename, point);
+		return newFilename;
+	}
+
+	//NOTE(Jitse): Separate CopyNewExtra func for .obj files, to make a new generated folder containing the .obj
+	private string CopyNewExtraObj(InteractionPointEditor point, string sourcePath)
+	{
+		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var newFileDir = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+		var destDir = Path.Combine(projectFolder, newFileDir);
+		Directory.CreateDirectory(destDir);
+		var newFilename = Path.Combine(newFileDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
+		var destPath = Path.Combine(destDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
+
+		if (File.Exists(sourcePath))
+		{
+			File.Copy(sourcePath, destPath);
+		}
+
+		Debug.Log(newFilename);
+		allExtras.Add(newFilename, point);
+		return newFilename;
+	}
+
+	//NOTE(Jitse): Separate CopyNewExtra function for .mtl files, because they need the same ExtraGuid as .obj
+	private string CopyNewExtraMtl(InteractionPointEditor point, string sourcePath, string realPath)
+	{
+		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var newFileDir = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
+		var destDir = Path.Combine(projectFolder, realPath);
+		Directory.CreateDirectory(destDir);
+		var newFilename = Path.Combine(newFileDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
+		var destPath = Path.Combine(destDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
+
+		if (File.Exists(sourcePath))
+		{
+			File.Copy(sourcePath, destPath);
+		}
+
+		Debug.Log(newFilename);
 		allExtras.Add(newFilename, point);
 		return newFilename;
 	}
