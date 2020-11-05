@@ -3,12 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Assertions;
+using UnityEngine.Audio;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.XR;
 using Valve.VR;
-using Object = UnityEngine.Object;
 
 public enum PlayerState
 {
@@ -50,6 +49,7 @@ public class Player : MonoBehaviour
 	public GameObject findAreaPanelPrefab;
 	public GameObject multipleChoiceAreaPanelPrefab;
 	public GameObject multipleChoiceImagePanelPrefab;
+	public GameObject tabularDataPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject projectorPrefab;
 
@@ -66,7 +66,9 @@ public class Player : MonoBehaviour
 	private FileLoader fileLoader;
 	private VideoController videoController;
 	private List<GameObject> videoList;
-	
+
+	public AudioMixer mixer;
+
 	private GameObject indexPanel;
 	private Transform videoCanvas;
 	private GameObject projector;
@@ -110,7 +112,9 @@ public class Player : MonoBehaviour
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
 		videoController.OnSeek += OnSeek;
+		videoController.mixer = mixer;
 		VideoControls.videoController = videoController;
+
 		OpenFilePanel();
 
 		mainEventSystem = EventSystem.current;
@@ -378,7 +382,11 @@ public class Player : MonoBehaviour
 				{
 					continue;
 				}
-				hittable.hitting = false;
+				//NOTE(Jitse): Check if a hittable is being held down
+				if (!(controllerList[0].triggerDown || controllerList[1].triggerDown))
+				{
+					hittable.hitting = false;
+				}
 				hittable.hovering = false;
 			}
 
@@ -553,6 +561,17 @@ public class Player : MonoBehaviour
 						urls.Add(url);
 					}
 					panel.GetComponent<MultipleChoiceImagePanelSphere>().Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.TabularData:
+				{
+					var panel = Instantiate(tabularDataPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
+					string[] body = newInteractionPoint.body.Split(new[] { '\f' }, 3);
+					int rows = Int32.Parse(body[0]);
+					int columns = Int32.Parse(body[1]);
+
+					panel.GetComponent<TabularDataPanelSphere>().Init(newInteractionPoint.title, rows, columns, body[2].Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
 				}

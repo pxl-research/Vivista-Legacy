@@ -91,3 +91,7 @@ MonoBehaviour:
     type: 3}
   multipleChoiceImagePanelEditor: {fileID: 1342452400986974951, guid: e5c25242b6238e445b14e706a33cf53a,
     type: 3}
+  TabularDataPanel: {fileID: 8660734572250089207, guid: b258900f25720d7469bdcb6fc8e052f5,
+    type: 3}
+  tabularDataPanelEditor: {fileID: 2136346459895991725, guid: 64643fc252b442243b98b048a46f458d,
+    type: 3}

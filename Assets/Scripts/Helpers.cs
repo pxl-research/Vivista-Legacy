@@ -119,6 +119,12 @@ public static class MathHelper
 		x = Mathf.Clamp01((x - edge0) / (edge1 - edge0));
 		return x * x * x * (x * (x * 6 - 15) + 10);
 	}
+
+	//NOTE(Simon): Convert a linear(wrong) volume value to a logarithmic(correct) volume value
+	public static float LinearToLogVolume(float value)
+	{
+		return Mathf.Log10(value) * 20;
+	}
 }
 
 public class UIAnimation
@@ -188,5 +194,19 @@ public static class ExplorerHelper
 #if UNITY_STANDALONE_LINUX
 		Process.Start("xdg-open", path);
 #endif
+	}
+}
+
+public static class GameObjectHelper
+{
+	public static T GetOrAddComponent<T>(this GameObject go) where T:Component
+	{
+		var component = go.GetComponent<T>();
+		if (component == null)
+		{
+			component = go.AddComponent<T>();
+		}
+
+		return component;
 	}
 }

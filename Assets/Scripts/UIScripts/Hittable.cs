@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 public class Hittable : MonoBehaviour
 {
 	public UnityEvent onHit;
+	public UnityEvent onHitDown;
+	public UnityEvent onHitUp;
 	public UnityEvent onHoverStart;
 	public UnityEvent onHoverStay;
 	public UnityEvent onHoverEnd;
@@ -29,6 +31,16 @@ public class Hittable : MonoBehaviour
 		if (!oldHitting && hitting)
 		{
 			onHit.Invoke();
+		}
+
+		if (oldHitting && hitting)
+		{
+			onHitDown.Invoke();
+		}
+
+		if (oldHitting & !hitting)
+		{
+			onHitUp.Invoke();
 		}
 
 		if (!oldHovering && hovering)
