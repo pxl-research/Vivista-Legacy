@@ -11,6 +11,9 @@ public class Object3DPanelEditor : MonoBehaviour
 	public InputField objectUrl;
 	public Text dependencies;
 	public InputField title;
+	public InputField scalingInput;
+	public InputField xInput;
+	public InputField yInput;
 
 	public bool answered;
 	public string answerTitle;
@@ -24,6 +27,10 @@ public class Object3DPanelEditor : MonoBehaviour
 	private GameObject objectRenderer;
 
 	private bool fileOpening;
+
+	private Button[] scalingButtons;
+	private Button[] xButtons;
+	private Button[] yButtons;
 
 	private List<string> files;
 
@@ -79,8 +86,23 @@ public class Object3DPanelEditor : MonoBehaviour
 			objectUrl.text = initialUrl;
 		}
 
+		scalingButtons = scalingInput.GetComponentsInChildren<Button>(true);
+		scalingButtons[0].onClick.AddListener(IncreaseScaling);
+		scalingButtons[1].onClick.AddListener(DecreaseScaling);
+
+		xButtons = xInput.GetComponentsInChildren<Button>(true);
+		xButtons[0].onClick.AddListener(IncreaseX);
+		xButtons[1].onClick.AddListener(DecreaseX);
+
+		yButtons = yInput.GetComponentsInChildren<Button>(true);
+		yButtons[0].onClick.AddListener(IncreaseY);
+		yButtons[1].onClick.AddListener(DecreaseY);
+
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		objectUrl.onValueChanged.AddListener(_ => OnInputChange(objectUrl));
+		scalingInput.onValueChanged.AddListener(_ => OnScalingValueChanged(scalingInput));
+		xInput.onValueChanged.AddListener(_ => OnXYValueChanged(xInput));
+		yInput.onValueChanged.AddListener(_ => OnXYValueChanged(yInput));
 	}
 
 	public void Answer()
@@ -168,9 +190,8 @@ public class Object3DPanelEditor : MonoBehaviour
 					}
 
 					//NOTE(Jitse): Check if the line contains an extension
-					var extension = "";
 					mtlLine = mtlLine.Trim('\t');
-					extension = Path.GetExtension(mtlLine);
+					var extension = Path.GetExtension(mtlLine);
 					
 					if (extension.Length > 1 && !ContainsDigit(extension))
 					{
@@ -224,5 +245,188 @@ public class Object3DPanelEditor : MonoBehaviour
 	public void OnInputChange(InputField input)
 	{
 		input.image.color = Color.white;
+	}
+
+	private void IncreaseScaling()
+	{
+		double value = Convert.ToDouble(scalingInput.text);
+		if (value < 0.1)
+		{
+			value += 0.01;
+		}
+		else if (value < 1)
+		{
+			value += 0.1;
+		}
+		else
+		{
+			value += 1;
+		}
+		scalingInput.text = $"{value}";
+	}
+
+	private void IncreaseX()
+	{
+		int value = Convert.ToInt32(xInput.text);
+		if (Math.Abs(value) < 100)
+		{
+			value += 1;
+		}
+		else
+		{
+			value += 5;
+		}
+		if (value > 500)
+		{
+			value = 500;
+		}
+		xInput.text = $"{value}";
+	}
+
+	private void IncreaseY()
+	{
+		int value = Convert.ToInt32(yInput.text);
+		if (Math.Abs(value) < 100)
+		{
+			value += 1;
+		}
+		else
+		{
+			value += 5;
+		}
+		if (value > 500)
+		{
+			value = 500;
+		}
+		yInput.text = $"{value}";
+	}
+
+	private void DecreaseScaling()
+	{
+		double value = Convert.ToDouble(scalingInput.text);
+		if (value <= 0.1)
+		{
+			value -= 0.01;
+			if (value <= 0)
+			{
+				value = 0.01;
+			}
+		}
+		else if (value <= 1)
+		{
+			value -= 0.1;
+			if (value < 0.1)
+			{
+				value = 0.1;
+			}
+		}
+		else
+		{
+			value -= 1;
+			if (value < 1)
+			{
+				value = 1f;
+			}
+		}
+		scalingInput.text = $"{value}";
+	}
+
+	private void DecreaseX()
+	{
+		int value = Convert.ToInt32(xInput.text);
+		if (Math.Abs(value) <= 100)
+		{
+			value -= 1;
+		}
+		else
+		{
+			value -= 5;
+		}
+		if (value < -500)
+		{
+			value = -500;
+		}
+		xInput.text = $"{value}";
+	}
+
+	private void DecreaseY()
+	{
+		int value = Convert.ToInt32(yInput.text);
+		if (Math.Abs(value) <= 100)
+		{
+			value -= 1;
+		}
+		else
+		{
+			value -= 5;
+		}
+		if (value < -500)
+		{
+			value = -500;
+		}
+		yInput.text = $"{value}";
+	}
+
+
+	public void HoverScaling()
+	{
+		SetButtonStates(scalingButtons);
+	}
+
+	public void HoverX()
+	{
+		SetButtonStates(xButtons);
+	}
+
+	public void HoverY()
+	{
+		SetButtonStates(yButtons);
+	}
+
+	private void SetButtonStates(Button[] buttons)
+	{
+		bool oldState = buttons[0].IsActive();
+		buttons[0].gameObject.SetActive(!oldState);
+		buttons[1].gameObject.SetActive(!oldState);
+	}
+
+	public void OnScalingValueChanged(InputField input)
+	{
+		if (input.text.Length == 0)
+		{
+			input.text = "1";
+		} 
+		else
+		{
+			double value = Convert.ToDouble(input.text);
+			if (value > 100)
+			{
+				input.text = "100";
+			}
+			else if (value <= 0)
+			{
+				input.text = "0";
+			}
+		}
+	}
+
+	public void OnXYValueChanged(InputField input)
+	{
+		if (input.text.Length == 0)
+		{
+			input.text = "0";
+		}
+		else
+		{
+			int value = Convert.ToInt32(input.text);
+			if (value > 500)
+			{
+				input.text = "500";
+			}
+			else if (value < -500)
+			{
+				input.text = "-500";
+			}
+		}
 	}
 }
