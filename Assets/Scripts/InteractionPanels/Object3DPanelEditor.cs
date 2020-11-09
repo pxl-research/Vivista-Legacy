@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -55,8 +54,6 @@ public class Object3DPanelEditor : MonoBehaviour
 					Destroy(explorerPanel.gameObject);
 				}
 			}
-
-			
 		}
 	}
 
@@ -175,7 +172,7 @@ public class Object3DPanelEditor : MonoBehaviour
 					mtlLine = mtlLine.Trim('\t');
 					extension = Path.GetExtension(mtlLine);
 					
-					if (extension.Length > 1 && !extension.Any(Char.IsDigit))
+					if (extension.Length > 1 && !ContainsDigit(extension))
 					{
 						string textureFile = mtlLine.Substring(mtlLine.LastIndexOf(' ') + 1);
 						textureFile = textureFile.Replace("\\\\", "\\");
@@ -210,6 +207,18 @@ public class Object3DPanelEditor : MonoBehaviour
 		Color color = dependencies.color;
 		color.a = 1f;
 		dependencies.color = color;
+	}
+
+	private bool ContainsDigit(string text)
+	{
+		for (int i = 0; i < text.Length; i++)
+		{
+			if (Char.IsDigit(text[i]))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void OnInputChange(InputField input)
