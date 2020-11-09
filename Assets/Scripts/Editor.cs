@@ -436,7 +436,7 @@ public class Editor : MonoBehaviour
 						case InteractionType.Object3D:
 						{
 							interactionEditor = Instantiate(UIPanels.Instance.object3DPanelEditor, Canvass.main.transform).gameObject;
-							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", "", "");
+							interactionEditor.GetComponent<Object3DPanelEditor>().Init("", null, "");
 							break;
 						}
 						default:
@@ -502,7 +502,7 @@ public class Editor : MonoBehaviour
 						panel.Init(editor.answerTitle, newFullPaths);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = String.Join("\f", newFilenames);
+						lastPlacedPoint.filename = string.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -574,7 +574,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
-						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
+						lastPlacedPoint.body += string.Join("\f", editor.answerAnswers);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -677,7 +677,7 @@ public class Editor : MonoBehaviour
 						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
 						lastPlacedPoint.title = editor.answerQuestion;
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
-						lastPlacedPoint.filename = String.Join("\f", newFilenames);
+						lastPlacedPoint.filename = string.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -691,37 +691,36 @@ public class Editor : MonoBehaviour
 
 					if (editor.answered)
 					{
-						var originalObjPath = editor.answerObjUrl;
-						string newObjFilename = "";
-						string newObjFullPath = "";
+						var answerUrls = new List<string>();
+						answerUrls.Add(editor.answerObjUrl);
+						answerUrls.Add(editor.answerMatUrl);
+						var texturePaths = editor.answerTexturesUrl.Split('\f');
+						var textures = editor.answerTexturesUrlRelative.Split('\f');
 
-						string newFilename = "";
-
-						/*foreach (string originalPath in originalPaths)
+						for (int i = 0; i < texturePaths.Length; i++)
 						{
-							if (originalPath != "")
-							{
-								var fileType = Path.GetExtension(originalPath);
-								if (fileType == ".mtl")
-								{
-									var fileDir = newFilename.Substring(0, newFilename.Length - newFilename.Substring(newFilename.LastIndexOf("\\")).Length);
-									newFilename = CopyNewExtraMtl(lastPlacedPoint, originalPath, fileDir);
-								}
-								else if (fileType == ".obj")
-								{
-									newFilename = CopyNewExtraObj(lastPlacedPoint, originalPath);
-								}
-								var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
+							answerUrls.Add(texturePaths[i]);
+						}
 
-								newFilenames.Add(newFilename);
-								newFullPaths.Add(newFullPath);
+						var newFilenames = new string[answerUrls.Count];
+						var newFullPaths = new List<string>(answerUrls.Count);
+						newFilenames = CopyNewExtrasFolder(lastPlacedPoint, answerUrls, textures);
+
+						for (int i = 0; i < newFilenames.Length; i++)
+						{
+							var newFilename = newFilenames[i];
+							if (newFilename != "" && newFilename != null && newFilename.Length > 0)
+							{
+								newFullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename));
 							}
-						}*/
+						}
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						//panel.Init(editor.answerTitle, newFullPaths);
+						var parameters = new float[] { editor.answerScaling, editor.answerX, editor.answerY };
+						panel.Init(editor.answerTitle, newFullPaths, parameters);
 						lastPlacedPoint.title = editor.answerTitle;
-						//lastPlacedPoint.filename = string.Join("\f", newFilenames);
+						lastPlacedPoint.filename = string.Join("\f", newFilenames);
+						lastPlacedPoint.body = $"{editor.answerScaling}\f{editor.answerX}\f{editor.answerY}";
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -1007,29 +1006,39 @@ public class Editor : MonoBehaviour
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
-						/*var originalPaths = editor.answerURLs;
-						var newFilenames = new List<string>(originalPaths.Count);
-						var newFullPaths = new List<string>(originalPaths.Count);
+						var answerUrls = new List<string>();
+						answerUrls.Add(editor.answerObjUrl);
+						answerUrls.Add(editor.answerMatUrl);
+						var texturePaths = editor.answerTexturesUrl.Split('\f');
+						var textures = editor.answerTexturesUrlRelative.Split('\f');
 
-						foreach (string originalPath in originalPaths)
+						for (int i = 0; i < texturePaths.Length; i++)
 						{
-							if (originalPath != "")
-							{
-								var newFilename = CopyNewExtra(pointToEdit, originalPath);
-								var newFullPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename);
+							answerUrls.Add(texturePaths[i]);
+						}
 
-								newFilenames.Add(newFilename);
-								newFullPaths.Add(newFullPath);
+						var newFilenames = new string[answerUrls.Count];
+						var newFullPaths = new List<string>(answerUrls.Count);
+						newFilenames = CopyNewExtrasFolder(pointToEdit, answerUrls, textures);
+
+						for (int i = 0; i < newFilenames.Length; i++)
+						{
+							var newFilename = newFilenames[i];
+							if (newFilename != "" && newFilename != null && newFilename.Length > 0)
+							{
+								newFullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename));
 							}
 						}
 
-						var panel = pointToEdit.panel.GetComponent<Object3DPanel>();
-						panel.Init(editor.answerTitle, newFullPaths);
-
+						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
+						var parameters = new float[] { editor.answerScaling, editor.answerX, editor.answerY };
+						panel.Init(editor.answerTitle, newFullPaths, parameters);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = string.Join("\f", newFilenames);
+						pointToEdit.body = $"{editor.answerScaling}\f{editor.answerX}\f{editor.answerY}";
 						pointToEdit.panel = panel.gameObject;
-						finished = true;*/
+
+						finished = true;
 					}
 					break;
 				}
@@ -1721,17 +1730,14 @@ public class Editor : MonoBehaviour
 						var object3dName = "";
 						foreach (var file in filenames)
 						{
-							//NOTE(Jitse): Remove file extension and folder from string to get object name.
 							if (object3dName == "")
 							{
-								Debug.Log("file: " + file + "\nsubstring: " + file.Substring(file.IndexOf("\\") + 1));
-								object3dName = file.Substring(file.IndexOf("\\") + 1);
-								object3dName = object3dName.Substring(0, object3dName.IndexOf("."));
+								object3dName = file.Split('\\')[1];
 							}
 							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
 						}
 						Debug.Log("name: " + object3dName);
-						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, "", object3dName);
+						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, fullPaths, object3dName);
 						break;
 					}
 					default:
@@ -2352,8 +2358,14 @@ public class Editor : MonoBehaviour
 						}
 						urls.Add(url);
 					}
-						
-					panel.Init(newInteractionPoint.title, urls);
+					var body = point.body.Split('\f');
+					float[] parameters = new float[body.Length];
+
+					for (int i = 0; i < body.Length; i++)
+					{
+						parameters[i] = float.Parse(body[i]);
+					}
+					panel.Init(newInteractionPoint.title, urls, parameters);
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
@@ -2660,44 +2672,57 @@ public class Editor : MonoBehaviour
 		return newFilename;
 	}
 
-	//NOTE(Jitse): Separate CopyNewExtra func for .obj files, to make a new generated folder containing the .obj
-	private string CopyNewExtraObj(InteractionPointEditor point, string sourcePath)
+	//NOTE(Jitse): Separate CopyNewExtra func for .obj files, to make a new generated folder containing the .obj, .mtl and textures
+	private string[] CopyNewExtrasFolder(InteractionPointEditor point, List<string> sourcePaths, string[] textures)
 	{
+		string[] newFilenames = new string[sourcePaths.Count];
 		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var newFileDir = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
 		var destDir = Path.Combine(projectFolder, newFileDir);
 		Directory.CreateDirectory(destDir);
-		var newFilename = Path.Combine(newFileDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
-		var destPath = Path.Combine(destDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
 
-		if (File.Exists(sourcePath))
+		for (int i = 0; i < sourcePaths.Count; i++)
 		{
-			File.Copy(sourcePath, destPath);
+			//NOTE(Jitse): For the first two files (.obj & .mtl); use GetFileName to get correct path.
+			//NOTE(cont.): For the remaining files (textures); use their provided relative path, to make sure the location of the textures in the .mtl is correct.
+			var newFilename = "";
+			var destPath = "";
+			if (i < 2)
+			{
+				newFilename = Path.Combine(newFileDir, Path.GetFileName(sourcePaths[i]));
+				destPath = Path.Combine(destDir, Path.GetFileName(sourcePaths[i]));
+			}
+			else
+			{
+				string texture = textures[i - 2];
+				if (texture == "")
+				{
+					break;
+				}
+				if (texture.Contains("\\"))
+				{
+					var directory = Path.Combine(destDir, texture.Split('\\')[0]);
+
+					if (!Directory.Exists(directory))
+					{
+						Directory.CreateDirectory(directory);
+					}
+				}
+				newFilename = Path.Combine(newFileDir, texture);
+				destPath = Path.Combine(destDir, texture);
+			}
+
+			if (File.Exists(sourcePaths[i]))
+			{
+				File.Copy(sourcePaths[i], destPath);
+			}
+
+			Debug.Log(newFilename + "\t" + destPath);
+			allExtras.Add(newFilename, point);
+			newFilenames[i] = newFilename;
 		}
-
-		Debug.Log(newFilename);
-		allExtras.Add(newFilename, point);
-		return newFilename;
-	}
-
-	//NOTE(Jitse): Separate CopyNewExtra function for .mtl files, because they need the same ExtraGuid as .obj
-	private string CopyNewExtraMtl(InteractionPointEditor point, string sourcePath, string realPath)
-	{
-		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var newFileDir = Path.Combine(SaveFile.extraPath, GenerateExtraGuid());
-		var destDir = Path.Combine(projectFolder, realPath);
-		Directory.CreateDirectory(destDir);
-		var newFilename = Path.Combine(newFileDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
-		var destPath = Path.Combine(destDir, sourcePath.Substring(sourcePath.LastIndexOf("\\") + 1));
-
-		if (File.Exists(sourcePath))
-		{
-			File.Copy(sourcePath, destPath);
-		}
-
-		Debug.Log(newFilename);
-		allExtras.Add(newFilename, point);
-		return newFilename;
+		
+		return newFilenames;
 	}
 
 	private void UpdateUploadPanel()

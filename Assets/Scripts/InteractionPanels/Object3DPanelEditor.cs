@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,9 +22,14 @@ public class Object3DPanelEditor : MonoBehaviour
 	public string answerObjUrl;
 	public string answerMatUrl;
 	public string answerTexturesUrl;
+	public string answerTexturesUrlRelative;
+	public float answerScaling = 1f;
+	public int answerX;
+	public int answerY;
 
 	public bool allowCancel => explorerPanel == null;
 
+	private string oldObject3dName;
 	private ExplorerPanel explorerPanel;
 	private GameObject objectRenderer;
 
@@ -33,6 +40,8 @@ public class Object3DPanelEditor : MonoBehaviour
 	private Button[] yButtons;
 
 	private List<string> files;
+	private List<string> filePaths;
+	private List<string> textures;
 
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
@@ -64,26 +73,40 @@ public class Object3DPanelEditor : MonoBehaviour
 		}
 	}
 
-	public void Init(string initialTitle, string initialUrl, string object3dName)
+	public void Init(string initialTitle, List<string> initialUrl, string object3dName)
 	{
 		title.text = initialTitle;
 		objectRenderer = GameObject.Find("ObjectRenderer");
 
-		var objects3d = objectRenderer.GetComponentsInChildren<Transform>(true);
-		for (int i = 0; i < objects3d.Length; i++)
+		if (object3dName.Length > 0)
 		{
-			var tempObject = objects3d[i];
-			Debug.Log(tempObject.ToString());
-			if (tempObject.name == object3dName)
-			{
-				Destroy(tempObject.gameObject);
-				break;
-			}
+			oldObject3dName = object3dName;
 		}
 
 		if (initialUrl != null)
 		{
-			objectUrl.text = initialUrl;
+			if (initialUrl.Count > 0)
+			{
+				objectUrl.text = initialUrl[0];
+			}
+			if (initialUrl.Count > 1)
+			{
+				filePaths = new List<string>();
+				files = new List<string>();
+				textures = new List<string>();
+				for (int i = 1; i < initialUrl.Count; i++)
+				{
+					filePaths.Add(initialUrl[i]);
+					string pattern = "(" + object3dName + ")\\\\(.+)";
+					Match m = Regex.Match(initialUrl[i], pattern);
+					files.Add(m.Groups[2].Value);
+					if (i > 1)
+					{
+						textures.Add(files[i - 1]);
+					}
+				}
+				ShowFiles();
+			}
 		}
 
 		scalingButtons = scalingInput.GetComponentsInChildren<Button>(true);
@@ -101,8 +124,8 @@ public class Object3DPanelEditor : MonoBehaviour
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		objectUrl.onValueChanged.AddListener(_ => OnInputChange(objectUrl));
 		scalingInput.onValueChanged.AddListener(_ => OnScalingValueChanged(scalingInput));
-		xInput.onValueChanged.AddListener(_ => OnXYValueChanged(xInput));
-		yInput.onValueChanged.AddListener(_ => OnXYValueChanged(yInput));
+		xInput.onValueChanged.AddListener(_ => OnXValueChanged());
+		yInput.onValueChanged.AddListener(_ => OnYValueChanged());
 	}
 
 	public void Answer()
@@ -114,7 +137,7 @@ public class Object3DPanelEditor : MonoBehaviour
 			errors = true;
 		}
 
-		if (String.IsNullOrEmpty(objectUrl.text))
+		if (String.IsNullOrEmpty(objectUrl.text) || !File.Exists(objectUrl.text))
 		{
 			objectUrl.image.color = errorColor;
 			errors = true;
@@ -124,9 +147,44 @@ public class Object3DPanelEditor : MonoBehaviour
 		{
 			answered = true;
 			answerObjUrl = objectUrl.text;
-			answerMatUrl = "";
-			answerTexturesUrl = "";
+			if (filePaths.Count > 0)
+			{
+				answerMatUrl = filePaths[0];
+			}
+			if (filePaths.Count > 1)
+			{
+				for (int i = 1; i < filePaths.Count; i++)
+				{
+					if (i != filePaths.Count - 1)
+					{
+						answerTexturesUrl = answerTexturesUrl + filePaths[i] + "\f";
+						answerTexturesUrlRelative = answerTexturesUrlRelative + textures[i - 1] + "\f";
+					}
+					else
+					{
+						answerTexturesUrl = answerTexturesUrl + filePaths[i];
+						answerTexturesUrlRelative = answerTexturesUrlRelative + textures[i - 1];
+					}
+				}
+			}
 			answerTitle = title.text;
+
+			//NOTE(Jitse): Delete the old 3D object if there was one.
+			if (oldObject3dName.Length > 0)
+			{
+				var objects3d = objectRenderer.GetComponentsInChildren<Transform>(true);
+
+				for (int i = 0; i < objects3d.Length; i++)
+				{
+					var tempObject = objects3d[i];
+					Debug.Log(tempObject.ToString());
+					if (tempObject.name == oldObject3dName)
+					{
+						Destroy(tempObject.gameObject);
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -143,7 +201,10 @@ public class Object3DPanelEditor : MonoBehaviour
 	{
 		string objLine;
 		string matUrl = "";
+		string folderPath = Path.GetDirectoryName(url);
 		files = new List<string>();
+		filePaths = new List<string>();
+		textures = new List<string>();
 
 		//NOTE(Jitse): Try to find a .mtl file reference.  
 		//NOTE(cont.): This might loop through the entire .obj in some rare cases, if neither mtllib or usemtl is specified.
@@ -157,6 +218,7 @@ public class Object3DPanelEditor : MonoBehaviour
 			}
 
 			//TODO(Jitse): Apparently (according to .obj wiki), more than one .mtl file may be referenced within the .obj file.
+			//TODO(cont.): If updating this to allow multiple .mtl files, also update everywhere else where necessary.
 			if (objLine.StartsWith("mtllib"))
 			{
 				matUrl = objLine.Split(' ')[1];
@@ -172,10 +234,11 @@ public class Object3DPanelEditor : MonoBehaviour
 
 		if (matUrl != "")
 		{
-			string matUrlPath = Path.Combine(Path.GetDirectoryName(url), matUrl);
+			string matUrlPath = Path.Combine(folderPath, matUrl);
 			if (File.Exists(matUrlPath))
 			{
 				files.Add(matUrl);
+				filePaths.Add(matUrlPath);
 
 				string mtlLine;
 
@@ -197,7 +260,16 @@ public class Object3DPanelEditor : MonoBehaviour
 					{
 						string textureFile = mtlLine.Substring(mtlLine.LastIndexOf(' ') + 1);
 						textureFile = textureFile.Replace("\\\\", "\\");
-						if (!File.Exists(Path.Combine(Path.GetDirectoryName(url), textureFile)))
+						string textureFilePath = Path.Combine(folderPath, textureFile);
+						if (File.Exists(textureFilePath))
+						{
+							if (!filePaths.Contains(textureFilePath))
+							{
+								filePaths.Add(Path.Combine(folderPath, textureFile));
+								textures.Add(textureFile);
+							}
+						}
+						else
 						{
 							textureFile = "# File not found: " + textureFile;
 						}
@@ -249,20 +321,27 @@ public class Object3DPanelEditor : MonoBehaviour
 
 	private void IncreaseScaling()
 	{
-		double value = Convert.ToDouble(scalingInput.text);
+		float value = 0;
+		var text = scalingInput.text;
+		if (ContainsDigit(text))
+		{
+			text = text.Replace(',', '.');
+			value = float.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
+		}
+
 		if (value < 0.1)
 		{
-			value += 0.01;
+			value += 0.01f;
 		}
 		else if (value < 1)
 		{
-			value += 0.1;
+			value += 0.1f;
 		}
 		else
 		{
 			value += 1;
 		}
-		scalingInput.text = $"{value}";
+		scalingInput.text = string.Format("{0:0.00}", value);
 	}
 
 	private void IncreaseX()
@@ -303,21 +382,28 @@ public class Object3DPanelEditor : MonoBehaviour
 
 	private void DecreaseScaling()
 	{
-		double value = Convert.ToDouble(scalingInput.text);
-		if (value <= 0.1)
+		float value = 0;
+		var text = scalingInput.text;
+		if (ContainsDigit(text))
 		{
-			value -= 0.01;
-			if (value <= 0)
+			text = text.Replace(',', '.');
+			value = float.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
+		}
+
+		if (value <= 0.1f)
+		{
+			value -= 0.01f;
+			if (value < 0)
 			{
-				value = 0.01;
+				value = 0;
 			}
 		}
 		else if (value <= 1)
 		{
-			value -= 0.1;
+			value -= 0.1f;
 			if (value < 0.1)
 			{
-				value = 0.1;
+				value = 0.1f;
 			}
 		}
 		else
@@ -328,7 +414,7 @@ public class Object3DPanelEditor : MonoBehaviour
 				value = 1f;
 			}
 		}
-		scalingInput.text = $"{value}";
+		scalingInput.text = string.Format("{0:0.00}", value);
 	}
 
 	private void DecreaseX()
@@ -367,7 +453,6 @@ public class Object3DPanelEditor : MonoBehaviour
 		yInput.text = $"{value}";
 	}
 
-
 	public void HoverScaling()
 	{
 		SetButtonStates(scalingButtons);
@@ -398,19 +483,39 @@ public class Object3DPanelEditor : MonoBehaviour
 		} 
 		else
 		{
-			double value = Convert.ToDouble(input.text);
+			float value = 0;
+			var text = scalingInput.text;
+			if (ContainsDigit(text))
+			{
+				text = text.Replace(',', '.');
+				value = float.Parse(text, NumberStyles.Any, CultureInfo.InvariantCulture.NumberFormat);
+			}
+
 			if (value > 100)
 			{
 				input.text = "100";
 			}
-			else if (value <= 0)
+			else if (value < 0)
 			{
 				input.text = "0";
 			}
 		}
+		answerScaling = float.Parse(input.text, CultureInfo.InvariantCulture.NumberFormat);
 	}
 
-	public void OnXYValueChanged(InputField input)
+	public void OnXValueChanged()
+	{
+		OnXYValueChanged(xInput);
+		answerX = Convert.ToInt32(xInput);
+	}
+
+	public void OnYValueChanged()
+	{
+		OnXYValueChanged(yInput);
+		answerY = Convert.ToInt32(yInput);
+	}
+
+	private void OnXYValueChanged(InputField input)
 	{
 		if (input.text.Length == 0)
 		{
@@ -418,7 +523,12 @@ public class Object3DPanelEditor : MonoBehaviour
 		}
 		else
 		{
-			int value = Convert.ToInt32(input.text);
+			int value = 0;
+			if (ContainsDigit(input.text))
+			{
+				value = Convert.ToInt32(input.text);
+			}
+
 			if (value > 500)
 			{
 				input.text = "500";
