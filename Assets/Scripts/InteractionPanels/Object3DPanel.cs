@@ -5,6 +5,9 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
+//TODO(Jitse): Some objects have the wrong pivot/center point which messes with rotation.
+//TODO(cont.): In some cases, the pivot point is so far off from the object that the object is too far away from the preview panel to see.
+//TODO(cont.): Lay the responsibility of a correct pivot point on the user? Or is there a workaround?
 public class Object3DPanel : MonoBehaviour
 {
 	public Text title;
@@ -12,6 +15,7 @@ public class Object3DPanel : MonoBehaviour
 	public Material transparent;
 
 	private GameObject objectRenderer;
+	private GameObject objectHolder;
 
 	[SerializeField]
 	private string filePath = "";
@@ -47,7 +51,12 @@ public class Object3DPanel : MonoBehaviour
 		{
 			filePath = newPaths[0];
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
-			objImporter.ImportModelAsync(objectName, filePath, objectRenderer.transform, importOptions);
+
+			//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
+			objectHolder = new GameObject("holder_" + objectName);
+			objectHolder.AddComponent<Transform>();
+			objectHolder.transform.parent = objectRenderer.transform;
+			objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
 		}
 	}
 
@@ -62,7 +71,7 @@ public class Object3DPanel : MonoBehaviour
 				object3d = currentObject.gameObject;
 
 				var transforms = object3d.GetComponentsInChildren<Transform>();
-				//NOTE(Jitse): If the object consists of more than 1 child objects
+				//NOTE(Jitse): If the object consists of more than 1 child objects, we want to combine the meshes
 				if (transforms.Length > 2)
 				{
 					rend = object3d.AddComponent<MeshRenderer>();
@@ -90,18 +99,24 @@ public class Object3DPanel : MonoBehaviour
 				{
 					rend = transforms[1].gameObject.GetComponent<MeshRenderer>();
 				}
-				//NOTE(Jitse): Set the scaling value; 80f was chosen by testing which size would be most appropriate.
+				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				var scale = 80f / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
+				var scale = 100f / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
 
 				//TODO(Jitse): Test stuff with the radius of the bounds for scaling, if there seem to be problems with the current solution.
 				//Vector3 center = rend.bounds.center;
 				//float radius = rend.bounds.extents.magnitude;
 
+				//NOTE(Jitse): Set object position to the bounding box center, this fixes when objects have an offset from their pivot point.
+				Debug.Log($"{objectName}:  {rend.bounds.center}  {rend} ");
+				Vector3 center = rend.bounds.center;
+				Vector3 newPos = new Vector3(center.x * -2, center.y * -2, 0);
+				object3d.transform.localPosition = newPos;
+
 				//TODO(Jitse): Is this necessary? Current indication is yes.
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				var children = object3d.GetComponentsInChildren<Transform>();
-				for (int j = 0; j < children.Length; j++)
+				for (int j = 1; j < children.Length; j++)
 				{
 					children[j].localPosition = Vector3.zero;
 				}
@@ -110,10 +125,10 @@ public class Object3DPanel : MonoBehaviour
 				var rotation = object3d.transform.localRotation.eulerAngles;
 				rotation.x = -90;
 				object3d.transform.localRotation = Quaternion.Euler(rotation);
-				object3d.transform.localPosition = new Vector3(valueX, valueY, -50);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(12);
 				object3d.SetActive(false);
+				objectHolder.transform.localPosition = new Vector3(valueX, valueY, -50);
 
 				break;
 			}
@@ -127,7 +142,7 @@ public class Object3DPanel : MonoBehaviour
 	{
 		if (object3d != null && rotate)
 		{
-			object3d.transform.Rotate(new Vector3(0, 0, 0.1f), Space.Self);
+			objectHolder.transform.Rotate(new Vector3(0, 0.1f, 0), Space.Self);
 		}
 	}
 
