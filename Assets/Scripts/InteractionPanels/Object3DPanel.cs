@@ -9,9 +9,6 @@ public class Object3DPanel : MonoBehaviour
 {
 	public Text title;
 	public GameObject object3d;
-	public Slider sliderScale;
-	public Slider sliderX;
-	public Slider sliderY;
 	public Material transparent;
 
 	private GameObject objectRenderer;
@@ -52,10 +49,6 @@ public class Object3DPanel : MonoBehaviour
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
 			objImporter.ImportModelAsync(objectName, filePath, objectRenderer.transform, importOptions);
 		}
-
-		sliderY.onValueChanged.AddListener(_ => YValueChanged());
-		sliderX.onValueChanged.AddListener(_ => XValueChanged());
-		sliderScale.onValueChanged.AddListener(_ => ScaleValueChanged());
 	}
 
 	private void SetObjectProperties()
@@ -157,29 +150,5 @@ public class Object3DPanel : MonoBehaviour
 	public void ToggleRotate()
 	{
 		rotate = !rotate;
-	}
-
-	public void ScaleValueChanged()
-	{
-		var scale = sliderScale.value;
-		object3d.GetComponent<Transform>().localScale = new Vector3(scale, scale, scale);
-	}
-
-	public void XValueChanged()
-	{
-		var x = (int) sliderX.value;
-		var object3dRect = object3d.GetComponent<Transform>();
-		var oldPos = object3dRect.localPosition;
-		oldPos.x = x;
-		object3dRect.localPosition = oldPos;
-	}
-
-	public void YValueChanged()
-	{
-		var y = (int)sliderY.value;
-		var object3dRect = object3d.GetComponent<Transform>();
-		var oldPos = object3dRect.localPosition;
-		oldPos.y = y;
-		object3dRect.localPosition = oldPos;
 	}
 }
