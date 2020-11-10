@@ -1736,7 +1736,6 @@ public class Editor : MonoBehaviour
 							}
 							fullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file));
 						}
-						Debug.Log("name: " + object3dName);
 						interactionEditor.GetComponent<Object3DPanelEditor>().Init(point.title, fullPaths, object3dName);
 						break;
 					}
@@ -2717,7 +2716,6 @@ public class Editor : MonoBehaviour
 				File.Copy(sourcePaths[i], destPath);
 			}
 
-			Debug.Log(newFilename + "\t" + destPath);
 			allExtras.Add(newFilename, point);
 			newFilenames[i] = newFilename;
 		}

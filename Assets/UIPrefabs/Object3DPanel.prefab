@@ -1833,6 +1833,7 @@ MonoBehaviour:
   sliderScale: {fileID: 1331375490945814416}
   sliderX: {fileID: 3834401130630223776}
   sliderY: {fileID: 8461251645328867460}
+  transparent: {fileID: 2100000, guid: c7d0477638bff984a86aa72be29801cb, type: 2}
   filePath: 
   objectName: 
   importOptions:

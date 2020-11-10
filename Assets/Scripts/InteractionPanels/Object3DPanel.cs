@@ -12,6 +12,7 @@ public class Object3DPanel : MonoBehaviour
 	public Slider sliderScale;
 	public Slider sliderX;
 	public Slider sliderY;
+	public Material transparent;
 
 	private GameObject objectRenderer;
 
@@ -27,6 +28,7 @@ public class Object3DPanel : MonoBehaviour
 	private int valueX;
 	private int valueY;
 	private bool rotate;
+	private Renderer rend;
 
 	public void Init(string newTitle, List<string> newPaths, float[] parameters)
 	{
@@ -61,35 +63,78 @@ public class Object3DPanel : MonoBehaviour
 		var objects3d = objectRenderer.GetComponentsInChildren<Transform>(true);
 		for (int i = 0; i < objects3d.Length; i++)
 		{
-			var tempObject = objects3d[i];
-			if (tempObject.name == objectName)
+			var currentObject = objects3d[i];
+			if (currentObject.name == objectName)
 			{
-				object3d = tempObject.gameObject;
+				object3d = currentObject.gameObject;
+
+				var transforms = object3d.GetComponentsInChildren<Transform>();
+				//NOTE(Jitse): If the object consists of more than 1 child objects
+				if (transforms.Length > 2)
+				{
+					rend = object3d.AddComponent<MeshRenderer>();
+					//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
+					rend.material = transparent;
+					var mainMesh = object3d.AddComponent<MeshFilter>();
+
+					//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
+					MeshFilter[] meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
+					CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+
+					int k = 0;
+					while (k < meshFilters.Length)
+					{
+						combine[k].mesh = meshFilters[k].sharedMesh;
+						combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
+
+						k++;
+					}
+
+					mainMesh.mesh = new Mesh();
+					mainMesh.mesh.CombineMeshes(combine);
+				}
+				else
+				{
+					rend = transforms[1].gameObject.GetComponent<MeshRenderer>();
+				}
+				//NOTE(Jitse): Set the scaling value; 80f was chosen by testing which size would be most appropriate.
+				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
+				var scale = 80f / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
+
+				//TODO(Jitse): Test stuff with the radius of the bounds for scaling, if there seem to be problems with the current solution.
+				//Vector3 center = rend.bounds.center;
+				//float radius = rend.bounds.extents.magnitude;
+
+				//TODO(Jitse): Is this necessary? Current indication is yes.
+				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				var children = object3d.GetComponentsInChildren<Transform>();
 				for (int j = 0; j < children.Length; j++)
 				{
 					children[j].localPosition = Vector3.zero;
 				}
+
+				//NOTE(Jitse): Setting correct parameters of the object.
 				var rotation = object3d.transform.localRotation.eulerAngles;
 				rotation.x = -90;
 				object3d.transform.localRotation = Quaternion.Euler(rotation);
 				object3d.transform.localPosition = new Vector3(valueX, valueY, -50);
-				object3d.transform.localScale = new Vector3(valueScaling, valueScaling, valueScaling);
+				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(12);
 				object3d.SetActive(false);
-				
+
 				break;
 			}
 		}
+
+		//NOTE(Jitse): Makes sure to not call this again when importing a new object.
+		objImporter.ImportingComplete -= SetObjectProperties;
 	}
 
 	private void Update()
 	{
 		if (object3d != null && rotate)
 		{
-			var oldRotation = object3d.transform.localRotation.eulerAngles;
-			oldRotation.y += 0.1f;
-			object3d.transform.localRotation = Quaternion.Euler(oldRotation);
+			object3d.transform.Rotate(new Vector3(0, 0, 0.1f), Space.Self);
 		}
 	}
 
