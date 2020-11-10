@@ -23,6 +23,7 @@ public class Object3DPanel : MonoBehaviour
 	private float valueScaling;
 	private int valueX;
 	private int valueY;
+	private bool rotate;
 
 	public void Init(string newTitle, List<string> newPaths, float[] parameters)
 	{
@@ -77,7 +78,7 @@ public class Object3DPanel : MonoBehaviour
 
 	private void Update()
 	{
-		if (object3d != null)
+		if (object3d != null && rotate)
 		{
 			var oldRotation = object3d.transform.localRotation.eulerAngles;
 			oldRotation.y += 0.1f;
@@ -99,5 +100,10 @@ public class Object3DPanel : MonoBehaviour
 		{
 			object3d.SetActive(false);
 		}
+	}
+
+	public void ToggleRotate()
+	{
+		rotate = !rotate;
 	}
 }
