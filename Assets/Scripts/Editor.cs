@@ -1364,9 +1364,11 @@ public class Editor : MonoBehaviour
 		Destroy(point.point);
 		if (point.panel != null)
 		{
+			//NOTE(Jitse): 3D Objects aren't child objects of the panel, so this needs to be done to delete the objects from the ObjectRenderer GO.
 			if (point.type == InteractionType.Object3D)
 			{
-				//TODO(Jitse): Delete the 3D model that's part of the to be deleted panel
+				var objName = "holder_" + point.panel.GetComponent<Object3DPanel>().object3d.name;
+				Destroy(GameObject.Find("/ObjectRenderer/" + objName));
 			}
 			Destroy(point.panel);
 		}
@@ -2004,7 +2006,7 @@ public class Editor : MonoBehaviour
 
 	private void UnpinPoint()
 	{
-		if (pinnedHoverPoint != null)
+		if (pinnedHoverPoint != null && pinnedHoverPoint.panel != null)
 		{
 			pinnedHoverPoint.panel.SetActive(false);
 			pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
@@ -2618,9 +2620,12 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Delete all unused miniatures
+		//NOTE(Jitse): Also delete all unused 3D objects
 		{
 			var allMiniatures = Directory.GetFiles(Path.Combine(projectFolder, SaveFile.miniaturesPath));
 			var miniaturesInUse = new List<string>();
+			var allObjects = Directory.GetDirectories(Path.Combine(projectFolder, SaveFile.extraPath));
+			var objectsInUse = new List<string>();
 			foreach (var point in interactionPoints)
 			{
 				if (point.type == InteractionType.FindArea || point.type == InteractionType.MultipleChoiceArea)
@@ -2631,6 +2636,12 @@ public class Editor : MonoBehaviour
 						miniaturesInUse.Add(Path.Combine(projectFolder, SaveFile.miniaturesPath, file));
 					}
 				}
+				else if (point.type == InteractionType.Object3D)
+				{
+					var name = point.filename.Split('\f')[0];
+					name = Path.GetFileName(Path.GetDirectoryName(name));
+					objectsInUse.Add(Path.Combine(projectFolder, SaveFile.extraPath, name));
+				}
 			}
 
 			foreach (var miniature in allMiniatures)
@@ -2638,6 +2649,14 @@ public class Editor : MonoBehaviour
 				if (!miniaturesInUse.Contains(miniature))
 				{
 					File.Delete(miniature);
+				}
+			}
+
+			foreach (var object3d in allObjects)
+			{
+				if(!objectsInUse.Contains(object3d))
+				{
+					Directory.Delete(object3d, true);
 				}
 			}
 		}
@@ -2684,8 +2703,8 @@ public class Editor : MonoBehaviour
 		{
 			//NOTE(Jitse): For the first two files (.obj & .mtl); use GetFileName to get correct path.
 			//NOTE(cont.): For the remaining files (textures); use their provided relative path, to make sure the location of the textures in the .mtl is correct.
-			var newFilename = "";
-			var destPath = "";
+			string newFilename;
+			string destPath;
 			if (i < 2)
 			{
 				newFilename = Path.Combine(newFileDir, Path.GetFileName(sourcePaths[i]));
@@ -2719,7 +2738,8 @@ public class Editor : MonoBehaviour
 			allExtras.Add(newFilename, point);
 			newFilenames[i] = newFilename;
 		}
-		
+		allExtras.Add(newFileDir, point);
+
 		return newFilenames;
 	}
 

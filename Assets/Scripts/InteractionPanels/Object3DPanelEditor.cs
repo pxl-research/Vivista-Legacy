@@ -27,6 +27,7 @@ public class Object3DPanelEditor : MonoBehaviour
 	public bool allowCancel => explorerPanel == null;
 
 	private string oldObject3dName;
+	private string initialObjectUrl;
 	private ExplorerPanel explorerPanel;
 	private GameObject objectRenderer;
 
@@ -81,6 +82,7 @@ public class Object3DPanelEditor : MonoBehaviour
 			if (initialUrl.Count > 0)
 			{
 				objectUrl.text = initialUrl[0];
+				initialObjectUrl = initialUrl[0];
 			}
 			if (initialUrl.Count > 1)
 			{
@@ -109,13 +111,13 @@ public class Object3DPanelEditor : MonoBehaviour
 	public void Answer()
 	{
 		bool errors = false;
-		if (String.IsNullOrEmpty(title.text))
+		if (string.IsNullOrEmpty(title.text))
 		{
 			title.image.color = errorColor;
 			errors = true;
 		}
 
-		if (String.IsNullOrEmpty(objectUrl.text) || !File.Exists(objectUrl.text))
+		if (string.IsNullOrEmpty(objectUrl.text) || !File.Exists(objectUrl.text))
 		{
 			objectUrl.image.color = errorColor;
 			errors = true;
@@ -150,15 +152,11 @@ public class Object3DPanelEditor : MonoBehaviour
 			//NOTE(Jitse): Delete the old 3D object if there was one.
 			if (oldObject3dName != null)
 			{
-				var objects3d = objectRenderer.GetComponentsInChildren<Transform>(true);
-
-				for (int i = 0; i < objects3d.Length; i++)
+				foreach (Transform object3d in objectRenderer.transform)
 				{
-					var tempObject = objects3d[i];
-					Debug.Log(tempObject.ToString());
-					if (tempObject.name == oldObject3dName)
+					if (object3d.name == "holder_" + oldObject3dName)
 					{
-						Destroy(tempObject.gameObject);
+						Destroy(object3d.gameObject);
 						break;
 					}
 				}

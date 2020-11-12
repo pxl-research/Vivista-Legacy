@@ -25,7 +25,6 @@ public class Object3DPanel : MonoBehaviour
 	private ImportOptions importOptions = new ImportOptions();
 
 	private ObjectImporter objImporter;
-	private float valueScaling;
 	private int valueX;
 	private int valueY;
 	private bool rotate;
@@ -34,7 +33,6 @@ public class Object3DPanel : MonoBehaviour
 	public void Init(string newTitle, List<string> newPaths, float[] parameters)
 	{
 		title.text = newTitle;
-		valueScaling = parameters[0];
 		valueX = Convert.ToInt32(parameters[1]);
 		valueY = Convert.ToInt32(parameters[2]);
 
@@ -53,9 +51,12 @@ public class Object3DPanel : MonoBehaviour
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
 
 			//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
-			objectHolder = new GameObject("holder_" + objectName);
-			objectHolder.transform.parent = objectRenderer.transform;
-			objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
+			if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
+			{
+				objectHolder = new GameObject("holder_" + objectName);
+				objectHolder.transform.parent = objectRenderer.transform;
+				objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
+			}
 		}
 	}
 
