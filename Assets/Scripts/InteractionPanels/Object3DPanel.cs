@@ -11,6 +11,7 @@ using UnityEngine.UI;
 public class Object3DPanel : MonoBehaviour
 {
 	public Text title;
+	public Text errorText;
 	public GameObject object3d;
 	public Material transparent;
 
@@ -50,12 +51,21 @@ public class Object3DPanel : MonoBehaviour
 			filePath = newPaths[0];
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
 
-			//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
-			if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
+			if (File.Exists(filePath))
 			{
-				objectHolder = new GameObject("holder_" + objectName);
-				objectHolder.transform.parent = objectRenderer.transform;
-				objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
+				errorText.gameObject.SetActive(false);
+				//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
+				if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
+				{
+					objectHolder = new GameObject("holder_" + objectName);
+					objectHolder.transform.parent = objectRenderer.transform;
+					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
+				}
+			} 
+			else
+			{
+				errorText.gameObject.SetActive(true);
+				errorText.text = $"Error: File Not Found\n{filePath}";
 			}
 		}
 	}

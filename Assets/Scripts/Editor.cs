@@ -1367,8 +1367,12 @@ public class Editor : MonoBehaviour
 			//NOTE(Jitse): 3D Objects aren't child objects of the panel, so this needs to be done to delete the objects from the ObjectRenderer GO.
 			if (point.type == InteractionType.Object3D)
 			{
-				var objName = "holder_" + point.panel.GetComponent<Object3DPanel>().object3d.name;
-				Destroy(GameObject.Find("/ObjectRenderer/" + objName));
+				var obj3dPanel = point.panel.GetComponent<Object3DPanel>();
+				if (obj3dPanel.object3d != null)
+				{
+					var objName = "holder_" + point.panel.GetComponent<Object3DPanel>().object3d.name;
+					Destroy(GameObject.Find("/ObjectRenderer/" + objName));
+				}
 			}
 			Destroy(point.panel);
 		}
@@ -2584,7 +2588,10 @@ public class Editor : MonoBehaviour
 				var filesInPoint = point.filename.Split('\f');
 				foreach (var file in filesInPoint)
 				{
-					allExtras.Add(Path.Combine(projectFolder, file), point);
+					if (file != null && file != "")
+					{
+						allExtras.Add(Path.Combine(projectFolder, file), point);
+					}
 				}
 			}
 		}
@@ -2670,7 +2677,10 @@ public class Editor : MonoBehaviour
 
 		foreach (var path in list)
 		{
-			allExtras[Path.Combine(projectFolder, path)] = null;
+			if (path != null && path != "")
+			{
+				allExtras[Path.Combine(projectFolder, path)] = null;
+			}
 		}
 	}
 
@@ -2703,42 +2713,43 @@ public class Editor : MonoBehaviour
 		{
 			//NOTE(Jitse): For the first two files (.obj & .mtl); use GetFileName to get correct path.
 			//NOTE(cont.): For the remaining files (textures); use their provided relative path, to make sure the location of the textures in the .mtl is correct.
-			string newFilename;
-			string destPath;
-			if (i < 2)
+			if (sourcePaths[i] != null && sourcePaths[i].Length > 0)
 			{
-				newFilename = Path.Combine(newFileDir, Path.GetFileName(sourcePaths[i]));
-				destPath = Path.Combine(destDir, Path.GetFileName(sourcePaths[i]));
-			}
-			else
-			{
-				string texture = textures[i - 2];
-				if (texture == "")
+				string newFilename;
+				string destPath;
+				if (i < 2)
 				{
-					break;
+					newFilename = Path.Combine(newFileDir, Path.GetFileName(sourcePaths[i]));
+					destPath = Path.Combine(destDir, Path.GetFileName(sourcePaths[i]));
 				}
-				if (texture.Contains("\\"))
+				else
 				{
-					var directory = Path.Combine(destDir, texture.Split('\\')[0]);
-
-					if (!Directory.Exists(directory))
+					string texture = textures[i - 2];
+					if (texture == "")
 					{
-						Directory.CreateDirectory(directory);
+						break;
 					}
+					if (texture.Contains("\\"))
+					{
+						var directory = Path.Combine(destDir, texture.Split('\\')[0]);
+
+						if (!Directory.Exists(directory))
+						{
+							Directory.CreateDirectory(directory);
+						}
+					}
+					newFilename = Path.Combine(newFileDir, texture);
+					destPath = Path.Combine(destDir, texture);
 				}
-				newFilename = Path.Combine(newFileDir, texture);
-				destPath = Path.Combine(destDir, texture);
-			}
 
-			if (File.Exists(sourcePaths[i]))
-			{
-				File.Copy(sourcePaths[i], destPath);
+				if (File.Exists(sourcePaths[i]))
+				{
+					File.Copy(sourcePaths[i], destPath);
+				}
+				allExtras.Add(newFilename, point);
+				newFilenames[i] = newFilename;
 			}
-
-			allExtras.Add(newFilename, point);
-			newFilenames[i] = newFilename;
 		}
-		allExtras.Add(newFileDir, point);
 
 		return newFilenames;
 	}
