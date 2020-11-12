@@ -148,7 +148,7 @@ public class Object3DPanelEditor : MonoBehaviour
 			answerTitle = title.text;
 
 			//NOTE(Jitse): Delete the old 3D object if there was one.
-			if (oldObject3dName.Length > 0)
+			if (oldObject3dName != null)
 			{
 				var objects3d = objectRenderer.GetComponentsInChildren<Transform>(true);
 
