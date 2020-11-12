@@ -772,7 +772,11 @@ namespace AsImpL
                 newMaterial.EnableKeyword("_EMISSION");
             }
 
-            if (md.bumpTex != null)
+            //TODO(Jitse): Research the importancy of "bump map" and "normal map"
+            //TODO(cont.): This if check has been commented, because it severely slowed object loading in some cases.
+            //TODO(cont.): Texture2D normalMap = ModelUtil.HeightToNormalMap(md.bumpTex) is the big culprit.
+            //TODO(cont.): Can we improve this?
+            /*if (md.bumpTex != null)
             {
                 // bump map defined
 
@@ -809,7 +813,7 @@ namespace AsImpL
                         newMaterial.SetFloat("_BumpScale", 1.0f); // adjust the bump effect with the normal map
                     }
                 }
-            }
+            }*/
 
             if (md.specularTex != null)
             {
