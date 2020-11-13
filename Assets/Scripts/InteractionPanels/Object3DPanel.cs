@@ -129,6 +129,10 @@ public class Object3DPanel : MonoBehaviour
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(12);
 				object3d.SetActive(false);
+				if (objectHolder == null)
+				{
+					objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
+				}
 				objectHolder.transform.localPosition = new Vector3(valueX, valueY, 0);
 
 				break;

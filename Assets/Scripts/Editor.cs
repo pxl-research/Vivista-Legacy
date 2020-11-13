@@ -2222,6 +2222,17 @@ public class Editor : MonoBehaviour
 			RemoveItemFromTimeline(interactionPoints[j]);
 		}
 
+		var objectRenderer = GameObject.Find("ObjectRenderer").GetComponent<Transform>();
+		var childCount = objectRenderer.childCount;
+		for (int i = childCount - 1; i >= 0; i--) 
+		{
+			var objectHolder = objectRenderer.GetChild(i);
+			if (objectHolder.name.StartsWith("holder"))
+			{
+				DestroyImmediate(objectHolder.gameObject);
+			}
+		}
+
 		interactionPoints.Clear();
 		var tagsPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var tags = SaveFile.ReadTags(tagsPath);
@@ -2356,6 +2367,10 @@ public class Editor : MonoBehaviour
 					var urls = new List<string>();
 					foreach (var file in filenames)
 					{
+						if (file == null || file == "")
+						{
+							continue;
+						}
 						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
 						if (!File.Exists(url))
 						{

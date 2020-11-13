@@ -776,6 +776,7 @@ namespace AsImpL
             //TODO(cont.): This if check has been commented, because it severely slowed object loading in some cases.
             //TODO(cont.): Texture2D normalMap = ModelUtil.HeightToNormalMap(md.bumpTex) is the big culprit.
             //TODO(cont.): Can we improve this?
+            //TODO(cont.): It looks like disabling this doesn't disable the use of normal maps
             /*if (md.bumpTex != null)
             {
                 // bump map defined
@@ -815,7 +816,10 @@ namespace AsImpL
                 }
             }*/
 
-            if (md.specularTex != null)
+            //TODO(Jitse): Research the importancy of "specular texture"
+            //TODO(cont.): This if check has been commented, because it moderately slowed object loading in some cases.
+            //TODO(cont.): Can we improve this?
+            /*if (md.specularTex != null)
             {
                 Texture2D glossTexture = new Texture2D(md.specularTex.width, md.specularTex.height, TextureFormat.ARGB32, false);
                 Color col = new Color();
@@ -865,7 +869,7 @@ namespace AsImpL
                 }
 
                 //m.SetTexture( "_MetallicGlossMap", md.specularLevelTex );
-            }
+            }*/
 
             // replace the texture with Unity environment reflection
             if (md.hasReflectionTex)
