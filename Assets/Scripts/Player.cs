@@ -560,8 +560,29 @@ public class Player : MonoBehaviour
 				case InteractionType.Object3D:
 				{
 					var panel = Instantiate(object3DPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
-					string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), newInteractionPoint.filename);
-					panel.GetComponent<Object3DPanelSphere>().Init(newInteractionPoint.title, url);
+					var filenames = newInteractionPoint.filename.Split('\f');
+					var urls = new List<string>();
+					foreach (var file in filenames)
+					{
+						if (file == null || file == "")
+						{
+							continue;
+						}
+						string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), file);
+						if (!File.Exists(url))
+						{
+							Debug.LogWarningFormat($"File missing: {url}");
+						}
+						urls.Add(url);
+					}
+					var body = point.body.Split('\f');
+					float[] parameters = new float[body.Length];
+
+					for (int i = 0; i < body.Length; i++)
+					{
+						parameters[i] = float.Parse(body[i]);
+					}
+					panel.GetComponent<Object3DPanelSphere>().Init(newInteractionPoint.title, urls, parameters);
 					newInteractionPoint.panel = panel;
 					break;
 				}

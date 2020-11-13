@@ -36,7 +36,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.6, y: 1}
   m_AnchorMax: {x: 0.6, y: 1}
-  m_AnchoredPosition: {x: 0, y: -1}
+  m_AnchoredPosition: {x: 5, y: -5}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &3810995183552059419
@@ -189,6 +189,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   title: {fileID: 3919208909540169043}
+  object3d: {fileID: 0}
+  transparent: {fileID: 2100000, guid: c7d0477638bff984a86aa72be29801cb, type: 2}
+  filePath: 
+  objectName: 
+  importOptions:
+    zUp: 1
+    litDiffuse: 0
+    convertToDoubleSided: 0
+    modelScaling: 1
+    reuseLoaded: 0
+    inheritLayer: 0
+    buildColliders: 0
+    colliderConvex: 0
+    colliderTrigger: 0
+    use32bitIndices: 1
+    hideWhileLoading: 1
+    localPosition: {x: 0, y: 0, z: 0}
+    localEulerAngles: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &4031495814145594833
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,10 +317,10 @@ RectTransform:
   m_Father: {fileID: 3812454127456066631}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -50, y: 384}
-  m_SizeDelta: {x: 300, y: 768}
+  m_AnchorMin: {x: 0.3, y: 0}
+  m_AnchorMax: {x: 0.4, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3811169043324146497
 CanvasRenderer:
