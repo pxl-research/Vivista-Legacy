@@ -34,6 +34,8 @@ public class Controller : MonoBehaviour
 
 	private bool gripDown;
 
+	private int layerMask;
+
 	// Use this for initialization
 	void Start()
 	{
@@ -45,8 +47,10 @@ public class Controller : MonoBehaviour
 		SteamVR_Actions.default_Grip[inputSource].onStateUp += OnGripDown;
 		SteamVR_Actions.default_RotateLeft[inputSource].onStateDown += OnRotateLeft;
 		SteamVR_Actions.default_RotateRight[inputSource].onStateDown += OnRotateRight;
+
+		layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints");
 	}
-	
+
 	// Update is called once per frame
 	void Update()
 	{
@@ -59,12 +63,10 @@ public class Controller : MonoBehaviour
 
 		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
 		{
-			RaycastHit hit;
-			int layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints");
 			var ray = CastRay();
 			const float rayLength = 200f;
 
-			if (Physics.Raycast(ray, out hit, rayLength, layerMask))
+			if (Physics.Raycast(ray, out var hit, rayLength, layerMask))
 			{
 				uiHovering = true;
 				hoveredGo = hit.transform.gameObject;
@@ -122,53 +124,6 @@ public class Controller : MonoBehaviour
 		cursor.transform.position = Vector3.zero;
 		cursor.SetActive(false);
 	}
-
-	//public void TutorialHighlight()
-	//{
-	//	if (trigger == null)
-	//	{
-	//		var triggerGo = model.transform.Find("trigger");
-	//		if (triggerGo != null)
-	//		{
-	//			trigger = triggerGo.gameObject.GetComponent<MeshRenderer>();
-	//		}
-	//	}
-	//
-	//	if (trigger != null)
-	//	{
-	//		baseMaterial = trigger.material;
-	//		trigger.materials = new[] { baseMaterial, highlightMaterial };
-	//	}
-	//
-	//	//TODO(Kristof): Thumbstick is only used for the Ocoulus Touch controllers, The Vive controllers use trackpad. Needs to be added
-	//	if (thumbstick == null)
-	//	{
-	//		var thumbstickGo = model.transform.Find("thumbstick");
-	//		if (thumbstickGo != null)
-	//		{
-	//			thumbstick = thumbstickGo.gameObject.GetComponent<MeshRenderer>();
-	//		}
-	//	}
-	//
-	//	if (thumbstick != null)
-	//	{
-	//		baseMaterial = thumbstick.material;
-	//		thumbstick.materials = new[] { baseMaterial, highlightMaterial };
-	//	}
-	//}
-	//
-	//public void ResetMaterial()
-	//{
-	//	if (trigger != null)
-	//	{
-	//		trigger.materials = new[] { baseMaterial };
-	//	}
-	//
-	//	if (thumbstick != null)
-	//	{
-	//		thumbstick.materials = new[] { baseMaterial };
-	//	}
-	//}
 
 	public Ray CastRay()
 	{
