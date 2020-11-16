@@ -716,11 +716,9 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						var parameters = new [] { editor.answerScaling, editor.answerX, editor.answerY };
-						panel.Init(editor.answerTitle, newFullPaths, parameters);
+						panel.Init(editor.answerTitle, newFullPaths);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = string.Join("\f", newFilenames);
-						lastPlacedPoint.body = $"{editor.answerScaling}\f{editor.answerX}\f{editor.answerY}";
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -1029,11 +1027,9 @@ public class Editor : MonoBehaviour
 						}
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						var parameters = new [] { editor.answerScaling, editor.answerX, editor.answerY };
-						panel.Init(editor.answerTitle, newFullPaths, parameters);
+						panel.Init(editor.answerTitle, newFullPaths);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = string.Join("\f", newFilenames);
-						pointToEdit.body = $"{editor.answerScaling}\f{editor.answerX}\f{editor.answerY}";
 						pointToEdit.panel = panel.gameObject;
 
 						finished = true;
@@ -2374,15 +2370,7 @@ public class Editor : MonoBehaviour
 						urls.Add(url);
 					}
 
-					var body = point.body.Split('\f');
-					float[] parameters = new float[body.Length];
-
-					for (int i = 0; i < body.Length; i++)
-					{
-						parameters[i] = float.Parse(body[i]);
-					}
-
-					panel.Init(newInteractionPoint.title, urls, parameters);
+					panel.Init(newInteractionPoint.title, urls);
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
@@ -2752,8 +2740,11 @@ public class Editor : MonoBehaviour
 				{
 					File.Copy(sourcePaths[i], destPath);
 				}
-				allExtras.Add(newFilename, point);
-				newFilenames[i] = newFilename;
+				if (!String.IsNullOrEmpty(newFilename))
+				{
+					allExtras.Add(newFilename, point);
+					newFilenames[i] = newFilename;
+				}
 			}
 		}
 

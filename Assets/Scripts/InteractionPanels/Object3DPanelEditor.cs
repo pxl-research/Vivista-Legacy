@@ -18,9 +18,6 @@ public class Object3DPanelEditor : MonoBehaviour
 	public string answerMatUrl;
 	public string answerTexturesUrl;
 	public string answerTexturesUrlRelative;
-	public float answerScaling = 1f;
-	public int answerX;
-	public int answerY;
 
 	public bool allowCancel => explorerPanel == null;
 
@@ -69,7 +66,8 @@ public class Object3DPanelEditor : MonoBehaviour
 		title.text = initialTitle;
 		objectRenderer = GameObject.Find("ObjectRenderer");
 
-		if (String.IsNullOrEmpty(object3dName))
+		//NOTE(Jitse): If editing a point, save the old object name for possible deletion
+		if (!String.IsNullOrEmpty(object3dName))
 		{
 			oldObject3dName = object3dName;
 		}

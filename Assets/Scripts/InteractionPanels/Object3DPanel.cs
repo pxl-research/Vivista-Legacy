@@ -23,18 +23,14 @@ public class Object3DPanel : MonoBehaviour
 	private ImportOptions importOptions = new ImportOptions();
 
 	private ObjectImporter objImporter;
-	private int valueX;
-	private int valueY;
 	private bool rotate;
 	private Renderer rend;
 
 	private int layer;
 
-	public void Init(string newTitle, List<string> newPaths, float[] parameters)
+	public void Init(string newTitle, List<string> newPaths)
 	{
 		title.text = newTitle;
-		valueX = Convert.ToInt32(parameters[1]);
-		valueY = Convert.ToInt32(parameters[2]);
 
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
@@ -132,7 +128,7 @@ public class Object3DPanel : MonoBehaviour
 				{
 					objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
 				}
-				objectHolder.transform.localPosition = new Vector3(valueX, valueY, 0);
+				objectHolder.transform.localPosition = new Vector3(0, 0, 0);
 
 				break;
 			}
