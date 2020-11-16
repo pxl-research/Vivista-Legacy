@@ -14,6 +14,8 @@ public class Object3DPanel : MonoBehaviour
 	public Text errorText;
 	public GameObject object3d;
 	public Material transparent;
+	public Image loadingCircle;
+	public Image loadingCircleProgress;
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
@@ -122,7 +124,12 @@ public class Object3DPanel : MonoBehaviour
 				object3d.transform.localRotation = Quaternion.Euler(rotation);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(layer);
-				object3d.SetActive(false);
+
+				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
+				if (!isActiveAndEnabled)
+				{
+					object3d.SetActive(false);
+				}
 				//TODO(Jitse): Check if still necessary
 				if (objectHolder == null)
 				{
@@ -134,6 +141,9 @@ public class Object3DPanel : MonoBehaviour
 			}
 		}
 
+		loadingCircle.gameObject.SetActive(false);
+		loadingCircleProgress.gameObject.SetActive(false);
+
 		//NOTE(Jitse): After completion, remove current event handler, so that it won't be called again when another Init is called.
 		objImporter.ImportingComplete -= SetObjectProperties;
 	}
@@ -143,6 +153,11 @@ public class Object3DPanel : MonoBehaviour
 		if (object3d != null && rotate)
 		{
 			objectHolder.transform.Rotate(new Vector3(0, 0.1f, 0), Space.Self);
+		} 
+		else if (object3d == null && loadingCircle.IsActive())
+		{
+			var rotateSpeed = 200f;
+			loadingCircleProgress.GetComponent<RectTransform>().Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
 		}
 	}
 
