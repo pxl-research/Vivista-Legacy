@@ -39,8 +39,6 @@ public class Object3DPanel : MonoBehaviour
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
 
-		//NOTE(Simon): Remove any previous event handlers
-		objImporter.ImportingComplete -= SetObjectProperties;
 		objImporter.ImportingComplete += SetObjectProperties;
 
 		layer = LayerMask.NameToLayer("3DObjects");
@@ -139,6 +137,9 @@ public class Object3DPanel : MonoBehaviour
 				break;
 			}
 		}
+
+		//NOTE(Jitse): After completion, remove current event handler, so that it won't be called again when another Init is called.
+		objImporter.ImportingComplete -= SetObjectProperties;
 	}
 
 	private void Update()
