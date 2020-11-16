@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,7 +25,6 @@ public class Object3DPanelEditor : MonoBehaviour
 	public bool allowCancel => explorerPanel == null;
 
 	private string oldObject3dName;
-	private string initialObjectUrl;
 	private ExplorerPanel explorerPanel;
 	private GameObject objectRenderer;
 
@@ -72,7 +69,7 @@ public class Object3DPanelEditor : MonoBehaviour
 		title.text = initialTitle;
 		objectRenderer = GameObject.Find("ObjectRenderer");
 
-		if (object3dName.Length > 0)
+		if (String.IsNullOrEmpty(object3dName))
 		{
 			oldObject3dName = object3dName;
 		}
@@ -82,24 +79,26 @@ public class Object3DPanelEditor : MonoBehaviour
 			if (initialUrl.Count > 0)
 			{
 				objectUrl.text = initialUrl[0];
-				initialObjectUrl = initialUrl[0];
 			}
 			if (initialUrl.Count > 1)
 			{
 				filePaths = new List<string>();
 				files = new List<string>();
 				textures = new List<string>();
+
 				for (int i = 1; i < initialUrl.Count; i++)
 				{
 					filePaths.Add(initialUrl[i]);
-					string pattern = "(" + object3dName + ")\\\\(.+)";
-					Match m = Regex.Match(initialUrl[i], pattern);
-					files.Add(m.Groups[2].Value);
+					int index = initialUrl[i].IndexOf(object3dName, StringComparison.InvariantCulture) + object3dName.Length + 1;
+					string relativePath = initialUrl[i].Substring(index);
+					files.Add(relativePath);
+
 					if (i > 1)
 					{
 						textures.Add(files[i - 1]);
 					}
 				}
+
 				ShowFiles();
 			}
 		}
@@ -111,13 +110,13 @@ public class Object3DPanelEditor : MonoBehaviour
 	public void Answer()
 	{
 		bool errors = false;
-		if (string.IsNullOrEmpty(title.text))
+		if (String.IsNullOrEmpty(title.text))
 		{
 			title.image.color = errorColor;
 			errors = true;
 		}
 
-		if (string.IsNullOrEmpty(objectUrl.text) || !File.Exists(objectUrl.text))
+		if (String.IsNullOrEmpty(objectUrl.text) || !File.Exists(objectUrl.text))
 		{
 			objectUrl.image.color = errorColor;
 			errors = true;
@@ -133,19 +132,8 @@ public class Object3DPanelEditor : MonoBehaviour
 			}
 			if (filePaths.Count > 1)
 			{
-				for (int i = 1; i < filePaths.Count; i++)
-				{
-					if (i != filePaths.Count - 1)
-					{
-						answerTexturesUrl = answerTexturesUrl + filePaths[i] + "\f";
-						answerTexturesUrlRelative = answerTexturesUrlRelative + textures[i - 1] + "\f";
-					}
-					else
-					{
-						answerTexturesUrl = answerTexturesUrl + filePaths[i];
-						answerTexturesUrlRelative = answerTexturesUrlRelative + textures[i - 1];
-					}
-				}
+				answerTexturesUrl = String.Join("\f", filePaths.ToArray(), 1, filePaths.Count - 1);
+				answerTexturesUrlRelative = String.Join("\f", textures);
 			}
 			answerTitle = title.text;
 
@@ -166,8 +154,7 @@ public class Object3DPanelEditor : MonoBehaviour
 
 	public void Browse()
 	{
-		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel);
-		explorerPanel.transform.SetParent(Canvass.main.transform, false);
+		explorerPanel = Instantiate(UIPanels.Instance.explorerPanel, Canvass.main.transform, false);
 		explorerPanel.GetComponent<ExplorerPanel>().Init("", "*.obj", "Select 3D object");
 
 		fileOpening = true;
@@ -184,29 +171,30 @@ public class Object3DPanelEditor : MonoBehaviour
 
 		//NOTE(Jitse): Try to find a .mtl file reference.  
 		//NOTE(cont.): This might loop through the entire .obj in some rare cases, if neither mtllib or usemtl is specified.
-		StreamReader objFile = new StreamReader(url);
-		while ((objLine = objFile.ReadLine()) != null)
+		using (var objFile = new StreamReader(url))
 		{
-			//NOTE(Jitse): Skip commented lines.
-			if (objLine.StartsWith("#"))
+			while ((objLine = objFile.ReadLine()) != null)
 			{
-				continue;
-			}
+				//NOTE(Jitse): Skip commented lines.
+				if (objLine.StartsWith("#"))
+				{
+					continue;
+				}
 
-			//TODO(Jitse): Apparently (according to .obj wiki), more than one .mtl file may be referenced within the .obj file.
-			//TODO(cont.): If updating this to allow multiple .mtl files, also update everywhere else where necessary.
-			if (objLine.StartsWith("mtllib"))
-			{
-				matUrl = objLine.Split(' ')[1];
-				break;
-			}
-			if (objLine.StartsWith("usemtl"))
-			{
-				break;
+				//TODO(Jitse): Apparently (according to .obj wiki), more than one .mtl file may be referenced within the .obj file.
+				//TODO(cont.): If updating this to allow multiple .mtl files, also update everywhere else where necessary.
+				if (objLine.StartsWith("mtllib"))
+				{
+					matUrl = objLine.Split(' ')[1];
+					break;
+				}
+
+				if (objLine.StartsWith("usemtl"))
+				{
+					break;
+				}
 			}
 		}
-
-		objFile.Close();
 
 		if (matUrl != "")
 		{
@@ -216,48 +204,48 @@ public class Object3DPanelEditor : MonoBehaviour
 				files.Add(matUrl);
 				filePaths.Add(matUrlPath);
 
-				string mtlLine;
-
 				//NOTE(Jitse): Find all texture references.  
-				StreamReader mtlFile = new StreamReader(matUrlPath);
-				while ((mtlLine = mtlFile.ReadLine()) != null)
+				using (var mtlFile = new StreamReader(matUrlPath))
 				{
-					//NOTE(Jitse): Skip commented lines.
-					if (mtlLine.StartsWith("#"))
+					string mtlLine;
+					while ((mtlLine = mtlFile.ReadLine()) != null)
 					{
-						continue;
-					}
+						//NOTE(Jitse): Skip commented lines.
+						if (mtlLine.StartsWith("#"))
+						{
+							continue;
+						}
 
-					//NOTE(Jitse): Check if the line contains an extension
-					mtlLine = mtlLine.Trim('\t');
-					var extension = Path.GetExtension(mtlLine);
-					
-					if (extension.Length > 1 && !ContainsDigit(extension))
-					{
-						string textureFile = mtlLine.Substring(mtlLine.LastIndexOf(' ') + 1);
-						textureFile = textureFile.Replace("\\\\", "\\");
-						string textureFilePath = Path.Combine(folderPath, textureFile);
-						if (File.Exists(textureFilePath))
+						//NOTE(Jitse): Check if the line contains an extension
+						mtlLine = mtlLine.Trim('\t');
+						var extension = Path.GetExtension(mtlLine);
+
+						if (extension.Length > 1 && !ContainsDigit(extension))
 						{
-							if (!filePaths.Contains(textureFilePath))
+							string textureFile = mtlLine.Substring(mtlLine.LastIndexOf(' ') + 1);
+							textureFile = textureFile.Replace("\\\\", "\\");
+							string textureFilePath = Path.Combine(folderPath, textureFile);
+
+							if (File.Exists(textureFilePath))
 							{
-								filePaths.Add(Path.Combine(folderPath, textureFile));
-								textures.Add(textureFile);
+								if (!filePaths.Contains(textureFilePath))
+								{
+									filePaths.Add(Path.Combine(folderPath, textureFile));
+									textures.Add(textureFile);
+								}
 							}
-						}
-						else
-						{
-							textureFile = "# File not found: " + textureFile;
-						}
-						if (!files.Contains(textureFile))
-						{
-							
-							files.Add(textureFile);
+							else
+							{
+								textureFile = "# File not found: " + textureFile;
+							}
+
+							if (!files.Contains(textureFile))
+							{
+								files.Add(textureFile);
+							}
 						}
 					}
 				}
-
-				mtlFile.Close();
 			} 
 			else
 			{
@@ -271,9 +259,9 @@ public class Object3DPanelEditor : MonoBehaviour
 
 	private void ShowFiles()
 	{
-		dependencies.text = string.Join("\n", files);
+		dependencies.text = String.Join("\n", files);
 		dependencies.fontStyle = FontStyle.Normal;
-		Color color = dependencies.color;
+		var color = dependencies.color;
 		color.a = 1f;
 		dependencies.color = color;
 	}

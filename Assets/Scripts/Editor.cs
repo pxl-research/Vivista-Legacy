@@ -40,6 +40,8 @@ public enum InteractionType
 	FindArea,
 	MultipleChoiceArea,
 	MultipleChoiceImage,
+	TabularData,
+	Chapter,
 	Object3D
 }
 
@@ -471,7 +473,6 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
-			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 			bool finished = false;
 			//NOTE(Simon): Some panels use Esc internally to cancel a child action. We don't want to also cancel the panel in that case.
 			bool allowCancel = true;
@@ -702,21 +703,20 @@ public class Editor : MonoBehaviour
 							answerUrls.Add(texturePaths[i]);
 						}
 
-						var newFilenames = new string[answerUrls.Count];
 						var newFullPaths = new List<string>(answerUrls.Count);
-						newFilenames = CopyNewExtrasFolder(lastPlacedPoint, answerUrls, textures);
+						var newFilenames = CopyNewExtrasFolder(lastPlacedPoint, answerUrls, textures);
 
 						for (int i = 0; i < newFilenames.Length; i++)
 						{
 							var newFilename = newFilenames[i];
-							if (newFilename != "" && newFilename != null && newFilename.Length > 0)
+							if (!String.IsNullOrEmpty(newFilename))
 							{
 								newFullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename));
 							}
 						}
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						var parameters = new float[] { editor.answerScaling, editor.answerX, editor.answerY };
+						var parameters = new [] { editor.answerScaling, editor.answerX, editor.answerY };
 						panel.Init(editor.answerTitle, newFullPaths, parameters);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.filename = string.Join("\f", newFilenames);
@@ -759,7 +759,6 @@ public class Editor : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100))
 			{
 				SetInteractionpointPosition(pointToMove.point, hit.point);
-				var trans = pointToMove.point.transform;
 				transform.position = hit.point;
 			}
 
@@ -840,7 +839,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<VideoPanelEditor>();
 					allowCancel = editor.allowCancel;
 
-					if (editor && editor.answered)
+					if (editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
@@ -862,7 +861,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<AudioPanelEditor>();
 					allowCancel = editor.allowCancel;
 
-					if (editor && editor.answered)
+					if (editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
@@ -1002,7 +1001,7 @@ public class Editor : MonoBehaviour
 					var editor = interactionEditor.GetComponent<Object3DPanelEditor>();
 					allowCancel = editor.allowCancel;
 
-					if (editor && editor.answered)
+					if (editor.answered)
 					{
 						SetExtrasToDeleted(pointToEdit.filename);
 
@@ -1017,21 +1016,20 @@ public class Editor : MonoBehaviour
 							answerUrls.Add(texturePaths[i]);
 						}
 
-						var newFilenames = new string[answerUrls.Count];
 						var newFullPaths = new List<string>(answerUrls.Count);
-						newFilenames = CopyNewExtrasFolder(pointToEdit, answerUrls, textures);
+						var newFilenames = CopyNewExtrasFolder(pointToEdit, answerUrls, textures);
 
 						for (int i = 0; i < newFilenames.Length; i++)
 						{
 							var newFilename = newFilenames[i];
-							if (newFilename != "" && newFilename != null && newFilename.Length > 0)
+							if (!String.IsNullOrEmpty(newFilename))
 							{
 								newFullPaths.Add(Path.Combine(Application.persistentDataPath, meta.guid.ToString(), newFilename));
 							}
 						}
 
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
-						var parameters = new float[] { editor.answerScaling, editor.answerX, editor.answerY };
+						var parameters = new [] { editor.answerScaling, editor.answerX, editor.answerY };
 						panel.Init(editor.answerTitle, newFullPaths, parameters);
 						pointToEdit.title = editor.answerTitle;
 						pointToEdit.filename = string.Join("\f", newFilenames);
@@ -1364,16 +1362,6 @@ public class Editor : MonoBehaviour
 		Destroy(point.point);
 		if (point.panel != null)
 		{
-			//NOTE(Jitse): 3D Objects aren't child objects of the panel, so this needs to be done to delete the objects from the ObjectRenderer GO.
-			if (point.type == InteractionType.Object3D)
-			{
-				var obj3dPanel = point.panel.GetComponent<Object3DPanel>();
-				if (obj3dPanel.object3d != null)
-				{
-					var objName = "holder_" + point.panel.GetComponent<Object3DPanel>().object3d.name;
-					Destroy(GameObject.Find("/ObjectRenderer/" + objName));
-				}
-			}
 			Destroy(point.panel);
 		}
 		UnsavedChangesTracker.Instance.unsavedChanges = true;
@@ -2223,13 +2211,11 @@ public class Editor : MonoBehaviour
 		}
 
 		var objectRenderer = GameObject.Find("ObjectRenderer").GetComponent<Transform>();
-		var childCount = objectRenderer.childCount;
-		for (int i = childCount - 1; i >= 0; i--) 
+		foreach (Transform child in objectRenderer)
 		{
-			var objectHolder = objectRenderer.GetChild(i);
-			if (objectHolder.name.StartsWith("holder"))
+			if (child.name.StartsWith("holder"))
 			{
-				DestroyImmediate(objectHolder.gameObject);
+				DestroyImmediate(child.gameObject);
 			}
 		}
 
@@ -2345,6 +2331,7 @@ public class Editor : MonoBehaviour
 					var panel = Instantiate(UIPanels.Instance.multipleChoiceImagePanel, Canvass.main.transform);
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
+
 					foreach (var file in filenames)
 					{
 						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
@@ -2365,19 +2352,24 @@ public class Editor : MonoBehaviour
 					var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
 					var filenames = newInteractionPoint.filename.Split('\f');
 					var urls = new List<string>();
+
 					foreach (var file in filenames)
 					{
-						if (file == null || file == "")
+						if (String.IsNullOrEmpty(file))
 						{
 							continue;
 						}
+
 						string url = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), file);
+
 						if (!File.Exists(url))
 						{
 							Debug.LogWarningFormat($"File missing: {url}");
 						}
+
 						urls.Add(url);
 					}
+
 					var body = point.body.Split('\f');
 					float[] parameters = new float[body.Length];
 
@@ -2385,6 +2377,7 @@ public class Editor : MonoBehaviour
 					{
 						parameters[i] = float.Parse(body[i]);
 					}
+
 					panel.Init(newInteractionPoint.title, urls, parameters);
 					newInteractionPoint.panel = panel.gameObject;
 					break;
@@ -2603,10 +2596,7 @@ public class Editor : MonoBehaviour
 				var filesInPoint = point.filename.Split('\f');
 				foreach (var file in filesInPoint)
 				{
-					if (file != null && file != "")
-					{
-						allExtras.Add(Path.Combine(projectFolder, file), point);
-					}
+					allExtras.Add(Path.Combine(projectFolder, file), point);
 				}
 			}
 		}
@@ -2692,10 +2682,7 @@ public class Editor : MonoBehaviour
 
 		foreach (var path in list)
 		{
-			if (path != null && path != "")
-			{
-				allExtras[Path.Combine(projectFolder, path)] = null;
-			}
+			allExtras[Path.Combine(projectFolder, path)] = null;
 		}
 	}
 

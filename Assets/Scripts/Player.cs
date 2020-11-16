@@ -564,15 +564,18 @@ public class Player : MonoBehaviour
 					var urls = new List<string>();
 					foreach (var file in filenames)
 					{
-						if (file == null || file == "")
+						if (String.IsNullOrEmpty(file))
 						{
 							continue;
 						}
+
 						string url = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), file);
+
 						if (!File.Exists(url))
 						{
 							Debug.LogWarningFormat($"File missing: {url}");
 						}
+
 						urls.Add(url);
 					}
 					var body = point.body.Split('\f');

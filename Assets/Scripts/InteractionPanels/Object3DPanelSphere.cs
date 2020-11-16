@@ -14,44 +14,38 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
-	private Camera cameraVr;
 
-	[SerializeField]
 	private string filePath = "";
-	[SerializeField]
 	private string objectName = "";
-	[SerializeField]
 	private ImportOptions importOptions = new ImportOptions();
 
 	private ObjectImporter objImporter;
 	private int valueX;
 	private int valueY;
-	private bool rotate;
 	private Renderer rend;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
-	private float sensitivity;
-	private Vector3 mouseReference;
+	private float sensitivity = 0.4f;
+	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
 	private Vector3 rotation;
 	private bool isRotating;
+
+	private int layer;
 
 	public void Init(string newTitle, List<string> newUrls, float[] newParameters)
 	{
 		title.text = newTitle;
 		valueX = Convert.ToInt32(newParameters[1]);
 		valueY = Convert.ToInt32(newParameters[2]);
-		sensitivity = 0.4f;
 
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
-		if (objImporter == null)
-		{
-			objImporter = objectRenderer.AddComponent<ObjectImporter>();
-		}
+
+		objImporter.ImportingComplete -= SetObjectProperties;
 		objImporter.ImportingComplete += SetObjectProperties;
 
-		cameraVr = GameObject.Find("VRCamera").GetComponent<Camera>();
+		layer = LayerMask.NameToLayer("3DObjects");
 
 		if (newUrls.Count > 0)
 		{
@@ -113,7 +107,8 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				var scale = 100f / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
+				var desiredScale = 100f;
+				var scale = desiredScale / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				//NOTE(cont.): Set object position to the bounding box center, this fixes when objects have an offset from their pivot point.
@@ -129,17 +124,21 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
 				rotation = objRotation;
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
-				object3d.SetLayer(12);
+				object3d.SetLayer(layer);
 				object3d.SetActive(false);
+
 				EventTrigger trigger = object3d.AddComponent<EventTrigger>();
 				EventTrigger.Entry entryPointerDown = new EventTrigger.Entry();
 				entryPointerDown.eventID = EventTriggerType.PointerDown;
 				entryPointerDown.callback.AddListener((eventData) => { OnPointerDown(); });
+
 				EventTrigger.Entry entryPointerUp = new EventTrigger.Entry();
 				entryPointerUp.eventID = EventTriggerType.PointerUp;
 				entryPointerUp.callback.AddListener((eventData) => { OnPointerUp(); });
+
 				trigger.triggers.Add(entryPointerDown);
 				trigger.triggers.Add(entryPointerUp);
+
 				if (objectHolder == null)
 				{
 					objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
@@ -149,9 +148,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				break;
 			}
 		}
-
-		//NOTE(Jitse): Makes sure to not call this again when importing a new object.
-		objImporter.ImportingComplete -= SetObjectProperties;
 	}
 
 	private void OnEnable()
@@ -160,9 +156,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			object3d.SetActive(true);
 		}
-
-		cameraVr.cullingMask |= 1 << LayerMask.NameToLayer("3DObjects");
-		cameraVr.cullingMask &= ~(1 << LayerMask.NameToLayer("interactionPoints"));
 	}
 
 	private void OnDisable()
@@ -171,26 +164,23 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			object3d.SetActive(false);
 		}
-
-		cameraVr.cullingMask |= 1 << LayerMask.NameToLayer("interactionPoints");
-		cameraVr.cullingMask &= ~(1 << LayerMask.NameToLayer("3DObjects"));
 	}
 
 	private void Update()
 	{
 		if (isRotating)
 		{
-			mouseOffset = (Input.mousePosition - mouseReference);
+			mouseOffset = Input.mousePosition - prevMousePos;
 			rotation.y = -(mouseOffset.x + mouseOffset.y) * sensitivity;
 			object3d.transform.Rotate(rotation);
-			mouseReference = Input.mousePosition;
+			prevMousePos = Input.mousePosition;
 		}
 	}
 
 	public void OnPointerUp()
 	{
 		isRotating = true;
-		mouseReference = Input.mousePosition;
+		prevMousePos = Input.mousePosition;
 		Debug.Log("Pointer down 3D object");
 	}
 

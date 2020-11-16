@@ -18,11 +18,8 @@ public class Object3DPanel : MonoBehaviour
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
 
-	[SerializeField]
 	private string filePath = "";
-	[SerializeField]
 	private string objectName = "";
-	[SerializeField]
 	private ImportOptions importOptions = new ImportOptions();
 
 	private ObjectImporter objImporter;
@@ -30,6 +27,8 @@ public class Object3DPanel : MonoBehaviour
 	private int valueY;
 	private bool rotate;
 	private Renderer rend;
+
+	private int layer;
 
 	public void Init(string newTitle, List<string> newPaths, float[] parameters)
 	{
@@ -39,12 +38,12 @@ public class Object3DPanel : MonoBehaviour
 
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
-		if (objImporter == null)
-		{
-			objImporter = objectRenderer.AddComponent<ObjectImporter>();
-		}
 
+		//NOTE(Simon): Remove any previous event handlers
+		objImporter.ImportingComplete -= SetObjectProperties;
 		objImporter.ImportingComplete += SetObjectProperties;
+
+		layer = LayerMask.NameToLayer("3DObjects");
 
 		if (newPaths.Count > 0)
 		{
@@ -61,7 +60,7 @@ public class Object3DPanel : MonoBehaviour
 					objectHolder.transform.parent = objectRenderer.transform;
 					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
 				}
-			} 
+			}
 			else
 			{
 				errorText.gameObject.SetActive(true);
@@ -90,8 +89,8 @@ public class Object3DPanel : MonoBehaviour
 					var mainMesh = object3d.AddComponent<MeshFilter>();
 
 					//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
-					MeshFilter[] meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
-					CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+					var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
+					var combine = new CombineInstance[meshFilters.Length];
 
 					int k = 1;
 					while (k < meshFilters.Length)
@@ -112,7 +111,8 @@ public class Object3DPanel : MonoBehaviour
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				var scale = 100f / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
+				const float desiredScale = 100f;
+				float scale = desiredScale / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				//NOTE(cont.): Set object position to the bounding box center, this fixes when objects have an offset from their pivot point.
@@ -127,8 +127,9 @@ public class Object3DPanel : MonoBehaviour
 				rotation.x = -90;
 				object3d.transform.localRotation = Quaternion.Euler(rotation);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
-				object3d.SetLayer(12);
+				object3d.SetLayer(layer);
 				object3d.SetActive(false);
+				//TODO(Jitse): Check if still necessary
 				if (objectHolder == null)
 				{
 					objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
@@ -138,9 +139,6 @@ public class Object3DPanel : MonoBehaviour
 				break;
 			}
 		}
-
-		//NOTE(Jitse): Makes sure to not call this again when importing a new object.
-		objImporter.ImportingComplete -= SetObjectProperties;
 	}
 
 	private void Update()
@@ -165,6 +163,11 @@ public class Object3DPanel : MonoBehaviour
 		{
 			object3d.SetActive(false);
 		}
+	}
+
+	private void OnDestroy()
+	{
+		Destroy(objectHolder);
 	}
 
 	public void ToggleRotate()
