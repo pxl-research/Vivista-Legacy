@@ -10,6 +10,7 @@ public class Object3DPanelEditor : MonoBehaviour
 
 	public InputField objectUrl;
 	public Text dependencies;
+	public Text dependenciesPlaceholder;
 	public InputField title;
 
 	public bool answered;
@@ -259,9 +260,8 @@ public class Object3DPanelEditor : MonoBehaviour
 	{
 		dependencies.text = String.Join("\n", files);
 		dependencies.fontStyle = FontStyle.Normal;
-		var color = dependencies.color;
-		color.a = 1f;
-		dependencies.color = color;
+		dependenciesPlaceholder.gameObject.SetActive(false);
+		dependencies.gameObject.SetActive(true);
 	}
 
 	private bool ContainsDigit(string text)
