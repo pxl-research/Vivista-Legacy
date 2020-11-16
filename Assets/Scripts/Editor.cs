@@ -2211,11 +2211,15 @@ public class Editor : MonoBehaviour
 		}
 
 		var objectRenderer = GameObject.Find("ObjectRenderer").GetComponent<Transform>();
-		foreach (Transform child in objectRenderer)
+
+		//NOTE(Jitse): Reverse loop because we're deleting instances
+		var childCount = objectRenderer.childCount;
+		for (int i = childCount - 1; i >= 0; i--)
 		{
-			if (child.name.StartsWith("holder"))
+			var objectHolder = objectRenderer.GetChild(i);
+			if (objectHolder.name.StartsWith("holder"))
 			{
-				DestroyImmediate(child.gameObject);
+				DestroyImmediate(objectHolder.gameObject);
 			}
 		}
 
