@@ -304,11 +304,11 @@ public class IndexPanel : MonoBehaviour
 		{
 			url += $"&agedays={searchParamAgeDays}";
 		}
-		if (!string.IsNullOrEmpty(searchParamText))
+		if (!String.IsNullOrEmpty(searchParamText))
 		{
 			url += $"&search={searchParamText}";
 		}
-		if (!string.IsNullOrEmpty(searchParamAuthor))
+		if (!String.IsNullOrEmpty(searchParamAuthor))
 		{
 			url += $"&author={searchParamAuthor}";
 		}

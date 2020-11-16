@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -503,7 +502,7 @@ public class Editor : MonoBehaviour
 						panel.Init(editor.answerTitle, newFullPaths);
 						lastPlacedPoint.title = editor.answerTitle;
 						lastPlacedPoint.body = "";
-						lastPlacedPoint.filename = string.Join("\f", newFilenames);
+						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -575,7 +574,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.title = editor.answerQuestion;
 						//NOTE(Kristof): \f is used as a split character to divide the string into an array
 						lastPlacedPoint.body = editor.answerCorrect + "\f";
-						lastPlacedPoint.body += string.Join("\f", editor.answerAnswers);
+						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
@@ -678,7 +677,7 @@ public class Editor : MonoBehaviour
 						panel.Init(editor.answerQuestion, newFullPaths, editor.answerCorrect);
 						lastPlacedPoint.title = editor.answerQuestion;
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
-						lastPlacedPoint.filename = string.Join("\f", newFilenames);
+						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -718,7 +717,7 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPaths);
 						lastPlacedPoint.title = editor.answerTitle;
-						lastPlacedPoint.filename = string.Join("\f", newFilenames);
+						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
 
 						finished = true;
@@ -1029,7 +1028,7 @@ public class Editor : MonoBehaviour
 						var panel = Instantiate(UIPanels.Instance.object3DPanel, Canvass.main.transform);
 						panel.Init(editor.answerTitle, newFullPaths);
 						pointToEdit.title = editor.answerTitle;
-						pointToEdit.filename = string.Join("\f", newFilenames);
+						pointToEdit.filename = String.Join("\f", newFilenames);
 						pointToEdit.panel = panel.gameObject;
 
 						finished = true;

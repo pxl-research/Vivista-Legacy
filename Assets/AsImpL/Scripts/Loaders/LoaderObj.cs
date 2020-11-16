@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 
 namespace AsImpL
 {
@@ -54,7 +53,7 @@ namespace AsImpL
 
             string mtlLibName = ParseMaterialLibName(absolutePath);
 
-            if (!string.IsNullOrEmpty(mtlLibName))
+            if (!String.IsNullOrEmpty(mtlLibName))
             {
                 //mtlDepPathList.Add(mtlLibName);
                 string mtlPath = basePath + mtlLibName;
@@ -63,19 +62,19 @@ namespace AsImpL
                 ParseMaterialData(lines, mtlData);
                 foreach (MaterialData mtl in mtlData)
                 {
-                    if (!string.IsNullOrEmpty(mtl.diffuseTexPath))
+                    if (!String.IsNullOrEmpty(mtl.diffuseTexPath))
                     {
                         mtlTexPathList.Add(mtl.diffuseTexPath);
                     }
-                    if (!string.IsNullOrEmpty(mtl.specularTexPath))
+                    if (!String.IsNullOrEmpty(mtl.specularTexPath))
                     {
                         mtlTexPathList.Add(mtl.specularTexPath);
                     }
-                    if (!string.IsNullOrEmpty(mtl.bumpTexPath))
+                    if (!String.IsNullOrEmpty(mtl.bumpTexPath))
                     {
                         mtlTexPathList.Add(mtl.bumpTexPath);
                     }
-                    if (!string.IsNullOrEmpty(mtl.opacityTexPath))
+                    if (!String.IsNullOrEmpty(mtl.opacityTexPath))
                     {
                         mtlTexPathList.Add(mtl.opacityTexPath);
                     }
@@ -91,7 +90,7 @@ namespace AsImpL
             string url = absolutePath.Contains("//") ? absolutePath : "file:///" + absolutePath;
             yield return LoadOrDownloadText(url);
 
-            if (string.IsNullOrEmpty(loadedText))
+            if (String.IsNullOrEmpty(loadedText))
             {
                 // loading errors are already notified by LoadOrDownloadText()
                 if (loadedText == "")
@@ -339,13 +338,13 @@ namespace AsImpL
                         }
                         break;
                     case "mtllib":
-                        if (!string.IsNullOrEmpty(parameters))
+                        if (!String.IsNullOrEmpty(parameters))
                         {
                             mtlLib = parameters;
                         }
                         break;
                     case "usemtl":
-                        if (!string.IsNullOrEmpty(parameters))
+                        if (!String.IsNullOrEmpty(parameters))
                         {
                             dataSet.AddMaterialName(DataSet.FixMaterialName(parameters));
                         }
@@ -423,7 +422,7 @@ namespace AsImpL
                 // remove comments
                 if (line.IndexOf("#") != -1) line = line.Substring(0, line.IndexOf("#"));
                 string[] p = line.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-                if (p.Length == 0 || string.IsNullOrEmpty(p[0])) continue;
+                if (p.Length == 0 || String.IsNullOrEmpty(p[0])) continue;
                 string parameters = null;
                 if (line.Length > p[0].Length)
                 {
@@ -461,7 +460,7 @@ namespace AsImpL
                             break;
                         case "map_KD":
                         case "map_Kd": // Color texture, diffuse reflectivity
-                            if (!string.IsNullOrEmpty(parameters))
+                            if (!String.IsNullOrEmpty(parameters))
                             {
                                 current.diffuseTexPath = parameters;
                             }
@@ -470,13 +469,13 @@ namespace AsImpL
                         case "map_Ks": // specular reflectivity of the material
                         case "map_kS":
                         case "map_Ns": // Scalar texture for specular exponent
-                            if (!string.IsNullOrEmpty(parameters))
+                            if (!String.IsNullOrEmpty(parameters))
                             {
                                 current.specularTexPath = parameters;
                             }
                             break;
                         case "map_bump": // Bump map texture
-                            if (!string.IsNullOrEmpty(parameters))
+                            if (!String.IsNullOrEmpty(parameters))
                             {
                                 current.bumpTexPath = parameters;
                             }
@@ -486,7 +485,7 @@ namespace AsImpL
                             break;
                         case "map_opacity":
                         case "map_d": // Scalar texture modulating the dissolve into the background
-                            if (!string.IsNullOrEmpty(parameters))
+                            if (!String.IsNullOrEmpty(parameters))
                             {
                                 current.opacityTexPath = parameters;
                             }
@@ -495,14 +494,14 @@ namespace AsImpL
                             current.illumType = FastIntParse(p[1]);
                             break;
                         case "refl": // reflection map (replaced with Unity environment reflection)
-                            if (!string.IsNullOrEmpty(parameters))
+                            if (!String.IsNullOrEmpty(parameters))
                             {
                                 current.hasReflectionTex = true;
                             }
                             break;
                         case "map_Ka": // ambient reflectivity color texture
                         case "map_kA":
-                            if (!string.IsNullOrEmpty(parameters))
+                            if (!String.IsNullOrEmpty(parameters))
                             {
                                 Debug.Log("Map not supported:" + line);
                             }
@@ -599,7 +598,7 @@ namespace AsImpL
                     args.Add(param[pos]);
                 }
                 // TODO: some processing of options
-                Debug.Log("found option: " + optionName + " of material: " + mtlData.materialName + " args: " + string.Concat(args.ToArray()));
+                Debug.Log("found option: " + optionName + " of material: " + mtlData.materialName + " args: " + String.Concat(args.ToArray()));
             }
             // set the file name, if found
             // TODO: other parsed parameters are not used for now

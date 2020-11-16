@@ -703,10 +703,10 @@ namespace AsImpL
                     // The map_d value is multiplied by the d value --> Fade mode
                     mode = ModelUtil.MtlBlendMode.FADE;
 #if UNITY_EDITOR
-                    if (!string.IsNullOrEmpty(alternativeTexPath))
+                    if (!String.IsNullOrEmpty(alternativeTexPath))
                     {
                         string texAssetPath = AssetDatabase.GetAssetPath(md.opacityTex);
-                        if (!string.IsNullOrEmpty(texAssetPath))
+                        if (!String.IsNullOrEmpty(texAssetPath))
                         {
                             EditorUtil.SaveAndReimportPngTexture(ref albedoTexture, texAssetPath, "_alpha");
                         }
@@ -750,10 +750,10 @@ namespace AsImpL
                 albedoTexture.name = md.diffuseTexPath;
                 albedoTexture.Apply();
 #if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(alternativeTexPath))
+                if (!String.IsNullOrEmpty(alternativeTexPath))
                 {
                     string texAssetPath = AssetDatabase.GetAssetPath(md.opacityTex);
-                    if (!string.IsNullOrEmpty(texAssetPath))
+                    if (!String.IsNullOrEmpty(texAssetPath))
                     {
                         EditorUtil.SaveAndReimportPngTexture(ref albedoTexture, texAssetPath, "_op");
                     }

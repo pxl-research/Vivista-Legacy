@@ -106,7 +106,7 @@ namespace AsImpL
         /// <summary>
         /// Import data as assets in the project (Editor only)
         /// </summary>
-        public bool ImportingAssets { get { return !string.IsNullOrEmpty(altTexPath); } }
+        public bool ImportingAssets { get { return !String.IsNullOrEmpty(altTexPath); } }
 #endif
 
         /// <summary>
@@ -392,7 +392,7 @@ namespace AsImpL
             else
             {
                 string dirName = Path.GetDirectoryName(absolutePath);
-                basePath = string.IsNullOrEmpty(dirName) ? "" : dirName;
+                basePath = String.IsNullOrEmpty(dirName) ? "" : dirName;
                 if (!basePath.EndsWith("/"))
                 {
                     basePath += "/";

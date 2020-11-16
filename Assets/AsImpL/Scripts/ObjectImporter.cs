@@ -40,7 +40,7 @@ namespace AsImpL
         private static float OBJ_PHASE_PERC = 76f;
         //private static float ASSET_PHASE_PERC = 11f;
 
-        private string importMessage = string.Empty;
+        private string importMessage = String.Empty;
 #endif
         private ImportPhase importPhase = ImportPhase.Idle;
 
@@ -139,7 +139,7 @@ namespace AsImpL
                         switch (importPhase)
                         {
                             case ImportPhase.Idle:
-                                return string.Empty;
+                                return String.Empty;
                             case ImportPhase.ObjLoad:
                                 return Loader.totalProgress.singleProgress[0].message;
                             case ImportPhase.Done:
@@ -154,7 +154,7 @@ namespace AsImpL
                     }
                 }
 
-                return string.Empty;
+                return String.Empty;
             }
         }
 
@@ -193,7 +193,7 @@ namespace AsImpL
 
             importPhase = ImportPhase.TextureImport;
             string dirName = Path.GetDirectoryName(absolutePath);
-            string sourceBasePath = string.IsNullOrEmpty(dirName) ? "" : dirName;
+            string sourceBasePath = String.IsNullOrEmpty(dirName) ? "" : dirName;
             if (!sourceBasePath.EndsWith("/"))
             {
                 sourceBasePath += "/";
@@ -207,7 +207,7 @@ namespace AsImpL
                 importMessage = "Creating folders...";
                 FileInfo fileInfo = new FileInfo(absolutePath);
                 string fileName = fileInfo.Name;
-                if (!string.IsNullOrEmpty(importAssetPath))
+                if (!String.IsNullOrEmpty(importAssetPath))
                 {
                     EditorUtil.CreateAssetFolder("Assets", importAssetPath);
                     EditorUtil.CreateAssetFolder("Assets/" + importAssetPath, fileName);
@@ -217,7 +217,7 @@ namespace AsImpL
                     EditorUtil.CreateAssetFolder("Assets", fileName);
                 }
 
-                string prefabRelPath = (!string.IsNullOrEmpty(importAssetPath)) ? importAssetPath + "/" + fileName : fileName;
+                string prefabRelPath = (!String.IsNullOrEmpty(importAssetPath)) ? importAssetPath + "/" + fileName : fileName;
                 string prefabPath = "Assets/" + prefabRelPath;
                 string prefabName = prefabPath + "/" + fileName.Replace('.', '_') + ".prefab";
 
@@ -333,7 +333,7 @@ namespace AsImpL
         private Loader CreateLoader(string absolutePath)
         {
             string ext = Path.GetExtension(absolutePath);
-            if (string.IsNullOrEmpty(ext))
+            if (String.IsNullOrEmpty(ext))
             {
                 Debug.LogError("No extension defined, unable to detect file format");
                 return null;
@@ -402,7 +402,7 @@ namespace AsImpL
             numTotalImports++;
             loaderList.Add(loader);
             loader.buildOptions = options;
-            if (string.IsNullOrEmpty(objName))
+            if (String.IsNullOrEmpty(objName))
             {
                 objName = Path.GetFileNameWithoutExtension(absolutePath);
             }
