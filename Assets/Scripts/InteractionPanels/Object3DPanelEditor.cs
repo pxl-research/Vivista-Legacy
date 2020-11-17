@@ -227,6 +227,8 @@ public class Object3DPanelEditor : MonoBehaviour
 
 							if (File.Exists(textureFilePath))
 							{
+								//TODO(Jitse): Find an alternative to List, which automatically checks for duplication but also allows indexing.
+								//TODO(cont.): HashSet doesn't allow indexing and therefore is not fitting for our problem.
 								if (!filePaths.Contains(textureFilePath))
 								{
 									filePaths.Add(Path.Combine(folderPath, textureFile));

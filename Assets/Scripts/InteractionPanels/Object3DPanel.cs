@@ -114,7 +114,7 @@ public class Object3DPanel : MonoBehaviour
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
 				const float desiredScale = 100f;
-				float scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
+				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				//NOTE(cont.): Set object position to the bounding box center, this fixes when objects have an offset from their pivot point.

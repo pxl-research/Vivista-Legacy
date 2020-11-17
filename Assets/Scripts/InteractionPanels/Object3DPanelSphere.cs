@@ -25,11 +25,13 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Renderer rend;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
-	private float sensitivity = 0.4f;
+	private float sensitivity = 0.1f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
 	private Vector3 rotation;
 	private bool isRotating;
+	private bool mouseDown;
+	private MeshCollider objectCollider;
 
 	private int layer;
 
@@ -76,46 +78,52 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d = currentObject.gameObject;
 
 				var transforms = object3d.GetComponentsInChildren<Transform>();
-				//NOTE(Jitse): If the object consists of more than 1 child objects, we want to combine the meshes
-				if (transforms.Length > 2)
+				Vector3 objectCenter = Vector3.zero;
+
+				float maxX = float.MinValue;
+				float maxY = float.MinValue;
+				float maxZ = float.MinValue;
+
+				//NOTE(Jitse): Encapsulate the bounds to get the correct center of the 3D object.
+				//NOTE(cont.): Also calculate the bounds size of the object.
+				var meshes = object3d.GetComponentsInChildren<MeshRenderer>();
+				var bounds = meshes[0].bounds;
+				for (int j = 0; j < meshes.Length; j++)
 				{
-					rend = object3d.AddComponent<MeshRenderer>();
-					//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
-					rend.material = transparent;
-					var mainMesh = object3d.AddComponent<MeshFilter>();
-
-					//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
-					MeshFilter[] meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
-					CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-
-					int k = 1;
-					while (k < meshFilters.Length)
+					var currentRend = meshes[j];
+					var boundsSize = currentRend.bounds.size;
+					if (boundsSize.x > maxX)
 					{
-						combine[k].mesh = meshFilters[k].sharedMesh;
-						combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
-
-						k++;
+						maxX = boundsSize.x;
+					}
+					if (boundsSize.y > maxY)
+					{
+						maxY = boundsSize.y;
+					}
+					if (boundsSize.z > maxZ)
+					{
+						maxZ = boundsSize.z;
 					}
 
-					mainMesh.mesh = new Mesh();
-					mainMesh.mesh.CombineMeshes(combine);
+					if (j > 0)
+					{
+						bounds.Encapsulate(meshes[j].bounds);
+					}
 				}
-				else
-				{
-					rend = transforms[1].gameObject.GetComponent<MeshRenderer>();
-				}
+
+				objectCenter = bounds.center;
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				var desiredScale = 100f;
-				var scale = desiredScale / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
+				const float desiredScale = 50f;
+				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				//NOTE(cont.): Set object position to the bounding box center, this fixes when objects have an offset from their pivot point.
 				var children = object3d.GetComponentsInChildren<Transform>();
 				for (int j = 1; j < children.Length; j++)
 				{
-					children[j].localPosition = -rend.bounds.center;
+					children[j].localPosition = -objectCenter;
 				}
 
 				//NOTE(Jitse): Setting correct parameters of the object.
@@ -123,10 +131,11 @@ public class Object3DPanelSphere : MonoBehaviour
 				objRotation.x = -90;
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
 				rotation = objRotation;
+				object3d.transform.localPosition = new Vector3(0, 0, 70);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(layer);
 				object3d.SetActive(false);
-
+				
 				EventTrigger trigger = object3d.AddComponent<EventTrigger>();
 				EventTrigger.Entry entryPointerDown = new EventTrigger.Entry();
 				entryPointerDown.eventID = EventTriggerType.PointerDown;
@@ -139,12 +148,38 @@ public class Object3DPanelSphere : MonoBehaviour
 				trigger.triggers.Add(entryPointerDown);
 				trigger.triggers.Add(entryPointerUp);
 
-				if (objectHolder == null)
-				{
-					objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
-				}
-				objectHolder.transform.localPosition = new Vector3(valueX, valueY, 70);
+				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
+				objectHolder.transform.localPosition = new Vector3(valueX, valueY, 0);
 
+				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
+
+				//NOTE(Jitse): Combine the meshes, so we can assign it to the MeshCollider for hit detection
+				MeshFilter mainMesh;
+				rend = objectHolder.AddComponent<MeshRenderer>();
+
+				//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
+				rend.material = transparent;
+				mainMesh = objectHolder.AddComponent<MeshFilter>();
+
+				//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
+				var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
+				var combine = new CombineInstance[meshFilters.Length];
+
+				int k = 1;
+				while (k < meshFilters.Length)
+				{
+					combine[k].mesh = meshFilters[k].sharedMesh;
+					combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
+
+					k++;
+				}
+
+				mainMesh.mesh = new Mesh();
+				mainMesh.mesh.CombineMeshes(combine);
+
+				objectCollider = objectHolder.AddComponent<MeshCollider>();
+				objectCollider.convex = true;
+				objectHolder.AddComponent<Rigidbody>();
 				break;
 			}
 		}
@@ -155,6 +190,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (object3d != null)
 		{
 			object3d.SetActive(true);
+			Camera.main.cullingMask |= 1 << LayerMask.NameToLayer("3DObjects");
+			Camera.main.cullingMask &= ~(1 << LayerMask.NameToLayer("interactionPoints"));
 		}
 	}
 
@@ -163,7 +200,9 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (object3d != null)
 		{
 			object3d.SetActive(false);
-		}
+				Camera.main.cullingMask |= 1 << LayerMask.NameToLayer("interactionPoints");
+				Camera.main.cullingMask &= ~(1 << LayerMask.NameToLayer("3DObjects"));
+			}
 	}
 
 	private void Update()
@@ -174,6 +213,35 @@ public class Object3DPanelSphere : MonoBehaviour
 			rotation.y = -(mouseOffset.x + mouseOffset.y) * sensitivity;
 			object3d.transform.Rotate(rotation);
 			prevMousePos = Input.mousePosition;
+		}
+
+		if (mouseDown)
+		{
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hit;
+
+			Debug.Log(ray);
+
+			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			{
+				Debug.Log("Pointer down 3D object");
+				isRotating = true;
+				prevMousePos = Input.mousePosition;
+				transform.position = ray.GetPoint(10000.0f);
+			}
+		}
+		else
+		{
+			isRotating = false;
+		}
+
+		if (Input.GetMouseButtonDown(0))
+		{
+			mouseDown = true;
+		}
+		else if (Input.GetMouseButtonUp(0))
+		{
+			mouseDown = false;
 		}
 	}
 
