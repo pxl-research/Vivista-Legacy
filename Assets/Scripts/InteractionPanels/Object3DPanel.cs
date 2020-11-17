@@ -76,46 +76,52 @@ public class Object3DPanel : MonoBehaviour
 				object3d = currentObject.gameObject;
 
 				var transforms = object3d.GetComponentsInChildren<Transform>();
-				//NOTE(Jitse): If the object consists of more than 1 child objects, we want to combine the meshes
-				if (transforms.Length > 2)
+				Vector3 objectCenter = Vector3.zero;
+
+				float maxX = float.MinValue;
+				float maxY = float.MinValue;
+				float maxZ = float.MinValue;
+
+				//NOTE(Jitse): Encapsulate the bounds to get the correct center of the 3D object.
+				//NOTE(cont.): Also calculate the bounds size of the object.
+				var meshes = object3d.GetComponentsInChildren<MeshRenderer>();
+				var bounds = meshes[0].bounds;
+				for (int j = 0; j < meshes.Length; j++)
 				{
-					rend = object3d.AddComponent<MeshRenderer>();
-					//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
-					rend.material = transparent;
-					var mainMesh = object3d.AddComponent<MeshFilter>();
-
-					//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
-					var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
-					var combine = new CombineInstance[meshFilters.Length];
-
-					int k = 1;
-					while (k < meshFilters.Length)
+					var currentRend = meshes[j];
+					var boundsSize = currentRend.bounds.size;
+					if (boundsSize.x > maxX)
 					{
-						combine[k].mesh = meshFilters[k].sharedMesh;
-						combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
-
-						k++;
+						maxX = boundsSize.x;
+					}
+					if (boundsSize.y > maxY)
+					{
+						maxY = boundsSize.y;
+					}
+					if (boundsSize.z > maxZ)
+					{
+						maxZ = boundsSize.z;
 					}
 
-					mainMesh.mesh = new Mesh();
-					mainMesh.mesh.CombineMeshes(combine);
+					if (j > 0)
+					{
+						bounds.Encapsulate(meshes[j].bounds);
+					}
 				}
-				else
-				{
-					rend = transforms[1].gameObject.GetComponent<MeshRenderer>();
-				}
+
+				objectCenter = bounds.center;
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
 				const float desiredScale = 100f;
-				float scale = desiredScale / Math.Max(Math.Max(rend.bounds.size.x, rend.bounds.size.y), rend.bounds.size.x);
+				float scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
 				//NOTE(cont.): Set object position to the bounding box center, this fixes when objects have an offset from their pivot point.
 				var children = object3d.GetComponentsInChildren<Transform>();
 				for (int j = 1; j < children.Length; j++)
 				{
-					children[j].localPosition = -rend.bounds.center;
+					children[j].localPosition = -objectCenter;
 				}
 
 				//NOTE(Jitse): Setting correct parameters of the object.
@@ -130,11 +136,8 @@ public class Object3DPanel : MonoBehaviour
 				{
 					object3d.SetActive(false);
 				}
-				//TODO(Jitse): Check if still necessary
-				if (objectHolder == null)
-				{
-					objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
-				}
+
+				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
 				objectHolder.transform.localPosition = new Vector3(0, 0, 0);
 
 				break;
