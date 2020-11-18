@@ -26,7 +26,6 @@ public class Object3DPanel : MonoBehaviour
 
 	private ObjectImporter objImporter;
 	private bool rotate;
-	private Renderer rend;
 
 	private int layer;
 
@@ -36,6 +35,8 @@ public class Object3DPanel : MonoBehaviour
 
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
+		importOptions.hideWhileLoading = true;
+		importOptions.inheritLayer = true;
 
 		objImporter.ImportingComplete += SetObjectProperties;
 
@@ -54,6 +55,7 @@ public class Object3DPanel : MonoBehaviour
 				{
 					objectHolder = new GameObject("holder_" + objectName);
 					objectHolder.transform.parent = objectRenderer.transform;
+					objectHolder.layer = layer;
 					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
 				}
 			}

@@ -12,6 +12,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	public Text title;
 	public GameObject object3d;
 	public Material transparent;
+	public Material hoverMaterial;
 	public Button resetTransform;
 	public SteamVR_Action_Boolean grabPinch;
 	public SteamVR_Input_Sources inputSource = SteamVR_Input_Sources.Any;
@@ -32,6 +33,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Vector3 mouseOffset;
 	private bool isRotating;
 	private bool isMoving;
+	private bool isScaling;
 	private bool mouseDown;
 	private bool triggerDown;
 	private MeshCollider objectCollider;
@@ -45,6 +47,8 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
+		importOptions.hideWhileLoading = true;
+		importOptions.inheritLayer = true;
 
 		objImporter.ImportingComplete += SetObjectProperties;
 
@@ -137,23 +141,10 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
 				object3d.transform.localPosition = new Vector3(0, 0, 70);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
-				object3d.SetLayer(objects3dLayer);
-				object3d.SetActive(false);
 				
-				EventTrigger trigger = object3d.AddComponent<EventTrigger>();
-				EventTrigger.Entry entryPointerDown = new EventTrigger.Entry();
-				entryPointerDown.eventID = EventTriggerType.PointerDown;
-				entryPointerDown.callback.AddListener((eventData) => { OnPointerDown(); });
-
-				EventTrigger.Entry entryPointerUp = new EventTrigger.Entry();
-				entryPointerUp.eventID = EventTriggerType.PointerUp;
-				entryPointerUp.callback.AddListener((eventData) => { OnPointerUp(); });
-
-				trigger.triggers.Add(entryPointerDown);
-				trigger.triggers.Add(entryPointerUp);
-
 				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
 				objectHolder.transform.localPosition = new Vector3(0, 0, 0);
+				objectHolder.SetActive(false);
 
 				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
 
@@ -194,11 +185,10 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
-		if (object3d != null)
+		if (objectHolder != null)
 		{
-			object3d.SetActive(true);
-			Camera.main.cullingMask |= 1 << objects3dLayer;
-			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
+			objectHolder.SetActive(true);
+			Camera.main.cullingMask |= 1 << objects3dLayer;			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
 		}
 		if (grabPinch != null)
 		{
@@ -208,11 +198,11 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnDisable()
 	{
-		if (object3d != null)
+		if (objectHolder != null)
 		{
-			object3d.SetActive(false);
-				Camera.main.cullingMask |= 1 << interactionPointsLayer;
-				Camera.main.cullingMask &= ~(1 << objects3dLayer);
+			objectHolder.SetActive(false);
+			Camera.main.cullingMask |= 1 << interactionPointsLayer;
+			Camera.main.cullingMask &= ~(1 << objects3dLayer);
 		}
 		if (grabPinch != null)
 		{
@@ -222,10 +212,24 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void Update()
 	{
+		//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+
+		if (objectCollider.Raycast(ray, out hit, 10000.0f) && !(isMoving || isRotating || isScaling))
+		{
+			rend.material = hoverMaterial;
+		} 
+		else
+		{
+			rend.material = transparent;
+		}
+
 		if (!(mouseDown || triggerDown))
 		{
 			isRotating = false;
 			isMoving = false;
+			isScaling = false;
 		}
 
 		if (isRotating)
@@ -240,14 +244,33 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (isMoving)
 		{
-			
 			mouseOffset = Input.mousePosition - prevMousePos;
 			var position = objectHolder.transform.position;
 			position.y += mouseOffset.y * sensitivity;
 			position.x += mouseOffset.x * sensitivity;
 			objectHolder.transform.position = position;
 			prevMousePos = Input.mousePosition;
-			
+		}
+
+		if (isScaling)
+		{
+			mouseOffset = Input.mousePosition - prevMousePos;
+			var increase = (mouseOffset.y + mouseOffset.x) * sensitivity / 10;
+			var scaling = objectHolder.transform.localScale;
+			var position = objectHolder.transform.position;
+			scaling.y += increase;
+			scaling.x += increase;
+			scaling.z += increase;
+			if (scaling.x < 0)
+			{
+				scaling = Vector3.zero;
+			}
+			//NOTE(Jitse): We have to change the Z position of the object holder when scaling.
+			//NOTE(cont.): The {offset value} has been chosen through testing.
+			position.z = scaling.x * -60 + 60;
+			objectHolder.transform.position = position;
+			objectHolder.transform.localScale = scaling;
+			prevMousePos = Input.mousePosition;
 		}
 
 		GetMouseButtonStates();
@@ -255,11 +278,11 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void GetMouseButtonStates()
 	{
+		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+		RaycastHit hit;
+
 		if (Input.GetMouseButtonDown(0))
 		{
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-
 			if (objectCollider.Raycast(ray, out hit, 10000.0f))
 			{
 				isRotating = true;
@@ -274,9 +297,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (Input.GetMouseButtonDown(1))
 		{
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-
 			if (objectCollider.Raycast(ray, out hit, 10000.0f))
 			{
 				isMoving = true;
@@ -289,11 +309,22 @@ public class Object3DPanelSphere : MonoBehaviour
 			mouseDown = false;
 		}
 
+		if (Input.GetMouseButtonDown(2))
+		{
+			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			{
+				isScaling = true;
+				mouseDown = true;
+				prevMousePos = Input.mousePosition;
+			}
+		}
+		else if (Input.GetMouseButtonUp(2))
+		{
+			mouseDown = false;
+		}
+
 		if (SteamVR_Actions.default_Grip.GetState(inputSource))
 		{
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-
 			if (objectCollider.Raycast(ray, out hit, 10000.0f))
 			{
 				isMoving = true;
@@ -323,7 +354,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		var objRotation = Vector3.zero;
 		objRotation.x = -90;
 		object3d.transform.localRotation = Quaternion.Euler(objRotation);
-		var objPosition = Vector3.zero;
-		objectHolder.transform.localPosition = objPosition;
+		objectHolder.transform.localScale = new Vector3(1, 1, 1);
+		objectHolder.transform.localPosition = Vector3.zero;
+		objectHolder.transform.rotation = Quaternion.Euler(Vector3.zero);
 	}
 }
