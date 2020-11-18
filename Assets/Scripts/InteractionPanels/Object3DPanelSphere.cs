@@ -25,11 +25,12 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Renderer rend;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
-	private float sensitivity = 0.1f;
+	private float sensitivity = 0.25f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
 	private Vector3 rotation;
 	private bool isRotating;
+	private bool isMoving;
 	private bool mouseDown;
 	private MeshCollider objectCollider;
 
@@ -165,7 +166,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
 				var combine = new CombineInstance[meshFilters.Length];
 
-				int k = 1;
+				int k = 0;
 				while (k < meshFilters.Length)
 				{
 					combine[k].mesh = meshFilters[k].sharedMesh;
@@ -207,39 +208,67 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void Update()
 	{
+		if (!mouseDown)
+		{
+			isRotating = false;
+			isMoving = false;
+		}
+
 		if (isRotating)
 		{
 			mouseOffset = Input.mousePosition - prevMousePos;
-			rotation.y = -(mouseOffset.x + mouseOffset.y) * sensitivity;
-			object3d.transform.Rotate(rotation);
+			var rotation = object3d.transform.rotation.eulerAngles;
+			rotation.y -= mouseOffset.x * sensitivity;
+			rotation.x -= mouseOffset.y * sensitivity;
+			object3d.transform.rotation = Quaternion.Euler(rotation);
 			prevMousePos = Input.mousePosition;
 		}
 
-		if (mouseDown)
+		if (isMoving)
+		{
+			mouseOffset = Input.mousePosition - prevMousePos;
+			var position = objectHolder.transform.position;
+			position.y += mouseOffset.y * sensitivity;
+			position.x += mouseOffset.x * sensitivity;
+			objectHolder.transform.position = position;
+			prevMousePos = Input.mousePosition;
+		}
+
+		GetMouseButtonStates();
+	}
+
+	private void GetMouseButtonStates()
+	{
+		if (Input.GetMouseButtonDown(0))
 		{
 			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			RaycastHit hit;
 
-			Debug.Log(ray);
+			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			{
+				isRotating = true;
+				mouseDown = true;
+				prevMousePos = Input.mousePosition;
+			}
+		}
+		else if (Input.GetMouseButtonUp(0))
+		{
+			mouseDown = false;
+		}
+
+		if (Input.GetMouseButtonDown(1))
+		{
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hit;
 
 			if (objectCollider.Raycast(ray, out hit, 10000.0f))
 			{
-				Debug.Log("Pointer down 3D object");
-				isRotating = true;
+				isMoving = true;
+				mouseDown = true;
 				prevMousePos = Input.mousePosition;
-				transform.position = ray.GetPoint(10000.0f);
 			}
 		}
-		else
-		{
-			isRotating = false;
-		}
-
-		if (Input.GetMouseButtonDown(0))
-		{
-			mouseDown = true;
-		}
-		else if (Input.GetMouseButtonUp(0))
+		else if (Input.GetMouseButtonUp(1))
 		{
 			mouseDown = false;
 		}
@@ -249,12 +278,10 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		isRotating = true;
 		prevMousePos = Input.mousePosition;
-		Debug.Log("Pointer down 3D object");
 	}
 
 	public void OnPointerDown()
 	{
 		isRotating = false;
-		Debug.Log("Pointer up 3D object");
 	}
 }
