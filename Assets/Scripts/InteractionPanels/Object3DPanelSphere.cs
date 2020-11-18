@@ -11,6 +11,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	public Text title;
 	public GameObject object3d;
 	public Material transparent;
+	public Button resetTransform;
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
@@ -20,15 +21,12 @@ public class Object3DPanelSphere : MonoBehaviour
 	private ImportOptions importOptions = new ImportOptions();
 
 	private ObjectImporter objImporter;
-	private int valueX;
-	private int valueY;
 	private Renderer rend;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private float sensitivity = 0.25f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
-	private Vector3 rotation;
 	private bool isRotating;
 	private bool isMoving;
 	private bool mouseDown;
@@ -36,11 +34,9 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private int layer;
 
-	public void Init(string newTitle, List<string> newUrls, float[] newParameters)
+	public void Init(string newTitle, List<string> newUrls)
 	{
 		title.text = newTitle;
-		valueX = Convert.ToInt32(newParameters[1]);
-		valueY = Convert.ToInt32(newParameters[2]);
 
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
@@ -66,6 +62,8 @@ public class Object3DPanelSphere : MonoBehaviour
 				}
 			}
 		}
+
+		resetTransform.onClick.AddListener(ResetTransform);
 	}
 
 	private void SetObjectProperties()
@@ -116,7 +114,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				const float desiredScale = 50f;
+				const float desiredScale = 45f;
 				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
@@ -131,7 +129,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				var objRotation = object3d.transform.localRotation.eulerAngles;
 				objRotation.x = -90;
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
-				rotation = objRotation;
 				object3d.transform.localPosition = new Vector3(0, 0, 70);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(layer);
@@ -150,7 +147,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				trigger.triggers.Add(entryPointerUp);
 
 				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
-				objectHolder.transform.localPosition = new Vector3(valueX, valueY, 0);
+				objectHolder.transform.localPosition = new Vector3(0, 0, 0);
 
 				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
 
@@ -283,5 +280,14 @@ public class Object3DPanelSphere : MonoBehaviour
 	public void OnPointerDown()
 	{
 		isRotating = false;
+	}
+
+	private void ResetTransform()
+	{
+		var objRotation = Vector3.zero;
+		objRotation.x = -90;
+		object3d.transform.localRotation = Quaternion.Euler(objRotation);
+		var objPosition = Vector3.zero;
+		objectHolder.transform.localPosition = objPosition;
 	}
 }

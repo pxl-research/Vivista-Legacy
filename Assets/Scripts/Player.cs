@@ -577,14 +577,8 @@ public class Player : MonoBehaviour
 
 						urls.Add(url);
 					}
-					var body = point.body.Split('\f');
-					float[] parameters = new float[body.Length];
-
-					for (int i = 0; i < body.Length; i++)
-					{
-						parameters[i] = float.Parse(body[i]);
-					}
-					panel.GetComponent<Object3DPanelSphere>().Init(newInteractionPoint.title, urls, parameters);
+					
+					panel.GetComponent<Object3DPanelSphere>().Init(newInteractionPoint.title, urls);
 					newInteractionPoint.panel = panel;
 					break;
 				}
