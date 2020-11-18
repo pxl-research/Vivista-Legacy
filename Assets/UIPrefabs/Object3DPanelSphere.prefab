@@ -270,6 +270,10 @@ MonoBehaviour:
   object3d: {fileID: 0}
   transparent: {fileID: 2100000, guid: c7d0477638bff984a86aa72be29801cb, type: 2}
   resetTransform: {fileID: 4059793422350288076}
+  grabPinch:
+    actionPath: /actions/default/in/Grip
+    needsReinit: 0
+  inputSource: 2
 --- !u!1 &4031495814145594833
 GameObject:
   m_ObjectHideFlags: 0

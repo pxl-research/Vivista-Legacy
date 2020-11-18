@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Valve.VR;
 
 public class Object3DPanelSphere : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	public GameObject object3d;
 	public Material transparent;
 	public Button resetTransform;
+	public SteamVR_Action_Boolean grabPinch;
+	public SteamVR_Input_Sources inputSource = SteamVR_Input_Sources.Any;
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
@@ -30,9 +33,11 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool isRotating;
 	private bool isMoving;
 	private bool mouseDown;
+	private bool triggerDown;
 	private MeshCollider objectCollider;
 
-	private int layer;
+	private int objects3dLayer;
+	private int interactionPointsLayer;
 
 	public void Init(string newTitle, List<string> newUrls)
 	{
@@ -41,10 +46,10 @@ public class Object3DPanelSphere : MonoBehaviour
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
 
-		objImporter.ImportingComplete -= SetObjectProperties;
 		objImporter.ImportingComplete += SetObjectProperties;
 
-		layer = LayerMask.NameToLayer("3DObjects");
+		objects3dLayer = LayerMask.NameToLayer("3DObjects");
+		interactionPointsLayer = LayerMask.NameToLayer("interactionPoints");
 
 		if (newUrls.Count > 0)
 		{
@@ -58,6 +63,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				{
 					objectHolder = new GameObject("holder_" + objectName);
 					objectHolder.transform.parent = objectRenderer.transform;
+					objectHolder.layer = objects3dLayer;
 					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
 				}
 			}
@@ -131,7 +137,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
 				object3d.transform.localPosition = new Vector3(0, 0, 70);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
-				object3d.SetLayer(layer);
+				object3d.SetLayer(objects3dLayer);
 				object3d.SetActive(false);
 				
 				EventTrigger trigger = object3d.AddComponent<EventTrigger>();
@@ -181,6 +187,9 @@ public class Object3DPanelSphere : MonoBehaviour
 				break;
 			}
 		}
+
+		//NOTE(Jitse): After completion, remove current event handler, so that it won't be called again when another Init is called.
+		objImporter.ImportingComplete -= SetObjectProperties;
 	}
 
 	private void OnEnable()
@@ -188,8 +197,12 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (object3d != null)
 		{
 			object3d.SetActive(true);
-			Camera.main.cullingMask |= 1 << LayerMask.NameToLayer("3DObjects");
-			Camera.main.cullingMask &= ~(1 << LayerMask.NameToLayer("interactionPoints"));
+			Camera.main.cullingMask |= 1 << objects3dLayer;
+			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
+		}
+		if (grabPinch != null)
+		{
+			//grabPinch.AddOnChangeListener(OnTriggerPressedOrReleased, inputSource);
 		}
 	}
 
@@ -198,14 +211,18 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (object3d != null)
 		{
 			object3d.SetActive(false);
-				Camera.main.cullingMask |= 1 << LayerMask.NameToLayer("interactionPoints");
-				Camera.main.cullingMask &= ~(1 << LayerMask.NameToLayer("3DObjects"));
-			}
+				Camera.main.cullingMask |= 1 << interactionPointsLayer;
+				Camera.main.cullingMask &= ~(1 << objects3dLayer);
+		}
+		if (grabPinch != null)
+		{
+			//grabPinch.RemoveOnChangeListener(OnTriggerPressedOrReleased, inputSource);
+		}
 	}
 
 	private void Update()
 	{
-		if (!mouseDown)
+		if (!(mouseDown || triggerDown))
 		{
 			isRotating = false;
 			isMoving = false;
@@ -223,12 +240,14 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (isMoving)
 		{
+			
 			mouseOffset = Input.mousePosition - prevMousePos;
 			var position = objectHolder.transform.position;
 			position.y += mouseOffset.y * sensitivity;
 			position.x += mouseOffset.x * sensitivity;
 			objectHolder.transform.position = position;
 			prevMousePos = Input.mousePosition;
+			
 		}
 
 		GetMouseButtonStates();
@@ -268,6 +287,23 @@ public class Object3DPanelSphere : MonoBehaviour
 		else if (Input.GetMouseButtonUp(1))
 		{
 			mouseDown = false;
+		}
+
+		if (SteamVR_Actions.default_Grip.GetState(inputSource))
+		{
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hit;
+
+			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			{
+				isMoving = true;
+				triggerDown = true;
+				prevMousePos = ray.GetPoint(hit.distance);
+			}
+		}
+		else
+		{
+			triggerDown = false;
 		}
 	}
 
