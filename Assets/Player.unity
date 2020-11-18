@@ -2138,7 +2138,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1338136329}
   m_CullTransparentMesh: 0
---- !u!21 &1376512158
+--- !u!21 &1343869558
 Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
@@ -3457,7 +3457,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1996426690}
   - component: {fileID: 1996426691}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3589,7 +3589,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2144486936}
   - component: {fileID: 2144486935}
-  m_Layer: 12
+  m_Layer: 0
   m_Name: ObjectRenderer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3684,6 +3684,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 1376512158}
+      objectReference: {fileID: 1343869558}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 90327f67b40b91e439ac4274a7d43b8e, type: 3}
