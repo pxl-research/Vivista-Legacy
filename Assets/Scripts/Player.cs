@@ -84,9 +84,6 @@ public class Player : MonoBehaviour
 	public GameObject mandatoryPauseMessage;
 	public GameObject mandatoryPauseMessageVR;
 
-	private const float timeToInteract = 0.75f;
-	private bool isInteractingWithPoint;
-	private float interactionTimer;
 	private EventSystem mainEventSystem;
 
 	void Awake()
@@ -161,42 +158,24 @@ public class Player : MonoBehaviour
 
 					if (isSeekbarOutOfView)
 					{
-						var newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
+						float newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
 
 						//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
 						//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
-						var radianAngle = (-newAngle + 90) * Mathf.PI / 180;
-						var x = 1.8f * Mathf.Cos(radianAngle);
-						var y = Camera.main.transform.position.y - 2f;
-						var z = 1.8f * Mathf.Sin(radianAngle);
+						float radianAngle = (-newAngle + 90) * Mathf.PI / 180;
+						float x = 1.8f * Mathf.Cos(radianAngle);
+						float y = Camera.main.transform.position.y - 2f;
+						float z = 1.8f * Mathf.Sin(radianAngle);
 
 						Canvass.seekbar.transform.position = new Vector3(x, y, z);
 						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
 					}
 				}
-
-				//NOTE(Kristof): Rotating the Crosshair canvas
-				{
-					Ray cameraRay = Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
-					Canvass.crosshair.transform.position = cameraRay.GetPoint(90);
-					Canvass.crosshair.transform.LookAt(Camera.main.transform);
-				}
 			}
 			else
 			{
 				Canvass.seekbar.gameObject.SetActive(false);
-				Canvass.crosshair.gameObject.SetActive(false);
 			}
-		}
-
-		//NOTE(Simon): Enable/disable crosshair based on usage of controllers
-		if (VRDevices.loadedControllerSet != VRDevices.LoadedControllerSet.NoControllers)
-		{
-			Crosshair.Disable();
-		}
-		else
-		{
-			Crosshair.Enable();
 		}
 
 		//NOTE(Simon): Zoom when not using HMD
@@ -208,26 +187,25 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		Ray interactionpointRay;
+		Ray interactionpointRay = new Ray();
 		//NOTE(Kristof): Deciding on which object the Ray will be based on
 		//TODO(Simon): Prefers right over left controller
 		{
-			var controllerRay = new Ray();
-
 			if (trackedControllerLeft != null && trackedControllerLeft.triggerPressed)
 			{
-				controllerRay = trackedControllerLeft.CastRay();
+				interactionpointRay = trackedControllerLeft.CastRay();
 			}
 
 			if (trackedControllerRight != null && trackedControllerRight.triggerPressed)
 			{
-				controllerRay = trackedControllerRight.CastRay();
+				interactionpointRay = trackedControllerRight.CastRay();
 			}
 
-			interactionpointRay = VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers ? controllerRay : Camera.main.ViewportPointToRay(new Vector2(0.5f, 0.5f));
+			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers && Input.GetMouseButtonUp(0))
+			{
+				interactionpointRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+			}
 		}
-
-		isInteractingWithPoint = false;
 
 		if (playerState == PlayerState.Watching)
 		{
@@ -243,8 +221,7 @@ public class Player : MonoBehaviour
 				var reversedRay = interactionpointRay.ReverseRay();
 				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
 
-				RaycastHit hit;
-				Physics.Raycast(reversedRay, out hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
+				Physics.Raycast(reversedRay, out var hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				//NOTE(Simon): Update visible interactionpoints
 				for (int i = 0; i < interactionPoints.Count; i++)
@@ -270,21 +247,7 @@ public class Player : MonoBehaviour
 						}
 					}
 
-					//NOTE(Kristof): Using controllers
-					if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
-					{ 
-						ActivateInteractionPoint(point);
-					}
-					//NOTE(Kristof): Not using controllers
-					else
-					{
-						isInteractingWithPoint = true;
-
-						if (interactionTimer > timeToInteract)
-						{
-							ActivateInteractionPoint(point);
-						}
-					}
+					ActivateInteractionPoint(point);
 				}
 
 				//NOTE(Simon): Disable active interactionPoint if playback was started through seekbar
@@ -366,8 +329,7 @@ public class Player : MonoBehaviour
 
 		//NOTE(Simon): Interaction with Hittables
 		{
-			RaycastHit hit;
-			Physics.Raycast(interactionpointRay, out hit, 100, LayerMask.GetMask("UI", "WorldUI"));
+			Physics.Raycast(interactionpointRay, out var hit, 100, LayerMask.GetMask("UI", "WorldUI"));
 
 			var controllerList = new List<Controller>
 			{
@@ -382,15 +344,17 @@ public class Player : MonoBehaviour
 				{
 					continue;
 				}
+
 				//NOTE(Jitse): Check if a hittable is being held down
 				if (!(controllerList[0].triggerDown || controllerList[1].triggerDown))
 				{
 					hittable.hitting = false;
 				}
+
 				hittable.hovering = false;
 			}
 
-			//NOTE(Simon): Set hover state when hvoered by controllers
+			//NOTE(Simon): Set hover state when hovered by controllers
 			foreach (var con in controllerList)
 			{
 				if (con.uiHovering && con.hoveredGo != null)
@@ -406,36 +370,8 @@ public class Player : MonoBehaviour
 			//NOTE(Simon): Set hitting and hovering in hittables
 			if (hit.transform != null)
 			{
-				var hittable = hit.transform.GetComponent<Hittable>();
-				//NOTE(Kristof): Interacting with controller
-				if (VRDevices.loadedControllerSet > VRDevices.LoadedControllerSet.NoControllers)
-				{
-					hittable.hitting = true;
-				}
-				//NOTE(Kristof): Interacting without controllers
-				else
-				{
-					isInteractingWithPoint = true;
-					hittable.hovering = true;
-					if (interactionTimer >= timeToInteract)
-					{
-						interactionTimer = -1;
-						hittable.hitting = true;
-					}
-				}
+				hit.transform.GetComponent<Hittable>().hitting = true;
 			}
-		}
-
-		//NOTE(Simon): Interaction interactionTimer and Crosshair behaviour
-		if (isInteractingWithPoint)
-		{
-			interactionTimer += Time.deltaTime;
-			Crosshair.SetFillAmount(interactionTimer / timeToInteract);
-		}
-		else
-		{
-			interactionTimer = 0;
-			Crosshair.SetFillAmount(interactionTimer / timeToInteract);
 		}
 	}
 
@@ -615,16 +551,17 @@ public class Player : MonoBehaviour
 
 	private void ActivateInteractionPoint(InteractionPointPlayer point)
 	{
-		var pointAngle = Mathf.Rad2Deg * Mathf.Atan2(point.position.x, point.position.z) - 90;
+		float pointAngle = Mathf.Rad2Deg * Mathf.Atan2(point.position.x, point.position.z) - 90;
 		Canvass.sphereUIRenderer.GetComponent<UISphere>().Activate(pointAngle);
 
 		point.panel.SetActive(true);
+
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
+		button.onClick.RemoveAllListeners();
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
+
 		activeInteractionPoint = point;
 		point.isSeen = true;
-		//point.point.GetComponentInChildren<TextMesh>().color = Color.black;
-		//point.point.GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f, 1);
 
 		videoController.Pause();
 
@@ -855,16 +792,6 @@ public class Player : MonoBehaviour
 
 			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after the lobby)
 			SetCanvasesActive(false);
-
-			//NOTE(Kristof): Move crosshair to crosshair canvas to display it in worldspace
-			{
-				var ch = Canvass.main.transform.Find("Crosshair");
-				ch.SetParent(Canvass.crosshair.transform);
-				ch.localPosition = Vector3.zero;
-				ch.localEulerAngles = Vector3.zero;
-				ch.localScale = Vector3.one;
-				ch.gameObject.layer = LayerMask.NameToLayer("WorldUI");
-			}
 
 			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
 
