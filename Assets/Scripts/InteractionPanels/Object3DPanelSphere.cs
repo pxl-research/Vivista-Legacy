@@ -39,7 +39,12 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool mouseDown;
 	private bool triggerDown;
 	private MeshCollider objectCollider;
-	private Plane plane;
+
+	//NOTE(Jitse): Used to determine if the object has a "positive" depth value or "negative"
+	//TODO(Jitse): Testing, maybe delete these values after
+	private bool upperHalf = true;
+	private bool lowerHalf;
+	private float oldPositionZ;
 
 	private int objects3dLayer;
 	private int interactionPointsLayer;
@@ -144,10 +149,15 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
 				object3d.transform.localPosition = new Vector3(0, 0, 70);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
-				
+				object3d.SetLayer(objects3dLayer);
+
 				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
 				objectHolder.transform.localPosition = new Vector3(0, 0, 0);
-				objectHolder.SetActive(false);
+				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
+				if (!isActiveAndEnabled)
+				{
+					objectHolder.SetActive(false);
+				}
 
 				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
 
@@ -178,7 +188,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				objectCollider.convex = true;
 				objectHolder.AddComponent<Rigidbody>();
-				distanceCamera = Vector3.Distance(Camera.main.transform.position, objectHolder.transform.position);
 				break;
 			}
 		}
@@ -216,16 +225,20 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void Update()
 	{
-		//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
-		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-		RaycastHit hit;
-		if (objectCollider.Raycast(ray, out hit, 10000.0f) && !(isMoving || isRotating || isScaling))
+		//NOTE(Jitse): If the object hasn't been loaded yet.
+		if (objectCollider != null)
 		{
-			rend.material = hoverMaterial;
-		} 
-		else
-		{
-			rend.material = transparent;
+			//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			RaycastHit hit;
+			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity) && !(isMoving || isRotating || isScaling))
+			{
+				rend.material = hoverMaterial;
+			}
+			else
+			{
+				rend.material = transparent;
+			}
 		}
 
 		if (!(mouseDown || triggerDown))
@@ -235,7 +248,6 @@ public class Object3DPanelSphere : MonoBehaviour
 			isScaling = false;
 		}
 
-		
 		if (isRotating)
 		{
 			object3d.transform.Rotate((Input.GetAxis("Mouse Y") * rotationSpeed), -(Input.GetAxis("Mouse X") * rotationSpeed), 0, Space.World);
@@ -245,15 +257,85 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			mouseOffset = Input.mousePosition - prevMousePos;
 			var position = objectHolder.transform.position;
-			position.y += mouseOffset.y * sensitivity;
-			position.x += mouseOffset.x * sensitivity;
-			Debug.Log($"{distanceCamera}");
-			if (mouseOffset.x != 0)
+			if (mouseOffset.x > 0)
 			{
-				var z = -Math.Sqrt(Math.Pow(position.x, 2) + Math.Pow(distanceCamera, 2));
-				position.z = (float)z;
+				if (upperHalf)
+				{
+					position.y += mouseOffset.y * sensitivity;
+					position.x += mouseOffset.x * sensitivity;
+
+					var z = Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2)) - distanceCamera;
+
+					if (mouseOffset.x != 0)
+					{
+						position.z = (float)z;
+					}
+					if (position.x > distanceCamera)
+					{
+						upperHalf = false;
+						lowerHalf = true;
+					}
+				}
+				if (lowerHalf)
+				{
+					position.y += mouseOffset.y * sensitivity;
+					position.x -= mouseOffset.x * sensitivity;
+
+					var z = - distanceCamera - Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2));
+
+					if (mouseOffset.x != 0)
+					{
+						position.z = (float)z;
+					}
+					if (position.x < -distanceCamera)
+					{
+						upperHalf = true;
+						lowerHalf = false;
+					}
+				}
 			}
-			objectHolder.transform.position = position;
+			else
+			{
+				if (upperHalf)
+				{
+					position.y += mouseOffset.y * sensitivity;
+					position.x += mouseOffset.x * sensitivity;
+
+					var z = Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2)) - distanceCamera;
+
+					if (mouseOffset.x != 0)
+					{
+						position.z = (float)z;
+					}
+					if (position.x < -distanceCamera)
+					{
+						upperHalf = false;
+						lowerHalf = true;
+					}
+				}
+				if (lowerHalf)
+				{
+					position.y += mouseOffset.y * sensitivity;
+					position.x -= mouseOffset.x * sensitivity;
+
+					var z = -distanceCamera - Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2));
+
+					if (mouseOffset.x != 0)
+					{
+						position.z = (float)z;
+					}
+					if (position.x > distanceCamera)
+					{
+						lowerHalf = false;
+						upperHalf = true;
+					}
+				}
+			}
+
+			if (!float.IsNaN(position.z))
+			{
+				objectHolder.transform.position = position;
+			}
 			prevMousePos = Input.mousePosition;
 		}
 
@@ -270,9 +352,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				scaling = Vector3.zero;
 			}
-			//NOTE(Jitse): We have to change the Z position of the object holder when scaling.
+
+			//NOTE(Jitse): We have to change the Z position of the object holder when scaling. (Temporary workaround.)
 			//NOTE(cont.): The {offset value} has been chosen through testing.
-			position.z = scaling.x * -60 + 60;
+			position.z = oldPositionZ + scaling.x * -60 + 60;
 			objectHolder.transform.position = position;
 			objectHolder.transform.localScale = scaling;
 			prevMousePos = Input.mousePosition;
@@ -288,7 +371,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (Input.GetMouseButtonDown(0))
 		{
-			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
 				isRotating = true;
 				mouseDown = true;
@@ -302,8 +385,9 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (Input.GetMouseButtonDown(1))
 		{
-			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
+				distanceCamera = hit.distance;
 				isMoving = true;
 				mouseDown = true;
 				prevMousePos = Input.mousePosition;
@@ -316,8 +400,9 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (Input.GetMouseButtonDown(2))
 		{
-			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
+				oldPositionZ = objectHolder.transform.position.z;
 				isScaling = true;
 				mouseDown = true;
 				prevMousePos = Input.mousePosition;
@@ -330,7 +415,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (SteamVR_Actions.default_Grip.GetState(inputSource))
 		{
-			if (objectCollider.Raycast(ray, out hit, 10000.0f))
+			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
 				isMoving = true;
 				triggerDown = true;
@@ -362,5 +447,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		objectHolder.transform.localScale = new Vector3(1, 1, 1);
 		objectHolder.transform.localPosition = Vector3.zero;
 		objectHolder.transform.rotation = Quaternion.Euler(Vector3.zero);
+
+		lowerHalf = false;
+		upperHalf = true;
 	}
 }
