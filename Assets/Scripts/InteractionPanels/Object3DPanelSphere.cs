@@ -29,14 +29,17 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private float sensitivity = 0.25f;
+	private float rotationSpeed = 5f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
+	private float distanceCamera;
 	private bool isRotating;
 	private bool isMoving;
 	private bool isScaling;
 	private bool mouseDown;
 	private bool triggerDown;
 	private MeshCollider objectCollider;
+	private Plane plane;
 
 	private int objects3dLayer;
 	private int interactionPointsLayer;
@@ -175,6 +178,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				objectCollider.convex = true;
 				objectHolder.AddComponent<Rigidbody>();
+				distanceCamera = Vector3.Distance(Camera.main.transform.position, objectHolder.transform.position);
 				break;
 			}
 		}
@@ -215,7 +219,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
 		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit hit;
-
 		if (objectCollider.Raycast(ray, out hit, 10000.0f) && !(isMoving || isRotating || isScaling))
 		{
 			rend.material = hoverMaterial;
@@ -232,14 +235,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			isScaling = false;
 		}
 
+		
 		if (isRotating)
 		{
-			mouseOffset = Input.mousePosition - prevMousePos;
-			var rotation = object3d.transform.rotation.eulerAngles;
-			rotation.y -= mouseOffset.x * sensitivity;
-			rotation.x -= mouseOffset.y * sensitivity;
-			object3d.transform.rotation = Quaternion.Euler(rotation);
-			prevMousePos = Input.mousePosition;
+			object3d.transform.Rotate((Input.GetAxis("Mouse Y") * rotationSpeed), -(Input.GetAxis("Mouse X") * rotationSpeed), 0, Space.World);
 		}
 
 		if (isMoving)
@@ -248,6 +247,12 @@ public class Object3DPanelSphere : MonoBehaviour
 			var position = objectHolder.transform.position;
 			position.y += mouseOffset.y * sensitivity;
 			position.x += mouseOffset.x * sensitivity;
+			Debug.Log($"{distanceCamera}");
+			if (mouseOffset.x != 0)
+			{
+				var z = -Math.Sqrt(Math.Pow(position.x, 2) + Math.Pow(distanceCamera, 2));
+				position.z = (float)z;
+			}
 			objectHolder.transform.position = position;
 			prevMousePos = Input.mousePosition;
 		}
