@@ -28,13 +28,12 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Renderer rend;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
+	private Vector3 cameraPosition;
 	private float sensitivity = 0.25f;
 	private float rotationSpeed = 5f;
+	private float movementSpeed = 100;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
-	private Vector3 screenPoint;
-	private Vector3 offset;
-	private float distanceCamera;
 	private bool isRotating;
 	private bool isMoving;
 	private bool isScaling;
@@ -59,6 +58,8 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		objects3dLayer = LayerMask.NameToLayer("3DObjects");
 		interactionPointsLayer = LayerMask.NameToLayer("interactionPoints");
+
+		cameraPosition = Camera.main.transform.position;
 
 		if (newUrls.Count > 0)
 		{
@@ -253,11 +254,24 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (isMoving)
 		{
-			
-			Vector3 cursorScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
-			Vector3 cursorPosition = Camera.main.ScreenToWorldPoint(cursorScreenPoint) + offset;
-			objectHolder.transform.position = cursorPosition;
-			Debug.Log(Camera.main.WorldToScreenPoint(objectHolder.transform.position));
+			var actualSpeed = movementSpeed * Time.deltaTime;
+			if (Input.GetAxis("Mouse X") > 0)
+			{
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.up, actualSpeed);
+			}
+			else if (Input.GetAxis("Mouse X") < 0)
+			{
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.down, actualSpeed);
+			}
+
+			if (Input.GetAxis("Mouse Y") > 0)
+			{
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.left, actualSpeed);
+			}
+			else if (Input.GetAxis("Mouse Y") < 0)
+			{
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.right, actualSpeed);
+			}
 		}
 
 		if (isScaling)
@@ -310,9 +324,6 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				isMoving = true;
 				mouseDown = true;
-
-				screenPoint = Camera.main.WorldToScreenPoint(objectHolder.transform.position);
-				offset = objectHolder.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z));
 			}
 		}
 		else if (Input.GetMouseButtonUp(1))
