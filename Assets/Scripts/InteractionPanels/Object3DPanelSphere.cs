@@ -32,6 +32,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	private float rotationSpeed = 5f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
+	private Vector3 screenPoint;
+	private Vector3 offset;
 	private float distanceCamera;
 	private bool isRotating;
 	private bool isMoving;
@@ -39,11 +41,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool mouseDown;
 	private bool triggerDown;
 	private MeshCollider objectCollider;
-
-	//NOTE(Jitse): Used to determine if the object has a "positive" depth value or "negative"
-	//TODO(Jitse): Testing, maybe delete these values after
-	private bool upperHalf = true;
-	private bool lowerHalf;
 	private float oldPositionZ;
 
 	private int objects3dLayer;
@@ -152,7 +149,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.SetLayer(objects3dLayer);
 
 				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
-				objectHolder.transform.localPosition = new Vector3(0, 0, 0);
+
 				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
 				if (!isActiveAndEnabled)
 				{
@@ -188,6 +185,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				objectCollider.convex = true;
 				objectHolder.AddComponent<Rigidbody>();
+				objectHolder.transform.position = new Vector3(5, 0, 10);
 				break;
 			}
 		}
@@ -255,88 +253,11 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (isMoving)
 		{
-			mouseOffset = Input.mousePosition - prevMousePos;
-			var position = objectHolder.transform.position;
-			if (mouseOffset.x > 0)
-			{
-				if (upperHalf)
-				{
-					position.y += mouseOffset.y * sensitivity;
-					position.x += mouseOffset.x * sensitivity;
-
-					var z = Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2)) - distanceCamera;
-
-					if (mouseOffset.x != 0)
-					{
-						position.z = (float)z;
-					}
-					if (position.x > distanceCamera)
-					{
-						upperHalf = false;
-						lowerHalf = true;
-					}
-				}
-				if (lowerHalf)
-				{
-					position.y += mouseOffset.y * sensitivity;
-					position.x -= mouseOffset.x * sensitivity;
-
-					var z = - distanceCamera - Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2));
-
-					if (mouseOffset.x != 0)
-					{
-						position.z = (float)z;
-					}
-					if (position.x < -distanceCamera)
-					{
-						upperHalf = true;
-						lowerHalf = false;
-					}
-				}
-			}
-			else
-			{
-				if (upperHalf)
-				{
-					position.y += mouseOffset.y * sensitivity;
-					position.x += mouseOffset.x * sensitivity;
-
-					var z = Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2)) - distanceCamera;
-
-					if (mouseOffset.x != 0)
-					{
-						position.z = (float)z;
-					}
-					if (position.x < -distanceCamera)
-					{
-						upperHalf = false;
-						lowerHalf = true;
-					}
-				}
-				if (lowerHalf)
-				{
-					position.y += mouseOffset.y * sensitivity;
-					position.x -= mouseOffset.x * sensitivity;
-
-					var z = -distanceCamera - Math.Sqrt(Math.Pow(distanceCamera, 2) - Math.Pow(position.x, 2));
-
-					if (mouseOffset.x != 0)
-					{
-						position.z = (float)z;
-					}
-					if (position.x > distanceCamera)
-					{
-						lowerHalf = false;
-						upperHalf = true;
-					}
-				}
-			}
-
-			if (!float.IsNaN(position.z))
-			{
-				objectHolder.transform.position = position;
-			}
-			prevMousePos = Input.mousePosition;
+			
+			Vector3 cursorScreenPoint = new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z);
+			Vector3 cursorPosition = Camera.main.ScreenToWorldPoint(cursorScreenPoint) + offset;
+			objectHolder.transform.position = cursorPosition;
+			Debug.Log(Camera.main.WorldToScreenPoint(objectHolder.transform.position));
 		}
 
 		if (isScaling)
@@ -387,10 +308,11 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
-				distanceCamera = hit.distance;
 				isMoving = true;
 				mouseDown = true;
-				prevMousePos = Input.mousePosition;
+
+				screenPoint = Camera.main.WorldToScreenPoint(objectHolder.transform.position);
+				offset = objectHolder.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, screenPoint.z));
 			}
 		}
 		else if (Input.GetMouseButtonUp(1))
@@ -447,8 +369,5 @@ public class Object3DPanelSphere : MonoBehaviour
 		objectHolder.transform.localScale = new Vector3(1, 1, 1);
 		objectHolder.transform.localPosition = Vector3.zero;
 		objectHolder.transform.rotation = Quaternion.Euler(Vector3.zero);
-
-		lowerHalf = false;
-		upperHalf = true;
 	}
 }
