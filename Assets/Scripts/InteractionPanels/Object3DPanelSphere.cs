@@ -25,21 +25,22 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private ObjectImporter objImporter;
 	private Renderer rend;
+	private UISphere uiSphere;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 cameraPosition;
-	private float sensitivity = 500f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
+	private float sensitivity = 250f;
+	private float centerOffset = 95f;
 	private bool isRotating;
 	private bool isMoving;
 	private bool isScaling;
 	private bool mouseDown;
 	private bool triggerDown;
 	private MeshCollider objectCollider;
-	private Vector3 oldPosition;
-	private Quaternion oldRotation;
 
+	//NOTE(Jitse): Camera culling mask layers
 	private int objects3dLayer;
 	private int interactionPointsLayer;
 
@@ -128,7 +129,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				const float desiredScale = 45f;
+				const float desiredScale = 30f;
 				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
@@ -146,14 +147,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.transform.localPosition = new Vector3(0, 0, 70);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(objects3dLayer);
-
-				objectHolder = GameObject.Find("/ObjectRenderer/holder_" + objectName);
-
-				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
-				if (!isActiveAndEnabled)
-				{
-					objectHolder.SetActive(false);
-				}
 
 				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
 
@@ -183,8 +176,19 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				objectCollider.convex = true;
-				objectHolder.AddComponent<Rigidbody>();
-				objectHolder.transform.position = new Vector3(5, 0, 10);
+
+				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
+				//NOTE(cont.): Also get SphereUIRenderer to position the 3D object in the center of the sphere panel
+				if (isActiveAndEnabled)
+				{
+					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
+					objectHolder.transform.position = Vector3.zero;
+					objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+				} 
+				else
+				{
+					objectHolder.SetActive(false);
+				}
 				break;
 			}
 		}
@@ -195,11 +199,22 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
+		
 		if (objectHolder != null)
 		{
+			//NOTE(Jitse): Use SphereUIRenderer to get the offset to position the 3D object in the center of the window.
+			//NOTE(cont.): Get SphereUIRenderer object here, because it would be inactive otherwise.
+			if (uiSphere == null && object3d != null)
+			{
+				uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
+				objectHolder.transform.position = Vector3.zero;
+				objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+			}
+
 			objectHolder.SetActive(true);
 			Camera.main.cullingMask |= 1 << objects3dLayer;			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
 		}
+
 		if (grabPinch != null)
 		{
 			//grabPinch.AddOnChangeListener(OnTriggerPressedOrReleased, inputSource);
@@ -245,36 +260,22 @@ public class Object3DPanelSphere : MonoBehaviour
 			isScaling = false;
 		}
 
+		//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
 		if (isRotating)
 		{
 			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
 			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
 
-			//NOTE(Jitse) Horizontal rotation
-			if (Input.GetAxis("Mouse X") > 0)
-			{
-				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.up, speedHorizontal);
-			}
-			else if (Input.GetAxis("Mouse X") < 0)
-			{
-				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.down, -speedHorizontal);
-			}
-
-			//NOTE(Jitse) Vertical rotation
-			if (Input.GetAxis("Mouse Y") > 0)
-			{
-				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.left, speedVertical);
-			}
-			else if (Input.GetAxis("Mouse Y") < 0)
-			{
-				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.right, -speedVertical);
-			}
+			objectHolder.transform.RotateAround(object3d.transform.position, Vector3.down, speedHorizontal);
+			objectHolder.transform.RotateAround(object3d.transform.position, object3d.transform.right, speedVertical);
 		}
 
+		//NOTE(Jitse): Move objects by rotating them around the VRCamera.
 		if (isMoving)
 		{
 			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
 			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+			var currentRotation = objectHolder.transform.rotation;
 
 			//NOTE(Jitse): Horizontal movement
 			if (Input.GetAxis("Mouse X") > 0)
@@ -344,9 +345,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
-				oldPosition = objectHolder.transform.position;
-				oldRotation = objectHolder.transform.rotation;
-				Debug.Log(oldPosition);
 				isScaling = true;
 				mouseDown = true;
 				prevMousePos = Input.mousePosition;
@@ -385,11 +383,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void ResetTransform()
 	{
-		var objRotation = Vector3.zero;
-		objRotation.x = -90;
-		object3d.transform.localRotation = Quaternion.Euler(objRotation);
-		objectHolder.transform.localScale = new Vector3(1, 1, 1);
-		objectHolder.transform.localPosition = Vector3.zero;
-		objectHolder.transform.rotation = Quaternion.Euler(Vector3.zero);
+		objectHolder.transform.position = Vector3.zero;
+		objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
 	}
 }
