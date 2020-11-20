@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Valve.VR;
 
@@ -29,9 +28,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 cameraPosition;
-	private float sensitivity = 0.25f;
-	private float rotationSpeed = 5f;
-	private float movementSpeed = 100;
+	private float sensitivity = 500f;
 	private Vector3 prevMousePos;
 	private Vector3 mouseOffset;
 	private bool isRotating;
@@ -40,7 +37,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool mouseDown;
 	private bool triggerDown;
 	private MeshCollider objectCollider;
-	private float oldPositionZ;
+	private Vector3 oldPosition;
+	private Quaternion oldRotation;
 
 	private int objects3dLayer;
 	private int interactionPointsLayer;
@@ -249,50 +247,61 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (isRotating)
 		{
-			object3d.transform.Rotate((Input.GetAxis("Mouse Y") * rotationSpeed), -(Input.GetAxis("Mouse X") * rotationSpeed), 0, Space.World);
+			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+
+			//NOTE(Jitse) Horizontal rotation
+			if (Input.GetAxis("Mouse X") > 0)
+			{
+				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.up, speedHorizontal);
+			}
+			else if (Input.GetAxis("Mouse X") < 0)
+			{
+				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.down, -speedHorizontal);
+			}
+
+			//NOTE(Jitse) Vertical rotation
+			if (Input.GetAxis("Mouse Y") > 0)
+			{
+				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.left, speedVertical);
+			}
+			else if (Input.GetAxis("Mouse Y") < 0)
+			{
+				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.right, -speedVertical);
+			}
 		}
 
 		if (isMoving)
 		{
-			var actualSpeed = movementSpeed * Time.deltaTime;
+			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+
+			//NOTE(Jitse): Horizontal movement
 			if (Input.GetAxis("Mouse X") > 0)
 			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.up, actualSpeed);
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.up, speedHorizontal);
 			}
 			else if (Input.GetAxis("Mouse X") < 0)
 			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.down, actualSpeed);
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.down, -speedHorizontal);
 			}
 
+			//NOTE(Jitse): Vertical movement
 			if (Input.GetAxis("Mouse Y") > 0)
 			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.left, actualSpeed);
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.left, speedVertical);
 			}
 			else if (Input.GetAxis("Mouse Y") < 0)
 			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.right, actualSpeed);
+				objectHolder.transform.RotateAround(cameraPosition, Vector3.right, -speedVertical);
 			}
 		}
 
 		if (isScaling)
 		{
 			mouseOffset = Input.mousePosition - prevMousePos;
-			var increase = (mouseOffset.y + mouseOffset.x) * sensitivity / 10;
-			var scaling = objectHolder.transform.localScale;
-			var position = objectHolder.transform.position;
-			scaling.y += increase;
-			scaling.x += increase;
-			scaling.z += increase;
-			if (scaling.x < 0)
-			{
-				scaling = Vector3.zero;
-			}
-
-			//NOTE(Jitse): We have to change the Z position of the object holder when scaling. (Temporary workaround.)
-			//NOTE(cont.): The {offset value} has been chosen through testing.
-			position.z = oldPositionZ + scaling.x * -60 + 60;
-			objectHolder.transform.position = position;
-			objectHolder.transform.localScale = scaling;
+			var increase = (mouseOffset.y + mouseOffset.x) * Time.deltaTime;
+			objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, new Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z), increase);
 			prevMousePos = Input.mousePosition;
 		}
 
@@ -335,7 +344,9 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
-				oldPositionZ = objectHolder.transform.position.z;
+				oldPosition = objectHolder.transform.position;
+				oldRotation = objectHolder.transform.rotation;
+				Debug.Log(oldPosition);
 				isScaling = true;
 				mouseDown = true;
 				prevMousePos = Input.mousePosition;
