@@ -13,6 +13,7 @@ public class Controller : MonoBehaviour
 	//public Material highlightMaterial;
 
 	public bool uiHovering;
+	public bool object3dHovering;
 	public bool compassAttached;
 
 	public delegate void RotateHandler(int direction);
@@ -60,7 +61,8 @@ public class Controller : MonoBehaviour
 		//NOTE(Kristof): Checking for hovered UI elements and adjusting laser length
 		{
 			RaycastHit hit;
-			int layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints");
+			int layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints", "3DObjects");
+			int object3dMask = LayerMask.NameToLayer("3DObjects");
 			var ray = CastRay();
 			const float rayLength = 200f;
 
@@ -68,6 +70,14 @@ public class Controller : MonoBehaviour
 			{
 				uiHovering = true;
 				hoveredGo = hit.transform.gameObject;
+				if (hoveredGo.layer == object3dMask)
+				{
+					object3dHovering = true;
+				}
+				else
+				{
+					object3dHovering = false;
+				}
 				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
 				SetCursorLocation(hit.point, hit.distance);
 			}
@@ -78,6 +88,14 @@ public class Controller : MonoBehaviour
 				{
 					uiHovering = true;
 					hoveredGo = hit.transform.gameObject;
+					if (hoveredGo.layer == object3dMask)
+					{
+						object3dHovering = true;
+					}
+					else
+					{
+						object3dHovering = false;
+					}
 					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength - hit.distance, laser.transform.localScale.z);
 					SetCursorLocation(hit.point, rayLength - hit.distance);
 				}
@@ -85,6 +103,7 @@ public class Controller : MonoBehaviour
 				{
 					HideCursor();
 					uiHovering = false;
+					object3dHovering = false;
 					hoveredGo = null;
 					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength, laser.transform.localScale.z);
 				}

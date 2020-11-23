@@ -13,8 +13,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	public Material transparent;
 	public Material hoverMaterial;
 	public Button resetTransform;
-	public SteamVR_Action_Boolean grabPinch;
-	public SteamVR_Input_Sources inputSource = SteamVR_Input_Sources.Any;
+	public SteamVR_Input_Sources inputSourceLeft = SteamVR_Input_Sources.LeftHand;
+	public SteamVR_Input_Sources inputSourceRight = SteamVR_Input_Sources.RightHand;
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
@@ -37,8 +37,11 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool isMoving;
 	private bool isScaling;
 	private bool mouseDown;
-	private bool triggerDown;
+	private bool leftTriggerDown;
+	private bool rightTriggerDown;
 	private MeshCollider objectCollider;
+	private Controller controllerLeft;
+	private Controller controllerRight;
 
 	//NOTE(Jitse): Camera culling mask layers
 	private int objects3dLayer;
@@ -48,11 +51,15 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		title.text = newTitle;
 
+		if (newUrls.Count > 0)
+		{
+			filePath = newUrls[0];
+		}
+
 		objectRenderer = GameObject.Find("ObjectRenderer");
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
 		importOptions.hideWhileLoading = true;
 		importOptions.inheritLayer = true;
-
 		objImporter.ImportingComplete += SetObjectProperties;
 
 		objects3dLayer = LayerMask.NameToLayer("3DObjects");
@@ -60,25 +67,26 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		cameraPosition = Camera.main.transform.position;
 
-		if (newUrls.Count > 0)
-		{
-			filePath = newUrls[0];
-			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
+		resetTransform.onClick.AddListener(ResetTransform);
 
-			if (File.Exists(filePath))
+		var controllers = FindObjectsOfType<Controller>();
+
+		foreach (Controller controller in controllers)
+		{
+			if (controller.name == "LeftHand")
 			{
-				//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
-				if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
-				{
-					objectHolder = new GameObject("holder_" + objectName);
-					objectHolder.transform.parent = objectRenderer.transform;
-					objectHolder.layer = objects3dLayer;
-					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
-				}
+				controllerLeft = controller;
+			}
+			else if (controller.name == "RightHand")
+			{
+				controllerRight = controller;
 			}
 		}
 
-		resetTransform.onClick.AddListener(ResetTransform);
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += TriggerDownLeft;
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += TriggerUp;
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += TriggerDownRight;
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += TriggerUp;
 	}
 
 	private void SetObjectProperties()
@@ -149,30 +157,31 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.SetLayer(objects3dLayer);
 
 				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
+				{ 
+					//NOTE(Jitse): Combine the meshes, so we can assign it to the MeshCollider for hit detection
+					MeshFilter mainMesh;
+					rend = objectHolder.AddComponent<MeshRenderer>();
 
-				//NOTE(Jitse): Combine the meshes, so we can assign it to the MeshCollider for hit detection
-				MeshFilter mainMesh;
-				rend = objectHolder.AddComponent<MeshRenderer>();
+					//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
+					rend.material = transparent;
+					mainMesh = objectHolder.AddComponent<MeshFilter>();
 
-				//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
-				rend.material = transparent;
-				mainMesh = objectHolder.AddComponent<MeshFilter>();
+					//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
+					var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
+					var combine = new CombineInstance[meshFilters.Length];
 
-				//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
-				var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
-				var combine = new CombineInstance[meshFilters.Length];
+					int k = 0;
+					while (k < meshFilters.Length)
+					{
+						combine[k].mesh = meshFilters[k].sharedMesh;
+						combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
 
-				int k = 0;
-				while (k < meshFilters.Length)
-				{
-					combine[k].mesh = meshFilters[k].sharedMesh;
-					combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
+						k++;
+					}
 
-					k++;
+					mainMesh.mesh = new Mesh();
+					mainMesh.mesh.CombineMeshes(combine);
 				}
-
-				mainMesh.mesh = new Mesh();
-				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				objectCollider.convex = true;
@@ -199,39 +208,49 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
-		
-		if (objectHolder != null)
+		if (!objectHolder)
 		{
-			//NOTE(Jitse): Use SphereUIRenderer to get the offset to position the 3D object in the center of the window.
-			//NOTE(cont.): Get SphereUIRenderer object here, because it would be inactive otherwise.
-			if (uiSphere == null && object3d != null)
-			{
-				uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-				objectHolder.transform.position = Vector3.zero;
-				objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
-			}
+			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
 
-			objectHolder.SetActive(true);
-			Camera.main.cullingMask |= 1 << objects3dLayer;			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
+			if (File.Exists(filePath))
+			{
+				//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
+				if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
+				{
+					objectHolder = new GameObject("holder_" + objectName);
+					objectHolder.transform.parent = objectRenderer.transform;
+					objectHolder.layer = objects3dLayer;
+					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
+
+					//NOTE(Jitse): Use SphereUIRenderer to get the offset to position the 3D object in the center of the window.
+					//NOTE(cont.): Get SphereUIRenderer object here, because it would be inactive otherwise.
+					if (uiSphere == null && object3d != null)
+					{
+						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
+						objectHolder.transform.position = Vector3.zero;
+						objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+					}
+				}
+			}
 		}
 
-		if (grabPinch != null)
+		//NOTE(Jitse): Prevents null reference errors, which could occur if the object file could not be found
+		if (objectHolder != null)
 		{
-			//grabPinch.AddOnChangeListener(OnTriggerPressedOrReleased, inputSource);
+			objectHolder.SetActive(true);
+			Camera.main.cullingMask |= 1 << objects3dLayer;
+			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
 		}
 	}
 
 	private void OnDisable()
 	{
+		//NOTE(Jitse): Prevents null reference errors, which could occur if the object file could not be found
 		if (objectHolder != null)
 		{
 			objectHolder.SetActive(false);
 			Camera.main.cullingMask |= 1 << interactionPointsLayer;
 			Camera.main.cullingMask &= ~(1 << objects3dLayer);
-		}
-		if (grabPinch != null)
-		{
-			//grabPinch.RemoveOnChangeListener(OnTriggerPressedOrReleased, inputSource);
 		}
 	}
 
@@ -243,7 +262,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
 			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			RaycastHit hit;
-			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity) && !(isMoving || isRotating || isScaling))
+			if ((objectCollider.Raycast(ray, out hit, Mathf.Infinity) || controllerLeft.object3dHovering || controllerRight.object3dHovering) && !(isMoving || isRotating || isScaling))
 			{
 				rend.material = hoverMaterial;
 			}
@@ -251,13 +270,6 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				rend.material = transparent;
 			}
-		}
-
-		if (!(mouseDown || triggerDown))
-		{
-			isRotating = false;
-			isMoving = false;
-			isScaling = false;
 		}
 
 		//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
@@ -275,7 +287,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
 			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
-			var currentRotation = objectHolder.transform.rotation;
 
 			//NOTE(Jitse): Horizontal movement
 			if (Input.GetAxis("Mouse X") > 0)
@@ -306,7 +317,33 @@ public class Object3DPanelSphere : MonoBehaviour
 			prevMousePos = Input.mousePosition;
 		}
 
+		if (leftTriggerDown && rightTriggerDown)
+		{
+			float scale = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+			objectHolder.transform.localScale = new Vector3(scale, scale, scale);
+		}
+		else if (leftTriggerDown)
+		{
+			objectHolder.transform.position = controllerLeft.transform.position;
+			objectHolder.transform.rotation = controllerLeft.transform.rotation;
+		}
+		else if (rightTriggerDown)
+		{
+			objectHolder.transform.position = controllerRight.transform.position;
+			objectHolder.transform.rotation = controllerRight.transform.rotation;
+		}
+
 		GetMouseButtonStates();
+	}
+
+	private void LateUpdate()
+	{
+		if (!(mouseDown || leftTriggerDown || rightTriggerDown))
+		{
+			isRotating = false;
+			isMoving = false;
+			isScaling = false;
+		}
 	}
 
 	private void GetMouseButtonStates()
@@ -354,20 +391,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			mouseDown = false;
 		}
-
-		if (SteamVR_Actions.default_Grip.GetState(inputSource))
-		{
-			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
-			{
-				isMoving = true;
-				triggerDown = true;
-				prevMousePos = ray.GetPoint(hit.distance);
-			}
-		}
-		else
-		{
-			triggerDown = false;
-		}
 	}
 
 	public void OnPointerUp()
@@ -379,6 +402,27 @@ public class Object3DPanelSphere : MonoBehaviour
 	public void OnPointerDown()
 	{
 		isRotating = false;
+	}
+
+	private void TriggerDownLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	{
+		if (controllerLeft.object3dHovering)
+		{
+			leftTriggerDown = true;
+		}
+	}
+
+	private void TriggerDownRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	{
+		if (controllerRight.object3dHovering)
+		{
+			rightTriggerDown = true;
+		}
+	}
+	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	{
+		leftTriggerDown = false;
+		rightTriggerDown = false;
 	}
 
 	private void ResetTransform()
