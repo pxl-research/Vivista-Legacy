@@ -97,9 +97,6 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				object3d = currentObject.gameObject;
 
-				var transforms = object3d.GetComponentsInChildren<Transform>();
-				Vector3 objectCenter = Vector3.zero;
-
 				float maxX = float.MinValue;
 				float maxY = float.MinValue;
 				float maxZ = float.MinValue;
@@ -112,18 +109,9 @@ public class Object3DPanelSphere : MonoBehaviour
 				{
 					var currentRend = meshes[j];
 					var boundsSize = currentRend.bounds.size;
-					if (boundsSize.x > maxX)
-					{
-						maxX = boundsSize.x;
-					}
-					if (boundsSize.y > maxY)
-					{
-						maxY = boundsSize.y;
-					}
-					if (boundsSize.z > maxZ)
-					{
-						maxZ = boundsSize.z;
-					}
+					maxX = Math.Max(maxX, boundsSize.x);
+					maxY = Math.Max(maxY, boundsSize.y);
+					maxZ = Math.Max(maxZ, boundsSize.z);
 
 					if (j > 0)
 					{
@@ -131,7 +119,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					}
 				}
 
-				objectCenter = bounds.center;
+				var objectCenter = bounds.center;
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
@@ -206,7 +194,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
-		if (!objectHolder)
+		if (objectHolder == null)
 		{
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
 
