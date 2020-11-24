@@ -224,6 +224,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (objectHolder != null)
 		{
 			objectHolder.SetActive(true);
+			
 			Camera.main.cullingMask |= 1 << objects3dLayer;
 			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
 		}
@@ -321,12 +322,11 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void GetMouseButtonStates()
 	{
-		Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-		RaycastHit hit;
+		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
 		if (Input.GetMouseButtonDown(0))
 		{
-			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
+			if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
 			{
 				isRotating = true;
 				mouseDown = true;
@@ -340,7 +340,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (Input.GetMouseButtonDown(1))
 		{
-			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
+			if (objectCollider.Raycast(ray, out _ , Mathf.Infinity))
 			{
 				MouseLook.Instance.forceInactive = true;
 				isMoving = true;
@@ -354,7 +354,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (Input.GetMouseButtonDown(2))
 		{
-			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
+			if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
 			{
 				isScaling = true;
 				mouseDown = true;

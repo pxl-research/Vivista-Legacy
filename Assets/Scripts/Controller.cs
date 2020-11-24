@@ -70,14 +70,8 @@ public class Controller : MonoBehaviour
 			{
 				uiHovering = true;
 				hoveredGo = hit.transform.gameObject;
-				if (hoveredGo.layer == object3dMask)
-				{
-					object3dHovering = true;
-				}
-				else
-				{
-					object3dHovering = false;
-				}
+				object3dHovering = hoveredGo.layer == object3dMask;
+
 				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
 				SetCursorLocation(hit.point, hit.distance);
 			}
@@ -88,14 +82,8 @@ public class Controller : MonoBehaviour
 				{
 					uiHovering = true;
 					hoveredGo = hit.transform.gameObject;
-					if (hoveredGo.layer == object3dMask)
-					{
-						object3dHovering = true;
-					}
-					else
-					{
-						object3dHovering = false;
-					}
+					object3dHovering = hoveredGo.layer == object3dMask;
+
 					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength - hit.distance, laser.transform.localScale.z);
 					SetCursorLocation(hit.point, rayLength - hit.distance);
 				}
