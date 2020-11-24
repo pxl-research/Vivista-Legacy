@@ -16,6 +16,9 @@ public class Object3DPanelSphere : MonoBehaviour
 	public SteamVR_Input_Sources inputSourceLeft = SteamVR_Input_Sources.LeftHand;
 	public SteamVR_Input_Sources inputSourceRight = SteamVR_Input_Sources.RightHand;
 
+	public float translateBaseSpeed;
+	public float translateZoomSpeed;
+
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
 
@@ -30,7 +33,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 cameraPosition;
 	private Vector3 prevMousePos;
-	private Vector3 mouseOffset;
+	private Vector3 mouseDelta;
 	private float sensitivity = 250f;
 	private float centerOffset = 95f;
 	private bool isRotating;
@@ -254,8 +257,9 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void Update()
+	private void LateUpdate()
 	{
+		mouseDelta = Input.mousePosition - prevMousePos;
 		//NOTE(Jitse): If the object hasn't been loaded yet.
 		if (objectCollider != null)
 		{
@@ -289,18 +293,16 @@ public class Object3DPanelSphere : MonoBehaviour
 			var right = Camera.main.transform.right;
 			var up = Camera.main.transform.up;
 
-			var zoomFactor = 1 + 3 * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
-			var delta = (Input.GetAxis("Mouse X") * right + Input.GetAxis("Mouse Y") * up) * zoomFactor;
+			var zoomFactor = 0.045f + 0.18f * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
+			var delta = (mouseDelta.x * right + mouseDelta.y * up) * zoomFactor;
 			
 			objectHolder.transform.Translate(delta, Space.World);
 		}
 
 		if (isScaling)
 		{
-			mouseOffset = Input.mousePosition - prevMousePos;
-			var increase = (mouseOffset.y + mouseOffset.x) * Time.deltaTime;
+			var increase = (mouseDelta.y + mouseDelta.x) * Time.deltaTime;
 			objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, new Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z), increase);
-			prevMousePos = Input.mousePosition;
 		}
 
 		if (leftTriggerDown && rightTriggerDown)
@@ -320,10 +322,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 
 		GetMouseButtonStates();
-	}
+		prevMousePos = Input.mousePosition;
 
-	private void LateUpdate()
-	{
 		if (!(mouseDown || leftTriggerDown || rightTriggerDown))
 		{
 			MouseLook.Instance.forceInactive = false;
