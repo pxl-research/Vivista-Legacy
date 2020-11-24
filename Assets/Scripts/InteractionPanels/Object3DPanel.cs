@@ -92,18 +92,9 @@ public class Object3DPanel : MonoBehaviour
 				{
 					var currentRend = meshes[j];
 					var boundsSize = currentRend.bounds.size;
-					if (boundsSize.x > maxX)
-					{
-						maxX = boundsSize.x;
-					}
-					if (boundsSize.y > maxY)
-					{
-						maxY = boundsSize.y;
-					}
-					if (boundsSize.z > maxZ)
-					{
-						maxZ = boundsSize.z;
-					}
+					maxX = Math.Max(maxX, boundsSize.x);
+					maxY = Math.Max(maxY, boundsSize.y);
+					maxZ = Math.Max(maxZ, boundsSize.z);
 
 					if (j > 0)
 					{

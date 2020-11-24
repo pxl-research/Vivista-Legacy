@@ -29,19 +29,23 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 prevMousePos;
+	private Vector3 prevObjectScale;
 	private Vector3 mouseDelta;
 	private float rotationSensitivity = 250f;
 	private float scaleSensitivity = .1f;
-	private float centerOffset = 95f;
+	private float centerOffset = 90f;
 	private bool isRotating;
 	private bool isMoving;
 	private bool isScaling;
 	private bool mouseDown;
 	private bool leftTriggerDown;
 	private bool rightTriggerDown;
+	private bool bothTriggersDown;
 	private MeshCollider objectCollider;
 	private Controller controllerLeft;
 	private Controller controllerRight;
+	private Transform controllerLeftAttachmentPoint;
+	private Transform controllerRightAttachmentPoint;
 
 	//NOTE(Jitse): Camera culling mask layers
 	private int objects3dLayer;
@@ -60,7 +64,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
 		importOptions.hideWhileLoading = true;
 		importOptions.inheritLayer = true;
-		objImporter.ImportingComplete += SetObjectProperties;
 
 		objects3dLayer = LayerMask.NameToLayer("3DObjects");
 		interactionPointsLayer = LayerMask.NameToLayer("interactionPoints");
@@ -74,17 +77,33 @@ public class Object3DPanelSphere : MonoBehaviour
 			if (controller.name == "LeftHand")
 			{
 				controllerLeft = controller;
+				foreach (Transform trans in controllerLeft.GetComponentsInChildren<Transform>())
+				{
+					if (trans.name == "HoverPoint")
+					{
+						controllerLeftAttachmentPoint = trans;
+						break;
+					}
+				}
 			}
 			else if (controller.name == "RightHand")
 			{
 				controllerRight = controller;
+				foreach (Transform trans in controllerRight.GetComponentsInChildren<Transform>())
+				{
+					if (trans.name == "HoverPoint")
+					{
+						controllerRightAttachmentPoint = trans;
+						break;
+					}
+				}
 			}
 		}
 
 		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += TriggerDownLeft;
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += TriggerUp;
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += TriggerUpLeft;
 		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += TriggerDownRight;
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += TriggerUp;
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += TriggerUpRight;
 	}
 
 	private void SetObjectProperties()
@@ -121,7 +140,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				var objectCenter = bounds.center;
 
-				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
+				//NOTE(Jitse): Set the scaling value; this value was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
 				const float desiredScale = 5f;
 				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
@@ -206,6 +225,8 @@ public class Object3DPanelSphere : MonoBehaviour
 					objectHolder = new GameObject("holder_" + objectName);
 					objectHolder.transform.parent = objectRenderer.transform;
 					objectHolder.layer = objects3dLayer;
+					
+					objImporter.ImportingComplete += SetObjectProperties;
 					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
 
 					//NOTE(Jitse): Use SphereUIRenderer to get the offset to position the 3D object in the center of the window.
@@ -281,6 +302,12 @@ public class Object3DPanelSphere : MonoBehaviour
 			var delta = (mouseDelta.x * right + mouseDelta.y * up) * zoomFactor;
 			
 			objectHolder.transform.Translate(delta, Space.World);
+
+			/*var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
+			var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
+
+			objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, speedHorizontal);
+			objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.left, speedVertical);*/
 		}
 
 		if (isScaling)
@@ -292,19 +319,21 @@ public class Object3DPanelSphere : MonoBehaviour
 			objectHolder.transform.position = position;			objectHolder.transform.localScale = scaling;			prevMousePos = Input.mousePosition;
 		}
 
-		if (leftTriggerDown && rightTriggerDown)
+		if (bothTriggersDown)
 		{
 			float scale = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-			objectHolder.transform.localScale = new Vector3(scale, scale, scale);
+			var newScale = prevObjectScale;
+			newScale *= scale;
+			objectHolder.transform.localScale = newScale;
 		}
 		else if (leftTriggerDown)
 		{
-			objectHolder.transform.position = controllerLeft.transform.position;
+			objectHolder.transform.position = controllerLeftAttachmentPoint.position;
 			objectHolder.transform.rotation = controllerLeft.transform.rotation;
 		}
 		else if (rightTriggerDown)
 		{
-			objectHolder.transform.position = controllerRight.transform.position;
+			objectHolder.transform.position = controllerRightAttachmentPoint.position;
 			objectHolder.transform.rotation = controllerRight.transform.rotation;
 		}
 
@@ -322,86 +351,95 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void GetMouseButtonStates()
 	{
-		var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-		if (Input.GetMouseButtonDown(0))
+		if (object3d != null)
 		{
-			if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
+			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+			if (Input.GetMouseButtonDown(0))
 			{
-				isRotating = true;
-				mouseDown = true;
-				prevMousePos = Input.mousePosition;
+				if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
+				{
+					isRotating = true;
+					mouseDown = true;
+					prevMousePos = Input.mousePosition;
+				}
+			}
+			else if (Input.GetMouseButtonUp(0))
+			{
+				mouseDown = false;
+			}
+
+			if (Input.GetMouseButtonDown(1))
+			{
+				if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
+				{
+					MouseLook.Instance.forceInactive = true;
+					isMoving = true;
+					mouseDown = true;
+				}
+			}
+			else if (Input.GetMouseButtonUp(1))
+			{
+				mouseDown = false;
+			}
+
+			if (Input.GetMouseButtonDown(2))
+			{
+				if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
+				{
+					isScaling = true;
+					mouseDown = true;
+					prevMousePos = Input.mousePosition;
+				}
+			}
+			else if (Input.GetMouseButtonUp(2))
+			{
+				mouseDown = false;
 			}
 		}
-		else if (Input.GetMouseButtonUp(0))
-		{
-			mouseDown = false;
-		}
-
-		if (Input.GetMouseButtonDown(1))
-		{
-			if (objectCollider.Raycast(ray, out _ , Mathf.Infinity))
-			{
-				MouseLook.Instance.forceInactive = true;
-				isMoving = true;
-				mouseDown = true;
-			}
-		}
-		else if (Input.GetMouseButtonUp(1))
-		{
-			mouseDown = false;
-		}
-
-		if (Input.GetMouseButtonDown(2))
-		{
-			if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
-			{
-				isScaling = true;
-				mouseDown = true;
-				prevMousePos = Input.mousePosition;
-			}
-		}
-		else if (Input.GetMouseButtonUp(2))
-		{
-			mouseDown = false;
-		}
-	}
-
-	public void OnPointerUp()
-	{
-		isRotating = true;
-		prevMousePos = Input.mousePosition;
-	}
-
-	public void OnPointerDown()
-	{
-		isRotating = false;
 	}
 
 	private void TriggerDownLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
-		if (controllerLeft.object3dHovering)
+		if (controllerLeft.object3dHovering && objectHolder != null)
 		{
 			leftTriggerDown = true;
+			if (rightTriggerDown)
+			{
+				bothTriggersDown = true;
+				prevObjectScale = objectHolder.transform.localScale;
+			}
 		}
 	}
 
 	private void TriggerDownRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
-		if (controllerRight.object3dHovering)
+		if (controllerRight.object3dHovering && objectHolder != null)
 		{
 			rightTriggerDown = true;
+			if (leftTriggerDown)
+			{
+				bothTriggersDown = true;
+				prevObjectScale = objectHolder.transform.localScale;
+			}
 		}
 	}
-	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	private void TriggerUpLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
 		leftTriggerDown = false;
+		bothTriggersDown = false;
+	}
+
+	private void TriggerUpRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	{
 		rightTriggerDown = false;
+		bothTriggersDown = false;
 	}
 
 	private void ResetTransform()
 	{
-		objectHolder.transform.position = Vector3.zero;
+		objectHolder.transform.localPosition = new Vector3(0, 0, 10);
 		objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+		objectHolder.transform.localScale = Vector3.one;
 	}
 }

@@ -2612,7 +2612,11 @@ public class Editor : MonoBehaviour
 		{
 			if (file.Value == null)
 			{
-				File.Delete(Path.Combine(projectFolder, file.Key));
+				var pathToDelete = Path.Combine(projectFolder, file.Key);
+				if (File.Exists(pathToDelete))
+				{
+					File.Delete(pathToDelete);
+				}
 				toRemoveFromDict.Add(file.Key);
 			}
 		}
