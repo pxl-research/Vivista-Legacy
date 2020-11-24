@@ -16,9 +16,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	public SteamVR_Input_Sources inputSourceLeft = SteamVR_Input_Sources.LeftHand;
 	public SteamVR_Input_Sources inputSourceRight = SteamVR_Input_Sources.RightHand;
 
-	public float translateBaseSpeed;
-	public float translateZoomSpeed;
-
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
 
@@ -31,10 +28,10 @@ public class Object3DPanelSphere : MonoBehaviour
 	private UISphere uiSphere;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
-	private Vector3 cameraPosition;
 	private Vector3 prevMousePos;
 	private Vector3 mouseDelta;
-	private float sensitivity = 250f;
+	private float rotationSensitivity = 250f;
+	private float scaleSensitivity = .1f;
 	private float centerOffset = 95f;
 	private bool isRotating;
 	private bool isMoving;
@@ -67,8 +64,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		objects3dLayer = LayerMask.NameToLayer("3DObjects");
 		interactionPointsLayer = LayerMask.NameToLayer("interactionPoints");
-
-		cameraPosition = Camera.main.transform.position;
 
 		resetTransform.onClick.AddListener(ResetTransform);
 
@@ -140,7 +135,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				//NOTE(Jitse): Set the scaling value; 100f was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				const float desiredScale = 30f;
+				const float desiredScale = 5f;
 				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
@@ -155,7 +150,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				var objRotation = object3d.transform.localRotation.eulerAngles;
 				objRotation.x = -90;
 				object3d.transform.localRotation = Quaternion.Euler(objRotation);
-				object3d.transform.localPosition = new Vector3(0, 0, 70);
+				object3d.transform.localPosition = new Vector3(0, 0, 0);
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(objects3dLayer);
 
@@ -194,7 +189,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					objectHolder.transform.position = Vector3.zero;
+					objectHolder.transform.localPosition = new Vector3(0, 0, 10);
 					objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
 				} 
 				else
@@ -230,7 +225,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						objectHolder.transform.position = Vector3.zero;
+						objectHolder.transform.localPosition = new Vector3(0, 0, 10);
 						objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
 					}
 				}
@@ -280,8 +275,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
 		if (isRotating)
 		{
-			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+			var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
+			var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
 
 			objectHolder.transform.RotateAround(object3d.transform.position, Vector3.down, speedHorizontal);
 			objectHolder.transform.RotateAround(object3d.transform.position, object3d.transform.right, speedVertical);
@@ -293,7 +288,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			var right = Camera.main.transform.right;
 			var up = Camera.main.transform.up;
 
-			var zoomFactor = 0.045f + 0.18f * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
+			var zoomFactor = 0.0064f + 0.026f * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
 			var delta = (mouseDelta.x * right + mouseDelta.y * up) * zoomFactor;
 			
 			objectHolder.transform.Translate(delta, Space.World);
@@ -301,8 +296,11 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (isScaling)
 		{
-			var increase = (mouseDelta.y + mouseDelta.x) * Time.deltaTime;
-			objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, new Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z), increase);
+			var increase = (mouseDelta.y + mouseDelta.x) * scaleSensitivity / 10;			var scaling = objectHolder.transform.localScale;			var position = objectHolder.transform.position;			scaling.x = Mathf.Clamp(scaling.x + increase, 0.5f, 5);
+			scaling.y = Mathf.Clamp(scaling.y + increase, 0.5f, 5);
+			scaling.z = Mathf.Clamp(scaling.z + increase, 0.5f, 5);
+
+			objectHolder.transform.position = position;			objectHolder.transform.localScale = scaling;			prevMousePos = Input.mousePosition;
 		}
 
 		if (leftTriggerDown && rightTriggerDown)
