@@ -17,6 +17,10 @@ public class MouseLook : MonoBehaviour
 
 	public float sensivity = 0.5f;
 	public bool forceActive;
+	public bool forceInactive;
+
+	public float fovMin;
+	public float fovMax;
 
 	public Quaternion originalRotation;
 
@@ -25,6 +29,8 @@ public class MouseLook : MonoBehaviour
 	void Awake()
 	{
 		Instance = this;
+		fovMin = 40;
+		fovMax = 120;
 	}
 
 	void Start () 
@@ -49,11 +55,11 @@ public class MouseLook : MonoBehaviour
 		//NOTE(Simon): Do use mouselook if in editor and correct editorstate
 		if (!UnityEngine.XR.XRSettings.enabled)
 		{
-			if (forceActive || editor == null || 
-									  (editor.editorState == EditorState.Active
-									|| editor.editorState == EditorState.Inactive
-									|| editor.editorState == EditorState.MovingInteractionPoint
-									|| editor.editorState == EditorState.PlacingInteractionPoint))
+			bool correctEditorState = editor != null && (editor.editorState == EditorState.Active
+														|| editor.editorState == EditorState.Inactive
+														|| editor.editorState == EditorState.MovingInteractionPoint
+														|| editor.editorState == EditorState.PlacingInteractionPoint);
+			if (forceActive || (editor == null && !forceInactive) || correctEditorState)
 			{
 				if (Input.GetMouseButton(1) && !EventSystem.current.IsPointerOverGameObject())
 				{
@@ -71,7 +77,7 @@ public class MouseLook : MonoBehaviour
 
 				if (Input.mouseScrollDelta.y != 0 && !EventSystem.current.IsPointerOverGameObject())
 				{
-					Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 40, 120);
+					Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, fovMin, fovMax);
 				}
 			}
 		}

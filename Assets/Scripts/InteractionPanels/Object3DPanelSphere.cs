@@ -260,9 +260,10 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (objectCollider != null)
 		{
 			//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hit;
-			if ((objectCollider.Raycast(ray, out hit, Mathf.Infinity) || controllerLeft.object3dHovering || controllerRight.object3dHovering) && !(isMoving || isRotating || isScaling))
+			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+			bool isControllerHovering = (controllerLeft != null && controllerLeft.object3dHovering) || (controllerRight != null && controllerRight.object3dHovering);
+			if ((objectCollider.Raycast(ray, out _, Mathf.Infinity) || isControllerHovering) && !(isMoving || isRotating || isScaling))
 			{
 				rend.material = hoverMaterial;
 			}
@@ -285,28 +286,13 @@ public class Object3DPanelSphere : MonoBehaviour
 		//NOTE(Jitse): Move objects by rotating them around the VRCamera.
 		if (isMoving)
 		{
-			var speedHorizontal = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-			var speedVertical = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+			var right = Camera.main.transform.right;
+			var up = Camera.main.transform.up;
 
-			//NOTE(Jitse): Horizontal movement
-			if (Input.GetAxis("Mouse X") > 0)
-			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.up, speedHorizontal);
-			}
-			else if (Input.GetAxis("Mouse X") < 0)
-			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.down, -speedHorizontal);
-			}
-
-			//NOTE(Jitse): Vertical movement
-			if (Input.GetAxis("Mouse Y") > 0)
-			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.left, speedVertical);
-			}
-			else if (Input.GetAxis("Mouse Y") < 0)
-			{
-				objectHolder.transform.RotateAround(cameraPosition, Vector3.right, -speedVertical);
-			}
+			var zoomFactor = 1 + 3 * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
+			var delta = (Input.GetAxis("Mouse X") * right + Input.GetAxis("Mouse Y") * up) * zoomFactor;
+			
+			objectHolder.transform.Translate(delta, Space.World);
 		}
 
 		if (isScaling)
@@ -340,6 +326,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		if (!(mouseDown || leftTriggerDown || rightTriggerDown))
 		{
+			MouseLook.Instance.forceInactive = false;
 			isRotating = false;
 			isMoving = false;
 			isScaling = false;
@@ -369,6 +356,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			if (objectCollider.Raycast(ray, out hit, Mathf.Infinity))
 			{
+				MouseLook.Instance.forceInactive = true;
 				isMoving = true;
 				mouseDown = true;
 			}
