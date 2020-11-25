@@ -31,6 +31,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Vector3 prevMousePos;
 	private Vector3 prevObjectScale;
 	private Vector3 mouseDelta;
+	private float startDistanceControllers;
 	private float rotationSensitivity = 250f;
 	private float scaleSensitivity = .1f;
 	private float centerOffset = 90f;
@@ -41,11 +42,17 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool leftTriggerDown;
 	private bool rightTriggerDown;
 	private bool bothTriggersDown;
+	private bool leftControllerFound;
+	private bool rightControllerFound;
 	private MeshCollider objectCollider;
 	private Controller controllerLeft;
 	private Controller controllerRight;
 	private Transform controllerLeftAttachmentPoint;
 	private Transform controllerRightAttachmentPoint;
+	private SteamVR_Behaviour_Skeleton leftSkeleton;
+	private SteamVR_Behaviour_Skeleton rightSkeleton;
+	private SteamVR_RenderModel leftModel;
+	private SteamVR_RenderModel rightModel;
 
 	//NOTE(Jitse): Camera culling mask layers
 	private int objects3dLayer;
@@ -71,8 +78,10 @@ public class Object3DPanelSphere : MonoBehaviour
 		resetTransform.onClick.AddListener(ResetTransform);
 
 		var controllers = FindObjectsOfType<Controller>();
+		var skeletons = FindObjectsOfType<SteamVR_Behaviour_Skeleton>();
+		var models = FindObjectsOfType<SteamVR_RenderModel>();
 
-		foreach (Controller controller in controllers)
+		foreach (var controller in controllers)
 		{
 			if (controller.name == "LeftHand")
 			{
@@ -97,6 +106,32 @@ public class Object3DPanelSphere : MonoBehaviour
 						break;
 					}
 				}
+			}
+		}
+
+		foreach (var skeleton in skeletons)
+		{
+			if (skeleton.name == "vr_glove_left_model_slim(Clone)")
+			{
+				leftSkeleton = skeleton;
+				leftControllerFound = true;
+			}
+			else
+			{
+				rightSkeleton = skeleton;
+				rightControllerFound = true;
+			}
+		}
+
+		foreach (var model in models)
+		{
+			if (model.transform.parent.name == "LeftRenderModel Slim(Clone)")
+			{
+				leftModel = model;
+			}
+			else
+			{
+				rightModel = model;
 			}
 		}
 
@@ -142,7 +177,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				//NOTE(Jitse): Set the scaling value; this value was chosen by testing which size would be most appropriate.
 				//NOTE(cont.): Lowering or raising this value respectively decreases or increases the object size.
-				const float desiredScale = 5f;
+				const float desiredScale = 0.5f;
 				var scale = desiredScale / Math.Max(Math.Max(maxX, maxY), maxZ);
 
 				//NOTE(Jitse): Ensure every child object has the correct position within the object.
@@ -196,8 +231,8 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					objectHolder.transform.localPosition = new Vector3(0, 0, 10);
-					objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+					objectHolder.transform.localPosition = new Vector3(0, 0, 5f);
+					objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 				} 
 				else
 				{
@@ -234,8 +269,8 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						objectHolder.transform.localPosition = new Vector3(0, 0, 10);
-						objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+						objectHolder.transform.localPosition = new Vector3(0, 0, 5f);
+						objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 					}
 				}
 			}
@@ -262,6 +297,63 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
+	private void Update()
+	{
+		//NOTE(Jitse): If an active controller hasn't been found on Init, try to find it every frame until it is found.
+		if (!leftControllerFound 
+			&& controllerLeft != null
+			&& controllerLeft.isActiveAndEnabled)
+		{
+			var skeletons = FindObjectsOfType<SteamVR_Behaviour_Skeleton>();
+			var models = FindObjectsOfType<SteamVR_RenderModel>();
+
+			foreach (var skeleton in skeletons)
+			{
+				if (skeleton.name == "vr_glove_left_model_slim(Clone)")
+				{
+					leftSkeleton = skeleton;
+					leftControllerFound = true;
+					break;
+				}
+			}
+
+			foreach (var model in models)
+			{
+				if (model.transform.parent.name == "LeftRenderModel Slim(Clone)")
+				{
+					leftModel = model;
+					break;
+				}
+			}
+		}
+		if (!rightControllerFound 
+			&& controllerRight != null 
+			&& controllerRight.isActiveAndEnabled)
+		{
+			var skeletons = FindObjectsOfType<SteamVR_Behaviour_Skeleton>();
+			var models = FindObjectsOfType<SteamVR_RenderModel>();
+
+			foreach (var skeleton in skeletons)
+			{
+				if (skeleton.name == "vr_glove_right_model_slim(Clone)")
+				{
+					rightSkeleton = skeleton;
+					rightControllerFound = true;
+					break;
+				}
+			}
+
+			foreach (var model in models)
+			{
+				if (model.transform.parent.name == "RightRenderModel Slim(Clone)")
+				{
+					rightModel = model;
+					break;
+				}
+			}
+		}
+	}
+
 	private void LateUpdate()
 	{
 		mouseDelta = Input.mousePosition - prevMousePos;
@@ -280,65 +372,121 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				rend.material = transparent;
 			}
-		}
 
-		//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
-		if (isRotating)
-		{
-			var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
-			var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
-
-			objectHolder.transform.RotateAround(object3d.transform.position, Vector3.down, speedHorizontal);
-			objectHolder.transform.RotateAround(object3d.transform.position, object3d.transform.right, speedVertical);
-		}
-
-		//NOTE(Jitse): Move objects by rotating them around the VRCamera.
-		if (isMoving)
-		{
-			var right = Camera.main.transform.right;
-			var up = Camera.main.transform.up;
-
-			var zoomFactor = 0.0064f + 0.026f * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
-			var delta = (mouseDelta.x * right + mouseDelta.y * up) * zoomFactor;
 			
-			objectHolder.transform.Translate(delta, Space.World);
-
-			/*var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
-			var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
-
-			objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, speedHorizontal);
-			objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.left, speedVertical);*/
+			if (controllerLeft != null && leftControllerFound)
+			{
+				if (controllerLeft.object3dHovering || leftTriggerDown || isScaling)
+				{
+					if (leftModel.gameObject.activeSelf)
+					{
+						controllerLeft.laser.SetActive(false);
+						leftModel.gameObject.SetActive(false);
+						leftSkeleton.SetTemporaryRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+					}
+				} 
+				else
+				{
+					if (!leftModel.gameObject.activeSelf)
+					{
+						controllerLeft.laser.SetActive(true);
+						leftModel.gameObject.SetActive(true);
+						leftSkeleton.ResetTemporaryRangeOfMotion();
+					}
+				}
+			}
+			if (controllerRight != null && rightControllerFound)
+			{
+				if (controllerRight.object3dHovering || rightTriggerDown || isScaling)
+				{
+					if (rightModel.gameObject.activeSelf)
+					{
+						controllerRight.laser.SetActive(false);
+						rightModel.gameObject.SetActive(false);
+						rightSkeleton.SetTemporaryRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+					}
+				}
+				else
+				{
+					if (!rightModel.gameObject.activeSelf)
+					{
+						controllerRight.laser.SetActive(true);
+						rightModel.gameObject.SetActive(true);
+						rightSkeleton.ResetTemporaryRangeOfMotion();
+					}
+				}
+			}
 		}
 
-		if (isScaling)
+		//NOTE(Jitse): Object 3D interactions when not in VR
+		if (controllerLeft == null && controllerRight == null)
 		{
-			var increase = (mouseDelta.y + mouseDelta.x) * scaleSensitivity / 10;			var scaling = objectHolder.transform.localScale;			var position = objectHolder.transform.position;			scaling.x = Mathf.Clamp(scaling.x + increase, 0.5f, 5);
-			scaling.y = Mathf.Clamp(scaling.y + increase, 0.5f, 5);
-			scaling.z = Mathf.Clamp(scaling.z + increase, 0.5f, 5);
+			//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
+			if (isRotating)
+			{
+				var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
+				var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
 
-			objectHolder.transform.position = position;			objectHolder.transform.localScale = scaling;			prevMousePos = Input.mousePosition;
-		}
+				objectHolder.transform.RotateAround(object3d.transform.position, Vector3.down, speedHorizontal);
+				objectHolder.transform.RotateAround(object3d.transform.position, object3d.transform.right, speedVertical);
+			}
 
-		if (bothTriggersDown)
-		{
-			float scale = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-			var newScale = prevObjectScale;
-			newScale *= scale;
-			objectHolder.transform.localScale = newScale;
-		}
-		else if (leftTriggerDown)
-		{
-			objectHolder.transform.position = controllerLeftAttachmentPoint.position;
-			objectHolder.transform.rotation = controllerLeft.transform.rotation;
-		}
-		else if (rightTriggerDown)
-		{
-			objectHolder.transform.position = controllerRightAttachmentPoint.position;
-			objectHolder.transform.rotation = controllerRight.transform.rotation;
-		}
+			//NOTE(Jitse): Move objects by rotating them around the VRCamera.
+			if (isMoving)
+			{
+				var right = Camera.main.transform.right;
+				var up = Camera.main.transform.up;
 
-		GetMouseButtonStates();
-		prevMousePos = Input.mousePosition;
+				var zoomFactor = 0.0064f + 0.026f * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
+				var delta = (mouseDelta.y * up) * zoomFactor;
+
+				objectHolder.transform.Translate(delta, Space.World);
+
+				var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
+				//var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
+
+				objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, speedHorizontal);
+				//objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.left, speedVertical);
+			}
+
+			if (isScaling)
+			{
+				var increase = (mouseDelta.y + mouseDelta.x) * scaleSensitivity / 10;
+				var scaling = objectHolder.transform.localScale;
+				var position = objectHolder.transform.position;
+				scaling.x = Mathf.Clamp(scaling.x + increase, 0.5f, 5);
+				scaling.y = Mathf.Clamp(scaling.y + increase, 0.5f, 5);
+				scaling.z = Mathf.Clamp(scaling.z + increase, 0.5f, 5);
+
+				objectHolder.transform.position = position;
+				objectHolder.transform.localScale = scaling;
+			}
+
+			GetMouseButtonStates();
+			prevMousePos = Input.mousePosition;
+		}
+		//NOTE(Jitse): Object 3D interactions when in VR
+		else
+		{
+			if (bothTriggersDown)
+			{
+				float scale = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+				scale = 1 + (scale - startDistanceControllers);
+				var newScale = prevObjectScale;
+				newScale *= scale;
+				objectHolder.transform.localScale = newScale;
+			}
+			if (leftTriggerDown)
+			{
+				objectHolder.transform.position = controllerLeft.transform.position;
+				objectHolder.transform.rotation = controllerLeft.transform.rotation;
+			}
+			else if (rightTriggerDown)
+			{
+				objectHolder.transform.position = controllerRight.transform.position;
+				objectHolder.transform.rotation = controllerRight.transform.rotation;
+			}
+		}
 
 		if (!(mouseDown || leftTriggerDown || rightTriggerDown))
 		{
@@ -355,6 +503,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
+			//NOTE(Jitse): Left mouse button click for rotation
 			if (Input.GetMouseButtonDown(0))
 			{
 				if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
@@ -369,6 +518,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				mouseDown = false;
 			}
 
+			//NOTE(Jitse): Right mouse button click for movement
 			if (Input.GetMouseButtonDown(1))
 			{
 				if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
@@ -383,6 +533,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				mouseDown = false;
 			}
 
+			//NOTE(Jitse): Middle mouse button click for scaling
 			if (Input.GetMouseButtonDown(2))
 			{
 				if (objectCollider.Raycast(ray, out _, Mathf.Infinity))
@@ -403,11 +554,18 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		if (controllerLeft.object3dHovering && objectHolder != null)
 		{
-			leftTriggerDown = true;
+			isMoving = true;
 			if (rightTriggerDown)
 			{
 				bothTriggersDown = true;
+				isScaling = true;
+				isMoving = false;
 				prevObjectScale = objectHolder.transform.localScale;
+				startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+			} 
+			else
+			{
+				leftTriggerDown = true;
 			}
 		}
 	}
@@ -417,29 +575,47 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (controllerRight.object3dHovering && objectHolder != null)
 		{
 			rightTriggerDown = true;
+			isMoving = true;
 			if (leftTriggerDown)
 			{
 				bothTriggersDown = true;
+				isScaling = true;
+				isMoving = false;
 				prevObjectScale = objectHolder.transform.localScale;
+				startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+
 			}
 		}
 	}
 	private void TriggerUpLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
 		leftTriggerDown = false;
-		bothTriggersDown = false;
+		isScaling = false;
+		if (bothTriggersDown)
+		{
+			isMoving = true;
+			rightTriggerDown = true;
+			bothTriggersDown = false;
+		}
 	}
 
 	private void TriggerUpRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
 		rightTriggerDown = false;
-		bothTriggersDown = false;
+		isScaling = false;
+		if (bothTriggersDown)
+		{
+			isMoving = true;
+			leftTriggerDown = true;
+			bothTriggersDown = false;
+		}
 	}
 
 	private void ResetTransform()
 	{
-		objectHolder.transform.localPosition = new Vector3(0, 0, 10);
-		objectHolder.transform.rotation = Quaternion.Euler(new Vector3(0, uiSphere.offset + centerOffset, 0));
+		objectHolder.transform.localPosition = new Vector3(0, 0, 5f);
+		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 		objectHolder.transform.localScale = Vector3.one;
 	}
 }

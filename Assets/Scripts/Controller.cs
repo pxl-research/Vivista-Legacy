@@ -54,7 +54,7 @@ public class Controller : MonoBehaviour
 		//NOTE(Simon): Set laser direction based on controller type
 		if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
 		{
-			laser.transform.localPosition = new Vector3(0, 0, 0.1f);
+			laser.transform.localPosition = new Vector3(0, -0.0325f, -0.01f);
 			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
 		}
 
