@@ -201,32 +201,29 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.transform.localScale = new Vector3(scale, scale, scale);
 				object3d.SetLayer(objects3dLayer);
 
-				//TODO(Jitse): Is there a way to avoid using combined meshes for hit detection?
-				{ 
-					//NOTE(Jitse): Combine the meshes, so we can assign it to the MeshCollider for hit detection
-					MeshFilter mainMesh;
-					rend = objectHolder.AddComponent<MeshRenderer>();
+				//NOTE(Jitse): Combine the meshes, so we can assign it to the MeshCollider for hit detection
+				MeshFilter mainMesh;
+				rend = objectHolder.AddComponent<MeshRenderer>();
 
-					//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
-					rend.material = transparent;
-					mainMesh = objectHolder.AddComponent<MeshFilter>();
+				//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
+				rend.material = transparent;
+				mainMesh = objectHolder.AddComponent<MeshFilter>();
 
-					//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
-					var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
-					var combine = new CombineInstance[meshFilters.Length];
+				//NOTE(Jitse): Combine the meshes of the object into one mesh, to correctly calculate the bounds
+				var meshFilters = object3d.GetComponentsInChildren<MeshFilter>();
+				var combine = new CombineInstance[meshFilters.Length];
 
-					int k = 0;
-					while (k < meshFilters.Length)
-					{
-						combine[k].mesh = meshFilters[k].sharedMesh;
-						combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
+				int k = 0;
+				while (k < meshFilters.Length)
+				{
+					combine[k].mesh = meshFilters[k].sharedMesh;
+					combine[k].transform = meshFilters[k].transform.localToWorldMatrix;
 
-						k++;
-					}
-
-					mainMesh.mesh = new Mesh();
-					mainMesh.mesh.CombineMeshes(combine);
+					k++;
 				}
+
+				mainMesh.mesh = new Mesh();
+				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				objectCollider.convex = true;
@@ -236,7 +233,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+					objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
 					objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 				} 
 				else
@@ -274,7 +271,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+						objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
 						objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 					}
 				}
@@ -436,12 +433,10 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectHolder.transform.RotateAround(object3d.transform.position, object3d.transform.right, speedVertical);
 			}
 
-			//NOTE(Jitse): Move objects by rotating them around the VRCamera.
+			//NOTE(Jitse): Move objects
 			if (isMoving)
 			{
-				var mousePos = prevMousePos;
-
-				objectHolder.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, objectDistance));
+				objectHolder.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(prevMousePos.x, prevMousePos.y, objectDistance));
 			}
 
 			if (isScaling)
@@ -474,30 +469,16 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 			if (leftTriggerDown)
 			{
-				float distance = (controllerLeft.transform.position - objectHolder.transform.position).magnitude;
-				Debug.Log($"{distance}\t{controllerLeft.transform.position}\t{objectHolder.transform.position}");
-				if (distance > 0.2)
-				{
-					objectHolder.transform.position = controllerLeft.cursor.transform.position;
-				} 
-				else
-				{
-					objectHolder.transform.position = controllerLeft.laser.transform.position;
-				}
+				float step = 1f * Time.deltaTime;
+				objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, controllerLeft.transform.position, step);
+
 				objectHolder.transform.rotation = controllerLeft.transform.rotation;
 			}
 			else if (rightTriggerDown)
 			{
-				float distance = (controllerRight.transform.position - objectHolder.transform.position).magnitude;
-				Debug.Log($"{distance}\t{controllerRight.transform.position}\t{objectHolder.transform.position}");
-				if (distance > 0.2)
-				{
-					objectHolder.transform.position = controllerRight.cursor.transform.position;
-				}
-				else
-				{
-					objectHolder.transform.position = controllerRight.laser.transform.position;
-				}
+				float step = 1f * Time.deltaTime;
+				objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, controllerRight.transform.position, step);
+
 				objectHolder.transform.rotation = controllerRight.transform.rotation;
 			}
 		}
@@ -566,38 +547,52 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void TriggerDownLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
-		if (controllerLeft.object3dHovering && objectHolder != null)
+		if (objectHolder != null)
 		{
-			isMoving = true;
-			if (rightTriggerDown)
+			float distance = (controllerLeft.transform.position - objectHolder.transform.position).magnitude;
+
+			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
+			if (controllerLeft.object3dHovering || distance < 0.1f)
 			{
-				bothTriggersDown = true;
-				isScaling = true;
-				isMoving = false;
-				prevObjectScale = objectHolder.transform.localScale;
-				startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-			} 
-			else
-			{
-				leftTriggerDown = true;
+				isMoving = true;
+				if (rightTriggerDown)
+				{
+					bothTriggersDown = true;
+					isScaling = true;
+					isMoving = false;
+					prevObjectScale = objectHolder.transform.localScale;
+					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+				}
+				else
+				{
+					leftTriggerDown = true;
+				}
 			}
 		}
 	}
 
 	private void TriggerDownRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
-		if (controllerRight.object3dHovering && objectHolder != null)
+		if (objectHolder != null)
 		{
-			rightTriggerDown = true;
-			isMoving = true;
-			if (leftTriggerDown)
-			{
-				bothTriggersDown = true;
-				isScaling = true;
-				isMoving = false;
-				prevObjectScale = objectHolder.transform.localScale;
-				startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+			float distance = (controllerRight.transform.position - objectHolder.transform.position).magnitude;
 
+			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
+			if (controllerRight.object3dHovering || distance < 0.1f)
+			{
+				isMoving = true;
+				if (leftTriggerDown)
+				{
+					bothTriggersDown = true;
+					isScaling = true;
+					isMoving = false;
+					prevObjectScale = objectHolder.transform.localScale;
+					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+				}
+				else
+				{
+					rightTriggerDown = true;
+				}
 			}
 		}
 	}
@@ -628,7 +623,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private void ResetTransform()
 	{
 		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
-		objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+		objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 		objectHolder.transform.localScale = Vector3.one;
 	}
