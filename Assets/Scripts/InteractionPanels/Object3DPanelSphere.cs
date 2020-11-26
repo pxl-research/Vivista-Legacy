@@ -31,10 +31,13 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Vector3 prevMousePos;
 	private Vector3 prevObjectScale;
 	private Vector3 mouseDelta;
+
 	private float startDistanceControllers;
 	private float rotationSensitivity = 250f;
 	private float scaleSensitivity = .1f;
 	private float centerOffset = 90f;
+	private float objectDistance = 1f;
+
 	private bool isRotating;
 	private bool isMoving;
 	private bool isScaling;
@@ -44,7 +47,9 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool bothTriggersDown;
 	private bool leftControllerFound;
 	private bool rightControllerFound;
+
 	private MeshCollider objectCollider;
+
 	private Controller controllerLeft;
 	private Controller controllerRight;
 	private Transform controllerLeftAttachmentPoint;
@@ -231,7 +236,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					objectHolder.transform.localPosition = new Vector3(0, 0, 5f);
+					objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 					objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 				} 
 				else
@@ -269,7 +274,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						objectHolder.transform.localPosition = new Vector3(0, 0, 5f);
+						objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 						objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 					}
 				}
@@ -434,19 +439,9 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(Jitse): Move objects by rotating them around the VRCamera.
 			if (isMoving)
 			{
-				var right = Camera.main.transform.right;
-				var up = Camera.main.transform.up;
+				var mousePos = prevMousePos;
 
-				var zoomFactor = 0.0064f + 0.026f * (Mathf.InverseLerp(MouseLook.Instance.fovMin, MouseLook.Instance.fovMax, Camera.main.fieldOfView));
-				var delta = (mouseDelta.y * up) * zoomFactor;
-
-				objectHolder.transform.Translate(delta, Space.World);
-
-				var speedHorizontal = Input.GetAxis("Mouse X") * rotationSensitivity * Time.deltaTime;
-				//var speedVertical = Input.GetAxis("Mouse Y") * rotationSensitivity * Time.deltaTime;
-
-				objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, speedHorizontal);
-				//objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.left, speedVertical);
+				objectHolder.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, objectDistance));
 			}
 
 			if (isScaling)
@@ -466,24 +461,43 @@ public class Object3DPanelSphere : MonoBehaviour
 			prevMousePos = Input.mousePosition;
 		}
 		//NOTE(Jitse): Object 3D interactions when in VR
+		//TODO(Jitse): Instead of object teleporting to hand, make them slowly move towards the hand when trigger down (maybe using controller.cursor position?)
 		else
 		{
 			if (bothTriggersDown)
 			{
-				float scale = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-				scale = 1 + (scale - startDistanceControllers);
+				float distance = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+				float scale = 1 + (distance - startDistanceControllers);
 				var newScale = prevObjectScale;
 				newScale *= scale;
 				objectHolder.transform.localScale = newScale;
 			}
 			if (leftTriggerDown)
 			{
-				objectHolder.transform.position = controllerLeft.transform.position;
+				float distance = (controllerLeft.transform.position - objectHolder.transform.position).magnitude;
+				Debug.Log($"{distance}\t{controllerLeft.transform.position}\t{objectHolder.transform.position}");
+				if (distance > 0.2)
+				{
+					objectHolder.transform.position = controllerLeft.cursor.transform.position;
+				} 
+				else
+				{
+					objectHolder.transform.position = controllerLeft.laser.transform.position;
+				}
 				objectHolder.transform.rotation = controllerLeft.transform.rotation;
 			}
 			else if (rightTriggerDown)
 			{
-				objectHolder.transform.position = controllerRight.transform.position;
+				float distance = (controllerRight.transform.position - objectHolder.transform.position).magnitude;
+				Debug.Log($"{distance}\t{controllerRight.transform.position}\t{objectHolder.transform.position}");
+				if (distance > 0.2)
+				{
+					objectHolder.transform.position = controllerRight.cursor.transform.position;
+				}
+				else
+				{
+					objectHolder.transform.position = controllerRight.laser.transform.position;
+				}
 				objectHolder.transform.rotation = controllerRight.transform.rotation;
 			}
 		}
@@ -613,8 +627,8 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void ResetTransform()
 	{
-		objectHolder.transform.localPosition = new Vector3(0, 0, 5f);
 		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 		objectHolder.transform.localScale = Vector3.one;
 	}

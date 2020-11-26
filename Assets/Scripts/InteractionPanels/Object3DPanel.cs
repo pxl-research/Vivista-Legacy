@@ -26,6 +26,7 @@ public class Object3DPanel : MonoBehaviour
 
 	private ObjectImporter objImporter;
 	private bool rotate;
+	private bool isImporting;
 
 	private int layer;
 
@@ -38,44 +39,23 @@ public class Object3DPanel : MonoBehaviour
 		importOptions.hideWhileLoading = true;
 		importOptions.inheritLayer = true;
 
-		objImporter.ImportingComplete += SetObjectProperties;
-
 		layer = LayerMask.NameToLayer("3DObjects");
 
 		if (newPaths.Count > 0)
 		{
 			filePath = newPaths[0];
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
-
-			if (File.Exists(filePath))
-			{
-				errorText.gameObject.SetActive(false);
-				//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
-				if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
-				{
-					objectHolder = new GameObject("holder_" + objectName);
-					objectHolder.transform.parent = objectRenderer.transform;
-					objectHolder.layer = layer;
-					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
-				}
-			}
-			else
-			{
-				errorText.gameObject.SetActive(true);
-				errorText.text = $"Error: File Not Found\n{filePath}";
-			}
 		}
 	}
 
 	private void SetObjectProperties()
 	{
-		var objects3d = objectRenderer.GetComponentsInChildren<Transform>(true);
-		for (int i = 0; i < objects3d.Length; i++)
+		foreach (Transform holder in objectRenderer.transform)
 		{
-			var currentObject = objects3d[i];
-			if (currentObject.name == objectName)
+			Debug.Log(holder.name);
+			if (holder.name == "holder_"+objectName)
 			{
-				object3d = currentObject.gameObject;
+				object3d = holder.GetComponentsInChildren<Transform>()[1].gameObject;
 
 				var transforms = object3d.GetComponentsInChildren<Transform>();
 				Vector3 objectCenter = Vector3.zero;
@@ -162,6 +142,29 @@ public class Object3DPanel : MonoBehaviour
 		if (object3d != null)
 		{
 			object3d.SetActive(true);
+		} 
+		else if (!isImporting)
+		{
+			objImporter.ImportingComplete += SetObjectProperties;
+
+			if (File.Exists(filePath))
+			{
+				errorText.gameObject.SetActive(false);
+				//NOTE(Jitse): Create a parent object for the 3D object, to ensure it has the correct position for rotation
+				if (GameObject.Find("/ObjectRenderer/holder_" + objectName) == null)
+				{
+					objectHolder = new GameObject("holder_" + objectName);
+					objectHolder.transform.parent = objectRenderer.transform;
+					objectHolder.layer = layer;
+					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
+					isImporting = true;
+				}
+			}
+			else
+			{
+				errorText.gameObject.SetActive(true);
+				errorText.text = $"Error: File Not Found\n{filePath}";
+			}
 		}
 	}
 
