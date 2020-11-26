@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using Valve.VR;
+using Valve.VR.InteractionSystem;
 
 public class Object3DPanelSphere : MonoBehaviour
 {
@@ -41,19 +42,20 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool isRotating;
 	private bool isMoving;
 	private bool isScaling;
+
 	private bool mouseDown;
 	private bool leftTriggerDown;
 	private bool rightTriggerDown;
 	private bool bothTriggersDown;
+
 	private bool leftControllerFound;
 	private bool rightControllerFound;
 
 	private MeshCollider objectCollider;
-
 	private Controller controllerLeft;
 	private Controller controllerRight;
-	private Transform controllerLeftAttachmentPoint;
-	private Transform controllerRightAttachmentPoint;
+	private Hand handLeft;
+	private Hand handRight;
 	private SteamVR_Behaviour_Skeleton leftSkeleton;
 	private SteamVR_Behaviour_Skeleton rightSkeleton;
 	private SteamVR_RenderModel leftModel;
@@ -91,26 +93,12 @@ public class Object3DPanelSphere : MonoBehaviour
 			if (controller.name == "LeftHand")
 			{
 				controllerLeft = controller;
-				foreach (Transform trans in controllerLeft.GetComponentsInChildren<Transform>())
-				{
-					if (trans.name == "HoverPoint")
-					{
-						controllerLeftAttachmentPoint = trans;
-						break;
-					}
-				}
+				handLeft = controller.transform.GetComponent<Hand>();
 			}
 			else if (controller.name == "RightHand")
 			{
 				controllerRight = controller;
-				foreach (Transform trans in controllerRight.GetComponentsInChildren<Transform>())
-				{
-					if (trans.name == "HoverPoint")
-					{
-						controllerRightAttachmentPoint = trans;
-						break;
-					}
-				}
+				handRight = controller.transform.GetComponent<Hand>();
 			}
 		}
 
@@ -226,7 +214,13 @@ public class Object3DPanelSphere : MonoBehaviour
 				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
+				var rigidbody = objectHolder.AddComponent<Rigidbody>();
+				var interactable = objectHolder.AddComponent<Interactable>();
 				objectCollider.convex = true;
+				rigidbody.isKinematic = true;
+				interactable.attachEaseIn = true;
+				interactable.hideHandOnAttach = false;
+				interactable.hideHighlight = new GameObject[] { object3d };
 
 				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
 				//NOTE(cont.): Also get SphereUIRenderer to position the 3D object in the center of the sphere panel
@@ -365,7 +359,8 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(Jitse): If mouse is over the object, change the collider's material to emphasize that the object can be interacted with.
 			var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-			bool isControllerHovering = (controllerLeft != null && controllerLeft.object3dHovering) || (controllerRight != null && controllerRight.object3dHovering);
+			bool isControllerHovering = (controllerLeft != null && (controllerLeft.object3dHovering || handLeft.hoveringInteractable)) 
+										|| (controllerRight != null && (controllerRight.object3dHovering || handRight.hoveringInteractable));
 			if ((objectCollider.Raycast(ray, out _, Mathf.Infinity) || isControllerHovering) && !(isMoving || isRotating || isScaling))
 			{
 				rend.material = hoverMaterial;
@@ -373,50 +368,6 @@ public class Object3DPanelSphere : MonoBehaviour
 			else
 			{
 				rend.material = transparent;
-			}
-
-			
-			if (controllerLeft != null && leftControllerFound)
-			{
-				if (controllerLeft.object3dHovering || leftTriggerDown || isScaling)
-				{
-					if (leftModel.gameObject.activeSelf)
-					{
-						controllerLeft.laser.SetActive(false);
-						leftModel.gameObject.SetActive(false);
-						leftSkeleton.SetTemporaryRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
-					}
-				} 
-				else
-				{
-					if (!leftModel.gameObject.activeSelf)
-					{
-						controllerLeft.laser.SetActive(true);
-						leftModel.gameObject.SetActive(true);
-						leftSkeleton.ResetTemporaryRangeOfMotion();
-					}
-				}
-			}
-			if (controllerRight != null && rightControllerFound)
-			{
-				if (controllerRight.object3dHovering || rightTriggerDown || isScaling)
-				{
-					if (rightModel.gameObject.activeSelf)
-					{
-						controllerRight.laser.SetActive(false);
-						rightModel.gameObject.SetActive(false);
-						rightSkeleton.SetTemporaryRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
-					}
-				}
-				else
-				{
-					if (!rightModel.gameObject.activeSelf)
-					{
-						controllerRight.laser.SetActive(true);
-						rightModel.gameObject.SetActive(true);
-						rightSkeleton.ResetTemporaryRangeOfMotion();
-					}
-				}
 			}
 		}
 
@@ -466,20 +417,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				var newScale = prevObjectScale;
 				newScale *= scale;
 				objectHolder.transform.localScale = newScale;
-			}
-			if (leftTriggerDown)
-			{
-				float step = 1f * Time.deltaTime;
-				objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, controllerLeft.transform.position, step);
-
-				objectHolder.transform.rotation = controllerLeft.transform.rotation;
-			}
-			else if (rightTriggerDown)
-			{
-				float step = 1f * Time.deltaTime;
-				objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, controllerRight.transform.position, step);
-
-				objectHolder.transform.rotation = controllerRight.transform.rotation;
 			}
 		}
 
@@ -549,23 +486,25 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		if (objectHolder != null)
 		{
-			float distance = (controllerLeft.transform.position - objectHolder.transform.position).magnitude;
-
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controllerLeft.object3dHovering || distance < 0.1f)
+			if (controllerLeft.object3dHovering || handLeft.hoveringInteractable)
 			{
 				isMoving = true;
+				controllerLeft.laser.SetActive(false);
+
 				if (rightTriggerDown)
 				{
 					bothTriggersDown = true;
 					isScaling = true;
 					isMoving = false;
+
 					prevObjectScale = objectHolder.transform.localScale;
 					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 				}
 				else
 				{
 					leftTriggerDown = true;
+					handLeft.AttachObject(objectHolder, GrabTypes.Trigger);
 				}
 			}
 		}
@@ -575,23 +514,25 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		if (objectHolder != null)
 		{
-			float distance = (controllerRight.transform.position - objectHolder.transform.position).magnitude;
-
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controllerRight.object3dHovering || distance < 0.1f)
+			if (controllerRight.object3dHovering || handRight.hoveringInteractable)
 			{
 				isMoving = true;
+				controllerRight.laser.SetActive(false);
+
 				if (leftTriggerDown)
 				{
 					bothTriggersDown = true;
 					isScaling = true;
 					isMoving = false;
+
 					prevObjectScale = objectHolder.transform.localScale;
 					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 				}
 				else
 				{
 					rightTriggerDown = true;
+					handRight.AttachObject(objectHolder, GrabTypes.Trigger);
 				}
 			}
 		}
@@ -600,11 +541,17 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		leftTriggerDown = false;
 		isScaling = false;
+
+		handLeft.DetachObject(objectHolder);
+		controllerLeft.laser.SetActive(true);
+
 		if (bothTriggersDown)
 		{
 			isMoving = true;
 			rightTriggerDown = true;
 			bothTriggersDown = false;
+		
+			handRight.AttachObject(objectHolder, GrabTypes.Trigger);
 		}
 	}
 
@@ -612,11 +559,17 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		rightTriggerDown = false;
 		isScaling = false;
+
+		handRight.DetachObject(objectHolder);
+		controllerRight.laser.SetActive(true);
+
 		if (bothTriggersDown)
 		{
 			isMoving = true;
 			leftTriggerDown = true;
 			bothTriggersDown = false;
+
+			handLeft.AttachObject(objectHolder, GrabTypes.Trigger);
 		}
 	}
 
