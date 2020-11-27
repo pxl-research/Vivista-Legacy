@@ -427,14 +427,14 @@ public class Object3DPanelSphere : MonoBehaviour
 			if (leftTriggerDown)
 			{
 				var handRotation = initialHandRotation * controllerLeft.transform.rotation;
-				var handAttachmentPoint = Vector3.MoveTowards(controllerLeft.transform.position, controllerLeft.cursor.transform.position, 0.01f);
+				var handAttachmentPoint = Vector3.MoveTowards(controllerLeft.transform.position, controllerLeft.cursor.transform.position, 0.05f);
 				objectHolder.transform.position = handAttachmentPoint;
 				objectHolder.transform.rotation = handRotation * initialObjectRotation;
 			}
 			else if (rightTriggerDown)
 			{
 				var handRotation = initialHandRotation * controllerRight.transform.rotation;
-				var handAttachmentPoint = Vector3.MoveTowards(controllerRight.transform.position, controllerRight.cursor.transform.position, 0.01f);
+				var handAttachmentPoint = Vector3.MoveTowards(controllerRight.transform.position, controllerRight.cursor.transform.position, 0.05f);
 				objectHolder.transform.position = handAttachmentPoint;
 				objectHolder.transform.rotation = handRotation * initialObjectRotation;
 			}
@@ -513,6 +513,15 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				CalculateAttachmentPoint(hit);
 			}
+			else if (handLeft.hoveringInteractable)
+			{
+				Ray rayHand = new Ray(handLeft.transform.position, -handLeft.transform.up);
+				RaycastHit hitHand;
+				if (Physics.Raycast(rayHand, out hitHand, Mathf.Infinity))
+				{
+					CalculateAttachmentPoint(hitHand);
+				}
+			}
 
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
 			if (controllerLeft.object3dHovering || (handLeft.hoveringInteractable))
@@ -550,6 +559,15 @@ public class Object3DPanelSphere : MonoBehaviour
 			if (!leftTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
 			{
 				CalculateAttachmentPoint(hit);
+			}
+			else if (handRight.hoveringInteractable)
+			{
+				Ray rayHand = new Ray(handRight.transform.position, -handRight.transform.up);
+				RaycastHit hitHand;
+				if (Physics.Raycast(rayHand, out hitHand, Mathf.Infinity))
+				{
+					CalculateAttachmentPoint(hitHand);
+				}
 			}
 
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
