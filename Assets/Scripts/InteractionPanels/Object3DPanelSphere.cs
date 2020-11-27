@@ -19,6 +19,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
+	private GameObject attachmentPoint;
 
 	private string filePath = "";
 	private string objectName = "";
@@ -31,6 +32,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 prevMousePos;
 	private Vector3 prevObjectScale;
+	private Quaternion initialObjectRotation;
+	private Quaternion initialHandRotation;
 	private Vector3 mouseDelta;
 
 	private float startDistanceControllers;
@@ -52,6 +55,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool rightControllerFound;
 
 	private MeshCollider objectCollider;
+	private MeshFilter mainMesh;
 	private Controller controllerLeft;
 	private Controller controllerRight;
 	private Hand handLeft;
@@ -190,7 +194,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				object3d.SetLayer(objects3dLayer);
 
 				//NOTE(Jitse): Combine the meshes, so we can assign it to the MeshCollider for hit detection
-				MeshFilter mainMesh;
 				rend = objectHolder.AddComponent<MeshRenderer>();
 
 				//NOTE(Jitse): We don't want to see the combined "parent" mesh, because we already see the separate children meshes with their respective materials, so we assign a transparent material
@@ -214,10 +217,9 @@ public class Object3DPanelSphere : MonoBehaviour
 				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
-				var rigidbody = objectHolder.AddComponent<Rigidbody>();
+				//var rigidbody = objectHolder.AddComponent<Rigidbody>();
 				var interactable = objectHolder.AddComponent<Interactable>();
-				objectCollider.convex = true;
-				rigidbody.isKinematic = true;
+				//objectCollider.convex = true;
 				interactable.attachEaseIn = true;
 				interactable.hideHandOnAttach = false;
 				interactable.hideHighlight = new GameObject[] { object3d };
@@ -361,7 +363,10 @@ public class Object3DPanelSphere : MonoBehaviour
 
 			bool isControllerHovering = (controllerLeft != null && (controllerLeft.object3dHovering || handLeft.hoveringInteractable)) 
 										|| (controllerRight != null && (controllerRight.object3dHovering || handRight.hoveringInteractable));
-			if ((objectCollider.Raycast(ray, out _, Mathf.Infinity) || isControllerHovering) && !(isMoving || isRotating || isScaling))
+
+			bool isMouseHovering = (objectCollider.Raycast(ray, out _, Mathf.Infinity) && controllerLeft == null && controllerRight == null);
+
+			if ((isMouseHovering || isControllerHovering) && !(isMoving || isRotating || isScaling))
 			{
 				rend.material = hoverMaterial;
 			}
@@ -417,6 +422,21 @@ public class Object3DPanelSphere : MonoBehaviour
 				var newScale = prevObjectScale;
 				newScale *= scale;
 				objectHolder.transform.localScale = newScale;
+			}
+
+			if (leftTriggerDown)
+			{
+				var handRotation = initialHandRotation * controllerLeft.transform.rotation;
+				var handAttachmentPoint = Vector3.MoveTowards(controllerLeft.transform.position, controllerLeft.cursor.transform.position, 0.01f);
+				objectHolder.transform.position = handAttachmentPoint;
+				objectHolder.transform.rotation = handRotation * initialObjectRotation;
+			}
+			else if (rightTriggerDown)
+			{
+				var handRotation = initialHandRotation * controllerRight.transform.rotation;
+				var handAttachmentPoint = Vector3.MoveTowards(controllerRight.transform.position, controllerRight.cursor.transform.position, 0.01f);
+				objectHolder.transform.position = handAttachmentPoint;
+				objectHolder.transform.rotation = handRotation * initialObjectRotation;
 			}
 		}
 
@@ -486,8 +506,16 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		if (objectHolder != null)
 		{
+			//NOTE(Jitse): Find closest vertex hit by multiplying the hit triangle index by 3 and determining largest x, y or z from the barycentricCoordinate.
+			Ray ray = new Ray(controllerLeft.laser.transform.position, controllerLeft.laser.transform.up);
+			RaycastHit hit;
+			if (!rightTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
+			{
+				CalculateAttachmentPoint(hit);
+			}
+
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controllerLeft.object3dHovering || handLeft.hoveringInteractable)
+			if (controllerLeft.object3dHovering || (handLeft.hoveringInteractable))
 			{
 				isMoving = true;
 				controllerLeft.laser.SetActive(false);
@@ -503,8 +531,10 @@ public class Object3DPanelSphere : MonoBehaviour
 				}
 				else
 				{
+					initialObjectRotation = objectHolder.transform.rotation;
+					initialHandRotation = controllerLeft.transform.rotation;
+
 					leftTriggerDown = true;
-					handLeft.AttachObject(objectHolder, GrabTypes.Trigger);
 				}
 			}
 		}
@@ -514,8 +544,16 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		if (objectHolder != null)
 		{
+			//NOTE(Jitse): Find closest vertex hit by multiplying the hit triangle index by 3 and determining largest x, y or z from the barycentricCoordinate.
+			Ray ray = new Ray(controllerRight.laser.transform.position, controllerRight.laser.transform.up);
+			RaycastHit hit;
+			if (!leftTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
+			{
+				CalculateAttachmentPoint(hit);
+			}
+
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controllerRight.object3dHovering || handRight.hoveringInteractable)
+			if (controllerRight.object3dHovering || (handRight.hoveringInteractable))
 			{
 				isMoving = true;
 				controllerRight.laser.SetActive(false);
@@ -531,53 +569,104 @@ public class Object3DPanelSphere : MonoBehaviour
 				}
 				else
 				{
+					initialObjectRotation = objectHolder.transform.rotation;
+					initialHandRotation = controllerRight.transform.rotation;
+
 					rightTriggerDown = true;
-					handRight.AttachObject(objectHolder, GrabTypes.Trigger);
 				}
 			}
 		}
 	}
+
 	private void TriggerUpLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
-		leftTriggerDown = false;
-		isScaling = false;
-
-		handLeft.DetachObject(objectHolder);
-		controllerLeft.laser.SetActive(true);
-
-		if (bothTriggersDown)
+		if (objectHolder != null)
 		{
-			isMoving = true;
-			rightTriggerDown = true;
-			bothTriggersDown = false;
-		
-			handRight.AttachObject(objectHolder, GrabTypes.Trigger);
+			leftTriggerDown = false;
+			isScaling = false;
+
+			controllerLeft.laser.SetActive(true);
+
+			if (bothTriggersDown)
+			{
+				isMoving = true;
+				rightTriggerDown = true;
+				bothTriggersDown = false;
+
+				initialObjectRotation = objectHolder.transform.rotation;
+				initialHandRotation = controllerRight.transform.rotation;
+			} 
+			else
+			{
+				objectHolder.transform.parent = objectRenderer.transform;
+				Destroy(attachmentPoint);
+			}
 		}
 	}
 
 	private void TriggerUpRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
 	{
-		rightTriggerDown = false;
-		isScaling = false;
-
-		handRight.DetachObject(objectHolder);
-		controllerRight.laser.SetActive(true);
-
-		if (bothTriggersDown)
+		if (objectHolder != null)
 		{
-			isMoving = true;
-			leftTriggerDown = true;
-			bothTriggersDown = false;
+			rightTriggerDown = false;
+			isScaling = false;
 
-			handLeft.AttachObject(objectHolder, GrabTypes.Trigger);
+			controllerRight.laser.SetActive(true);
+
+			if (bothTriggersDown)
+			{
+				isMoving = true;
+				leftTriggerDown = true;
+				bothTriggersDown = false;
+
+				initialObjectRotation = objectHolder.transform.rotation;
+				initialHandRotation = controllerLeft.transform.rotation;
+			}
+			else
+			{
+				objectHolder.transform.parent = objectRenderer.transform;
+				Destroy(attachmentPoint);
+			}
 		}
 	}
 
 	private void ResetTransform()
 	{
+		objectHolder.transform.localScale = Vector3.one;
 		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
 		objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
-		objectHolder.transform.localScale = Vector3.one;
+	}
+
+	private void CalculateAttachmentPoint(RaycastHit hit)
+	{
+		if (hit.transform.gameObject.layer == objects3dLayer)
+		{
+			var barycentricCoordinate = hit.barycentricCoordinate;
+			int index = hit.triangleIndex * 3;
+
+			if (barycentricCoordinate.x > barycentricCoordinate.y)
+			{
+				if (barycentricCoordinate.z > barycentricCoordinate.x)
+				{
+					index += 2;
+				}
+			}
+			else if (barycentricCoordinate.y > barycentricCoordinate.z)
+			{
+				index += 1;
+			}
+			else
+			{
+				index += 2;
+			}
+
+			var triangleIndex = mainMesh.mesh.triangles[index];
+			var vertexHit = mainMesh.mesh.vertices[triangleIndex];
+			attachmentPoint = new GameObject("AttachmentPoint");
+			attachmentPoint.transform.parent = objectRenderer.transform;
+			objectHolder.transform.parent = attachmentPoint.transform;
+			attachmentPoint.transform.position = vertexHit;
+		}
 	}
 }
