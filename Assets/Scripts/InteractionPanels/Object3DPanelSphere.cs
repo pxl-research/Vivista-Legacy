@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using Hand = Valve.VR.InteractionSystem.Hand;
 
 public class Object3DPanelSphere : MonoBehaviour
 {
@@ -32,9 +34,11 @@ public class Object3DPanelSphere : MonoBehaviour
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 prevMousePos;
 	private Vector3 prevObjectScale;
+	private Vector3 mouseDelta;
+	private Vector3 initialObjectPosition;
+	private Vector3 initialHandPosition;
 	private Quaternion initialObjectRotation;
 	private Quaternion initialHandRotation;
-	private Vector3 mouseDelta;
 
 	private float startDistanceControllers;
 	private float rotationSensitivity = 250f;
@@ -184,7 +188,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
-				//var rigidbody = objectHolder.AddComponent<Rigidbody>();
 				var interactable = objectHolder.AddComponent<Interactable>();
 				interactable.attachEaseIn = true;
 				interactable.hideHandOnAttach = false;
@@ -286,7 +289,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 
 		//NOTE(Jitse): Object 3D interactions when not in VR
-		if (controllerLeft == null && controllerRight == null)
+		if (!XRSettings.enabled)
 		{
 			//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
 			if (isRotating)
@@ -335,16 +338,18 @@ public class Object3DPanelSphere : MonoBehaviour
 
 			if (leftTriggerDown)
 			{
-				var handRotation = initialHandRotation * controllerLeft.transform.rotation;
-				var handAttachmentPoint = Vector3.MoveTowards(controllerLeft.transform.position, controllerLeft.cursor.transform.position, 0.05f);
-				objectHolder.transform.position = handAttachmentPoint;
+				var handRotation = Quaternion.Inverse(controllerLeft.transform.rotation) * initialHandRotation;
+				//var handAttachmentPoint = Vector3.MoveTowards(controllerLeft.transform.position, controllerLeft.cursor.transform.position, 0.05f);
+				var newControllerPosition = initialHandPosition - controllerLeft.transform.position;
+				objectHolder.transform.position = initialObjectPosition - newControllerPosition;
 				objectHolder.transform.rotation = handRotation * initialObjectRotation;
 			}
 			else if (rightTriggerDown)
 			{
-				var handRotation = initialHandRotation * controllerRight.transform.rotation;
-				var handAttachmentPoint = Vector3.MoveTowards(controllerRight.transform.position, controllerRight.cursor.transform.position, 0.05f);
-				objectHolder.transform.position = handAttachmentPoint;
+				var handRotation = Quaternion.Inverse(controllerRight.transform.rotation) * initialHandRotation;
+				//var handAttachmentPoint = Vector3.MoveTowards(controllerRight.transform.position, controllerRight.cursor.transform.position, 0.05f);
+				var newControllerPosition = initialHandPosition - controllerRight.transform.position;
+				objectHolder.transform.position = initialObjectPosition - newControllerPosition;
 				objectHolder.transform.rotation = handRotation * initialObjectRotation;
 			}
 		}
@@ -478,7 +483,9 @@ public class Object3DPanelSphere : MonoBehaviour
 				}
 				else
 				{
+					initialObjectPosition = objectHolder.transform.position;
 					initialObjectRotation = objectHolder.transform.rotation;
+					initialHandPosition = controller.transform.position;
 					initialHandRotation = controller.transform.rotation;
 
 					if (controllerType.Equals("left"))
@@ -506,7 +513,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 		else
 		{
-			otherController = controllerRight;
+			otherController = controllerLeft;
 		}
 
 		if (objectHolder != null)
@@ -538,12 +545,13 @@ public class Object3DPanelSphere : MonoBehaviour
 				isMoving = true;
 				bothTriggersDown = false;
 
+				initialObjectPosition = objectHolder.transform.position;
 				initialObjectRotation = objectHolder.transform.rotation;
 				initialHandRotation = otherController.transform.rotation;
+				initialHandPosition = otherController.transform.position;
 			} 
 			else
 			{
-				objectHolder.transform.parent = objectRenderer.transform;
 				Destroy(attachmentPoint);
 			}
 		}
@@ -581,8 +589,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 
 			attachmentPoint = new GameObject("AttachmentPoint");
-			attachmentPoint.transform.parent = objectRenderer.transform;
-			objectHolder.transform.parent = attachmentPoint.transform;
+			attachmentPoint.transform.parent = objectHolder.transform;
 
 			//TODO(Jitse): When does IndexOutOfRange occur?
 			if (index < mainMesh.mesh.triangles.Length)
