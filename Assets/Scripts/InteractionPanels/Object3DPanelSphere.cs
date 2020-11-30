@@ -338,19 +338,19 @@ public class Object3DPanelSphere : MonoBehaviour
 
 			if (leftTriggerDown)
 			{
-				var handRotation = Quaternion.Inverse(controllerLeft.transform.rotation) * initialHandRotation;
-				//var handAttachmentPoint = Vector3.MoveTowards(controllerLeft.transform.position, controllerLeft.cursor.transform.position, 0.05f);
+				var handRotation = initialHandRotation * Quaternion.Inverse(controllerLeft.transform.rotation);
 				var newControllerPosition = initialHandPosition - controllerLeft.transform.position;
 				objectHolder.transform.position = initialObjectPosition - newControllerPosition;
-				objectHolder.transform.rotation = handRotation * initialObjectRotation;
+				objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
+				initialHandRotation = controllerLeft.transform.rotation;
 			}
 			else if (rightTriggerDown)
 			{
-				var handRotation = Quaternion.Inverse(controllerRight.transform.rotation) * initialHandRotation;
-				//var handAttachmentPoint = Vector3.MoveTowards(controllerRight.transform.position, controllerRight.cursor.transform.position, 0.05f);
+				var handRotation = initialHandRotation * Quaternion.Inverse(controllerRight.transform.rotation);
 				var newControllerPosition = initialHandPosition - controllerRight.transform.position;
 				objectHolder.transform.position = initialObjectPosition - newControllerPosition;
-				objectHolder.transform.rotation = handRotation * initialObjectRotation;
+				objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
+				initialHandRotation = controllerRight.transform.rotation;
 			}
 		}
 
