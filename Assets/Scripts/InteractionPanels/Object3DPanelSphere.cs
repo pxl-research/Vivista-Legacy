@@ -41,6 +41,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private float scaleSensitivity = .1f;
 	private float centerOffset = 90f;
 	private float objectDistance = 1f;
+	private float handGrabDistance = 0.5f;
 
 	private bool isRotating;
 	private bool isMoving;
@@ -50,9 +51,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool leftTriggerDown;
 	private bool rightTriggerDown;
 	private bool bothTriggersDown;
-
-	private bool leftControllerFound;
-	private bool rightControllerFound;
+	private bool handNearObject;
 
 	private MeshCollider objectCollider;
 	private MeshFilter mainMesh;
@@ -60,10 +59,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Controller controllerRight;
 	private Hand handLeft;
 	private Hand handRight;
-	private SteamVR_Behaviour_Skeleton leftSkeleton;
-	private SteamVR_Behaviour_Skeleton rightSkeleton;
-	private SteamVR_RenderModel leftModel;
-	private SteamVR_RenderModel rightModel;
 
 	//NOTE(Jitse): Camera culling mask layers
 	private int objects3dLayer;
@@ -89,8 +84,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		resetTransform.onClick.AddListener(ResetTransform);
 
 		var controllers = FindObjectsOfType<Controller>();
-		var skeletons = FindObjectsOfType<SteamVR_Behaviour_Skeleton>();
-		var models = FindObjectsOfType<SteamVR_RenderModel>();
 
 		foreach (var controller in controllers)
 		{
@@ -106,36 +99,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 		}
 
-		foreach (var skeleton in skeletons)
-		{
-			if (skeleton.name == "vr_glove_left_model_slim(Clone)")
-			{
-				leftSkeleton = skeleton;
-				leftControllerFound = true;
-			}
-			else
-			{
-				rightSkeleton = skeleton;
-				rightControllerFound = true;
-			}
-		}
-
-		foreach (var model in models)
-		{
-			if (model.transform.parent.name == "LeftRenderModel Slim(Clone)")
-			{
-				leftModel = model;
-			}
-			else
-			{
-				rightModel = model;
-			}
-		}
-
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += TriggerDownLeft;
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += TriggerUpLeft;
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += TriggerDownRight;
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += TriggerUpRight;
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, controllerLeft, "left");
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, controllerRight, "right");
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, controllerLeft, "left");
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, controllerRight, "right");
 	}
 
 	private void SetObjectProperties()
@@ -219,7 +186,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				//var rigidbody = objectHolder.AddComponent<Rigidbody>();
 				var interactable = objectHolder.AddComponent<Interactable>();
-				//objectCollider.convex = true;
 				interactable.attachEaseIn = true;
 				interactable.hideHandOnAttach = false;
 				interactable.hideHighlight = new GameObject[] { object3d };
@@ -292,63 +258,6 @@ public class Object3DPanelSphere : MonoBehaviour
 			objectHolder.SetActive(false);
 			Camera.main.cullingMask |= 1 << interactionPointsLayer;
 			Camera.main.cullingMask &= ~(1 << objects3dLayer);
-		}
-	}
-
-	private void Update()
-	{
-		//NOTE(Jitse): If an active controller hasn't been found on Init, try to find it every frame until it is found.
-		if (!leftControllerFound 
-			&& controllerLeft != null
-			&& controllerLeft.isActiveAndEnabled)
-		{
-			var skeletons = FindObjectsOfType<SteamVR_Behaviour_Skeleton>();
-			var models = FindObjectsOfType<SteamVR_RenderModel>();
-
-			foreach (var skeleton in skeletons)
-			{
-				if (skeleton.name == "vr_glove_left_model_slim(Clone)")
-				{
-					leftSkeleton = skeleton;
-					leftControllerFound = true;
-					break;
-				}
-			}
-
-			foreach (var model in models)
-			{
-				if (model.transform.parent.name == "LeftRenderModel Slim(Clone)")
-				{
-					leftModel = model;
-					break;
-				}
-			}
-		}
-		if (!rightControllerFound 
-			&& controllerRight != null 
-			&& controllerRight.isActiveAndEnabled)
-		{
-			var skeletons = FindObjectsOfType<SteamVR_Behaviour_Skeleton>();
-			var models = FindObjectsOfType<SteamVR_RenderModel>();
-
-			foreach (var skeleton in skeletons)
-			{
-				if (skeleton.name == "vr_glove_right_model_slim(Clone)")
-				{
-					rightSkeleton = skeleton;
-					rightControllerFound = true;
-					break;
-				}
-			}
-
-			foreach (var model in models)
-			{
-				if (model.transform.parent.name == "RightRenderModel Slim(Clone)")
-				{
-					rightModel = model;
-					break;
-				}
-			}
 		}
 	}
 
@@ -502,144 +411,136 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void TriggerDownLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	private void TriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, string controllerType)
 	{
+		bool otherTriggerDown;
+		Hand hand;
+		if (controllerType.Equals("left"))
+		{
+			otherTriggerDown = rightTriggerDown;
+			hand = handLeft;
+		} 
+		else
+		{
+			otherTriggerDown = leftTriggerDown;
+			hand = handRight;
+		}
+
 		if (objectHolder != null)
 		{
 			//NOTE(Jitse): Find closest vertex hit by multiplying the hit triangle index by 3 and determining largest x, y or z from the barycentricCoordinate.
-			Ray ray = new Ray(controllerLeft.laser.transform.position, controllerLeft.laser.transform.up);
+			Ray ray = new Ray(controller.laser.transform.position, controller.laser.transform.up);
 			RaycastHit hit;
-			if (!rightTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
+			if (!otherTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
 			{
 				CalculateAttachmentPoint(hit);
 			}
-			else if (handLeft.hoveringInteractable)
-			{
-				Ray rayHand = new Ray(handLeft.transform.position, -handLeft.transform.up);
-				RaycastHit hitHand;
-				if (Physics.Raycast(rayHand, out hitHand, Mathf.Infinity))
-				{
-					CalculateAttachmentPoint(hitHand);
-				}
-			}
-
-			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controllerLeft.object3dHovering || (handLeft.hoveringInteractable))
-			{
-				isMoving = true;
-				controllerLeft.laser.SetActive(false);
-
-				if (rightTriggerDown)
-				{
-					bothTriggersDown = true;
-					isScaling = true;
-					isMoving = false;
-
-					prevObjectScale = objectHolder.transform.localScale;
-					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-				}
-				else
-				{
-					initialObjectRotation = objectHolder.transform.rotation;
-					initialHandRotation = controllerLeft.transform.rotation;
-
-					leftTriggerDown = true;
-				}
-			}
-		}
-	}
-
-	private void TriggerDownRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
-	{
-		if (objectHolder != null)
-		{
-			//NOTE(Jitse): Find closest vertex hit by multiplying the hit triangle index by 3 and determining largest x, y or z from the barycentricCoordinate.
-			Ray ray = new Ray(controllerRight.laser.transform.position, controllerRight.laser.transform.up);
-			RaycastHit hit;
-			if (!leftTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
-			{
-				CalculateAttachmentPoint(hit);
-			}
-			else if (handRight.hoveringInteractable)
-			{
-				Ray rayHand = new Ray(handRight.transform.position, -handRight.transform.up);
-				RaycastHit hitHand;
-				if (Physics.Raycast(rayHand, out hitHand, Mathf.Infinity))
-				{
-					CalculateAttachmentPoint(hitHand);
-				}
-			}
-
-			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controllerRight.object3dHovering || (handRight.hoveringInteractable))
-			{
-				isMoving = true;
-				controllerRight.laser.SetActive(false);
-
-				if (leftTriggerDown)
-				{
-					bothTriggersDown = true;
-					isScaling = true;
-					isMoving = false;
-
-					prevObjectScale = objectHolder.transform.localScale;
-					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-				}
-				else
-				{
-					initialObjectRotation = objectHolder.transform.rotation;
-					initialHandRotation = controllerRight.transform.rotation;
-
-					rightTriggerDown = true;
-				}
-			}
-		}
-	}
-
-	private void TriggerUpLeft(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
-	{
-		if (objectHolder != null)
-		{
-			leftTriggerDown = false;
-			isScaling = false;
-
-			controllerLeft.laser.SetActive(true);
-
-			if (bothTriggersDown)
-			{
-				isMoving = true;
-				rightTriggerDown = true;
-				bothTriggersDown = false;
-
-				initialObjectRotation = objectHolder.transform.rotation;
-				initialHandRotation = controllerRight.transform.rotation;
-			} 
 			else
 			{
-				objectHolder.transform.parent = objectRenderer.transform;
-				Destroy(attachmentPoint);
+				Ray rayHand = new Ray(hand.transform.position, -hand.transform.up);
+				RaycastHit hitHand;
+				if (Physics.Raycast(rayHand, out hitHand, handGrabDistance))
+				{
+					handNearObject = true;
+					if (!otherTriggerDown)
+					{
+						CalculateAttachmentPoint(hitHand);
+					}
+				}
+				else
+				{
+					var reversedRay = rayHand.ReverseRay();
+					if (Physics.Raycast(reversedRay, out hitHand, handGrabDistance))
+					{
+						handNearObject = true;
+						if (!otherTriggerDown)
+						{
+							CalculateAttachmentPoint(hitHand);
+						}
+					}
+				}
+			}
+
+			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
+			if (controller.object3dHovering || handNearObject) //handLeft.hoveringInteractable
+			{
+				isMoving = true;
+				controller.laser.SetActive(false);
+
+				if (otherTriggerDown)
+				{
+					bothTriggersDown = true;
+					isScaling = true;
+					isMoving = false;
+
+					prevObjectScale = objectHolder.transform.localScale;
+					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+				}
+				else
+				{
+					initialObjectRotation = objectHolder.transform.rotation;
+					initialHandRotation = controller.transform.rotation;
+
+					if (controllerType.Equals("left"))
+					{
+						leftTriggerDown = true;
+					}
+					else
+					{
+						rightTriggerDown = true;
+					}
+				}
+
+				handNearObject = false;
 			}
 		}
 	}
 
-	private void TriggerUpRight(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, string controllerType)
 	{
+		Controller otherController;
+
+		if (controllerType.Equals("left"))
+		{
+			otherController = controllerRight;
+		}
+		else
+		{
+			otherController = controllerRight;
+		}
+
 		if (objectHolder != null)
 		{
-			rightTriggerDown = false;
+			if (controllerType.Equals("left"))
+			{
+				leftTriggerDown = false;
+			}
+			else
+			{
+				rightTriggerDown = false;
+			}
+
 			isScaling = false;
 
-			controllerRight.laser.SetActive(true);
+			controller.laser.SetActive(true);
 
 			if (bothTriggersDown)
 			{
+				if (controllerType.Equals("left"))
+				{
+					rightTriggerDown = true;
+				}
+				else
+				{
+					leftTriggerDown = true;
+				}
+
 				isMoving = true;
-				leftTriggerDown = true;
 				bothTriggersDown = false;
 
 				initialObjectRotation = objectHolder.transform.rotation;
-				initialHandRotation = controllerLeft.transform.rotation;
-			}
+				initialHandRotation = otherController.transform.rotation;
+			} 
 			else
 			{
 				objectHolder.transform.parent = objectRenderer.transform;
@@ -679,12 +580,17 @@ public class Object3DPanelSphere : MonoBehaviour
 				index += 2;
 			}
 
-			var triangleIndex = mainMesh.mesh.triangles[index];
-			var vertexHit = mainMesh.mesh.vertices[triangleIndex];
 			attachmentPoint = new GameObject("AttachmentPoint");
 			attachmentPoint.transform.parent = objectRenderer.transform;
 			objectHolder.transform.parent = attachmentPoint.transform;
-			attachmentPoint.transform.position = vertexHit;
+
+			//TODO(Jitse): When does IndexOutOfRange occur?
+			if (index < mainMesh.mesh.triangles.Length)
+			{
+				var triangleIndex = mainMesh.mesh.triangles[index];
+				var vertexHit = mainMesh.mesh.vertices[triangleIndex];
+				attachmentPoint.transform.position = vertexHit;
+			}
 		}
 	}
 }
