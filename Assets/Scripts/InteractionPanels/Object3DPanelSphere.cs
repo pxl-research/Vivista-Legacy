@@ -68,6 +68,9 @@ public class Object3DPanelSphere : MonoBehaviour
 	private int objects3dLayer;
 	private int interactionPointsLayer;
 
+	//NOTE(Jitse): Bool for checking current input method, currently used for depevelopment
+	private bool isInputMethodGrab;
+
 	public void Init(string newTitle, List<string> newUrls)
 	{
 		title.text = newTitle;
@@ -205,6 +208,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				{
 					objectHolder.SetActive(false);
 				}
+
 				break;
 			}
 		}
@@ -266,7 +270,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void LateUpdate()
 	{
-		mouseDelta = Input.mousePosition - prevMousePos;
 		//NOTE(Jitse): If the object hasn't been loaded yet.
 		if (objectCollider != null)
 		{
@@ -291,6 +294,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		//NOTE(Jitse): Object 3D interactions when not in VR
 		if (!XRSettings.enabled)
 		{
+			mouseDelta = Input.mousePosition - prevMousePos;
+
 			//NOTE(Jitse): Rotate objectHolders by rotating them around their child object.
 			if (isRotating)
 			{
@@ -336,21 +341,30 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectHolder.transform.localScale = newScale;
 			}
 
-			if (leftTriggerDown)
+			if (isInputMethodGrab)
 			{
-				var handRotation = initialHandRotation * Quaternion.Inverse(controllerLeft.transform.rotation);
-				var newControllerPosition = initialHandPosition - controllerLeft.transform.position;
-				objectHolder.transform.position = initialObjectPosition - newControllerPosition;
-				objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
-				initialHandRotation = controllerLeft.transform.rotation;
+				
 			}
-			else if (rightTriggerDown)
+			else
 			{
-				var handRotation = initialHandRotation * Quaternion.Inverse(controllerRight.transform.rotation);
-				var newControllerPosition = initialHandPosition - controllerRight.transform.position;
-				objectHolder.transform.position = initialObjectPosition - newControllerPosition;
-				objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
-				initialHandRotation = controllerRight.transform.rotation;
+				if (leftTriggerDown)
+				{
+					var newControllerPosition = initialHandPosition - controllerLeft.transform.position;
+					objectHolder.transform.position = initialObjectPosition - newControllerPosition;
+
+					var handRotation = initialHandRotation * Quaternion.Inverse(controllerLeft.transform.rotation);
+					objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
+					initialHandRotation = controllerLeft.transform.rotation;
+				}
+				else if (rightTriggerDown)
+				{
+					var newControllerPosition = initialHandPosition - controllerRight.transform.position;
+					objectHolder.transform.position = initialObjectPosition - newControllerPosition;
+
+					var handRotation = initialHandRotation * Quaternion.Inverse(controllerRight.transform.rotation);
+					objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
+					initialHandRotation = controllerRight.transform.rotation;
+				}
 			}
 		}
 
@@ -467,38 +481,75 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
-			if (controller.object3dHovering || handNearObject) //handLeft.hoveringInteractable
+			//NOTE(cont.): Two different interaction methods
+			if (isInputMethodGrab)
 			{
-				isMoving = true;
-				controller.laser.SetActive(false);
-
-				if (otherTriggerDown)
+				if (controller.object3dHovering || hand.hoveringInteractable)
 				{
-					bothTriggersDown = true;
-					isScaling = true;
-					isMoving = false;
+					isMoving = true;
+					controller.laser.SetActive(false);
 
-					prevObjectScale = objectHolder.transform.localScale;
-					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-				}
-				else
-				{
-					initialObjectPosition = objectHolder.transform.position;
-					initialObjectRotation = objectHolder.transform.rotation;
-					initialHandPosition = controller.transform.position;
-					initialHandRotation = controller.transform.rotation;
-
-					if (controllerType.Equals("left"))
+					if (otherTriggerDown)
 					{
-						leftTriggerDown = true;
+						bothTriggersDown = true;
+						isScaling = true;
+						isMoving = false;
+
+						prevObjectScale = objectHolder.transform.localScale;
+						startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 					}
 					else
 					{
-						rightTriggerDown = true;
+						objectHolder.transform.localPosition = new Vector3(0, 0, 0.3f);
+						objectHolder.transform.localRotation = Quaternion.Euler(new Vector3(-90, 0, 0));
+						hand.AttachObject(attachmentPoint, GrabTypes.Grip);
+						
+						if (controllerType.Equals("left"))
+						{
+							leftTriggerDown = true;
+						}
+						else
+						{
+							rightTriggerDown = true;
+						}
 					}
 				}
+			}
+			else
+			{
+				if (controller.object3dHovering || handNearObject) //handLeft.hoveringInteractable
+				{
+					isMoving = true;
+					controller.laser.SetActive(false);
 
-				handNearObject = false;
+					if (otherTriggerDown)
+					{
+						bothTriggersDown = true;
+						isScaling = true;
+						isMoving = false;
+
+						prevObjectScale = objectHolder.transform.localScale;
+						startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+					}
+					else
+					{
+						initialObjectPosition = objectHolder.transform.position;
+						initialObjectRotation = objectHolder.transform.rotation;
+						initialHandPosition = controller.transform.position;
+						initialHandRotation = controller.transform.rotation;
+
+						if (controllerType.Equals("left"))
+						{
+							leftTriggerDown = true;
+						}
+						else
+						{
+							rightTriggerDown = true;
+						}
+					}
+
+					handNearObject = false;
+				}
 			}
 		}
 	}
@@ -506,14 +557,17 @@ public class Object3DPanelSphere : MonoBehaviour
 	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, string controllerType)
 	{
 		Controller otherController;
+		Hand hand;
 
 		if (controllerType.Equals("left"))
 		{
 			otherController = controllerRight;
+			hand = handLeft;
 		}
 		else
 		{
 			otherController = controllerLeft;
+			hand = handRight;
 		}
 
 		if (objectHolder != null)
@@ -531,28 +585,59 @@ public class Object3DPanelSphere : MonoBehaviour
 
 			controller.laser.SetActive(true);
 
-			if (bothTriggersDown)
+			//NOTE(Jitse): Different actions depending on the interaction mode
+			if (isInputMethodGrab)
 			{
-				if (controllerType.Equals("left"))
+				hand.DetachObject(attachmentPoint);
+
+				if (bothTriggersDown)
 				{
-					rightTriggerDown = true;
+					if (controllerType.Equals("left"))
+					{
+						rightTriggerDown = true;
+					}
+					else
+					{
+						leftTriggerDown = true;
+					}
+
+					isMoving = true;
+					bothTriggersDown = false;
+
+					hand.otherHand.AttachObject(attachmentPoint, GrabTypes.Grip);
 				}
 				else
 				{
-					leftTriggerDown = true;
+					objectHolder.transform.parent = objectRenderer.transform;
+					Destroy(attachmentPoint);
 				}
-
-				isMoving = true;
-				bothTriggersDown = false;
-
-				initialObjectPosition = objectHolder.transform.position;
-				initialObjectRotation = objectHolder.transform.rotation;
-				initialHandRotation = otherController.transform.rotation;
-				initialHandPosition = otherController.transform.position;
-			} 
+			}
 			else
 			{
-				Destroy(attachmentPoint);
+				if (bothTriggersDown)
+				{
+					if (controllerType.Equals("left"))
+					{
+						rightTriggerDown = true;
+					}
+					else
+					{
+						leftTriggerDown = true;
+					}
+
+					isMoving = true;
+					bothTriggersDown = false;
+
+					initialObjectPosition = objectHolder.transform.position;
+					initialObjectRotation = objectHolder.transform.rotation;
+					initialHandRotation = otherController.transform.rotation;
+					initialHandPosition = otherController.transform.position;
+				}
+				else
+				{
+					objectHolder.transform.parent = objectRenderer.transform;
+					Destroy(attachmentPoint);
+				}
 			}
 		}
 	}
@@ -589,15 +674,31 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 
 			attachmentPoint = new GameObject("AttachmentPoint");
-			attachmentPoint.transform.parent = objectHolder.transform;
+
+			var interactable = attachmentPoint.AddComponent<Interactable>();
+			interactable.attachEaseIn = true;
+			interactable.hideHandOnAttach = false;
+			interactable.hideHighlight = new GameObject[] { object3d };
+
+			attachmentPoint.transform.parent = objectRenderer.transform;
 
 			//TODO(Jitse): When does IndexOutOfRange occur?
 			if (index < mainMesh.mesh.triangles.Length)
 			{
 				var triangleIndex = mainMesh.mesh.triangles[index];
 				var vertexHit = mainMesh.mesh.vertices[triangleIndex];
+
+				Debug.Log($"{vertexHit.x}, {vertexHit.y}, {vertexHit.z}");
 				attachmentPoint.transform.position = vertexHit;
+				attachmentPoint.transform.localPosition = vertexHit;
 			}
+			
+			objectHolder.transform.parent = attachmentPoint.transform;
 		}
+	}
+
+	public void ChangeInputMethod()
+	{
+		isInputMethodGrab = !isInputMethodGrab;
 	}
 }
