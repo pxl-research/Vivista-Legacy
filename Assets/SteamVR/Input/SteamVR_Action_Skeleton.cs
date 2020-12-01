@@ -1331,6 +1331,25 @@ namespace Valve.VR
                     return -1;
             }
         }
+
+        public static int GetBoneForFingerTip(int fingerIndex)
+        {
+            switch (fingerIndex)
+            {
+                case SteamVR_Skeleton_FingerIndexes.thumb:
+                    return thumbTip;
+                case SteamVR_Skeleton_FingerIndexes.index:
+                    return indexTip;
+                case SteamVR_Skeleton_FingerIndexes.middle:
+                    return middleTip;
+                case SteamVR_Skeleton_FingerIndexes.ring:
+                    return ringTip;
+                case SteamVR_Skeleton_FingerIndexes.pinky:
+                    return pinkyTip;
+                default:
+                    return indexTip;
+            }
+        }
     }
 
     public enum SteamVR_Skeleton_JointIndexEnum

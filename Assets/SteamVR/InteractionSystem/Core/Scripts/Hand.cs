@@ -76,9 +76,12 @@ namespace Valve.VR.InteractionSystem
         private float noSteamVRFallbackInteractorDistance = -1.0f;
 
         public GameObject renderModelPrefab;
-        protected List<RenderModel> renderModels = new List<RenderModel>();
-        protected RenderModel mainRenderModel;
-        protected RenderModel hoverhighlightRenderModel;
+        [HideInInspector]
+        public List<RenderModel> renderModels = new List<RenderModel>();
+        [HideInInspector]
+        public RenderModel mainRenderModel;
+        [HideInInspector]
+        public RenderModel hoverhighlightRenderModel;
 
         public bool showDebugText = false;
         public bool spewDebugText = false;

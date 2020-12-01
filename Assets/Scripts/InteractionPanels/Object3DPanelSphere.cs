@@ -56,6 +56,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool rightTriggerDown;
 	private bool bothTriggersDown;
 	private bool handNearObject;
+	private bool lastHovering;
 
 	private MeshCollider objectCollider;
 	private MeshFilter mainMesh;
@@ -63,13 +64,16 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Controller controllerRight;
 	private Hand handLeft;
 	private Hand handRight;
+	private Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags & (~Hand.AttachmentFlags.SnapOnAttach) & (~Hand.AttachmentFlags.DetachOthers) & (~Hand.AttachmentFlags.VelocityMovement);
+	private Interactable interactable;
+	private GrabTypes grabType;
 
 	//NOTE(Jitse): Camera culling mask layers
 	private int objects3dLayer;
 	private int interactionPointsLayer;
 
 	//NOTE(Jitse): Bool for checking current input method, currently used for depevelopment
-	private bool isInputMethodGrab;
+	private bool isInputMethodGrab = true;
 
 	public void Init(string newTitle, List<string> newUrls)
 	{
@@ -191,7 +195,9 @@ public class Object3DPanelSphere : MonoBehaviour
 				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
-				var interactable = objectHolder.AddComponent<Interactable>();
+				var rigid = objectHolder.AddComponent<Rigidbody>();
+				rigid.isKinematic = true;
+				interactable = objectHolder.AddComponent<Interactable>();
 				interactable.attachEaseIn = true;
 				interactable.hideHandOnAttach = false;
 				interactable.hideHighlight = new GameObject[] { object3d };
@@ -268,6 +274,55 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
+	private void Update()
+	{
+		if (isInputMethodGrab)
+		{
+			if (interactable == null)
+			{
+				interactable = objectHolder.GetComponentInChildren<Interactable>();
+			}
+			else if (interactable.isHovering != lastHovering)
+			{
+				lastHovering = interactable.isHovering;
+			}
+
+			Hand hand = null;
+			if (handLeft.hoveringInteractable)
+			{
+				hand = handLeft;
+			}
+			else if (handRight.hoveringInteractable)
+			{
+				hand = handRight;
+			}
+
+			if (hand != null)
+			{
+				GrabTypes startingGrabType = grabType;
+				bool isGrabbing = (startingGrabType == GrabTypes.Trigger);
+
+				if (interactable.attachedToHand == null && startingGrabType != GrabTypes.None)
+				{
+					// Call this to continue receiving HandHoverUpdate messages,
+					// and prevent the hand from hovering over anything else
+					hand.HoverLock(interactable);
+
+					// Attach this object to the hand
+					hand.AttachObject(objectHolder, startingGrabType, attachmentFlags);
+				}
+				else if (!isGrabbing)
+				{
+					// Detach this object from the hand
+					hand.DetachObject(objectHolder);
+
+					// Call this to undo HoverLock
+					hand.HoverUnlock(interactable);
+				}
+			}
+		}
+	}
+
 	private void LateUpdate()
 	{
 		//NOTE(Jitse): If the object hasn't been loaded yet.
@@ -340,30 +395,32 @@ public class Object3DPanelSphere : MonoBehaviour
 				newScale *= scale;
 				objectHolder.transform.localScale = newScale;
 			}
-
-			if (isInputMethodGrab)
-			{
-				
-			}
 			else
 			{
-				if (leftTriggerDown)
+				if (isInputMethodGrab)
 				{
-					var newControllerPosition = initialHandPosition - controllerLeft.transform.position;
-					objectHolder.transform.position = initialObjectPosition - newControllerPosition;
-
-					var handRotation = initialHandRotation * Quaternion.Inverse(controllerLeft.transform.rotation);
-					objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
-					initialHandRotation = controllerLeft.transform.rotation;
+					
 				}
-				else if (rightTriggerDown)
+				else
 				{
-					var newControllerPosition = initialHandPosition - controllerRight.transform.position;
-					objectHolder.transform.position = initialObjectPosition - newControllerPosition;
+					if (leftTriggerDown)
+					{
+						var newControllerPosition = initialHandPosition - controllerLeft.transform.position;
+						objectHolder.transform.position = initialObjectPosition - newControllerPosition;
 
-					var handRotation = initialHandRotation * Quaternion.Inverse(controllerRight.transform.rotation);
-					objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
-					initialHandRotation = controllerRight.transform.rotation;
+						var handRotation = initialHandRotation * Quaternion.Inverse(controllerLeft.transform.rotation);
+						objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
+						initialHandRotation = controllerLeft.transform.rotation;
+					}
+					else if (rightTriggerDown)
+					{
+						var newControllerPosition = initialHandPosition - controllerRight.transform.position;
+						objectHolder.transform.position = initialObjectPosition - newControllerPosition;
+
+						var handRotation = initialHandRotation * Quaternion.Inverse(controllerRight.transform.rotation);
+						objectHolder.transform.rotation = Quaternion.Inverse(handRotation) * objectHolder.transform.rotation;
+						initialHandRotation = controllerRight.transform.rotation;
+					}
 				}
 			}
 		}
@@ -484,7 +541,8 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(cont.): Two different interaction methods
 			if (isInputMethodGrab)
 			{
-				if (controller.object3dHovering || hand.hoveringInteractable)
+				grabType = GrabTypes.Trigger;
+				/*if (controller.object3dHovering || hand.hoveringInteractable)
 				{
 					isMoving = true;
 					controller.laser.SetActive(false);
@@ -500,9 +558,9 @@ public class Object3DPanelSphere : MonoBehaviour
 					}
 					else
 					{
-						objectHolder.transform.localPosition = new Vector3(0, 0, 0.3f);
-						objectHolder.transform.localRotation = Quaternion.Euler(new Vector3(-90, 0, 0));
-						hand.AttachObject(attachmentPoint, GrabTypes.Grip);
+						//objectHolder.transform.localPosition = new Vector3(0, 0, 0.3f);
+						//objectHolder.transform.localRotation = Quaternion.Euler(new Vector3(-90, 0, 0));
+						//hand.AttachObject(objectHolder, GrabTypes.Grip);
 						
 						if (controllerType.Equals("left"))
 						{
@@ -513,7 +571,7 @@ public class Object3DPanelSphere : MonoBehaviour
 							rightTriggerDown = true;
 						}
 					}
-				}
+				}*/
 			}
 			else
 			{
@@ -588,9 +646,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(Jitse): Different actions depending on the interaction mode
 			if (isInputMethodGrab)
 			{
-				hand.DetachObject(attachmentPoint);
+				grabType = GrabTypes.None;
+				//hand.DetachObject(objectHolder);
 
-				if (bothTriggersDown)
+				/*if (bothTriggersDown)
 				{
 					if (controllerType.Equals("left"))
 					{
@@ -604,13 +663,8 @@ public class Object3DPanelSphere : MonoBehaviour
 					isMoving = true;
 					bothTriggersDown = false;
 
-					hand.otherHand.AttachObject(attachmentPoint, GrabTypes.Grip);
-				}
-				else
-				{
-					objectHolder.transform.parent = objectRenderer.transform;
-					Destroy(attachmentPoint);
-				}
+					//hand.otherHand.AttachObject(objectHolder, GrabTypes.Grip);
+				}*/
 			}
 			else
 			{
@@ -632,11 +686,6 @@ public class Object3DPanelSphere : MonoBehaviour
 					initialObjectRotation = objectHolder.transform.rotation;
 					initialHandRotation = otherController.transform.rotation;
 					initialHandPosition = otherController.transform.position;
-				}
-				else
-				{
-					objectHolder.transform.parent = objectRenderer.transform;
-					Destroy(attachmentPoint);
 				}
 			}
 		}
@@ -673,7 +722,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				index += 2;
 			}
 
-			attachmentPoint = new GameObject("AttachmentPoint");
+			/*attachmentPoint = new GameObject("AttachmentPoint");
 
 			var interactable = attachmentPoint.AddComponent<Interactable>();
 			interactable.attachEaseIn = true;
@@ -693,7 +742,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				attachmentPoint.transform.localPosition = vertexHit;
 			}
 			
-			objectHolder.transform.parent = attachmentPoint.transform;
+			objectHolder.transform.parent = attachmentPoint.transform;*/
 		}
 	}
 
