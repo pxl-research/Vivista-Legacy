@@ -37,6 +37,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Vector3 mouseDelta;
 	private Vector3 initialObjectPosition;
 	private Vector3 initialHandPosition;
+	private Vector3 currentVelocity = Vector3.zero;
 	private Quaternion initialHandRotation;
 
 	private float startDistanceControllers;
@@ -45,6 +46,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private float centerOffset = 90f;
 	private float objectDistance = 1f;
 	private float handGrabDistance = 0.3f;
+	private float moveAnimationStartTime;
 
 	private bool isRotating;
 	private bool isMoving;
@@ -202,7 +204,10 @@ public class Object3DPanelSphere : MonoBehaviour
 				interactable = objectHolder.AddComponent<Interactable>();
 				interactable.attachEaseIn = true;
 				interactable.hideHandOnAttach = false;
-				interactable.hideHighlight = new GameObject[] { object3d };
+				interactable.hideSkeletonOnAttach = false;
+				interactable.hideControllerOnAttach = false;
+				interactable.highlightOnHover = false;
+				interactable.handFollowTransform = false;
 
 				//NOTE(Jitse): If the user has the preview panel active when the object has been loaded, do not hide the object
 				//NOTE(cont.): Also get SphereUIRenderer to position the 3D object in the center of the sphere panel
@@ -336,16 +341,17 @@ public class Object3DPanelSphere : MonoBehaviour
 			GetMouseButtonStates();
 			prevMousePos = Input.mousePosition;
 		}
+
 		//NOTE(Jitse): Object 3D interactions when in VR
-		//TODO(Jitse): Instead of object teleporting to hand, make them slowly move towards the hand when trigger down (maybe using controller.cursor position?)
 		else
 		{
+			//NOTE(Jitse): Scaling the object in VR
 			if (bothTriggersDown)
 			{
 				Debug.Log($"Both triggers are down.\n" +
 									$"Now scaling object.");
-				float distance = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-				float scale = 1 + (distance - startDistanceControllers);
+				float distance = (controllerLeft.transform.position - controllerRight.transform.position).magnitude * 2;
+				float scale = 0.5f + (distance - startDistanceControllers);
 				var newScale = prevObjectScale;
 				newScale *= scale;
 				objectHolder.transform.localScale = newScale;
@@ -360,12 +366,12 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (interactable == null)
 					{
 						interactable = objectHolder.GetComponentInChildren<Interactable>();
+						interactable.highlightOnHover = false;
 					}
 
 					if (outOfReach && handGrab != null)
 					{
-						var moveDistance = 1f * Time.deltaTime;
-						objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, handGrab.transform.position, moveDistance);
+						objectHolder.transform.position = Vector3.SmoothDamp(objectHolder.transform.position, handGrab.transform.position, ref currentVelocity, 0.5f);
 						if (Vector3.Distance(objectHolder.transform.position, handGrab.transform.position) <= handGrabDistance)
 						{
 							outOfReach = false;
@@ -444,7 +450,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void HideOrShowLaser()
 	{
-		if (Vector3.Distance(controllerLeft.transform.position, objectHolder.transform.position) < handGrabDistance)
+		if (handLeft.hoveringInteractable)
 		{
 			controllerLeft.laser.SetActive(false);
 			controllerLeft.cursor.SetActive(false);
@@ -456,7 +462,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			controllerLeft.cursor.SetActive(true);
 			leftControllerNear = false;
 		}
-		if (Vector3.Distance(controllerRight.transform.position, objectHolder.transform.position) < handGrabDistance)
+		if (handRight.hoveringInteractable)
 		{
 			controllerRight.laser.SetActive(false);
 			controllerRight.cursor.SetActive(false);
@@ -577,6 +583,7 @@ public class Object3DPanelSphere : MonoBehaviour
 							{
 								handGrab = hand;
 								outOfReach = true;
+								moveAnimationStartTime = Time.time;
 							}
 						}
 
