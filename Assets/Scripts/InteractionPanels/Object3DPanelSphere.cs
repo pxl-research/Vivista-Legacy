@@ -37,7 +37,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Vector3 mouseDelta;
 	private Vector3 initialObjectPosition;
 	private Vector3 initialHandPosition;
-	private Quaternion initialObjectRotation;
 	private Quaternion initialHandRotation;
 
 	private float startDistanceControllers;
@@ -45,7 +44,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private float scaleSensitivity = .1f;
 	private float centerOffset = 90f;
 	private float objectDistance = 1f;
-	private float handGrabDistance = 0.5f;
+	private float handGrabDistance = 0.3f;
 
 	private bool isRotating;
 	private bool isMoving;
@@ -55,8 +54,10 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool leftTriggerDown;
 	private bool rightTriggerDown;
 	private bool bothTriggersDown;
+	private bool leftControllerNear;
+	private bool rightControllerNear;
 	private bool handNearObject;
-	private bool lastHovering;
+	private bool outOfReach;
 
 	private MeshCollider objectCollider;
 	private MeshFilter mainMesh;
@@ -64,6 +65,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Controller controllerRight;
 	private Hand handLeft;
 	private Hand handRight;
+	private Hand handGrab;
 	private Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags & (~Hand.AttachmentFlags.SnapOnAttach) & (~Hand.AttachmentFlags.DetachOthers) & (~Hand.AttachmentFlags.VelocityMovement);
 	private Interactable interactable;
 	private GrabTypes grabType;
@@ -274,55 +276,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void Update()
-	{
-		if (isInputMethodGrab)
-		{
-			if (interactable == null)
-			{
-				interactable = objectHolder.GetComponentInChildren<Interactable>();
-			}
-			else if (interactable.isHovering != lastHovering)
-			{
-				lastHovering = interactable.isHovering;
-			}
-
-			Hand hand = null;
-			if (handLeft.hoveringInteractable)
-			{
-				hand = handLeft;
-			}
-			else if (handRight.hoveringInteractable)
-			{
-				hand = handRight;
-			}
-
-			if (hand != null)
-			{
-				GrabTypes startingGrabType = grabType;
-				bool isGrabbing = (startingGrabType == GrabTypes.Trigger);
-
-				if (interactable.attachedToHand == null && startingGrabType != GrabTypes.None)
-				{
-					// Call this to continue receiving HandHoverUpdate messages,
-					// and prevent the hand from hovering over anything else
-					hand.HoverLock(interactable);
-
-					// Attach this object to the hand
-					hand.AttachObject(objectHolder, startingGrabType, attachmentFlags);
-				}
-				else if (!isGrabbing)
-				{
-					// Detach this object from the hand
-					hand.DetachObject(objectHolder);
-
-					// Call this to undo HoverLock
-					hand.HoverUnlock(interactable);
-				}
-			}
-		}
-	}
-
 	private void LateUpdate()
 	{
 		//NOTE(Jitse): If the object hasn't been loaded yet.
@@ -389,6 +342,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			if (bothTriggersDown)
 			{
+				Debug.Log($"Both triggers are down.\n" +
+									$"Now scaling object.");
 				float distance = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 				float scale = 1 + (distance - startDistanceControllers);
 				var newScale = prevObjectScale;
@@ -399,7 +354,60 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				if (isInputMethodGrab)
 				{
-					
+					//NOTE(Jitse): Hide the respective controller's laser if it's close to the object, to help visualize that it is within range to grab
+					HideOrShowLaser();
+
+					if (interactable == null)
+					{
+						interactable = objectHolder.GetComponentInChildren<Interactable>();
+					}
+
+					if (outOfReach && handGrab != null)
+					{
+						var moveDistance = 1f * Time.deltaTime;
+						objectHolder.transform.position = Vector3.MoveTowards(objectHolder.transform.position, handGrab.transform.position, moveDistance);
+						if (Vector3.Distance(objectHolder.transform.position, handGrab.transform.position) <= handGrabDistance)
+						{
+							outOfReach = false;
+						}
+					}
+					else if (interactable != null)
+					{
+						if (handGrab != null)
+						{
+							bool isGrabbing = grabType == GrabTypes.Trigger;
+
+							if (interactable.attachedToHand == null && isGrabbing)
+							{
+								Debug.Log($"No object attached to {handGrab.name}.\n" +
+									$"Attaching {objectHolder.name}.");
+								handGrab.HoverLock(interactable);
+								handGrab.AttachObject(objectHolder, grabType, attachmentFlags);
+							}
+							else if (!isGrabbing)
+							{
+								Debug.Log($"{handGrab.name} isn't grabbing anymore.\n" +
+									$"Detaching {objectHolder.name}.");
+								handGrab.DetachObject(objectHolder);
+								handGrab.HoverUnlock(interactable);
+							}
+						}
+						else
+						{
+							if (handLeft.ObjectIsAttached(objectHolder))
+							{
+								Debug.Log($"Left hand was grabbing.\n" +
+									$"Detaching {objectHolder.name}.");
+								handLeft.DetachObject(objectHolder);
+							}
+							else if (handRight.ObjectIsAttached(objectHolder))
+							{
+								Debug.Log($"Right hand was grabbing.\n" +
+									$"Detaching {objectHolder.name}.");
+								handRight.DetachObject(objectHolder);
+							}
+						}
+					}
 				}
 				else
 				{
@@ -431,6 +439,34 @@ public class Object3DPanelSphere : MonoBehaviour
 			isRotating = false;
 			isMoving = false;
 			isScaling = false;
+		}
+	}
+
+	private void HideOrShowLaser()
+	{
+		if (Vector3.Distance(controllerLeft.transform.position, objectHolder.transform.position) < handGrabDistance)
+		{
+			controllerLeft.laser.SetActive(false);
+			controllerLeft.cursor.SetActive(false);
+			leftControllerNear = true;
+		}
+		else
+		{
+			controllerLeft.laser.SetActive(true);
+			controllerLeft.cursor.SetActive(true);
+			leftControllerNear = false;
+		}
+		if (Vector3.Distance(controllerRight.transform.position, objectHolder.transform.position) < handGrabDistance)
+		{
+			controllerRight.laser.SetActive(false);
+			controllerRight.cursor.SetActive(false);
+			rightControllerNear = true;
+		}
+		else
+		{
+			controllerRight.laser.SetActive(true);
+			controllerRight.cursor.SetActive(true);
+			rightControllerNear = false;
 		}
 	}
 
@@ -490,92 +526,67 @@ public class Object3DPanelSphere : MonoBehaviour
 	private void TriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, string controllerType)
 	{
 		bool otherTriggerDown;
+		bool controllerNear;
 		Hand hand;
 		if (controllerType.Equals("left"))
 		{
 			otherTriggerDown = rightTriggerDown;
 			hand = handLeft;
+			controllerNear = leftControllerNear;
 		} 
 		else
 		{
 			otherTriggerDown = leftTriggerDown;
 			hand = handRight;
+			controllerNear = rightControllerNear;
 		}
 
 		if (objectHolder != null)
 		{
-			//NOTE(Jitse): Find closest vertex hit by multiplying the hit triangle index by 3 and determining largest x, y or z from the barycentricCoordinate.
-			Ray ray = new Ray(controller.laser.transform.position, controller.laser.transform.up);
-			RaycastHit hit;
-			if (!otherTriggerDown && Physics.Raycast(ray, out hit, Mathf.Infinity))
-			{
-				CalculateAttachmentPoint(hit);
-			}
-			else
-			{
-				Ray rayHand = new Ray(hand.transform.position, -hand.transform.up);
-				RaycastHit hitHand;
-				if (Physics.Raycast(rayHand, out hitHand, handGrabDistance))
-				{
-					handNearObject = true;
-					if (!otherTriggerDown)
-					{
-						CalculateAttachmentPoint(hitHand);
-					}
-				}
-				else
-				{
-					var reversedRay = rayHand.ReverseRay();
-					if (Physics.Raycast(reversedRay, out hitHand, handGrabDistance))
-					{
-						handNearObject = true;
-						if (!otherTriggerDown)
-						{
-							CalculateAttachmentPoint(hitHand);
-						}
-					}
-				}
-			}
-
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
 			//NOTE(cont.): Two different interaction methods
 			if (isInputMethodGrab)
 			{
-				grabType = GrabTypes.Trigger;
-				/*if (controller.object3dHovering || hand.hoveringInteractable)
+				if (hand.hoveringInteractable)
 				{
-					isMoving = true;
-					controller.laser.SetActive(false);
-
-					if (otherTriggerDown)
+					if (handGrab != null)
 					{
 						bothTriggersDown = true;
-						isScaling = true;
-						isMoving = false;
-
 						prevObjectScale = objectHolder.transform.localScale;
 						startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 					}
 					else
 					{
-						//objectHolder.transform.localPosition = new Vector3(0, 0, 0.3f);
-						//objectHolder.transform.localRotation = Quaternion.Euler(new Vector3(-90, 0, 0));
-						//hand.AttachObject(objectHolder, GrabTypes.Grip);
-						
-						if (controllerType.Equals("left"))
+						handGrab = hand;
+						grabType = GrabTypes.Trigger;
+					}
+				}
+				else
+				{
+					if (controller.object3dHovering || controllerNear)
+					{
+						if (handGrab != null)
 						{
-							leftTriggerDown = true;
+							bothTriggersDown = true;
+							prevObjectScale = objectHolder.transform.localScale;
+							startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 						}
 						else
 						{
-							rightTriggerDown = true;
+							if (Vector3.Distance(objectHolder.transform.position, hand.transform.position) > handGrabDistance)
+							{
+								handGrab = hand;
+								outOfReach = true;
+							}
 						}
+
+						controller.laser.SetActive(false);
 					}
-				}*/
+				}
 			}
 			else
 			{
-				if (controller.object3dHovering || handNearObject) //handLeft.hoveringInteractable
+				if (controller.object3dHovering || handNearObject)
 				{
 					isMoving = true;
 					controller.laser.SetActive(false);
@@ -592,7 +603,6 @@ public class Object3DPanelSphere : MonoBehaviour
 					else
 					{
 						initialObjectPosition = objectHolder.transform.position;
-						initialObjectRotation = objectHolder.transform.rotation;
 						initialHandPosition = controller.transform.position;
 						initialHandRotation = controller.transform.rotation;
 
@@ -646,25 +656,32 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(Jitse): Different actions depending on the interaction mode
 			if (isInputMethodGrab)
 			{
-				grabType = GrabTypes.None;
-				//hand.DetachObject(objectHolder);
-
-				/*if (bothTriggersDown)
+				Debug.Log($"Trigger up for {hand.name}.");
+				if (bothTriggersDown)
 				{
-					if (controllerType.Equals("left"))
+					Debug.Log($"Both triggers were down.");
+					if (hand == handGrab)
 					{
-						rightTriggerDown = true;
-					}
-					else
-					{
-						leftTriggerDown = true;
+						Debug.Log($"This hand was grabbing, so detach and attach to other hand.");
+						handGrab.DetachObject(objectHolder);
+						handGrab.HoverUnlock(interactable);
+						handGrab = hand.otherHand;
+						handGrab.HoverLock(interactable);
+						handGrab.AttachObject(objectHolder, grabType);
 					}
 
-					isMoving = true;
 					bothTriggersDown = false;
-
-					//hand.otherHand.AttachObject(objectHolder, GrabTypes.Grip);
-				}*/
+				}
+				else
+				{
+					if (handGrab == hand)
+					{
+						Debug.Log($"Only this trigger was down, so set handgrab to null which detaches object.");
+						handGrab = null;
+						grabType = GrabTypes.None;
+						outOfReach = false;
+					}
+				}
 			}
 			else
 			{
@@ -683,7 +700,6 @@ public class Object3DPanelSphere : MonoBehaviour
 					bothTriggersDown = false;
 
 					initialObjectPosition = objectHolder.transform.position;
-					initialObjectRotation = objectHolder.transform.rotation;
 					initialHandRotation = otherController.transform.rotation;
 					initialHandPosition = otherController.transform.position;
 				}
@@ -697,53 +713,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
 		objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
-	}
-
-	private void CalculateAttachmentPoint(RaycastHit hit)
-	{
-		if (hit.transform.gameObject.layer == objects3dLayer)
-		{
-			var barycentricCoordinate = hit.barycentricCoordinate;
-			int index = hit.triangleIndex * 3;
-
-			if (barycentricCoordinate.x > barycentricCoordinate.y)
-			{
-				if (barycentricCoordinate.z > barycentricCoordinate.x)
-				{
-					index += 2;
-				}
-			}
-			else if (barycentricCoordinate.y > barycentricCoordinate.z)
-			{
-				index += 1;
-			}
-			else
-			{
-				index += 2;
-			}
-
-			/*attachmentPoint = new GameObject("AttachmentPoint");
-
-			var interactable = attachmentPoint.AddComponent<Interactable>();
-			interactable.attachEaseIn = true;
-			interactable.hideHandOnAttach = false;
-			interactable.hideHighlight = new GameObject[] { object3d };
-
-			attachmentPoint.transform.parent = objectRenderer.transform;
-
-			//TODO(Jitse): When does IndexOutOfRange occur?
-			if (index < mainMesh.mesh.triangles.Length)
-			{
-				var triangleIndex = mainMesh.mesh.triangles[index];
-				var vertexHit = mainMesh.mesh.vertices[triangleIndex];
-
-				Debug.Log($"{vertexHit.x}, {vertexHit.y}, {vertexHit.z}");
-				attachmentPoint.transform.position = vertexHit;
-				attachmentPoint.transform.localPosition = vertexHit;
-			}
-			
-			objectHolder.transform.parent = attachmentPoint.transform;*/
-		}
 	}
 
 	public void ChangeInputMethod()
