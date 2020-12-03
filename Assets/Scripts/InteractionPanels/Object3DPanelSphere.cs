@@ -16,6 +16,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	public Material transparent;
 	public Material hoverMaterial;
 	public Button resetTransform;
+	public Image loadingCircle;
+	public Image loadingCircleProgress;
 	public SteamVR_Input_Sources inputSourceLeft = SteamVR_Input_Sources.LeftHand;
 	public SteamVR_Input_Sources inputSourceRight = SteamVR_Input_Sources.RightHand;
 
@@ -225,6 +227,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 		}
 
+		//NOTE(Jitse): Deactivate loading circle
+		loadingCircle.gameObject.SetActive(false);
+		loadingCircleProgress.gameObject.SetActive(false);
+
 		//NOTE(Jitse): After completion, remove current event handler, so that it won't be called again when another Init is called.
 		objImporter.ImportingComplete -= SetObjectProperties;
 	}
@@ -277,6 +283,16 @@ public class Object3DPanelSphere : MonoBehaviour
 			objectHolder.SetActive(false);
 			Camera.main.cullingMask |= 1 << interactionPointsLayer;
 			Camera.main.cullingMask &= ~(1 << objects3dLayer);
+		}
+	}
+
+	private void Update()
+	{
+		//NOTE(Jitse): Animate loading circle while importing object
+		if (object3d == null && loadingCircle.IsActive())
+		{
+			var rotateSpeed = 200f;
+			loadingCircleProgress.GetComponent<RectTransform>().Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
 		}
 	}
 
