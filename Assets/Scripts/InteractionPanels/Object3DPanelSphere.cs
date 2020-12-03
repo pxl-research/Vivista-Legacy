@@ -21,7 +21,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private GameObject objectRenderer;
 	private GameObject objectHolder;
-	private GameObject attachmentPoint;
 
 	private string filePath = "";
 	private string objectName = "";
@@ -45,8 +44,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private float scaleSensitivity = .1f;
 	private float centerOffset = 90f;
 	private float objectDistance = 1f;
-	private float handGrabDistance = 0.3f;
-	private float moveAnimationStartTime;
 
 	private bool isRotating;
 	private bool isMoving;
@@ -77,7 +74,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private int interactionPointsLayer;
 
 	//NOTE(Jitse): Bool for checking current input method, currently used for depevelopment
-	private bool isInputMethodGrab = true;
+	private bool isInputMethodGrab;
 
 	public void Init(string newTitle, List<string> newUrls)
 	{
@@ -199,6 +196,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				mainMesh.mesh.CombineMeshes(combine);
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
+				var interactable = objectHolder.AddComponent<Interactable>();
 				var rigid = objectHolder.AddComponent<Rigidbody>();
 				rigid.isKinematic = true;
 				interactable = objectHolder.AddComponent<Interactable>();
@@ -341,19 +339,16 @@ public class Object3DPanelSphere : MonoBehaviour
 			GetMouseButtonStates();
 			prevMousePos = Input.mousePosition;
 		}
-
 		//NOTE(Jitse): Object 3D interactions when in VR
 		else
 		{
 			//NOTE(Jitse): Scaling the object in VR
 			if (bothTriggersDown)
 			{
-				Debug.Log($"Both triggers are down.\n" +
-									$"Now scaling object.");
-				float distance = (controllerLeft.transform.position - controllerRight.transform.position).magnitude * 2;
-				float scale = 0.5f + (distance - startDistanceControllers);
+				float distance = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+				float scale = startDistanceControllers / distance;
 				var newScale = prevObjectScale;
-				newScale *= scale;
+				newScale /= scale;
 				objectHolder.transform.localScale = newScale;
 			}
 			else
@@ -366,13 +361,12 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (interactable == null)
 					{
 						interactable = objectHolder.GetComponentInChildren<Interactable>();
-						interactable.highlightOnHover = false;
 					}
 
 					if (outOfReach && handGrab != null)
 					{
-						objectHolder.transform.position = Vector3.SmoothDamp(objectHolder.transform.position, handGrab.transform.position, ref currentVelocity, 0.5f);
-						if (Vector3.Distance(objectHolder.transform.position, handGrab.transform.position) <= handGrabDistance)
+						objectHolder.transform.position = Vector3.SmoothDamp(objectHolder.transform.position, handGrab.transform.position, ref currentVelocity, 0.25f);
+						if (handGrab.hoveringInteractable)
 						{
 							outOfReach = false;
 						}
@@ -385,15 +379,18 @@ public class Object3DPanelSphere : MonoBehaviour
 
 							if (interactable.attachedToHand == null && isGrabbing)
 							{
-								Debug.Log($"No object attached to {handGrab.name}.\n" +
-									$"Attaching {objectHolder.name}.");
+								//NOTE(Jitse): Set this here, to ensure the interactable has the right options set.
+								interactable.hideHandOnAttach = false;
+								interactable.hideSkeletonOnAttach = false;
+								interactable.hideControllerOnAttach = false;
+								interactable.highlightOnHover = false;
+								interactable.handFollowTransform = false;
+
 								handGrab.HoverLock(interactable);
 								handGrab.AttachObject(objectHolder, grabType, attachmentFlags);
 							}
 							else if (!isGrabbing)
 							{
-								Debug.Log($"{handGrab.name} isn't grabbing anymore.\n" +
-									$"Detaching {objectHolder.name}.");
 								handGrab.DetachObject(objectHolder);
 								handGrab.HoverUnlock(interactable);
 							}
@@ -402,14 +399,10 @@ public class Object3DPanelSphere : MonoBehaviour
 						{
 							if (handLeft.ObjectIsAttached(objectHolder))
 							{
-								Debug.Log($"Left hand was grabbing.\n" +
-									$"Detaching {objectHolder.name}.");
 								handLeft.DetachObject(objectHolder);
 							}
 							else if (handRight.ObjectIsAttached(objectHolder))
 							{
-								Debug.Log($"Right hand was grabbing.\n" +
-									$"Detaching {objectHolder.name}.");
 								handRight.DetachObject(objectHolder);
 							}
 						}
@@ -453,25 +446,21 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (handLeft.hoveringInteractable)
 		{
 			controllerLeft.laser.SetActive(false);
-			controllerLeft.cursor.SetActive(false);
 			leftControllerNear = true;
 		}
 		else
 		{
 			controllerLeft.laser.SetActive(true);
-			controllerLeft.cursor.SetActive(true);
 			leftControllerNear = false;
 		}
 		if (handRight.hoveringInteractable)
 		{
 			controllerRight.laser.SetActive(false);
-			controllerRight.cursor.SetActive(false);
 			rightControllerNear = true;
 		}
 		else
 		{
 			controllerRight.laser.SetActive(true);
-			controllerRight.cursor.SetActive(true);
 			rightControllerNear = false;
 		}
 	}
@@ -539,7 +528,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			otherTriggerDown = rightTriggerDown;
 			hand = handLeft;
 			controllerNear = leftControllerNear;
-		} 
+		}
 		else
 		{
 			otherTriggerDown = leftTriggerDown;
@@ -558,6 +547,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (handGrab != null)
 					{
 						bothTriggersDown = true;
+						handGrab.DetachObject(objectHolder);
 						prevObjectScale = objectHolder.transform.localScale;
 						startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 					}
@@ -579,11 +569,11 @@ public class Object3DPanelSphere : MonoBehaviour
 						}
 						else
 						{
-							if (Vector3.Distance(objectHolder.transform.position, hand.transform.position) > handGrabDistance)
+							if (hand.hoveringInteractable == null)
 							{
 								handGrab = hand;
+								grabType = GrabTypes.Trigger;
 								outOfReach = true;
-								moveAnimationStartTime = Time.time;
 							}
 						}
 
@@ -663,18 +653,18 @@ public class Object3DPanelSphere : MonoBehaviour
 			//NOTE(Jitse): Different actions depending on the interaction mode
 			if (isInputMethodGrab)
 			{
-				Debug.Log($"Trigger up for {hand.name}.");
 				if (bothTriggersDown)
 				{
-					Debug.Log($"Both triggers were down.");
 					if (hand == handGrab)
 					{
-						Debug.Log($"This hand was grabbing, so detach and attach to other hand.");
 						handGrab.DetachObject(objectHolder);
 						handGrab.HoverUnlock(interactable);
 						handGrab = hand.otherHand;
-						handGrab.HoverLock(interactable);
-						handGrab.AttachObject(objectHolder, grabType);
+
+						if (handGrab.hoveringInteractable == null)
+						{
+							outOfReach = true;
+						}
 					}
 
 					bothTriggersDown = false;
@@ -683,7 +673,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				{
 					if (handGrab == hand)
 					{
-						Debug.Log($"Only this trigger was down, so set handgrab to null which detaches object.");
 						handGrab = null;
 						grabType = GrabTypes.None;
 						outOfReach = false;
