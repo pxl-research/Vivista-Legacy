@@ -44,6 +44,8 @@ public class Object3DPanelSphere : MonoBehaviour
 	private float scaleSensitivity = .1f;
 	private float centerOffset = 90f;
 	private float objectDistance = 1f;
+	private float minScale = 0.2f;
+	private float maxScale = 5f;
 
 	private bool isRotating;
 	private bool isMoving;
@@ -56,7 +58,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool leftControllerNear;
 	private bool rightControllerNear;
 	private bool handNearObject;
-	private bool outOfReach;
 
 	private MeshCollider objectCollider;
 	private MeshFilter mainMesh;
@@ -111,10 +112,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 		}
 
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, controllerLeft, "left");
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, controllerRight, "right");
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, controllerLeft, "left");
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, controllerRight, "right");
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, "left");
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, "right");
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, "left");
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, "right");
 	}
 
 	private void SetObjectProperties()
@@ -290,7 +291,8 @@ public class Object3DPanelSphere : MonoBehaviour
 			bool isControllerHovering = (controllerLeft != null && (controllerLeft.object3dHovering || handLeft.hoveringInteractable)) 
 										|| (controllerRight != null && (controllerRight.object3dHovering || handRight.hoveringInteractable));
 
-			bool isMouseHovering = (objectCollider.Raycast(ray, out _, Mathf.Infinity) && controllerLeft == null && controllerRight == null);
+			bool isMouseHovering = (objectCollider.Raycast(ray, out _, Mathf.Infinity) 
+									&& controllerLeft == null && controllerRight == null);
 
 			if ((isMouseHovering || isControllerHovering) && !(isMoving || isRotating || isScaling))
 			{
@@ -317,7 +319,6 @@ public class Object3DPanelSphere : MonoBehaviour
 				objectHolder.transform.RotateAround(object3d.transform.position, object3d.transform.right, speedVertical);
 			}
 
-			//NOTE(Jitse): Move objects
 			if (isMoving)
 			{
 				objectHolder.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(prevMousePos.x, prevMousePos.y, objectDistance));
@@ -328,9 +329,9 @@ public class Object3DPanelSphere : MonoBehaviour
 				var increase = (mouseDelta.y + mouseDelta.x) * scaleSensitivity / 10;
 				var scaling = objectHolder.transform.localScale;
 				var position = objectHolder.transform.position;
-				scaling.x = Mathf.Clamp(scaling.x + increase, 0.5f, 5);
-				scaling.y = Mathf.Clamp(scaling.y + increase, 0.5f, 5);
-				scaling.z = Mathf.Clamp(scaling.z + increase, 0.5f, 5);
+				scaling.x = Mathf.Clamp(scaling.x + increase, minScale, maxScale);
+				scaling.y = Mathf.Clamp(scaling.y + increase, minScale, maxScale);
+				scaling.z = Mathf.Clamp(scaling.z + increase, minScale, maxScale);
 
 				objectHolder.transform.position = position;
 				objectHolder.transform.localScale = scaling;
@@ -349,7 +350,11 @@ public class Object3DPanelSphere : MonoBehaviour
 				float scale = startDistanceControllers / distance;
 				var newScale = prevObjectScale;
 				newScale /= scale;
-				objectHolder.transform.localScale = newScale;
+
+				if (newScale.x > minScale && newScale.x < maxScale)
+				{
+					objectHolder.transform.localScale = newScale;
+				}
 			}
 			else
 			{
@@ -363,13 +368,9 @@ public class Object3DPanelSphere : MonoBehaviour
 						interactable = objectHolder.GetComponentInChildren<Interactable>();
 					}
 
-					if (outOfReach && handGrab != null)
+					if (handGrab != null && handGrab.hoveringInteractable == null)
 					{
-						objectHolder.transform.position = Vector3.SmoothDamp(objectHolder.transform.position, handGrab.transform.position, ref currentVelocity, 0.25f);
-						if (handGrab.hoveringInteractable)
-						{
-							outOfReach = false;
-						}
+						objectHolder.transform.position = Vector3.SmoothDamp(objectHolder.transform.position, handGrab.transform.position, ref currentVelocity, 0.2f);
 					}
 					else if (interactable != null)
 					{
@@ -432,7 +433,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 		}
 
-		if (!(mouseDown || leftTriggerDown || rightTriggerDown))
+		if (!(mouseDown || leftTriggerDown || rightTriggerDown || handGrab != null))
 		{
 			MouseLook.Instance.forceInactive = false;
 			isRotating = false;
@@ -518,21 +519,25 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void TriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, string controllerType)
+	private void TriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, string controllerType)
 	{
+		Controller controller;
+		Hand hand;
 		bool otherTriggerDown;
 		bool controllerNear;
-		Hand hand;
+
 		if (controllerType.Equals("left"))
 		{
-			otherTriggerDown = rightTriggerDown;
+			controller = controllerLeft;
 			hand = handLeft;
+			otherTriggerDown = rightTriggerDown;
 			controllerNear = leftControllerNear;
 		}
 		else
 		{
-			otherTriggerDown = leftTriggerDown;
+			controller = controllerRight;
 			hand = handRight;
+			otherTriggerDown = leftTriggerDown;
 			controllerNear = rightControllerNear;
 		}
 
@@ -544,37 +549,47 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				if (hand.hoveringInteractable)
 				{
-					if (handGrab != null)
+					//NOTE(Jitse): If neither hand is currently grabbing the object
+					if (handGrab == null)
 					{
-						bothTriggersDown = true;
-						handGrab.DetachObject(objectHolder);
-						prevObjectScale = objectHolder.transform.localScale;
-						startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
+						isMoving = true;
+
+						handGrab = hand;
+						grabType = GrabTypes.Trigger;
 					}
 					else
 					{
-						handGrab = hand;
-						grabType = GrabTypes.Trigger;
+						bothTriggersDown = true;
+						isScaling = true;
+						isMoving = false;
+
+						handGrab.DetachObject(objectHolder);
+						prevObjectScale = objectHolder.transform.localScale;
+						startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 					}
 				}
 				else
 				{
 					if (controller.object3dHovering || controllerNear)
 					{
-						if (handGrab != null)
-						{
-							bothTriggersDown = true;
-							prevObjectScale = objectHolder.transform.localScale;
-							startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
-						}
-						else
+						if (handGrab == null)
 						{
 							if (hand.hoveringInteractable == null)
 							{
+								isMoving = true;
+
 								handGrab = hand;
 								grabType = GrabTypes.Trigger;
-								outOfReach = true;
 							}
+						}
+						else
+						{
+							bothTriggersDown = true;
+							isScaling = true;
+							isMoving = false;
+
+							prevObjectScale = objectHolder.transform.localScale;
+							startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
 						}
 
 						controller.laser.SetActive(false);
@@ -619,18 +634,21 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, string controllerType)
+	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, string controllerType)
 	{
+		Controller controller;
 		Controller otherController;
 		Hand hand;
 
 		if (controllerType.Equals("left"))
 		{
+			controller = controllerLeft;
 			otherController = controllerRight;
 			hand = handLeft;
 		}
 		else
 		{
+			controller = controllerRight;
 			otherController = controllerLeft;
 			hand = handRight;
 		}
@@ -660,11 +678,6 @@ public class Object3DPanelSphere : MonoBehaviour
 						handGrab.DetachObject(objectHolder);
 						handGrab.HoverUnlock(interactable);
 						handGrab = hand.otherHand;
-
-						if (handGrab.hoveringInteractable == null)
-						{
-							outOfReach = true;
-						}
 					}
 
 					bothTriggersDown = false;
@@ -675,7 +688,6 @@ public class Object3DPanelSphere : MonoBehaviour
 					{
 						handGrab = null;
 						grabType = GrabTypes.None;
-						outOfReach = false;
 					}
 				}
 			}
