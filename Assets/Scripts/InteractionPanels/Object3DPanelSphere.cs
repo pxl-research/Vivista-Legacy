@@ -57,8 +57,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool leftTriggerDown;
 	private bool rightTriggerDown;
 	private bool bothTriggersDown;
-	private bool leftControllerNear;
-	private bool rightControllerNear;
 	private bool handNearObject;
 
 	private MeshCollider objectCollider;
@@ -237,6 +235,11 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
+		handLeft.HideController();
+		handRight.HideController();
+		handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+		handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+
 		if (objectHolder == null)
 		{
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
@@ -277,6 +280,8 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnDisable()
 	{
+		RestoreOriginalControllerSettings();
+
 		//NOTE(Jitse): Prevents null reference errors, which could occur if the object file could not be found
 		if (objectHolder != null)
 		{
@@ -284,6 +289,28 @@ public class Object3DPanelSphere : MonoBehaviour
 			Camera.main.cullingMask |= 1 << interactionPointsLayer;
 			Camera.main.cullingMask &= ~(1 << objects3dLayer);
 		}
+	}
+
+	private void RestoreOriginalControllerSettings()
+	{
+		if (handLeft.ObjectIsAttached(objectHolder))
+		{
+			handLeft.DetachObject(objectHolder);
+		}
+		if (handRight.ObjectIsAttached(objectHolder))
+		{
+			handRight.DetachObject(objectHolder);
+		}
+
+		controllerLeft.laser.SetActive(true);
+		controllerRight.laser.SetActive(true);
+		controllerLeft.cursor.SetActive(true);
+		controllerRight.cursor.SetActive(true);
+
+		handLeft.ShowController();
+		handRight.ShowController();
+		handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
+		handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 	}
 
 	private void Update()
@@ -463,22 +490,22 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (handLeft.hoveringInteractable)
 		{
 			controllerLeft.laser.SetActive(false);
-			leftControllerNear = true;
+			controllerLeft.cursor.SetActive(false);
 		}
 		else
 		{
 			controllerLeft.laser.SetActive(true);
-			leftControllerNear = false;
+			controllerLeft.cursor.SetActive(true);
 		}
 		if (handRight.hoveringInteractable)
 		{
 			controllerRight.laser.SetActive(false);
-			rightControllerNear = true;
+			controllerRight.cursor.SetActive(false);
 		}
 		else
 		{
 			controllerRight.laser.SetActive(true);
-			rightControllerNear = false;
+			controllerRight.cursor.SetActive(true);
 		}
 	}
 
@@ -547,14 +574,14 @@ public class Object3DPanelSphere : MonoBehaviour
 			controller = controllerLeft;
 			hand = handLeft;
 			otherTriggerDown = rightTriggerDown;
-			controllerNear = leftControllerNear;
+			controllerNear = handLeft.hoveringInteractable;
 		}
 		else
 		{
 			controller = controllerRight;
 			hand = handRight;
 			otherTriggerDown = leftTriggerDown;
-			controllerNear = rightControllerNear;
+			controllerNear = handRight.hoveringInteractable;
 		}
 
 		if (objectHolder != null)
@@ -696,6 +723,7 @@ public class Object3DPanelSphere : MonoBehaviour
 						handGrab = hand.otherHand;
 					}
 
+					isMoving = true;
 					bothTriggersDown = false;
 				}
 				else
