@@ -52,8 +52,6 @@ public class Object3DPanelSphere : MonoBehaviour
 	private bool isScaling;
 
 	private bool mouseDown;
-	private bool leftTriggerDown;
-	private bool rightTriggerDown;
 	private bool bothTriggersDown;
 
 	private MeshCollider objectCollider;
@@ -468,7 +466,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 		}
 
-		if (!(mouseDown || leftTriggerDown || rightTriggerDown || handGrab != null))
+		if (!(mouseDown || handGrab != null))
 		{
 			MouseLook.Instance.forceInactive = false;
 			isRotating = false;
@@ -645,15 +643,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 		if (objectHolder != null)
 		{
-			if (controllerType.Equals("left"))
-			{
-				leftTriggerDown = false;
-			}
-			else
-			{
-				rightTriggerDown = false;
-			}
-
 			isScaling = false;
 
 			controller.laser.SetActive(true);

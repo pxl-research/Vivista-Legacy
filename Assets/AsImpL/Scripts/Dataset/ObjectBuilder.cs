@@ -777,7 +777,7 @@ namespace AsImpL
             //TODO(cont.): Texture2D normalMap = ModelUtil.HeightToNormalMap(md.bumpTex) is the big culprit.
             //TODO(cont.): Can we improve this?
             //TODO(cont.): It looks like disabling this doesn't disable the use of normal maps
-            /*if (md.bumpTex != null)
+            if (md.bumpTex != null)
             {
                 // bump map defined
 
@@ -814,37 +814,39 @@ namespace AsImpL
                         newMaterial.SetFloat("_BumpScale", 1.0f); // adjust the bump effect with the normal map
                     }
                 }
-            }*/
+            }
 
             //TODO(Jitse): Research the importancy of "specular texture"
             //TODO(cont.): This if check has been commented, because it moderately slowed object loading in some cases.
             //TODO(cont.): Can we improve this?
-            /*if (md.specularTex != null)
+            if (md.specularTex != null)
             {
-                Texture2D glossTexture = new Texture2D(md.specularTex.width, md.specularTex.height, TextureFormat.ARGB32, false);
-                Color col = new Color();
+                var glossTexture = new Texture2D(md.specularTex.width, md.specularTex.height, TextureFormat.ARGB32, false);
+                var col = new Color();
                 float pix = 0.0f;
-                for (int x = 0; x < glossTexture.width; x++)
-                {
-                    for (int y = 0; y < glossTexture.height; y++)
-                    {
-                        pix = md.specularTex.GetPixel(x, y).grayscale;
 
-                        // red = metallic
+                int w = md.specularTex.width;
+                var data = md.specularTex.GetPixels();
+
+                for (int y = 0; y < md.specularTex.height; y++)
+                {
+                    for (int x = 0; x < md.specularTex.width; x++)
+                    {
+                        int pos = y * w + x;
+
+                        pix = data[pos].grayscale;
 
                         col.r = metallic * pix;// md.specular.grayscale*pix;
                         col.g = col.r;
                         col.b = col.r;
 
-                        // alpha = smoothness
-
                         // if reflecting set maximum smoothness value, else use a precomputed value
-                        if (md.hasReflectionTex) col.a = pix;
-                        else col.a = pix * smoothness;
+                        col.a = md.hasReflectionTex ? pix : pix * smoothness;
 
-                        glossTexture.SetPixel(x, y, col);
+                        data[pos] = col;
                     }
                 }
+                glossTexture.SetPixels(data);
                 glossTexture.Apply();
 #if UNITY_EDITOR
                 if (!string.IsNullOrEmpty(alternativeTexPath))
@@ -867,9 +869,7 @@ namespace AsImpL
                     newMaterial.EnableKeyword("_METALLICGLOSSMAP");
                     newMaterial.SetTexture("_MetallicGlossMap", glossTexture);
                 }
-
-                //m.SetTexture( "_MetallicGlossMap", md.specularLevelTex );
-            }*/
+            }
 
             // replace the texture with Unity environment reflection
             if (md.hasReflectionTex)

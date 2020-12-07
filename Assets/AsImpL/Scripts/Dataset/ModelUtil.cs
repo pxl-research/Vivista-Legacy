@@ -161,21 +161,18 @@ namespace AsImpL
 
             Color col = Color.black;
 
+            var data = bumpMap.GetPixels();
+            var data2 = new Color[data.Length];
+
             for (int y = 0; y < bumpMap.height; y++)
             {
                 for (int x = 0; x < bumpMap.width; x++)
                 {
                     Vector3 n = Vector3.zero;
                     // CHANGE IN X
-
-                    //h0 = height_map.GetPixel( WrapInt(x-2, w),y).grayscale;
-                    h1 = bumpMap.GetPixel(WrapInt(x - 1, w), y).grayscale;
-                    h2 = bumpMap.GetPixel(x, y).grayscale;
-                    h3 = bumpMap.GetPixel(WrapInt(x + 1, w), y).grayscale;
-                    //h4 = height_map.GetPixel(WrapInt(x+2, w) , y).grayscale;
-
-                    //changeNeg = 0.7f*(h1 - h0)+0.2f*(h2 - h1);
-                    //changePos = 0.2f*(h3 - h2)+0.7f*(h4 - h3);
+                    h1 = data[y * w + (x + w - 1) % w].grayscale;
+                    h2 = data[y * w + x].grayscale;
+                    h3 = data[y * w + (x + w + 1) % w].grayscale;
 
                     changeNeg = h2 - h1;
                     changePos = h3 - h2;
@@ -184,14 +181,9 @@ namespace AsImpL
 
                     // CHANGE IN Y
 
-                    //h0 = height_map.GetPixel(x, WrapInt(y-2, h)).grayscale;
-                    h1 = bumpMap.GetPixel(x, WrapInt(y - 1, h)).grayscale;
-                    h2 = bumpMap.GetPixel(x, y).grayscale;
-                    h3 = bumpMap.GetPixel(x, WrapInt(y + 1, h)).grayscale;
-                    //h4 = height_map.GetPixel(x, WrapInt(y+2, h).grayscale);
-
-                    //changeNeg = 0.7f*(h1 - h0)+0.2f*(h2 - h1);
-                    //changePos = 0.2f*(h3 - h2)+0.7f*(h4 - h3);
+                    h1 = data[(y + h - 1) % h * w + y].grayscale;
+                    h2 = data[y * w + y].grayscale;
+                    h3 = data[(y + h + 1) % h * w + y].grayscale;
 
                     changeNeg = h2 - h1;
                     changePos = h3 - h2;
@@ -215,10 +207,13 @@ namespace AsImpL
                     col.b = Mathf.Clamp01(n.z + 0.5f);
 
                     col.a = col.r;
-                    normalMap.SetPixel(x, y, col);
+                    data2[y * w + x] = col;
+
+                    //normalMap.SetPixel(x, y, col);
                 }
             }
 
+            normalMap.SetPixels(data2);
             normalMap.Apply();
 
             return normalMap;
