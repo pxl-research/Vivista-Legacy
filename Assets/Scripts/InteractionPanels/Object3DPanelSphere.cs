@@ -31,6 +31,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private ObjectImporter objImporter;
 	private Renderer rend;
 	private UISphere uiSphere;
+	private Transform vrCamera;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 prevMousePos;
@@ -90,6 +91,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		objImporter = objectRenderer.GetComponent<ObjectImporter>();
 		importOptions.hideWhileLoading = true;
 		importOptions.inheritLayer = true;
+
+		vrCamera = GameObject.Find("VRCamera").transform;
 
 		objects3dLayer = LayerMask.NameToLayer("3DObjects");
 		interactionPointsLayer = LayerMask.NameToLayer("interactionPoints");
@@ -213,7 +216,14 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+					if (XRSettings.enabled)
+					{
+						objectHolder.transform.localPosition = new Vector3(0, vrCamera.localPosition.y, objectDistance);
+					} 
+					else
+					{
+						objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+					}
 					objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 				} 
 				else
@@ -264,7 +274,14 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+						if (XRSettings.enabled)
+						{
+							objectHolder.transform.localPosition = new Vector3(0, vrCamera.localPosition.y, objectDistance);
+						}
+						else
+						{
+							objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+						}
 						objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 					}
 				}
@@ -769,7 +786,14 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		objectHolder.transform.localScale = Vector3.one;
 		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
-		objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+		if (XRSettings.enabled)
+		{
+			objectHolder.transform.localPosition = new Vector3(0, vrCamera.localPosition.y, objectDistance);
+		}
+		else
+		{
+			objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
+		}
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 	}
 
