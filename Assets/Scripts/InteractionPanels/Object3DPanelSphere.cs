@@ -213,7 +213,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
+					objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 					objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 				} 
 				else
@@ -235,10 +235,13 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
-		handLeft.HideController();
-		handRight.HideController();
-		handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
-		handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+		if (XRSettings.enabled)
+		{
+			handLeft.HideController();
+			handRight.HideController();
+			handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+			handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+		}
 
 		if (objectHolder == null)
 		{
@@ -261,7 +264,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
+						objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 						objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 					}
 				}
@@ -280,7 +283,10 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnDisable()
 	{
-		RestoreOriginalControllerSettings();
+		if (XRSettings.enabled)
+		{
+			RestoreOriginalControllerSettings();
+		}
 
 		//NOTE(Jitse): Prevents null reference errors, which could occur if the object file could not be found
 		if (objectHolder != null)
@@ -763,7 +769,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	{
 		objectHolder.transform.localScale = Vector3.one;
 		objectHolder.transform.localRotation = Quaternion.Euler(Vector3.zero);
-		objectHolder.transform.localPosition = new Vector3(0, 1, objectDistance);
+		objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
 	}
 
