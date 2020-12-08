@@ -926,6 +926,12 @@ namespace Valve.VR.InteractionSystem
                 if (hoveringOverAttached)
                     continue;
 
+                //NOTE(Jitse): This code being disabled is IMPORTANT for the interaction with 3D objects.
+                //NOTE(cont.): Be careful when updating SteamVR. Make sure it is still possible to hover with both hands over an object.
+                // Occupied by another hand, so we can't touch it
+                //if (otherHand && otherHand.hoveringInteractable == contacting)
+                //    continue;
+
                 // Best candidate so far...
                 float distance = Vector3.Distance(contacting.transform.position, hoverPosition);
                 if (distance < closestDistance)
