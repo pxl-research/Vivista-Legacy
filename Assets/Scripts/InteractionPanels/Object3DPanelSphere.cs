@@ -270,8 +270,11 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (objectHolder != null)
 		{
 			objectHolder.SetActive(true);
-			ResetTransform();
-			
+			if (uiSphere != null)
+			{
+				ResetTransform();
+			}
+
 			Camera.main.cullingMask |= 1 << objects3dLayer;
 			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
 		}
