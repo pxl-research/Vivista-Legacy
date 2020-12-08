@@ -1,6 +1,7 @@
 ﻿using AsImpL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +13,7 @@ using Hand = Valve.VR.InteractionSystem.Hand;
 public class Object3DPanelSphere : MonoBehaviour
 {
 	public Text title;
+	public Text longLoadMessage;
 	public GameObject object3d;
 	public Material transparent;
 	public Material hoverMaterial;
@@ -32,6 +34,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Renderer rend;
 	private UISphere uiSphere;
 	private Transform vrCamera;
+	private Stopwatch importingStopwatch;
 
 	//NOTE(Jitse): Values used for interacting with 3D object
 	private Vector3 prevMousePos;
@@ -205,15 +208,7 @@ public class Object3DPanelSphere : MonoBehaviour
 				if (isActiveAndEnabled)
 				{
 					uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-					if (XRSettings.enabled)
-					{
-						objectHolder.transform.localPosition = new Vector3(0, vrCamera.localPosition.y, objectDistance);
-					} 
-					else
-					{
-						objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
-					}
-					objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
+					ResetTransform();
 				} 
 				else
 				{
@@ -227,6 +222,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		//NOTE(Jitse): Deactivate loading circle
 		loadingCircle.gameObject.SetActive(false);
 		loadingCircleProgress.gameObject.SetActive(false);
+		longLoadMessage.gameObject.SetActive(false);
 
 		//NOTE(Jitse): After completion, remove current event handler, so that it won't be called again when another Init is called.
 		objImporter.ImportingComplete -= SetObjectProperties;
@@ -234,14 +230,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
-		if (XRSettings.enabled)
-		{
-			handLeft.HideController();
-			handRight.HideController();
-			handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
-			handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
-		}
-
 		if (objectHolder == null)
 		{
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
@@ -254,7 +242,9 @@ public class Object3DPanelSphere : MonoBehaviour
 					objectHolder = new GameObject("holder_" + objectName);
 					objectHolder.transform.parent = objectRenderer.transform;
 					objectHolder.layer = objects3dLayer;
-					
+
+					importingStopwatch = new Stopwatch();
+					importingStopwatch.Start();
 					objImporter.ImportingComplete += SetObjectProperties;
 					objImporter.ImportModelAsync(objectName, filePath, objectHolder.transform, importOptions);
 
@@ -263,15 +253,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					if (uiSphere == null && object3d != null)
 					{
 						uiSphere = GameObject.Find("SphereUIRenderer").GetComponent<UISphere>();
-						if (XRSettings.enabled)
-						{
-							objectHolder.transform.localPosition = new Vector3(0, vrCamera.localPosition.y, objectDistance);
-						}
-						else
-						{
-							objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
-						}
-						objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
+						ResetTransform();
 					}
 				}
 			}
@@ -332,6 +314,11 @@ public class Object3DPanelSphere : MonoBehaviour
 		{
 			var rotateSpeed = 200f;
 			loadingCircleProgress.GetComponent<RectTransform>().Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
+
+			if (importingStopwatch.IsRunning && importingStopwatch.ElapsedMilliseconds > 5000)
+			{
+				longLoadMessage.gameObject.SetActive(true);
+			}
 		}
 	}
 
@@ -421,6 +408,7 @@ public class Object3DPanelSphere : MonoBehaviour
 					interactable = objectHolder.GetComponentInChildren<Interactable>();
 				}
 
+				//NOTE(Jitse): If the object is out of reach, smoothly move it towards the grabbing hand.
 				if (handGrab != null && handGrab.hoveringInteractable == null)
 				{
 					objectHolder.transform.position = Vector3.SmoothDamp(objectHolder.transform.position, handGrab.transform.position, ref currentVelocity, 0.2f);
@@ -440,11 +428,15 @@ public class Object3DPanelSphere : MonoBehaviour
 							interactable.highlightOnHover = false;
 							interactable.handFollowTransform = false;
 
+							handGrab.HideController();
+							handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
 							handGrab.HoverLock(interactable);
 							handGrab.AttachObject(objectHolder, grabType, attachmentFlags);
 						}
 						else if (!isGrabbing)
 						{
+							handGrab.ShowController();
+							handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handGrab.DetachObject(objectHolder);
 							handGrab.HoverUnlock(interactable);
 						}
@@ -453,10 +445,14 @@ public class Object3DPanelSphere : MonoBehaviour
 					{
 						if (handLeft.ObjectIsAttached(objectHolder))
 						{
+							handLeft.ShowController();
+							handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handLeft.DetachObject(objectHolder);
 						}
 						else if (handRight.ObjectIsAttached(objectHolder))
 						{
+							handRight.ShowController();
+							handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handRight.DetachObject(objectHolder);
 						}
 					}
@@ -475,7 +471,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void HideOrShowLaser()
 	{
-		if (handLeft.hoveringInteractable)
+		if (handLeft.hoveringInteractable || bothTriggersDown)
 		{
 			controllerLeft.laser.SetActive(false);
 			controllerLeft.cursor.SetActive(false);
@@ -485,7 +481,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			controllerLeft.laser.SetActive(true);
 			controllerLeft.cursor.SetActive(true);
 		}
-		if (handRight.hoveringInteractable)
+		if (handRight.hoveringInteractable || bothTriggersDown)
 		{
 			controllerRight.laser.SetActive(false);
 			controllerRight.cursor.SetActive(false);
@@ -588,6 +584,8 @@ public class Object3DPanelSphere : MonoBehaviour
 					isScaling = true;
 					isMoving = false;
 
+					handGrab.ShowController();
+					handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 					handGrab.DetachObject(objectHolder);
 					prevObjectScale = objectHolder.transform.localScale;
 					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
@@ -649,6 +647,8 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				if (hand == handGrab)
 				{
+					handGrab.ShowController();
+					handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 					handGrab.DetachObject(objectHolder);
 					handGrab.HoverUnlock(interactable);
 					handGrab = hand.otherHand;
