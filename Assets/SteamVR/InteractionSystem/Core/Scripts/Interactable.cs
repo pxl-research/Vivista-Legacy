@@ -110,10 +110,15 @@ namespace Valve.VR.InteractionSystem
 
         protected virtual bool ShouldIgnore(GameObject check)
         {
-            for (int ignoreIndex = 0; ignoreIndex < hideHighlight.Length; ignoreIndex++)
-            {
-                if (check == hideHighlight[ignoreIndex])
-                    return true;
+            //NOTE(Jitse): This code normally shouldn't be called for 3D objects, because we set highlightOnHover = false.
+            //NOTE(cont.): For some reason, however, the Interactable object seems to lose this flag, which makes this code run.
+            if (hideHighlight != null)
+			{
+                for (int ignoreIndex = 0; ignoreIndex < hideHighlight.Length; ignoreIndex++)
+                {
+                    if (check == hideHighlight[ignoreIndex])
+                        return true;
+                }
             }
 
             return false;

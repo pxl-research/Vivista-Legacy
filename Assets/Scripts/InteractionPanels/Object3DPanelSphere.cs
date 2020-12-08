@@ -61,7 +61,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	private Hand handLeft;
 	private Hand handRight;
 	private Hand handGrab;
-	private Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags & (~Hand.AttachmentFlags.SnapOnAttach) & (~Hand.AttachmentFlags.DetachOthers) & (~Hand.AttachmentFlags.VelocityMovement);
+	private Hand.AttachmentFlags attachmentFlags = Hand.defaultAttachmentFlags & (~Hand.AttachmentFlags.SnapOnAttach) & (~Hand.AttachmentFlags.DetachOthers);
 	private Interactable interactable;
 	private GrabTypes grabType;
 
@@ -192,8 +192,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 				objectCollider = objectHolder.AddComponent<MeshCollider>();
 				var interactable = objectHolder.AddComponent<Interactable>();
-				var rigid = objectHolder.AddComponent<Rigidbody>();
-				rigid.isKinematic = true;
 				interactable = objectHolder.AddComponent<Interactable>();
 				interactable.attachEaseIn = true;
 				interactable.hideHandOnAttach = false;
