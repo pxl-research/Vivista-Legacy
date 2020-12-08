@@ -77,7 +77,6 @@ namespace Valve.VR
         /// <param name="inputSource">The device you would like to get data from. Any if the action is not device specific.</param>
         public bool GetStateDown(SteamVR_Input_Sources inputSource)
         {
-           
             return sourceMap[inputSource].stateDown;
         }
 

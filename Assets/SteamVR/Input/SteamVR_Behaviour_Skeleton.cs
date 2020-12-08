@@ -695,7 +695,7 @@ namespace Valve.VR
             return rawSkeleton;
         }
 
-        protected static readonly Quaternion rightFlipAngle = Quaternion.AngleAxis(180, Vector3.right);
+        protected Quaternion rightFlipAngle = Quaternion.AngleAxis(180, Vector3.right);
         protected Quaternion[] GetBoneRotations()
         {
             Quaternion[] rawSkeleton = skeletonAction.GetBoneRotations();
@@ -717,36 +717,6 @@ namespace Valve.VR
             }
 
             return rawSkeleton;
-        }
-
-        public static Vector3 MirrorPosition(int boneIndex, Vector3 rawPosition)
-        {
-            if (boneIndex == SteamVR_Skeleton_JointIndexes.wrist || IsMetacarpal(boneIndex))
-            {
-                rawPosition.Scale(new Vector3(-1, 1, 1));
-            }
-            else if (boneIndex != SteamVR_Skeleton_JointIndexes.root)
-            {
-                rawPosition = rawPosition * -1;
-            }
-
-            return rawPosition;
-        }
-
-        public static Quaternion MirrorRotation(int boneIndex, Quaternion rawRotation)
-        {
-            if (boneIndex == SteamVR_Skeleton_JointIndexes.wrist)
-            {
-                rawRotation.y = rawRotation.y * -1;
-                rawRotation.z = rawRotation.z * -1;
-            }
-
-            if (IsMetacarpal(boneIndex))
-            {
-                rawRotation = rightFlipAngle * rawRotation;
-            }
-
-            return rawRotation;
         }
 
         protected virtual void UpdatePose()
@@ -849,7 +819,7 @@ namespace Valve.VR
                 SteamVR.ExitTemporarySession();
         }
 
-        protected static bool IsMetacarpal(int boneIndex)
+        protected bool IsMetacarpal(int boneIndex)
         {
             return (boneIndex == SteamVR_Skeleton_JointIndexes.indexMetacarpal ||
                 boneIndex == SteamVR_Skeleton_JointIndexes.middleMetacarpal ||

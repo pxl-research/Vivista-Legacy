@@ -643,8 +643,15 @@ public class Player : MonoBehaviour
 	public void DeactivateActiveInteractionPoint()
 	{
 		Canvass.sphereUIRenderer.GetComponent<UISphere>().Deactivate();
-		activeInteractionPoint.panel.SetActive(false);
-		activeInteractionPoint = null;
+
+		//NOTE(Jitse): Null reference error when closing the same interaction panel for the 2nd, 3rd, ... time.
+		//NOTE(cont.): So it doesn't occur the first time.
+		if (activeInteractionPoint != null && activeInteractionPoint.panel != null) 
+		{
+			activeInteractionPoint.panel.SetActive(false);
+			activeInteractionPoint = null;
+		}
+		
 		videoController.Play();
 
 		mainEventSystem.enabled = true;
