@@ -18,6 +18,7 @@ public class Object3DPanelSphere : MonoBehaviour
 	public Material transparent;
 	public Material hoverMaterial;
 	public Button resetTransform;
+	public Image mouseInteractionTutorial;
 	public Image loadingCircle;
 	public Image loadingCircleProgress;
 	public SteamVR_Input_Sources inputSourceLeft = SteamVR_Input_Sources.LeftHand;
@@ -109,10 +110,16 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 		}
 
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, "left");
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, "right");
-		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, "left");
-		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, "right");
+		//NOTE(Jitse): Don't show the interaction instructions when in VR.
+		if (XRSettings.enabled)
+		{
+			mouseInteractionTutorial.enabled = false;
+		}
+
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, controllerLeft, handLeft);
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateDown += (fromAction, fromSource) => TriggerDown(fromAction, fromSource, controllerRight, handRight);
+		SteamVR_Actions.default_Trigger[inputSourceLeft].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, controllerLeft, handLeft);
+		SteamVR_Actions.default_Trigger[inputSourceRight].onStateUp += (fromAction, fromSource) => TriggerUp(fromAction, fromSource, controllerRight, handRight);
 	}
 
 	private void SetObjectProperties()
@@ -421,7 +428,6 @@ public class Object3DPanelSphere : MonoBehaviour
 
 							handGrab.HideController();
 							handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
-							handGrab.HoverLock(interactable);
 							handGrab.AttachObject(objectHolder, grabType, attachmentFlags);
 						}
 						else if (!isGrabbing)
@@ -429,7 +435,6 @@ public class Object3DPanelSphere : MonoBehaviour
 							handGrab.ShowController();
 							handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handGrab.DetachObject(objectHolder);
-							handGrab.HoverUnlock(interactable);
 						}
 					}
 					else
@@ -537,25 +542,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void TriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, string controllerType)
+	private void TriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, Hand hand)
 	{
-		Controller controller;
-		Hand hand;
-		bool controllerNear;
-
-		if (controllerType.Equals("left"))
-		{
-			controller = controllerLeft;
-			hand = handLeft;
-			controllerNear = handLeft.hoveringInteractable;
-		}
-		else
-		{
-			controller = controllerRight;
-			hand = handRight;
-			controllerNear = handRight.hoveringInteractable;
-		}
-
 		if (objectHolder != null)
 		{
 			//NOTE(Jitse): Grab object if controller cursor is over object or if object near hand
@@ -584,7 +572,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			}
 			else
 			{
-				if (controller.object3dHovering || controllerNear)
+				if (controller.object3dHovering || hand.hoveringInteractable)
 				{
 					if (handGrab == null)
 					{
@@ -612,22 +600,8 @@ public class Object3DPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, string controllerType)
+	private void TriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, Controller controller, Hand hand)
 	{
-		Controller controller;
-		Hand hand;
-
-		if (controllerType.Equals("left"))
-		{
-			controller = controllerLeft;
-			hand = handLeft;
-		}
-		else
-		{
-			controller = controllerRight;
-			hand = handRight;
-		}
-
 		if (objectHolder != null)
 		{
 			isScaling = false;
@@ -641,7 +615,6 @@ public class Object3DPanelSphere : MonoBehaviour
 					handGrab.ShowController();
 					handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 					handGrab.DetachObject(objectHolder);
-					handGrab.HoverUnlock(interactable);
 					handGrab = hand.otherHand;
 				}
 
