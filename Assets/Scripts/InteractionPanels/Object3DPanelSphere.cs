@@ -333,8 +333,7 @@ public class Object3DPanelSphere : MonoBehaviour
 			bool isControllerHovering = (controllerLeft != null && (controllerLeft.object3dHovering || handLeft.hoveringInteractable)) 
 										|| (controllerRight != null && (controllerRight.object3dHovering || handRight.hoveringInteractable));
 
-			bool isMouseHovering = (objectCollider.Raycast(ray, out _, Mathf.Infinity) 
-									&& controllerLeft == null && controllerRight == null);
+			bool isMouseHovering = (objectCollider.Raycast(ray, out _, Mathf.Infinity) && controllerLeft == null && controllerRight == null);
 
 			if ((isMouseHovering || isControllerHovering) && !(isMoving || isRotating || isScaling))
 			{
@@ -369,14 +368,8 @@ public class Object3DPanelSphere : MonoBehaviour
 			if (isScaling)
 			{
 				var increase = (mouseDelta.y + mouseDelta.x) * scaleSensitivity / 10;
-				var scaling = objectHolder.transform.localScale;
-				var position = objectHolder.transform.position;
-				scaling.x = Mathf.Clamp(scaling.x + increase, minScale, maxScale);
-				scaling.y = Mathf.Clamp(scaling.y + increase, minScale, maxScale);
-				scaling.z = Mathf.Clamp(scaling.z + increase, minScale, maxScale);
-
-				objectHolder.transform.position = position;
-				objectHolder.transform.localScale = scaling;
+				var scalingValue = Mathf.Clamp(objectHolder.transform.localScale.x + increase, minScale, maxScale);
+				objectHolder.transform.localScale = new Vector3(scalingValue, scalingValue, scalingValue);
 			}
 
 			GetMouseButtonStates();
@@ -393,10 +386,8 @@ public class Object3DPanelSphere : MonoBehaviour
 				var newScale = prevObjectScale;
 				newScale /= scale;
 
-				if (newScale.x > minScale && newScale.x < maxScale)
-				{
-					objectHolder.transform.localScale = newScale;
-				}
+				var scalingValue = Mathf.Clamp(newScale.x, minScale, maxScale);
+				objectHolder.transform.localScale = new Vector3(scalingValue, scalingValue, scalingValue);
 			}
 			else
 			{
