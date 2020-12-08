@@ -270,6 +270,7 @@ public class Object3DPanelSphere : MonoBehaviour
 		if (objectHolder != null)
 		{
 			objectHolder.SetActive(true);
+			ResetTransform();
 			
 			Camera.main.cullingMask |= 1 << objects3dLayer;
 			Camera.main.cullingMask &= ~(1 << interactionPointsLayer);
@@ -307,11 +308,6 @@ public class Object3DPanelSphere : MonoBehaviour
 		controllerRight.laser.SetActive(true);
 		controllerLeft.cursor.SetActive(true);
 		controllerRight.cursor.SetActive(true);
-
-		handLeft.ShowController();
-		handRight.ShowController();
-		handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
-		handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 	}
 
 	private void Update()
@@ -426,29 +422,23 @@ public class Object3DPanelSphere : MonoBehaviour
 							interactable.highlightOnHover = false;
 							interactable.handFollowTransform = false;
 
-							handGrab.HideController();
-							handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithoutController);
+							handGrab.HoverLock(interactable);
 							handGrab.AttachObject(objectHolder, grabType, attachmentFlags);
 						}
 						else if (!isGrabbing)
 						{
-							handGrab.ShowController();
-							handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handGrab.DetachObject(objectHolder);
+							handGrab.HoverUnlock(interactable);
 						}
 					}
 					else
 					{
 						if (handLeft.ObjectIsAttached(objectHolder))
 						{
-							handLeft.ShowController();
-							handLeft.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handLeft.DetachObject(objectHolder);
 						}
 						else if (handRight.ObjectIsAttached(objectHolder))
 						{
-							handRight.ShowController();
-							handRight.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 							handRight.DetachObject(objectHolder);
 						}
 					}
@@ -563,8 +553,6 @@ public class Object3DPanelSphere : MonoBehaviour
 					isScaling = true;
 					isMoving = false;
 
-					handGrab.ShowController();
-					handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 					handGrab.DetachObject(objectHolder);
 					prevObjectScale = objectHolder.transform.localScale;
 					startDistanceControllers = (controllerLeft.transform.position - controllerRight.transform.position).magnitude;
@@ -612,9 +600,8 @@ public class Object3DPanelSphere : MonoBehaviour
 			{
 				if (hand == handGrab)
 				{
-					handGrab.ShowController();
-					handGrab.SetSkeletonRangeOfMotion(EVRSkeletalMotionRange.WithController);
 					handGrab.DetachObject(objectHolder);
+					handGrab.HoverUnlock(interactable);
 					handGrab = hand.otherHand;
 				}
 

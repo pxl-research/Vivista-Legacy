@@ -274,6 +274,7 @@ MonoBehaviour:
   transparent: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
   hoverMaterial: {fileID: 2100000, guid: 7b939e5e799d98a469f594828ebab52e, type: 2}
   resetTransform: {fileID: 4059793422350288076}
+  mouseInteractionTutorial: {fileID: 2554246122247659001}
   loadingCircle: {fileID: 364416876715424389}
   loadingCircleProgress: {fileID: 1898086347734966681}
   inputSourceLeft: 1

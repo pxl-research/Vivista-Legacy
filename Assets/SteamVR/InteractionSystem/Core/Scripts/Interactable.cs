@@ -112,6 +112,7 @@ namespace Valve.VR.InteractionSystem
         {
             //NOTE(Jitse): This code normally shouldn't be called for 3D objects, because we set highlightOnHover = false.
             //NOTE(cont.): For some reason, however, the Interactable object seems to lose this flag, which makes this code run.
+            //NOTE(cont.): Also see (https://github.com/ValveSoftware/steamvr_unity_plugin/issues/367)
             if (hideHighlight != null)
 			{
                 for (int ignoreIndex = 0; ignoreIndex < hideHighlight.Length; ignoreIndex++)
@@ -241,11 +242,13 @@ namespace Valve.VR.InteractionSystem
 
             hoveringHand = hand;
 
-            if (highlightOnHover == true)
+            //NOTE(Jitse): This code has been commented to completely prevent highlights being created for 3D objects.
+            //NOTE(cont.): This normally shouldn't be necessary if Interactable.highlightOnHover = false would work correctly.
+            /*if (highlightOnHover == true)
             {
                 CreateHighlightRenderers();
                 UpdateHighlightRenderers();
-            }
+            }*/
         }
 
 
