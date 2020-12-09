@@ -23,9 +23,6 @@ public class TabularDataPanelSphere : MonoBehaviour
 
 	public void Init(string newTitle, int rows, int columns, string[] newTabularData)
 	{
-		backButton.onClick.AddListener(BackButtonClick);
-		nextButton.onClick.AddListener(NextButtonClick);
-
 		ClearTable();
 
 		title.text = newTitle;
@@ -96,7 +93,7 @@ public class TabularDataPanelSphere : MonoBehaviour
 		}
 	}
 
-	private void NextButtonClick()
+	public void NextButtonClick()
 	{
 		ClearTable();
 
@@ -107,7 +104,7 @@ public class TabularDataPanelSphere : MonoBehaviour
 		SetRowNumbers();
 	}
 
-	private void BackButtonClick()
+	public void BackButtonClick()
 	{
 		ClearTable();
 
