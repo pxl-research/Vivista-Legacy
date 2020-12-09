@@ -272,7 +272,7 @@ MonoBehaviour:
   longLoadMessage: {fileID: 8449908156602297319}
   object3d: {fileID: 0}
   transparent: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
-  hoverMaterial: {fileID: 2100000, guid: 7b939e5e799d98a469f594828ebab52e, type: 2}
+  hoverMaterial: {fileID: 2100000, guid: b30e59f6a87849d48b8651e32dfdbf12, type: 2}
   resetTransform: {fileID: 4059793422350288076}
   mouseInteractionTutorial: {fileID: 2554246122247659001}
   loadingCircle: {fileID: 364416876715424389}
@@ -616,7 +616,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -100}
-  m_SizeDelta: {x: 125, y: 125}
+  m_SizeDelta: {x: 200, y: 125}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4163721221402920042
 CanvasRenderer:
@@ -649,7 +649,7 @@ MonoBehaviour:
     m_FontSize: 40
     m_FontStyle: 1
     m_BestFit: 1
-    m_MinSize: 20
+    m_MinSize: 15
     m_MaxSize: 60
     m_Alignment: 0
     m_AlignByGeometry: 0
