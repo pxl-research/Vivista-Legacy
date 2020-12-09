@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -17,9 +18,21 @@ public class VideoPanel : MonoBehaviour
 	public RawImage videoSurface;
 	public VideoPlayer videoPlayer;
 	public AudioSource audioSource;
+	public Slider volumeSlider;
+	public Button decreaseVolumeButton;
+	public Button increaseVolumeButton;
+	public AudioMixer mixer;
+	public AudioMixerGroup mixerGroup;
+
+	private bool volumeChanging;
+	private bool increaseButtonPressed;
+	private bool decreaseButtonPressed;
+	private float volumeButtonClickTime;
 
 	public void Update()
 	{
+		CheckButtonStates();
+
 		float time = (float)videoPlayer.time;
 		float length = videoPlayer.frameCount / videoPlayer.frameRate;
 		progressBar.value = time;
@@ -29,18 +42,33 @@ public class VideoPanel : MonoBehaviour
 
 	public void Init(string newTitle, string fullPath)
 	{
-		audioSource = videoPlayer.gameObject.AddComponent<AudioSource>();
-		audioSource.playOnAwake = false;
-
+		videoPlayer.source = VideoSource.Url;
 		videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
 		videoPlayer.controlledAudioTrackCount = 1;
 		videoPlayer.EnableAudioTrack(0, true);
+
+		audioSource = videoPlayer.gameObject.GetOrAddComponent<AudioSource>();
+		audioSource.playOnAwake = false;
+		audioSource.outputAudioMixerGroup = mixerGroup;
+
 		videoPlayer.SetTargetAudioSource(0, audioSource);
 
 		videoPlayer.url = fullPath;
 		videoPlayer.playOnAwake = false;
 
 		title.text = newTitle;
+
+		//NOTE(Jitse): The volume buttons are only used in the Player.
+		//NOTE(cont.): This check prevents null reference errors.
+		if (decreaseVolumeButton != null && increaseVolumeButton != null)
+		{
+			decreaseVolumeButton.onClick.AddListener(DecreaseVolume);
+			increaseVolumeButton.onClick.AddListener(IncreaseVolume);
+		}
+
+		volumeSlider.onValueChanged.AddListener( _ => VolumeValueChanged());
+		mixer.SetFloat(Config.videoInteractionMixerChannelName, MathHelper.LinearToLogVolume(Config.VideoInteractionVolume));
+		volumeSlider.value = Config.VideoInteractionVolume;
 
 		//NOTE(Simon): Make sure we have added the events
 		controlButton.onClick.RemoveListener(TogglePlay);
@@ -74,6 +102,8 @@ public class VideoPanel : MonoBehaviour
 		controlButton.onClick.AddListener(TogglePlay);
 		bigButton.onClick.RemoveListener(TogglePlay);
 		bigButton.onClick.AddListener(TogglePlay);
+
+		volumeSlider.value = Config.VideoInteractionVolume;
 	}
 
 	public void OnSeek(float value)
@@ -97,5 +127,89 @@ public class VideoPanel : MonoBehaviour
 
 		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
 		bigButtonIcon.color = videoPlayer.isPlaying ? Color.clear : Color.white;
+	}
+
+	public void DecreaseVolume()
+	{
+		volumeSlider.value -= 0.1f;
+	}
+
+	public void IncreaseVolume()
+	{
+		volumeSlider.value += 0.1f;
+	}
+
+	public void VolumeValueChanged()
+	{
+		mixer.SetFloat(Config.videoInteractionMixerChannelName, MathHelper.LinearToLogVolume(volumeSlider.value));
+		Config.VideoInteractionVolume = volumeSlider.value;
+	}
+
+	private void CheckButtonStates()
+	{
+		if (increaseButtonPressed)
+		{
+			//NOTE(Simon): When button is down, immediately change volume
+			if (!volumeChanging)
+			{
+				IncreaseVolume();
+				volumeChanging = true;
+			}
+
+			//NOTE(Simon): Every {time interval} change volume
+			if (Time.realtimeSinceStartup > volumeButtonClickTime + 0.15)
+			{
+				volumeChanging = false;
+				volumeButtonClickTime = Time.realtimeSinceStartup;
+			}
+			if (Input.GetMouseButtonUp(0))
+			{
+				increaseButtonPressed = false;
+			}
+		}
+		else if (decreaseButtonPressed)
+		{
+			//NOTE(Simon): When button is down, immediately change volume
+			if (!volumeChanging)
+			{
+				DecreaseVolume();
+				volumeChanging = true;
+			}
+
+			//NOTE(Simon): Every {time interval} change volume
+			if (Time.realtimeSinceStartup > volumeButtonClickTime + 0.15)
+			{
+				volumeChanging = false;
+				volumeButtonClickTime = Time.realtimeSinceStartup;
+			}
+			if (Input.GetMouseButtonUp(0))
+			{
+				decreaseButtonPressed = false;
+			}
+		}
+	}
+
+	public void OnPointerDownIncreaseButton()
+	{
+		if (!increaseButtonPressed)
+		{
+			volumeButtonClickTime = Time.realtimeSinceStartup;
+		}
+		increaseButtonPressed = true;
+	}
+
+	public void OnPointerDownDecreaseButton()
+	{
+		if (!decreaseButtonPressed)
+		{
+			volumeButtonClickTime = Time.realtimeSinceStartup;
+		}
+		decreaseButtonPressed = true;
+	}
+
+	public void OnPointerUpVolumeButton()
+	{
+		decreaseButtonPressed = false;
+		increaseButtonPressed = false;
 	}
 }

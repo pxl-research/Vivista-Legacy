@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Assertions;
+using UnityEngine.Audio;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -39,7 +39,8 @@ public enum InteractionType
 	Audio,
 	FindArea,
 	MultipleChoiceArea,
-	MultipleChoiceImage
+	MultipleChoiceImage,
+	TabularData
 }
 
 public enum Perspective
@@ -177,9 +178,11 @@ public class Editor : MonoBehaviour
 	public RectTransform timelineHeader;
 	public GameObject timelineRowPrefab;
 	public Text labelPrefab;
+	public AudioMixer mixer;
 
 	private List<Text> headerLabels = new List<Text>();
 	private VideoController videoController;
+	private Slider audioSlider;
 	private FileLoader fileLoader;
 	private InteractionPointEditor pinnedHoverPoint;
 	private float timelineStartTime;
@@ -227,7 +230,6 @@ public class Editor : MonoBehaviour
 		interactionPointTemp = Instantiate(interactionPointPrefab);
 		interactionPointTemp.name = "Temp InteractionPoint";
 
-
 		interactionPoints = new List<InteractionPointEditor>();
 		sortedInteractionPoints = new List<InteractionPointEditor>();
 
@@ -245,8 +247,9 @@ public class Editor : MonoBehaviour
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
+		videoController.mixer = mixer;
 		VideoControls.videoController = videoController;
-
+		
 		//NOTE(Simon): Login if details were remembered
 		{
 			var details = LoginPanel.GetSavedLogin();
@@ -432,6 +435,10 @@ public class Editor : MonoBehaviour
 							interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init("", null);
 							break;
 						}
+						case InteractionType.TabularData:
+							interactionEditor = Instantiate(UIPanels.Instance.tabularDataPanelEditor, Canvass.main.transform).gameObject;
+							interactionEditor.GetComponent<TabularDataPanelEditor>().Init("", 1, 1, new List<string>());
+							break;
 						default:
 						{
 							Debug.LogError("FFS, you shoulda added it here");
@@ -672,6 +679,26 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.body = editor.answerCorrect.ToString();
 						lastPlacedPoint.filename = String.Join("\f", newFilenames);
 						lastPlacedPoint.panel = panel.gameObject;
+
+						finished = true;
+					}
+					break;
+				}
+				case InteractionType.TabularData:
+				{
+					var editor = interactionEditor.GetComponent<TabularDataPanelEditor>();
+
+					if (editor.answered)
+					{
+						var panel = Instantiate(UIPanels.Instance.tabularDataPanel, Canvass.main.transform);
+						lastPlacedPoint.title = editor.answerTitle;
+						//NOTE(Jitse): \f is used as a split character to divide the string into an array
+						lastPlacedPoint.body = $"{editor.answerRows}\f{editor.answerColumns}\f";
+						lastPlacedPoint.body += string.Join("\f", editor.answerTabularData);
+						lastPlacedPoint.panel = panel.gameObject;
+
+						//NOTE(Jitse): Init after building the correct body string because the function expect the correct answer index to be passed with the string
+						panel.Init(editor.answerTitle, editor.answerRows, editor.answerColumns, editor.answerTabularData);
 
 						finished = true;
 					}
@@ -947,6 +974,23 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
+				case InteractionType.TabularData:
+				{
+					var editor = interactionEditor.GetComponent<TabularDataPanelEditor>();
+					if (editor.answered)
+					{
+						var panel = pointToEdit.panel.GetComponent<TabularDataPanel>();
+						pointToEdit.title = editor.answerTitle;
+						//NOTE(Jitse): \f is used as a split character to divide the string into an array
+						pointToEdit.body = $"{editor.answerRows}\f{editor.answerColumns}\f";
+						pointToEdit.body += string.Join("\f", editor.answerTabularData);
+						pointToEdit.panel = panel.gameObject;
+
+						panel.Init(editor.answerTitle, editor.answerRows, editor.answerColumns, editor.answerTabularData);
+						finished = true;
+					}
+					break;
+				}
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -1040,6 +1084,9 @@ public class Editor : MonoBehaviour
 					SetEditorActive(true);
 					Destroy(projectPanel.gameObject);
 					Canvass.modalBackground.SetActive(false);
+
+					pinnedHoverPoint = null;
+
 					InitExtrasList();
 					//NOTE(Simon): When opening a project, any previous to-be-deleted-or-copied files are not relevant anymore. So clear them
 					CleanExtras();
@@ -1538,6 +1585,12 @@ public class Editor : MonoBehaviour
 					SetExtrasToDeleted(file);
 				}
 
+				//NOTE(Jitse): If the point was pinned, pinnedHoverPoint must also be updated to null.
+				if (pinnedHoverPoint == point)
+				{
+					pinnedHoverPoint = null;
+				}
+
 				//NOTE(Simon): Actually remove the point, and all associated data
 				RemoveItemFromTimeline(point);
 				Destroy(point.point);
@@ -1621,6 +1674,16 @@ public class Editor : MonoBehaviour
 						}
 						var correct = Int32.Parse(point.body);
 						interactionEditor.GetComponent<MultipleChoiceImagePanelEditor>().Init(point.title, fullPaths, correct);
+						break;
+					}
+					case InteractionType.TabularData:
+					{
+						interactionEditor = Instantiate(UIPanels.Instance.tabularDataPanelEditor, Canvass.main.transform).gameObject;
+						string[] body = point.body.Split(new[] { '\f' }, 3);
+						int rows = Int32.Parse(body[0]);
+						int columns = Int32.Parse(body[1]);
+
+						interactionEditor.GetComponent<TabularDataPanelEditor>().Init(point.title, rows, columns, new List<string>(body[2].Split('\f')));
 						break;
 					}
 					default:
@@ -2173,6 +2236,7 @@ public class Editor : MonoBehaviour
 				case InteractionType.MultipleChoice:
 				{
 					var panel = Instantiate(UIPanels.Instance.multipleChoicePanel, Canvass.main.transform);
+					//TODO(Simon): SPlit here, not in panel
 					panel.Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
 					newInteractionPoint.panel = panel.gameObject;
 					break;
@@ -2224,6 +2288,17 @@ public class Editor : MonoBehaviour
 
 					var correct = Int32.Parse(point.body);
 					panel.Init(newInteractionPoint.title, urls, correct);
+					newInteractionPoint.panel = panel.gameObject;
+					break;
+				}
+				case InteractionType.TabularData:
+				{
+					var panel = Instantiate(UIPanels.Instance.tabularDataPanel, Canvass.main.transform);
+					string[] body = newInteractionPoint.body.Split(new[] { '\f' }, 3);
+					int rows = Int32.Parse(body[0]);
+					int columns = Int32.Parse(body[1]);
+
+					panel.Init(newInteractionPoint.title, rows, columns, new List<string>(body[2].Split('\f')));
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}

@@ -30,6 +30,8 @@ public class UIPanels : MonoBehaviour
 	public MultipleChoiceAreaPanelEditor multipleChoiceAreaPanelEditor;
 	public MultipleChoiceImagePanel multipleChoiceImagePanel;
 	public MultipleChoiceImagePanelEditor multipleChoiceImagePanelEditor;
+	public TabularDataPanel tabularDataPanel;
+	public TabularDataPanelEditor tabularDataPanelEditor;
 
 	private void Awake()
 	{

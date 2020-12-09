@@ -57,4 +57,10 @@ public class InteractionTypePicker : MonoBehaviour
 		answered = true;
 		answer = InteractionType.MultipleChoiceImage;
 	}
+
+	public void AnswerTabularData()
+	{
+		answered = true;
+		answer = InteractionType.TabularData;
+	}
 }
