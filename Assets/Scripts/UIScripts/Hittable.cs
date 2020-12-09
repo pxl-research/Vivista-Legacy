@@ -28,12 +28,12 @@ public class Hittable : MonoBehaviour
 
 	void Update()
 	{
-		if (!oldHitting && hitting)
+		if (oldHitting && hitting)
 		{
 			onHit.Invoke();
 		}
 
-		if (oldHitting && hitting)
+		if (!oldHitting && hitting)
 		{
 			onHitDown.Invoke();
 		}

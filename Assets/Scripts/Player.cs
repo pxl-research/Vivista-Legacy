@@ -174,7 +174,7 @@ public class Player : MonoBehaviour
 			}
 			else
 			{
-				Canvass.seekbar.gameObject.SetActive(false);
+				Canvass.seekbar.gameObject.SetActive(true);
 			}
 		}
 
