@@ -176,7 +176,6 @@ namespace AsImpL
                     yield return null;
                 }
 
-
                 GameObject newObj = Instantiate(loadedModels[absolutePath]);
                 yield return newObj;
                 OnCreated(newObj, absolutePath);
@@ -271,13 +270,25 @@ namespace AsImpL
 #if UNITY_EDITOR
                         if (ImportingAssets)
                         {
+                            System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
+                            stopwatch2.Start();
+
                             mtl.diffuseTex = LoadAssetTexture(mtl.diffuseTexPath);
+
+                            stopwatch2.Stop();
+                            Debug.Log($"Code on line 276 took {stopwatch2.ElapsedMilliseconds} millis");
                         }
                         else
 #endif
                         {
+                            System.Diagnostics.Stopwatch stopwatch3 = new System.Diagnostics.Stopwatch();
+                            stopwatch3.Start();
+
                             yield return LoadMaterialTexture(basePath, mtl.diffuseTexPath);
                             mtl.diffuseTex = loadedTexture;
+
+                            stopwatch3.Stop();
+                            Debug.Log($"Code on line 287 took {stopwatch3.ElapsedMilliseconds} millis");
                         }
                     }
 
@@ -286,13 +297,25 @@ namespace AsImpL
 #if UNITY_EDITOR
                         if (ImportingAssets)
                         {
+                            System.Diagnostics.Stopwatch stopwatch4 = new System.Diagnostics.Stopwatch();
+                            stopwatch4.Start();
+
                             mtl.bumpTex = LoadAssetTexture(mtl.bumpTexPath);
+
+                            stopwatch4.Stop();
+                            Debug.Log($"Code on line 303 took {stopwatch4.ElapsedMilliseconds} millis");
                         }
                         else
 #endif
                         {
+                            System.Diagnostics.Stopwatch stopwatch5 = new System.Diagnostics.Stopwatch();
+                            stopwatch5.Start();
+
                             yield return LoadMaterialTexture(basePath, mtl.bumpTexPath);
                             mtl.bumpTex = loadedTexture;
+
+                            stopwatch5.Stop();
+                            Debug.Log($"Code on line 314 took {stopwatch5.ElapsedMilliseconds} millis");
                         }
                     }
 
@@ -301,13 +324,25 @@ namespace AsImpL
 #if UNITY_EDITOR
                         if (ImportingAssets)
                         {
+                            System.Diagnostics.Stopwatch stopwatch6 = new System.Diagnostics.Stopwatch();
+                            stopwatch6.Start();
+
                             mtl.specularTex = LoadAssetTexture(mtl.specularTexPath);
+
+                            stopwatch6.Stop();
+                            Debug.Log($"Code on line 330 took {stopwatch6.ElapsedMilliseconds} millis");
                         }
                         else
 #endif
                         {
+                            System.Diagnostics.Stopwatch stopwatch7 = new System.Diagnostics.Stopwatch();
+                            stopwatch7.Start();
+
                             yield return LoadMaterialTexture(basePath, mtl.specularTexPath);
                             mtl.specularTex = loadedTexture;
+
+                            stopwatch7.Stop();
+                            Debug.Log($"Code on line 341 took {stopwatch7.ElapsedMilliseconds} millis");
                         }
                     }
 
@@ -316,13 +351,25 @@ namespace AsImpL
 #if UNITY_EDITOR
                         if (ImportingAssets)
                         {
+                            System.Diagnostics.Stopwatch stopwatch8 = new System.Diagnostics.Stopwatch();
+                            stopwatch8.Start();
+
                             mtl.opacityTex = LoadAssetTexture(mtl.opacityTexPath);
+
+                            stopwatch8.Stop();
+                            Debug.Log($"Code on line 357 took {stopwatch8.ElapsedMilliseconds} millis");
                         }
                         else
 #endif
                         {
+                            System.Diagnostics.Stopwatch stopwatch9 = new System.Diagnostics.Stopwatch();
+                            stopwatch9.Start();
+
                             yield return LoadMaterialTexture(basePath, mtl.opacityTexPath);
                             mtl.opacityTex = loadedTexture;
+
+                            stopwatch9.Stop();
+                            Debug.Log($"Code on line 368 took {stopwatch9.ElapsedMilliseconds} millis");
                         }
                     }
                 }
@@ -340,15 +387,30 @@ namespace AsImpL
             objectBuilder.buildOptions = buildOptions;
             bool hasColors = dataSet.colorList.Count > 0;
             bool hasMaterials = materialData != null;
+
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
             objectBuilder.InitBuildMaterials(materialData, hasColors);
+
+            stopwatch.Stop();
+            Debug.Log($"Code on line 394 took {stopwatch.ElapsedMilliseconds} millis");
+
             float objInitPerc = objLoadingProgress.percentage;
             if (hasMaterials)
             {
+                System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
+                stopwatch2.Start();
+
                 while (objectBuilder.BuildMaterials(info))
                 {
                     objLoadingProgress.percentage = objInitPerc + MATERIAL_PHASE_PERC * objectBuilder.NumImportedMaterials / materialData.Count;
                     yield return null;
                 }
+
+                stopwatch2.Stop();
+                Debug.Log($"Code on line 405 took {stopwatch2.ElapsedMilliseconds} millis");
+
                 loadStats.buildStats.materialsTime = Time.realtimeSinceStartup - prevTime;
                 prevTime = Time.realtimeSinceStartup;
             }

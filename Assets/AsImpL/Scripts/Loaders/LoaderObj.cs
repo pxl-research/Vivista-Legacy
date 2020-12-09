@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Globalization;
+using System.Threading;
 
 namespace AsImpL
 {
@@ -39,7 +40,10 @@ namespace AsImpL
     {
         private string mtlLib;
         private string loadedText;
-
+        private MaterialData current;
+        private char[] separators;
+        private string[] lines;
+        private List<MaterialData> mtlData;
 
         /// <summary>
         /// Parse dependencies of the given OBJ file.
@@ -411,122 +415,131 @@ namespace AsImpL
         /// <param name="lines">lines read from the material library file</param>
         /// <param name="mtlData">list of material data</param>
         private void ParseMaterialData(string[] lines, List<MaterialData> mtlData)
-        {
-            MaterialData current = new MaterialData();
+		{
+			current = new MaterialData();
+			separators = new char[] { ' ', '\t' };
 
-            char[] separators = new char[] { ' ', '\t' };
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i].Trim();
+            this.lines = lines;
+            this.mtlData = mtlData;
+            Thread parseMaterialDataThread = new Thread(ParseMaterialDataThread);
+            parseMaterialDataThread.Start();
+            parseMaterialDataThread.Join();
+		}
 
-                // remove comments
-                if (line.IndexOf("#") != -1) line = line.Substring(0, line.IndexOf("#"));
-                string[] p = line.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-                if (p.Length == 0 || String.IsNullOrEmpty(p[0])) continue;
-                string parameters = null;
-                if (line.Length > p[0].Length)
-                {
-                    parameters = line.Substring(p[0].Length + 1).Trim();
-                }
-                try
-                {
-                    switch (p[0])
-                    {
-                        case "newmtl":
-                            current = new MaterialData();
-                            current.materialName = DataSet.FixMaterialName(parameters);
-                            mtlData.Add(current);
-                            break;
-                        case "Ka": // Ambient component (not supported)
-                            current.ambientColor = StringsToColor(p);
-                            break;
-                        case "Kd": // Diffuse component
-                            current.diffuseColor = StringsToColor(p);
-                            break;
-                        case "Ks": // Specular component
-                            current.specularColor = StringsToColor(p);
-                            break;
-                        case "Ke": // Specular component
-                            current.emissiveColor = StringsToColor(p);
-                            break;
-                        case "Ns": // Specular exponent --> shininess
-                            current.shininess = FastFloatParse(p[1]);
-                            break;
-                        case "d": // dissolve into the background (1=opaque, 0=transparent)
-                            current.overallAlpha = p.Length > 1 && p[1] != "" ? FastFloatParse(p[1]) : 1.0f;
-                            break;
-                        case "Tr": // Transparency
-                            current.overallAlpha = p.Length > 1 && p[1] != "" ? 1.0f - FastFloatParse(p[1]) : 1.0f;
-                            break;
-                        case "map_KD":
-                        case "map_Kd": // Color texture, diffuse reflectivity
-                            if (!String.IsNullOrEmpty(parameters))
-                            {
-                                current.diffuseTexPath = parameters;
-                            }
-                            break;
-                        // TODO: different processing needed, options not supported
-                        case "map_Ks": // specular reflectivity of the material
-                        case "map_kS":
-                        case "map_Ns": // Scalar texture for specular exponent
-                            if (!String.IsNullOrEmpty(parameters))
-                            {
-                                current.specularTexPath = parameters;
-                            }
-                            break;
-                        case "map_bump": // Bump map texture
-                            if (!String.IsNullOrEmpty(parameters))
-                            {
-                                current.bumpTexPath = parameters;
-                            }
-                            break;
-                        case "bump":
-                            ParseBumpParameters(p, current);
-                            break;
-                        case "map_opacity":
-                        case "map_d": // Scalar texture modulating the dissolve into the background
-                            if (!String.IsNullOrEmpty(parameters))
-                            {
-                                current.opacityTexPath = parameters;
-                            }
-                            break;
-                        case "illum": // Illumination model. 1 - diffuse, 2 - specular (not used)
-                            current.illumType = FastIntParse(p[1]);
-                            break;
-                        case "refl": // reflection map (replaced with Unity environment reflection)
-                            if (!String.IsNullOrEmpty(parameters))
-                            {
-                                current.hasReflectionTex = true;
-                            }
-                            break;
-                        case "map_Ka": // ambient reflectivity color texture
-                        case "map_kA":
-                            if (!String.IsNullOrEmpty(parameters))
-                            {
-                                Debug.Log("Map not supported:" + line);
-                            }
-                            break;
-                        default:
-                            Debug.Log("this line was not processed :" + line);
-                            break;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogErrorFormat("Error at line {0} in mtl file: {1}", i + 1, e);
-                }
-            }
-        }
+		private void ParseMaterialDataThread()
+		{
+			for (int i = 0; i < lines.Length; i++)
+			{
+				string line = lines[i].Trim();
+
+				// remove comments
+				if (line.IndexOf("#") != -1) line = line.Substring(0, line.IndexOf("#"));
+				string[] p = line.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+				if (p.Length == 0 || String.IsNullOrEmpty(p[0])) continue;
+				string parameters = null;
+				if (line.Length > p[0].Length)
+				{
+					parameters = line.Substring(p[0].Length + 1).Trim();
+				}
+				try
+				{
+					switch (p[0])
+					{
+						case "newmtl":
+							current = new MaterialData();
+							current.materialName = DataSet.FixMaterialName(parameters);
+							mtlData.Add(current);
+							break;
+						case "Ka": // Ambient component (not supported)
+							current.ambientColor = StringsToColor(p);
+							break;
+						case "Kd": // Diffuse component
+							current.diffuseColor = StringsToColor(p);
+							break;
+						case "Ks": // Specular component
+							current.specularColor = StringsToColor(p);
+							break;
+						case "Ke": // Specular component
+							current.emissiveColor = StringsToColor(p);
+							break;
+						case "Ns": // Specular exponent --> shininess
+							current.shininess = FastFloatParse(p[1]);
+							break;
+						case "d": // dissolve into the background (1=opaque, 0=transparent)
+							current.overallAlpha = p.Length > 1 && p[1] != "" ? FastFloatParse(p[1]) : 1.0f;
+							break;
+						case "Tr": // Transparency
+							current.overallAlpha = p.Length > 1 && p[1] != "" ? 1.0f - FastFloatParse(p[1]) : 1.0f;
+							break;
+						case "map_KD":
+						case "map_Kd": // Color texture, diffuse reflectivity
+							if (!String.IsNullOrEmpty(parameters))
+							{
+								current.diffuseTexPath = parameters;
+							}
+							break;
+						// TODO: different processing needed, options not supported
+						case "map_Ks": // specular reflectivity of the material
+						case "map_kS":
+						case "map_Ns": // Scalar texture for specular exponent
+							if (!String.IsNullOrEmpty(parameters))
+							{
+								current.specularTexPath = parameters;
+							}
+							break;
+						case "map_bump": // Bump map texture
+							if (!String.IsNullOrEmpty(parameters))
+							{
+								current.bumpTexPath = parameters;
+							}
+							break;
+						case "bump":
+							ParseBumpParameters(p, current);
+							break;
+						case "map_opacity":
+						case "map_d": // Scalar texture modulating the dissolve into the background
+							if (!String.IsNullOrEmpty(parameters))
+							{
+								current.opacityTexPath = parameters;
+							}
+							break;
+						case "illum": // Illumination model. 1 - diffuse, 2 - specular (not used)
+							current.illumType = FastIntParse(p[1]);
+							break;
+						case "refl": // reflection map (replaced with Unity environment reflection)
+							if (!String.IsNullOrEmpty(parameters))
+							{
+								current.hasReflectionTex = true;
+							}
+							break;
+						case "map_Ka": // ambient reflectivity color texture
+						case "map_kA":
+							if (!String.IsNullOrEmpty(parameters))
+							{
+								Debug.Log("Map not supported:" + line);
+							}
+							break;
+						default:
+							Debug.Log("this line was not processed :" + line);
+							break;
+					}
+				}
+				catch (Exception e)
+				{
+					Debug.LogErrorFormat("Error at line {0} in mtl file: {1}", i + 1, e);
+				}
+			}
+		}
 
 
-        /// <summary>
-        /// Parse bump parameters.
-        /// </summary>
-        /// <param name="param">list of paramers</param>
-        /// <param name="mtlData">material data to be updated</param>
-        /// <remarks>Only the bump map texture path is used here.</remarks>
-        /// <seealso cref="https://github.com/hammmm/unity-obj-loader"/>
-        private void ParseBumpParameters(string[] param, MaterialData mtlData)
+		/// <summary>
+		/// Parse bump parameters.
+		/// </summary>
+		/// <param name="param">list of paramers</param>
+		/// <param name="mtlData">material data to be updated</param>
+		/// <remarks>Only the bump map texture path is used here.</remarks>
+		/// <seealso cref="https://github.com/hammmm/unity-obj-loader"/>
+		private void ParseBumpParameters(string[] param, MaterialData mtlData)
         {
             Regex regexNumber = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
 

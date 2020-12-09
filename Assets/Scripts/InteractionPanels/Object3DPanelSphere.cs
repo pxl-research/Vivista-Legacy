@@ -237,6 +237,7 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void OnEnable()
 	{
+		//NOTE(Jitse): When first opening the panel, import the object
 		if (objectHolder == null)
 		{
 			objectName = Path.GetFileName(Path.GetDirectoryName(filePath));
@@ -343,11 +344,17 @@ public class Object3DPanelSphere : MonoBehaviour
 
 			if ((isMouseHovering || isControllerHovering) && !(isMoving || isRotating || isScaling))
 			{
-				rend.material = hoverMaterial;
+				if (rend.sharedMaterial != hoverMaterial)
+				{
+					rend.sharedMaterial = hoverMaterial;
+				}
 			}
 			else
 			{
-				rend.material = transparent;
+				if (rend.sharedMaterial != transparent)
+				{
+					rend.sharedMaterial = transparent;
+				}
 			}
 		}
 
@@ -460,26 +467,13 @@ public class Object3DPanelSphere : MonoBehaviour
 
 	private void HideOrShowLaser()
 	{
-		if (handLeft.hoveringInteractable || bothTriggersDown)
-		{
-			controllerLeft.laser.SetActive(false);
-			controllerLeft.cursor.SetActive(false);
-		}
-		else
-		{
-			controllerLeft.laser.SetActive(true);
-			controllerLeft.cursor.SetActive(true);
-		}
-		if (handRight.hoveringInteractable || bothTriggersDown)
-		{
-			controllerRight.laser.SetActive(false);
-			controllerRight.cursor.SetActive(false);
-		}
-		else
-		{
-			controllerRight.laser.SetActive(true);
-			controllerRight.cursor.SetActive(true);
-		}
+		bool leftLaser = !(handLeft.hoveringInteractable || bothTriggersDown);
+		controllerLeft.laser.SetActive(leftLaser);
+		controllerLeft.cursor.SetActive(leftLaser);
+
+		bool rightLaser = !(handRight.hoveringInteractable || bothTriggersDown);
+		controllerRight.laser.SetActive(rightLaser);
+		controllerRight.cursor.SetActive(rightLaser);
 	}
 
 	private void GetMouseButtonStates()
@@ -635,5 +629,10 @@ public class Object3DPanelSphere : MonoBehaviour
 			objectHolder.transform.localPosition = new Vector3(0, 0, objectDistance);
 		}
 		objectHolder.transform.RotateAround(Camera.main.transform.position, Vector3.up, uiSphere.offset + centerOffset);
+	}
+
+	private void OnDestroy()
+	{
+		Destroy(objectHolder);
 	}
 }

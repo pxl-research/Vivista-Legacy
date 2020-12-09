@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -727,42 +728,17 @@ namespace AsImpL
                 //Debug.LogFormat("Diffuse set for {0}",m.name);
             }
             else if (md.opacityTex != null)
-            {
-                // opacity without diffuse
-                //mode = ModelUtil.MtlBlendMode.TRANSPARENT;
-                mode = ModelUtil.MtlBlendMode.FADE;
-                int w = md.opacityTex.width;
-                int h = md.opacityTex.width;
-                Texture2D albedoTexture = new Texture2D(w, h, TextureFormat.ARGB32, false);
-                Color col = new Color();
-                bool detected = false;
-                for (int x = 0; x < albedoTexture.width; x++)
-                {
-                    for (int y = 0; y < albedoTexture.height; y++)
+			{
+                var opacityTexThread = new Thread(() =>
                     {
-                        col = md.diffuseColor;
-                        col.a = md.overallAlpha * md.opacityTex.GetPixel(x, y).grayscale;
-                        ModelUtil.DetectMtlBlendFadeOrCutout(col.a, ref mode, ref detected);
-                        //if (md.alpha == 1.0f && col.a == 0.0f) mode = ModelUtil.MtlBlendMode.CUTOUT;
-                        albedoTexture.SetPixel(x, y, col);
+                        mode = OpacityTex(md, newMaterial);
                     }
-                }
-                albedoTexture.name = md.diffuseTexPath;
-                albedoTexture.Apply();
-#if UNITY_EDITOR
-                if (!String.IsNullOrEmpty(alternativeTexPath))
-                {
-                    string texAssetPath = AssetDatabase.GetAssetPath(md.opacityTex);
-                    if (!String.IsNullOrEmpty(texAssetPath))
-                    {
-                        EditorUtil.SaveAndReimportPngTexture(ref albedoTexture, texAssetPath, "_op");
-                    }
-                }
-#endif
-                newMaterial.SetTexture("_MainTex", albedoTexture);
+                );
+                opacityTexThread.Start();
+                opacityTexThread.Join();
             }
 
-            md.diffuseColor.a = md.overallAlpha;
+			md.diffuseColor.a = md.overallAlpha;
             newMaterial.SetColor("_Color", md.diffuseColor);
 
             md.emissiveColor.a = md.overallAlpha;
@@ -820,59 +796,14 @@ namespace AsImpL
             //TODO(cont.): This if check has been commented, because it moderately slowed object loading in some cases.
             //TODO(cont.): Can we improve this?
             if (md.specularTex != null)
-            {
-                var glossTexture = new Texture2D(md.specularTex.width, md.specularTex.height, TextureFormat.ARGB32, false);
-                var col = new Color();
-                float pix = 0.0f;
-
-                int w = md.specularTex.width;
-                var data = md.specularTex.GetPixels();
-
-                for (int y = 0; y < md.specularTex.height; y++)
-                {
-                    for (int x = 0; x < md.specularTex.width; x++)
-                    {
-                        int pos = y * w + x;
-
-                        pix = data[pos].grayscale;
-
-                        col.r = metallic * pix;// md.specular.grayscale*pix;
-                        col.g = col.r;
-                        col.b = col.r;
-
-                        // if reflecting set maximum smoothness value, else use a precomputed value
-                        col.a = md.hasReflectionTex ? pix : pix * smoothness;
-
-                        data[pos] = col;
-                    }
-                }
-                glossTexture.SetPixels(data);
-                glossTexture.Apply();
-#if UNITY_EDITOR
-                if (!string.IsNullOrEmpty(alternativeTexPath))
-                {
-                    string texAssetPath = AssetDatabase.GetAssetPath(md.specularTex);
-                    if (!string.IsNullOrEmpty(texAssetPath))
-                    {
-                        EditorUtil.SaveAndReimportPngTexture(ref glossTexture, texAssetPath, "_spec");
-                    }
-                }
-#endif
-
-                if (specularMode)
-                {
-                    newMaterial.EnableKeyword("_SPECGLOSSMAP");
-                    newMaterial.SetTexture("_SpecGlossMap", glossTexture);
-                }
-                else
-                {
-                    newMaterial.EnableKeyword("_METALLICGLOSSMAP");
-                    newMaterial.SetTexture("_MetallicGlossMap", glossTexture);
-                }
+			{
+                var specularTexThread = new Thread(_ => SpecularTex(md, specularMode, newMaterial, metallic, smoothness));
+                specularTexThread.Start();
+                specularTexThread.Join();
             }
 
-            // replace the texture with Unity environment reflection
-            if (md.hasReflectionTex)
+			// replace the texture with Unity environment reflection
+			if (md.hasReflectionTex)
             {
                 if (md.overallAlpha < 1.0f)
                 {
@@ -905,17 +836,106 @@ namespace AsImpL
             return newMaterial;
         }
 
+		private ModelUtil.MtlBlendMode OpacityTex(MaterialData md, Material newMaterial)
+		{
+			// opacity without diffuse
+			//mode = ModelUtil.MtlBlendMode.TRANSPARENT;
+			ModelUtil.MtlBlendMode mode = ModelUtil.MtlBlendMode.FADE;
+			int w = md.opacityTex.width;
+			int h = md.opacityTex.width;
+			Texture2D albedoTexture = new Texture2D(w, h, TextureFormat.ARGB32, false);
+			Color col = new Color();
+			bool detected = false;
+			for (int x = 0; x < albedoTexture.width; x++)
+			{
+				for (int y = 0; y < albedoTexture.height; y++)
+				{
+					col = md.diffuseColor;
+					col.a = md.overallAlpha * md.opacityTex.GetPixel(x, y).grayscale;
+					ModelUtil.DetectMtlBlendFadeOrCutout(col.a, ref mode, ref detected);
+					//if (md.alpha == 1.0f && col.a == 0.0f) mode = ModelUtil.MtlBlendMode.CUTOUT;
+					albedoTexture.SetPixel(x, y, col);
+				}
+			}
+			albedoTexture.name = md.diffuseTexPath;
+			albedoTexture.Apply();
+#if UNITY_EDITOR
+			if (!String.IsNullOrEmpty(alternativeTexPath))
+			{
+				string texAssetPath = AssetDatabase.GetAssetPath(md.opacityTex);
+				if (!String.IsNullOrEmpty(texAssetPath))
+				{
+					EditorUtil.SaveAndReimportPngTexture(ref albedoTexture, texAssetPath, "_op");
+				}
+			}
+#endif
+			newMaterial.SetTexture("_MainTex", albedoTexture);
+			return mode;
+		}
+
+		private void SpecularTex(MaterialData md, bool specularMode, Material newMaterial, float metallic, float smoothness)
+		{
+			var glossTexture = new Texture2D(md.specularTex.width, md.specularTex.height, TextureFormat.ARGB32, false);
+			var col = new Color();
+			float pix = 0.0f;
+
+			int w = md.specularTex.width;
+			var data = md.specularTex.GetPixels();
+
+			for (int y = 0; y < md.specularTex.height; y++)
+			{
+				for (int x = 0; x < md.specularTex.width; x++)
+				{
+					int pos = y * w + x;
+
+					pix = data[pos].grayscale;
+
+					col.r = metallic * pix;// md.specular.grayscale*pix;
+					col.g = col.r;
+					col.b = col.r;
+
+					// if reflecting set maximum smoothness value, else use a precomputed value
+					col.a = md.hasReflectionTex ? pix : pix * smoothness;
+
+					data[pos] = col;
+				}
+			}
+			glossTexture.SetPixels(data);
+			glossTexture.Apply();
+#if UNITY_EDITOR
+			if (!string.IsNullOrEmpty(alternativeTexPath))
+			{
+				string texAssetPath = AssetDatabase.GetAssetPath(md.specularTex);
+				if (!string.IsNullOrEmpty(texAssetPath))
+				{
+					EditorUtil.SaveAndReimportPngTexture(ref glossTexture, texAssetPath, "_spec");
+				}
+			}
+#endif
+
+			if (specularMode)
+			{
+				newMaterial.EnableKeyword("_SPECGLOSSMAP");
+				newMaterial.SetTexture("_SpecGlossMap", glossTexture);
+			}
+			else
+			{
+				newMaterial.EnableKeyword("_METALLICGLOSSMAP");
+				newMaterial.SetTexture("_MetallicGlossMap", glossTexture);
+			}
+		}
+
 
 #if UNITY_2017_3_OR_NEWER
-        /// <summary>
-        /// Check if the GPU support for 32 bit indices is enabled and available.
-        /// </summary>
-        /// <remarks>
-        /// GPU support for 32 bit indices is not guaranteed on all platforms;
-        /// for example Android devices with Mali-400 GPU do not support them.
-        /// </remarks>
-        /// <returns>True if the GPU support for 32 bit indices is enabled and available.</returns>
-        private bool Using32bitIndices()
+		/// <summary>
+		/// Check if the GPU support for 32 bit indices is enabled and available.
+		/// </summary>
+		/// <remarks>
+		/// GPU support for 32 bit indices is not guaranteed on all platforms;
+		/// for example Android devices with Mali-400 GPU do not support them.
+		/// </remarks>
+		/// <returns>True if the GPU support for 32 bit indices is enabled and available.</returns>
+		private bool Using32bitIndices()
         {
             if (buildOptions != null && !buildOptions.use32bitIndices)
             {

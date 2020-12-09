@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Threading;
+using UnityEngine;
 
 namespace AsImpL
 {
@@ -152,81 +153,91 @@ namespace AsImpL
         /// <param name="amount">optionally adjust the bump effect with the normal map</param>
         /// <returns>The new normal map</returns>
         public static Texture2D HeightToNormalMap(Texture2D bumpMap, float amount = 1f)
-        {
-            int h = bumpMap.height;
-            int w = bumpMap.width;
+		{
+			int h = bumpMap.height;
+			int w = bumpMap.width;
+
+            Texture2D normalMap = new Texture2D(w, h, TextureFormat.ARGB32, true);
+            var heightToNormalThread = new Thread(() =>
+            {
+                normalMap = HeightToNormal(amount, h, w, bumpMap, normalMap);
+            });
+            heightToNormalThread.Start();
+            heightToNormalThread.Join();
+
+			return normalMap;
+		}
+
+		private static Texture2D HeightToNormal(float amount, int h, int w, Texture2D bumpMap, Texture2D normalMap)
+		{
             float changeNeg, changePos;
             float /*h0,*/ h1, h2, h3/*, h4*/;
-            Texture2D normalMap = new Texture2D(w, h, TextureFormat.ARGB32, true);
-
             Color col = Color.black;
-
             var data = bumpMap.GetPixels();
             var data2 = new Color[data.Length];
 
-            for (int y = 0; y < bumpMap.height; y++)
-            {
-                for (int x = 0; x < bumpMap.width; x++)
-                {
-                    Vector3 n = Vector3.zero;
-                    // CHANGE IN X
-                    h1 = data[y * w + (x + w - 1) % w].grayscale;
-                    h2 = data[y * w + x].grayscale;
-                    h3 = data[y * w + (x + w + 1) % w].grayscale;
+            for (int y = 0; y < h; y++)
+			{
+				for (int x = 0; x < w; x++)
+				{
+					Vector3 n = Vector3.zero;
+					// CHANGE IN X
+					h1 = data[y * w + (x + w - 1) % w].grayscale;
+					h2 = data[y * w + x].grayscale;
+					h3 = data[y * w + (x + w + 1) % w].grayscale;
 
-                    changeNeg = h2 - h1;
-                    changePos = h3 - h2;
+					changeNeg = h2 - h1;
+					changePos = h3 - h2;
 
-                    n.x = -(changePos + changeNeg) / 255.0f;
+					n.x = -(changePos + changeNeg) / 255.0f;
 
-                    // CHANGE IN Y
+					// CHANGE IN Y
 
-                    h1 = data[(y + h - 1) % h * w + y].grayscale;
-                    h2 = data[y * w + y].grayscale;
-                    h3 = data[(y + h + 1) % h * w + y].grayscale;
+					h1 = data[(y + h - 1) % h * w + y].grayscale;
+					h2 = data[y * w + y].grayscale;
+					h3 = data[(y + h + 1) % h * w + y].grayscale;
 
-                    changeNeg = h2 - h1;
-                    changePos = h3 - h2;
+					changeNeg = h2 - h1;
+					changePos = h3 - h2;
 
-                    n.y = -(changePos + changeNeg);
+					n.y = -(changePos + changeNeg);
 
-                    // SCALE OF BUMPINESS
+					// SCALE OF BUMPINESS
 
-                    if (amount != 1.0f) n *= amount;
+					if (amount != 1.0f) n *= amount;
 
-                    /// Get depth component
-                    n.z = Mathf.Sqrt(1.0f - (n.x * n.x + n.y * n.y));
+					/// Get depth component
+					n.z = Mathf.Sqrt(1.0f - (n.x * n.x + n.y * n.y));
 
-                    // Scale in (0..0.5);
-                    n *= 0.5f;
+					// Scale in (0..0.5);
+					n *= 0.5f;
 
-                    // set the pixel
+					// set the pixel
 
-                    col.r = Mathf.Clamp01(n.x + 0.5f);
-                    col.g = Mathf.Clamp01(n.y + 0.5f);
-                    col.b = Mathf.Clamp01(n.z + 0.5f);
+					col.r = Mathf.Clamp01(n.x + 0.5f);
+					col.g = Mathf.Clamp01(n.y + 0.5f);
+					col.b = Mathf.Clamp01(n.z + 0.5f);
 
-                    col.a = col.r;
-                    data2[y * w + x] = col;
+					col.a = col.r;
+					data2[y * w + x] = col;
 
-                    //normalMap.SetPixel(x, y, col);
-                }
-            }
+					//normalMap.SetPixel(x, y, col);
+				}
+			}
 
             normalMap.SetPixels(data2);
             normalMap.Apply();
-
             return normalMap;
-        }
+		}
 
 
-        /// <summary>
-        /// Wrap the given value pos inside the range (0..boundary).
-        /// </summary>
-        /// <param name="pos">input value</param>
-        /// <param name="boundary">range boundary</param>
-        /// <returns>the wrapped value</returns>
-        private static int WrapInt(int pos, int boundary)
+		/// <summary>
+		/// Wrap the given value pos inside the range (0..boundary).
+		/// </summary>
+		/// <param name="pos">input value</param>
+		/// <param name="boundary">range boundary</param>
+		/// <returns>the wrapped value</returns>
+		private static int WrapInt(int pos, int boundary)
         {
             if (pos < 0)
                 pos = boundary + pos;
