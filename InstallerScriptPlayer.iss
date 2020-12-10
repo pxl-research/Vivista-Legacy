@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Vivista Player"
-#define MyAppVersion "0.9.14"
+#define MyAppVersion "0.9.15"
 #define MyAppPublisher "Hogeschool PXL"
 #define MyAppExeName "VivistaPlayer.exe"
 
