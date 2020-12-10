@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class AudioControl : MonoBehaviour
 {
@@ -17,11 +18,14 @@ public class AudioControl : MonoBehaviour
 	public Slider volumeSlider;
 	public Button decreaseVolumeButton;
 	public Button increaseVolumeButton;
-
+	
 	public AudioMixer mixer;
 
 	private AudioSource audioSource;
 	private AudioClip clip;
+
+	private Controller controllerLeft;
+	private Controller controllerRight;
 
 	private string url;
 	private float fullClipLength;
@@ -58,7 +62,13 @@ public class AudioControl : MonoBehaviour
 			decreaseVolumeButton.onClick.AddListener(DecreaseVolume);
 			increaseVolumeButton.onClick.AddListener(IncreaseVolume);
 		}
-		
+
+		if (XRSettings.enabled)
+		{
+			controllerLeft = GameObject.Find("LeftHand").GetComponentInChildren<Controller>();
+			controllerRight = GameObject.Find("RightHand").GetComponentInChildren<Controller>();
+		}
+
 		volumeSlider.onValueChanged.AddListener(_ => VolumeValueChanged());
 		volumeSlider.value = Config.AudioInteractionVolume;
 		mixer.SetFloat(Config.audioInteractionMixerChannelName, MathHelper.LinearToLogVolume(Config.AudioInteractionVolume));
@@ -74,6 +84,16 @@ public class AudioControl : MonoBehaviour
 	
 	private void CheckButtonStates()
 	{
+		if (XRSettings.enabled 
+			&& controllerLeft != null && controllerRight != null 
+			&& !(controllerLeft.triggerDown || controllerRight.triggerDown) && (increaseButtonPressed || decreaseButtonPressed))
+		{
+			increaseButtonPressed = false;
+			decreaseButtonPressed = false;
+			increaseVolumeButton.enabled = false;
+			decreaseVolumeButton.enabled = false;
+		}
+
 		if (increaseButtonPressed)
 		{
 			//NOTE(Simon): When button is down, immediately change volume
