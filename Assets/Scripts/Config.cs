@@ -70,7 +70,6 @@ public static class Config
 
 	public static void SaveConfig()
 	{
-		Debug.Log("Saving Config");
 		string json = JsonUtility.ToJson(data);
 		File.WriteAllText(Path.Combine(Application.persistentDataPath, ".config"), json);
 	}

@@ -233,7 +233,7 @@ public class Player : MonoBehaviour
 					bool pointActive = videoController.currentTime >= interactionPoints[i].startTime 
 									&& videoController.currentTime <= interactionPoints[i].endTime;
 					interactionPoints[i].point.SetActive(pointActive);
-					interactionPoints[i].point.transform.GetChild(1).gameObject.SetActive(!interactionPoints[i].isSeen);
+					interactionPoints[i].point.GetComponentInChildren<MeshRenderer>(includeInactive: true).gameObject.SetActive(!interactionPoints[i].isSeen);
 				}
 
 				//NOTE(Simon): Interact with inactive interactionpoints

@@ -33,22 +33,18 @@ public class Hittable : MonoBehaviour
 
 	void Update()
 	{
-		Debug.Log(hitting);
 		if (oldHitting && hitting)
 		{
-			Debug.Log("OnHit");
 			onHit.Invoke();
 		}
 
 		if (!oldHitting && hitting)
 		{
-			Debug.Log("OnHitDown");
 			onHitDown.Invoke();
 		}
 
 		if (oldHitting & !hitting)
 		{
-			Debug.Log("OnHitUp");
 			onHitUp.Invoke();
 		}
 
