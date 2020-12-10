@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Hittable : MonoBehaviour
 {
@@ -10,6 +11,10 @@ public class Hittable : MonoBehaviour
 	public UnityEvent onHoverStart;
 	public UnityEvent onHoverStay;
 	public UnityEvent onHoverEnd;
+
+	public RawImage image;
+	public Color hoverColor;
+	private Color originalColor;
 
 	public bool hitting;
 	public bool hovering;
@@ -28,23 +33,33 @@ public class Hittable : MonoBehaviour
 
 	void Update()
 	{
+		Debug.Log(hitting);
 		if (oldHitting && hitting)
 		{
+			Debug.Log("OnHit");
 			onHit.Invoke();
 		}
 
 		if (!oldHitting && hitting)
 		{
+			Debug.Log("OnHitDown");
 			onHitDown.Invoke();
 		}
 
 		if (oldHitting & !hitting)
 		{
+			Debug.Log("OnHitUp");
 			onHitUp.Invoke();
 		}
 
 		if (!oldHovering && hovering)
 		{
+			if (image)
+			{
+				originalColor = image.color;
+				image.color = hoverColor;
+			}
+
 			onHoverStart.Invoke();
 		}
 
@@ -55,6 +70,10 @@ public class Hittable : MonoBehaviour
 
 		if (oldHovering && !hovering)
 		{
+			if (image)
+			{
+				image.color = originalColor;
+			}
 			onHoverEnd.Invoke();
 		}
 
