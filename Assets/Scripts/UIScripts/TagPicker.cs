@@ -99,7 +99,6 @@ public class TagPicker : MonoBehaviour
 				shapeImage.sprite = null;
 			}
 		}
-		
 	}
 
 	void OnPickTagEnd(Tag tag)

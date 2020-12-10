@@ -68,6 +68,7 @@ public static class SaveFile
 	public static string videoFilename = "main.mp4";
 	public static string thumbFilename = "thumb.jpg";
 	public static string tagsFilename = "tags.json";
+	public static string chaptersFilename = "chapters.json";
 	public static string editableFilename = ".editable";
 	public static string extraPath = "extra";
 	public static string miniaturesPath = "areaMiniatures";
@@ -191,6 +192,36 @@ public static class SaveFile
 		return tags;
 	}
 
+	public static List<Chapter> ReadChapters(string projectFolder)
+	{
+		string chaptersname = Path.Combine(projectFolder, chaptersFilename);
+
+		List<Chapter> chapters;
+
+		if (File.Exists(chaptersname))
+		{
+			try
+			{
+				using (var fileContents = File.OpenText(chaptersname))
+				{
+					string raw = fileContents.ReadToEnd();
+					chapters = new List<Chapter>(JsonHelper.ToArray<Chapter>(raw));
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.LogError(e.ToString());
+				return null;
+			}
+		}
+		else
+		{
+			chapters = new List<Chapter>();
+		}
+
+		return chapters;
+	}
+
 	public static bool WriteFile(SaveFileData data)
 	{
 		var meta = data.meta;
@@ -263,16 +294,31 @@ public static class SaveFile
 
 	public static bool WriteTags(string projectFolder, List<Tag> tags)
 	{
-		var sb = new StringBuilder();
-
-		sb.Append(JsonHelper.ToJson(tags.ToArray()));
-
 		try
 		{
 			string tagsname = Path.Combine(projectFolder, tagsFilename);
 			using (var file = File.CreateText(tagsname))
 			{
-				file.Write(sb.ToString());
+				file.Write(JsonHelper.ToJson(tags.ToArray()));
+			}
+		}
+		catch (Exception e)
+		{
+			Debug.LogError(e.ToString());
+			return false;
+		}
+
+		return true;
+	}
+
+	public static bool WriteChapters(string projectFolder, List<Chapter> chapters)
+	{
+		try
+		{
+			string tagsname = Path.Combine(projectFolder, chaptersFilename);
+			using (var file = File.CreateText(tagsname))
+			{
+				file.Write(JsonHelper.ToJson(chapters.ToArray()));
 			}
 		}
 		catch (Exception e)

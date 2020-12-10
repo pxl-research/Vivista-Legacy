@@ -45,7 +45,7 @@ public class VideoController : MonoBehaviour
 	public double videoLength;
 	public double currentFractionalTime;
 
-	public delegate void SeekEvent(double time);
+	public delegate float SeekEvent(double time);
 	public SeekEvent OnSeek;
 
 	public ScreenshotParams screenshotParams;
@@ -202,11 +202,24 @@ public class VideoController : MonoBehaviour
 		screenshots.Pause();
 	}
 
-	public void SeekFractional(float fractionalTime)
+	public void Seek(double newTime)
+	{
+		var correctedTime = OnSeek?.Invoke(newTime);
+		video.time = correctedTime ?? newTime;
+	}
+
+	public void SeekRelative(double delta)
+	{
+		var newTime = video.time + delta;
+		var correctedTime = OnSeek?.Invoke(newTime);
+		video.time = correctedTime ?? newTime;
+	}
+
+	public void SeekFractional(double fractionalTime)
 	{
 		var newTime = fractionalTime * videoLength;
-		video.time = newTime;
-		OnSeek.Invoke(newTime);
+		var correctedTime = OnSeek?.Invoke(newTime);
+		video.time = correctedTime ?? newTime;
 	}
 
 	public void SeekNoTriggers(double time)

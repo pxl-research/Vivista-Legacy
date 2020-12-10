@@ -19,7 +19,7 @@ public class VideoControls : MonoBehaviour
 
 	public void Skip(float amount)
 	{
-		videoController.video.time += amount;
+		videoController.SeekRelative(amount);
 	}
 
 	public void Toggle()

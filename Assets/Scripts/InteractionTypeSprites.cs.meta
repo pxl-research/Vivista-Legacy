@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 41bd6139843e0014ba850b4843c2e469
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - text: {fileID: 21300000, guid: 9067b484ad05f33408e00b460ae8a510, type: 3}
+  - image: {fileID: 21300000, guid: ef5765fccf4576b43a64089b7fb5bf8f, type: 3}
+  - video: {fileID: 21300000, guid: 3adda5a41ad68164eb471d2858e991f6, type: 3}
+  - multipleChoice: {fileID: 21300000, guid: 7d1ee0b78b71050498a9075753af66fe, type: 3}
+  - audio: {fileID: 21300000, guid: 034ee97e07d7e8645b8c38b97dc8cd59, type: 3}
+  - findArea: {fileID: 21300000, guid: 7d5d386811bae494abb3e439ff98d9ed, type: 3}
+  - multipleChoiceArea: {fileID: 21300000, guid: 7f2713b4ae53ca540b1e046befe84ee2,
+      type: 3}
+  - multipleChoiceImage: {fileID: 21300000, guid: d573217274a3d9542a574b5723d1a04e,
+      type: 3}
+  - tabularData: {instanceID: 0}
+  - chapter: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

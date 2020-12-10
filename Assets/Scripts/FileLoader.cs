@@ -18,8 +18,8 @@ public class FileLoader : MonoBehaviour
 	public void MoveSeekbarToVRPos()
 	{
 		//TODO(Kristof): This should all probably be done somewhere else
-		playerInfo.GetComponent<RectTransform>().SetParent(Canvass.seekbar.transform, false);
 		var t = playerInfo.GetComponent<RectTransform>();
+		t.SetParent(Canvass.seekbar.transform, false);
 		t.anchorMin = new Vector2(0, 0);
 		t.anchorMax = new Vector2(1, 1);
 		t.anchoredPosition = Vector2.zero;

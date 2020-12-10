@@ -209,4 +209,23 @@ public static class GameObjectHelper
 
 		return component;
 	}
+	
+	public static T GetComponentInChildren<T>(this GameObject go, bool excludeSelf)
+	{
+		if (excludeSelf)
+		{
+
+			var components = new HashSet<T>(go.GetComponentsInChildren<T>());
+
+			var componentInSelf = go.GetComponent<T>();
+
+			components.Remove(componentInSelf);
+
+			return components.ToArray()[0];
+		}
+		else
+		{
+			return go.GetComponentInChildren<T>();
+		}
+	}
 }

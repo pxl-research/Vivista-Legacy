@@ -15,7 +15,7 @@ public class TimeTooltip : MonoBehaviour
 			time1 = newTime;
 		}
 
-		pos.y = pos.y + text.rectTransform.rect.height;
+		pos.y += text.rectTransform.rect.height;
 		transform.position = pos;
 	}
 
@@ -31,7 +31,7 @@ public class TimeTooltip : MonoBehaviour
 			time2 = newTime2;
 		}
 
-		pos.y = pos.y + text.rectTransform.rect.height;
+		pos.y += text.rectTransform.rect.height;
 		transform.position = pos;
 	}
 

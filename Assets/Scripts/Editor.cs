@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Audio;
+
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -29,25 +29,22 @@ public enum EditorState
 	Exporting
 }
 
-public enum InteractionType
-{
-	None,
-	Text,
-	Image,
-	Video,
-	MultipleChoice,
-	Audio,
-	FindArea,
-	MultipleChoiceArea,
-	MultipleChoiceImage,
-	TabularData
-}
-
 public enum Perspective
 {
 	Perspective360,
 	Perspective180,
 	PerspectiveFlat
+}
+
+public enum TimelineDragMode
+{
+	None,
+	Time,
+	Chapter,
+	TimelineItem,
+	TimelineItemResize,
+	TimelineHorizontal,
+	TimelineVertical
 }
 
 [Serializable]
@@ -158,7 +155,6 @@ public class Editor : MonoBehaviour
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
-	private List<InteractionPointEditor> sortedInteractionPoints;
 	private InteractionPointEditor pointToMove;
 	private InteractionPointEditor pointToEdit;
 	private InteractionPointEditor lastPlacedPoint;
@@ -171,16 +167,21 @@ public class Editor : MonoBehaviour
 	private LoginPanel loginPanel;
 	private ExplorerPanel explorerPanel;
 	private TagPanel tagPanel;
+	private ChapterManagerPanel chapterPanel;
 	private ExportPanel exportPanel;
 
 	public RectTransform timelineContainer;
 	public RectTransform timeline;
-	public RectTransform timelineHeader;
+	public RectTransform timeLabelHolder;
+	public RectTransform chapterLabelHolder;
 	public GameObject timelineRowPrefab;
-	public Text labelPrefab;
+	public Text timeLabelPrefab;
+	public RectTransform chapterLabelPrefab;
+	public RectTransform currentTimeLabel;
 	public AudioMixer mixer;
 
-	private List<Text> headerLabels = new List<Text>();
+	private List<Text> timeLabels = new List<Text>();
+	private List<RectTransform> chapterLabels = new List<RectTransform>();
 	private VideoController videoController;
 	private Slider audioSlider;
 	private FileLoader fileLoader;
@@ -196,24 +197,20 @@ public class Editor : MonoBehaviour
 	private float timelineWidthPixels;
 	private bool timelineLabelsDirty;
 
+	private TimelineDragMode dragMode;
 	private Vector2 prevMousePosition;
 	private Vector2 mouseDelta;
 	private InteractionPointEditor timelineItemBeingDragged;
-	private bool isDraggingTimelineItem;
 	private InteractionPointEditor timelineItemBeingResized;
-	private bool isResizingTimelineItem;
 	private bool isResizingStart;
-	private bool isResizingTimelineVertical;
-	private bool isResizingTimelineHorizontal;
 	private TimeTooltip timeTooltip;
 	public RectTransform timelineFirstColumnWidth;
+	private Chapter chapterBeingDragged;
 
 	private Metadata meta;
 	private string userToken = "";
 	private UploadStatus uploadStatus;
 	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
-
-	private int interactionPointCount;
 
 
 	private void Awake()
@@ -222,7 +219,7 @@ public class Editor : MonoBehaviour
 		Instance = this;
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
 		UnityEngine.XR.XRSettings.enabled = false;
-		Screen.SetResolution(1600, 900, FullScreenMode.Windowed);
+		Screen.SetResolution(Screen.width - 50, Screen.height - 50, FullScreenMode.Windowed);
 	}
 
 	private void Start()
@@ -231,7 +228,6 @@ public class Editor : MonoBehaviour
 		interactionPointTemp.name = "Temp InteractionPoint";
 
 		interactionPoints = new List<InteractionPointEditor>();
-		sortedInteractionPoints = new List<InteractionPointEditor>();
 
 		timeTooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimeTooltip>();
 		timeTooltip.ResetPosition();
@@ -270,19 +266,10 @@ public class Editor : MonoBehaviour
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
-		//TODO(Simon): this is a hack to fix a bug. Sort sorts in place. So the sorted list got passed to all kinds of places where we need an unsorted list.
-		sortedInteractionPoints.Clear();
-		sortedInteractionPoints.AddRange(interactionPoints);
-		sortedInteractionPoints.Sort((x, y) => x.startTime != y.startTime
-			? x.startTime.CompareTo(y.startTime)
-			: x.endTime.CompareTo(y.endTime));
-		interactionPointCount = 0;
-
-		//NOTE(Simon): Reset InteractionPoint color. Yep this really is the best place to do this.
-		foreach (var point in sortedInteractionPoints)
+		//NOTE(Simon): Reset InteractionPoint color after a hover
+		foreach (var point in interactionPoints)
 		{
 			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
-			point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		}
 
 		if (videoController.videoLoaded)
@@ -320,7 +307,7 @@ public class Editor : MonoBehaviour
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-				&& Input.GetKeyDown(KeyCode.Space))
+				&& Input.GetKeyDown(KeyCode.Space) && tagPanel == null && chapterPanel == null)
 			{
 				videoController.TogglePlay();
 			}
@@ -436,9 +423,17 @@ public class Editor : MonoBehaviour
 							break;
 						}
 						case InteractionType.TabularData:
+						{
 							interactionEditor = Instantiate(UIPanels.Instance.tabularDataPanelEditor, Canvass.main.transform).gameObject;
 							interactionEditor.GetComponent<TabularDataPanelEditor>().Init("", 1, 1, new List<string>());
 							break;
+						}
+						case InteractionType.Chapter:
+						{
+							interactionEditor = Instantiate(UIPanels.Instance.chapterPanelEditor, Canvass.main.transform).gameObject;
+							interactionEditor.GetComponent<ChapterPanelEditor>().Init("", -1);
+							break;
+						}
 						default:
 						{
 							Debug.LogError("FFS, you shoulda added it here");
@@ -704,6 +699,22 @@ public class Editor : MonoBehaviour
 					}
 					break;
 				}
+				case InteractionType.Chapter:
+				{
+					var editor = interactionEditor.GetComponent<ChapterPanelEditor>();
+
+					if (editor.answered)
+					{
+						var panel = Instantiate(UIPanels.Instance.chapterPanel, Canvass.main.transform);
+						panel.Init(editor.answerTitle, editor.answerChapterId);
+						lastPlacedPoint.title = editor.answerTitle;
+						lastPlacedPoint.body = editor.answerChapterId.ToString();
+						lastPlacedPoint.panel = panel.gameObject;
+
+						finished = true;
+					}
+					break;
+				}
 				default:
 				{
 					throw new ArgumentOutOfRangeException();
@@ -715,10 +726,12 @@ public class Editor : MonoBehaviour
 				lastPlacedPoint.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				lastPlacedPoint.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
 				lastPlacedPoint.timelineRow.mandatory.isOn = lastPlacedPoint.mandatory;
-				Destroy(interactionEditor);
-				editorState = EditorState.Active;
+				lastPlacedPoint.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true).sprite = InteractionTypeSprites.GetSprite(lastPlacedPoint.type);
 				lastPlacedPoint.filled = true;
 				SetInteractionPointTag(lastPlacedPoint);
+
+				Destroy(interactionEditor);
+				editorState = EditorState.Active;
 				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 
@@ -987,6 +1000,23 @@ public class Editor : MonoBehaviour
 						pointToEdit.panel = panel.gameObject;
 
 						panel.Init(editor.answerTitle, editor.answerRows, editor.answerColumns, editor.answerTabularData);
+
+						finished = true;
+					}
+					break;
+				}
+				case InteractionType.Chapter:
+				{
+					var editor = interactionEditor.GetComponent<ChapterPanelEditor>();
+
+					if (editor.answered)
+					{
+						var panel = pointToEdit.panel.GetComponent<ChapterPanel>();
+						panel.Init(editor.answerTitle, editor.answerChapterId);
+						pointToEdit.title = editor.answerTitle;
+						pointToEdit.body = editor.answerChapterId.ToString();
+						pointToEdit.panel = panel.gameObject;
+
 						finished = true;
 					}
 					break;
@@ -1323,6 +1353,8 @@ public class Editor : MonoBehaviour
 
 	private void UpdateTimeline()
 	{
+		Texture2D desiredCursor = null;
+
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
 		//NOTE(Simon): This happens when a video isn't fully loaded yet. So don't update timeline until it is.
@@ -1338,7 +1370,7 @@ public class Editor : MonoBehaviour
 		}
 
 		//Note(Simon): Zoom timeline
-		if (!(isDraggingTimelineItem || isResizingTimelineItem))
+		if (dragMode == TimelineDragMode.None)
 		{
 			if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 			{
@@ -1410,16 +1442,16 @@ public class Editor : MonoBehaviour
 
 			if (timelineLabelsDirty)
 			{
-				while (headerLabels.Count < realNumLabels)
+				while (timeLabels.Count < realNumLabels)
 				{
-					var label = Instantiate(labelPrefab, timelineHeader.transform);
-					headerLabels.Add(label);
+					var label = Instantiate(timeLabelPrefab, timeLabelHolder.transform);
+					timeLabels.Add(label);
 				}
 
-				while (headerLabels.Count > realNumLabels)
+				while (timeLabels.Count > realNumLabels)
 				{
-					Destroy(headerLabels[headerLabels.Count - 1].gameObject);
-					headerLabels.RemoveAt(headerLabels.Count - 1);
+					Destroy(timeLabels[timeLabels.Count - 1].gameObject);
+					timeLabels.RemoveAt(timeLabels.Count - 1);
 				}
 			}
 
@@ -1432,21 +1464,21 @@ public class Editor : MonoBehaviour
 				{
 					if (timelineLabelsDirty)
 					{
-						headerLabels[i].enabled = true;
-						headerLabels[i].text = MathHelper.FormatSeconds(tickTime);
-						headerLabels[i].rectTransform.position = new Vector2(TimeToPx(tickTime), headerLabels[i].rectTransform.position.y);
+						timeLabels[i].enabled = true;
+						timeLabels[i].text = MathHelper.FormatSeconds(tickTime);
+						timeLabels[i].rectTransform.position = new Vector2(TimeToPx(tickTime), timeLabels[i].rectTransform.position.y);
 					}
 					DrawLineAtTime(tickTime, 1, new Color(0, 0, 0, 47f / 255));
 				}
 				else
 				{
-					headerLabels[i].enabled = false;
+					timeLabels[i].enabled = false;
 				}
 			}
 			timelineLabelsDirty = false;
 		}
 
-		//Note(Simon): Render timeline items
+		//Note(Simon): Render timeline item length indicators
 		foreach (var point in interactionPoints)
 		{
 			var row = point.timelineRow;
@@ -1479,61 +1511,6 @@ public class Editor : MonoBehaviour
 			point.timelineRow.indicator.color = tagColor;
 		}
 
-		//NOTE(Simon): Highlight interactionPoint on hover
-		//TODO(Simon): Show preview when hovering over timelineRow
-		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
-		{
-			foreach (var point in interactionPoints)
-			{
-				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
-				var rect = point.timelineRow.title.GetComponent<RectTransform>();
-				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
-					&& !isDraggingTimelineItem && !isResizingTimelineItem
-					&& editorState == EditorState.Active
-					&& point.panel != null)
-				{
-					HighlightPoint(point);
-
-					var worldCorners = new Vector3[4];
-					rectBackground.GetWorldCorners(worldCorners);
-					var start = new Vector2(worldCorners[0].x, (worldCorners[0].y + worldCorners[1].y) / 2);
-					var end = new Vector2(worldCorners[2].x - 3, (worldCorners[2].y + worldCorners[3].y) / 2);
-					var thickness = worldCorners[1].y - worldCorners[0].y;
-					//NOTE(Simon): Show a darker brackground on hover
-					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
-
-					//NOTE(Simon): If none are pinned, show currently hovered point
-					if (pinnedHoverPoint == null)
-					{
-						point.panel.SetActive(true);
-					}
-
-					point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
-
-					if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
-					{
-						if (pinnedHoverPoint == point)
-						{
-							UnpinPoint();
-						}
-						else
-						{
-							UnpinPoint();
-
-							PinPoint(point);
-						}
-					}
-				}
-				else
-				{
-					if (pinnedHoverPoint == null && point.panel != null)
-					{
-						point.panel.SetActive(false);
-					}
-				}
-			}
-		}
-
 		//NOTE(Simon): Timeline tag sprites
 		foreach (var point in interactionPoints)
 		{
@@ -1543,7 +1520,7 @@ public class Editor : MonoBehaviour
 		}
 
 		//Note(Simon): timeline buttons. Looping backwards because we're deleting items from the list.
-		for (var i = interactionPoints.Count - 1; i >= 0; i--)
+		for (int i = interactionPoints.Count - 1; i >= 0; i--)
 		{
 			var point = interactionPoints[i];
 			var edit = point.timelineRow.edit;
@@ -1686,6 +1663,13 @@ public class Editor : MonoBehaviour
 						interactionEditor.GetComponent<TabularDataPanelEditor>().Init(point.title, rows, columns, new List<string>(body[2].Split('\f')));
 						break;
 					}
+					case InteractionType.Chapter:
+					{
+						interactionEditor = Instantiate(UIPanels.Instance.chapterPanelEditor, Canvass.main.transform).gameObject;
+						int chapterId = Int32.Parse(point.body);
+						interactionEditor.GetComponent<ChapterPanelEditor>().Init(point.title, chapterId);
+						break;
+					}
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
@@ -1717,15 +1701,46 @@ public class Editor : MonoBehaviour
 
 		//Note(Simon): Render various stuff, such as current time, indicator lines for begin and end of video, and separator lines.
 		{
+			var time = videoController.rawCurrentTime >= 0 ? videoController.rawCurrentTime : 0;
+
+			if (dragMode == TimelineDragMode.Time)
+			{
+				time = PxToAbsTime(Input.mousePosition.x);
+				DrawLineAtTime(time, 4, new Color(0, 0, 0, 150f / 255));
+				desiredCursor = Cursors.Instance.CursorDrag;
+
+				if (Input.GetMouseButtonUp(0))
+				{
+					videoController.Seek(time);
+					dragMode = TimelineDragMode.None;
+				}
+			}
+			else
+			{
+				if (RectTransformUtility.RectangleContainsScreenPoint(currentTimeLabel, Input.mousePosition))
+				{
+					DrawLineAtTime(time, 4, new Color(0, 0, 0, 150f / 255));
+					desiredCursor = Cursors.Instance.CursorDrag;
+
+					if (Input.GetMouseButtonDown(0))
+					{
+						dragMode = TimelineDragMode.Time;
+					}
+				}
+			}
+
 			//NOTE(Simon): current time indicator
-			DrawLineAtTime(Seekbar.instance.lastSmoothTime * videoController.videoLength, 3, new Color(0, 0, 0, 150f / 255), 5);
+			DrawLineAtTime(time, 2, new Color(0, 0, 0, 150f / 255));
+			currentTimeLabel.GetComponentInChildren<Text>().text = $"{MathHelper.FormatSeconds(time)}";
+			currentTimeLabel.anchoredPosition = new Vector2(TimeToPx(time), 0);
+
 
 			//NOTE(Simon): Top line. Only draw when inside timeline.
 			var offset = new Vector3(0, 0);
-			if (timeline.localPosition.y < timelineHeader.rect.height - offset.y)
+			if (timeline.localPosition.y < timeLabelHolder.rect.height - offset.y)
 			{
 				var headerCoords = new Vector3[4];
-				timelineHeader.GetWorldCorners(headerCoords);
+				timeLabelHolder.GetWorldCorners(headerCoords);
 				UILineRenderer.DrawLine(headerCoords[0] + offset, headerCoords[3] + offset, 1, new Color(0, 0, 0, 47f / 255));
 			}
 			//NOTE(Simon): Start and end
@@ -1736,74 +1751,125 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		Texture2D desiredCursor = null;
-
-		//Note(Simon): resizing and moving of timeline items
+		//NOTE(Simon): Render chapters
 		{
-			foreach (var point in interactionPoints)
+			var chapters = ChapterManager.Instance.chapters;
+			while (chapters.Count > chapterLabels.Count)
 			{
-				var indicatorRect = point.timelineRow.indicator.rectTransform;
+				var newLabel = Instantiate(chapterLabelPrefab, chapterLabelHolder.transform);
+				newLabel.SetAsFirstSibling();
+				chapterLabels.Add(newLabel);
+			}
 
-				RectTransformUtility.ScreenPointToLocalPointInRectangle(indicatorRect, Input.mousePosition, null, out var rectPixel);
-				var leftAreaX = 5;
-				var rightAreaX = indicatorRect.rect.width - 5;
+			while (chapters.Count < chapterLabels.Count)
+			{
+				Destroy(chapterLabels[chapterLabels.Count - 1].gameObject);
+				chapterLabels.RemoveAt(chapterLabels.Count - 1);
+			}
 
-				//NOTE(Simon): Show correct cursor
-				if (isDraggingTimelineItem || isResizingTimelineItem || RectTransformUtility.RectangleContainsScreenPoint(indicatorRect, Input.mousePosition)
-					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
+			if (dragMode == TimelineDragMode.Chapter)
+			{
+				chapterBeingDragged.time = Mathf.Clamp(PxToAbsTime(Input.mousePosition.x), 0, (float)videoController.videoLength);
+				var tooltipPos = chapterLabels[chapters.IndexOf(chapterBeingDragged)].position + new Vector3(0, 15);
+				timeTooltip.SetTime(chapterBeingDragged.time, tooltipPos);
+				desiredCursor = Cursors.Instance.CursorDrag;
+
+				if (Input.GetMouseButtonUp(0))
 				{
-					if (isDraggingTimelineItem)
-					{
-						desiredCursor = Cursors.Instance.CursorDrag;
-					}
-					else if (isResizingTimelineItem)
-					{
-						desiredCursor = Cursors.Instance.CursorResizeHorizontal;
-					}
-					else if (rectPixel.x < leftAreaX || rectPixel.x > rightAreaX)
-					{
-						desiredCursor = Cursors.Instance.CursorResizeHorizontal;
-					}
-					else
-					{
-						desiredCursor = Cursors.Instance.CursorDrag;
-					}
+					dragMode = TimelineDragMode.None;
+					chapterBeingDragged = null;
+					timeTooltip.ResetPosition();
 				}
-
-				//NOTE(Simon) Check if conditions are met to start a resize or drag operation on a timeline item
-				if (!isDraggingTimelineItem && !isResizingTimelineItem
-					&& Input.GetMouseButtonDown(0) && RectTransformUtility.RectangleContainsScreenPoint(indicatorRect, Input.mousePosition)
-					&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
+			}
+			else
+			{
+				//NOTE(Simon): Only draw an interactable line if we're not already interacting with a timelineItem
+				if (dragMode == TimelineDragMode.None)
 				{
-					if (rectPixel.x < leftAreaX)
+					for (int i = 0; i < chapters.Count; i++)
 					{
-						isResizingStart = true;
-						isResizingTimelineItem = true;
-						timelineItemBeingResized = point;
-					}
-					else if (rectPixel.x > rightAreaX)
-					{
-						isResizingStart = false;
-						isResizingTimelineItem = true;
-						timelineItemBeingResized = point;
-					}
-					else
-					{
-						isDraggingTimelineItem = true;
-						timelineItemBeingDragged = point;
-					}
+						if (RectTransformUtility.RectangleContainsScreenPoint(chapterLabels[i], Input.mousePosition))
+						{
+							DrawLineAtTime(chapters[i].time, 4f, new Color(.7f, .3f, .3f));
+							desiredCursor = Cursors.Instance.CursorDrag;
 
-					DisableTimelineScroll();
-					break;
+							if (Input.GetMouseButtonDown(0))
+							{
+								dragMode = TimelineDragMode.Chapter;
+								chapterBeingDragged = chapters[i];
+							}
+						}
+					}
 				}
 			}
 
-			if (isDraggingTimelineItem)
+			for (int i = 0; i < chapters.Count; i++)
+			{
+				DrawLineAtTime(chapters[i].time, chapters[i] == chapterBeingDragged ? 4f : 2f, new Color(.7f, .3f, .3f));
+				chapterLabels[i].GetComponentInChildren<Text>().text = $"Ch.{i + 1}";
+				chapterLabels[i].anchoredPosition = new Vector2(TimeToPx(chapters[i].time), 0);
+			}
+		}
+
+		//Note(Simon): resizing and moving of timeline items
+		{
+			if (dragMode == TimelineDragMode.None)
+			{
+				foreach (var point in interactionPoints)
+				{
+					var indicatorRect = point.timelineRow.indicator.rectTransform;
+
+					RectTransformUtility.ScreenPointToLocalPointInRectangle(indicatorRect, Input.mousePosition, null,
+						out var rectPixel);
+					var leftAreaX = 5;
+					var rightAreaX = indicatorRect.rect.width - 5;
+
+					//NOTE(Simon) Check if conditions are met to start a resize or drag operation on a timeline item
+					if (RectTransformUtility.RectangleContainsScreenPoint(indicatorRect, Input.mousePosition)
+						&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
+					{
+						if (rectPixel.x < leftAreaX)
+						{
+							desiredCursor = Cursors.Instance.CursorResizeHorizontal;
+							if (Input.GetMouseButtonDown(0))
+							{
+								isResizingStart = true;
+								dragMode = TimelineDragMode.TimelineItemResize;
+								timelineItemBeingResized = point;
+							}
+						}
+						else if (rectPixel.x > rightAreaX)
+						{
+							desiredCursor = Cursors.Instance.CursorResizeHorizontal;
+							if (Input.GetMouseButtonDown(0))
+							{
+								isResizingStart = false;
+								dragMode = TimelineDragMode.TimelineItemResize;
+								timelineItemBeingResized = point;
+							}
+						}
+						else
+						{
+							desiredCursor = Cursors.Instance.CursorDrag;
+							if (Input.GetMouseButtonDown(0))
+							{
+								isResizingStart = false;
+								dragMode = TimelineDragMode.TimelineItem;
+								timelineItemBeingDragged = point;
+							}
+						}
+
+						DisableTimelineScroll();
+						break;
+					}
+				}
+			}
+			else if (dragMode == TimelineDragMode.TimelineItem)
 			{
 				//NOTE(Simon): End drag operation
 				if (!Input.GetMouseButton(0))
 				{
-					isDraggingTimelineItem = false;
+					dragMode = TimelineDragMode.None;
 					timelineItemBeingDragged = null;
 					timeTooltip.ResetPosition();
 					UnsavedChangesTracker.Instance.unsavedChanges = true;
@@ -1811,28 +1877,43 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					var newStart = Mathf.Max(0.0f, (float)timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x));
-					var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x));
-					if (newStart > 0.0f || newEnd < timelineEndTime)
+					//var newStart = Mathf.Max(0.0f, (float) timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x));
+					//var newEnd = Mathf.Min(timelineEndTime, (float) timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x));
+					float newStart = (float)timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x);
+					float newEnd = (float)timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x);
+					if (newStart < 0.0f)
 					{
-						timelineItemBeingDragged.startTime = newStart;
-						timelineItemBeingDragged.endTime = newEnd;
-
-						var imageRect = timelineItemBeingDragged.timelineRow.indicator.rectTransform;
-						var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width / 2,
-													imageRect.position.y + imageRect.rect.height / 2);
-
-						timeTooltip.SetTime(newStart, newEnd, tooltipPos);
+						float length = newEnd - newStart;
+						newStart = 0;
+						newEnd = length;
 					}
+
+					if (newEnd > timelineEndTime)
+					{
+						float length = newEnd - newStart;
+						newEnd = timelineEndTime;
+						newStart = newEnd - length;
+					}
+
+					timelineItemBeingDragged.startTime = newStart;
+					timelineItemBeingDragged.endTime = newEnd;
+
+					var imageRect = timelineItemBeingDragged.timelineRow.indicator.rectTransform;
+					var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width / 2,
+												 imageRect.position.y + imageRect.rect.height / 2);
+
+					timeTooltip.SetTime(newStart, newEnd, tooltipPos);
+
 					HighlightPoint(timelineItemBeingDragged);
+					desiredCursor = Cursors.Instance.CursorDrag;
 				}
 			}
-			else if (isResizingTimelineItem)
+			else if (dragMode == TimelineDragMode.TimelineItemResize)
 			{
 				//NOTE(Simon): End resize operation
 				if (!Input.GetMouseButton(0))
 				{
-					isResizingTimelineItem = false;
+					dragMode = TimelineDragMode.None;
 					timelineItemBeingResized = null;
 					timeTooltip.ResetPosition();
 					UnsavedChangesTracker.Instance.unsavedChanges = true;
@@ -1842,102 +1923,155 @@ public class Editor : MonoBehaviour
 				{
 					if (isResizingStart)
 					{
-						var newStart = Mathf.Max(0.0f, (float)timelineItemBeingResized.startTime + PxToRelativeTime(mouseDelta.x));
+						var newStart = Mathf.Max(0.0f,
+							(float) timelineItemBeingResized.startTime + PxToRelativeTime(mouseDelta.x));
 						if (newStart < timelineItemBeingResized.endTime - 1f)
 						{
 							timelineItemBeingResized.startTime = newStart;
 							var imageRect = timelineItemBeingResized.timelineRow.indicator.rectTransform;
 							var tooltipPos = new Vector2(imageRect.position.x,
-													imageRect.position.y + imageRect.rect.height / 2);
+								imageRect.position.y + imageRect.rect.height / 2);
 
 							timeTooltip.SetTime(newStart, tooltipPos);
 						}
 					}
 					else
 					{
-						var newEnd = Mathf.Min(timelineEndTime, (float)timelineItemBeingResized.endTime + PxToRelativeTime(mouseDelta.x));
+						var newEnd = Mathf.Min(timelineEndTime,
+							(float) timelineItemBeingResized.endTime + PxToRelativeTime(mouseDelta.x));
 						if (newEnd > timelineItemBeingResized.startTime + 1f)
 						{
 							timelineItemBeingResized.endTime = newEnd;
 							var imageRect = timelineItemBeingResized.timelineRow.indicator.rectTransform;
 							var tooltipPos = new Vector2(imageRect.position.x + imageRect.rect.width,
-													imageRect.position.y + imageRect.rect.height / 2);
+								imageRect.position.y + imageRect.rect.height / 2);
 
 							timeTooltip.SetTime(newEnd, tooltipPos);
 						}
 					}
+
 					HighlightPoint(timelineItemBeingResized);
+					desiredCursor = Cursors.Instance.CursorResizeHorizontal;
 				}
 			}
 		}
 
 		//Note(Simon): Resizing of timeline
 		{
-			if (!isDraggingTimelineItem && !isResizingTimelineItem)
+			if (dragMode == TimelineDragMode.None)
 			{
-				if (isResizingTimelineVertical)
+				var verticalRect = new Rect(new Vector2(0, timelineContainer.rect.height - 4), new Vector2(timelineContainer.rect.width, 4));
+				var horizontalRect = new Rect(new Vector2(timelineOffsetPixels + 1, 0), new Vector2(4, timelineContainer.rect.height - timeLabelHolder.sizeDelta.y));
+
+				if (verticalRect.Contains(Input.mousePosition))
 				{
-					if (Input.GetMouseButtonUp(0))
+					if (!Cursors.isOverridingCursor)
 					{
-						isResizingTimelineVertical = false;
-						desiredCursor = null;
+						desiredCursor = Cursors.Instance.CursorResizeVertical;
 					}
 
-					var resizeDelta = new Vector2(0, mouseDelta.y);
-					timelineContainer.sizeDelta += resizeDelta;
+					if (Input.GetMouseButtonDown(0))
+					{
+						dragMode = TimelineDragMode.TimelineVertical;
+					}
 				}
-				else if (isResizingTimelineHorizontal)
+				else if (horizontalRect.Contains(Input.mousePosition))
 				{
-					if (Input.GetMouseButtonUp(0))
+					DrawLineAtTime(0, 2, Color.black);
+					if (!Cursors.isOverridingCursor)
 					{
-						isResizingTimelineHorizontal = false;
-						desiredCursor = null;
+						desiredCursor = Cursors.Instance.CursorResizeHorizontal;
 					}
 
-					//NOTE(Simon): Clamp timeline size to 100px of either side of screen, so it can't go offscreen
-					timelineFirstColumnWidth.sizeDelta = new Vector2(Mathf.Clamp(timelineFirstColumnWidth.sizeDelta.x + mouseDelta.x, 100, Screen.width - 100), timelineFirstColumnWidth.sizeDelta.y);
-					for (int i = 0; i < interactionPoints.Count; i++)
+					if (Input.GetMouseButtonDown(0))
 					{
-						var point = interactionPoints[i];
-						float fudgeFactor = 10;
-						float offset = point.timelineRow.tagShape.rectTransform.sizeDelta.x + fudgeFactor;
-						point.timelineRow.title.rectTransform.sizeDelta = new Vector2(timelineFirstColumnWidth.sizeDelta.x - offset, point.timelineRow.title.rectTransform.sizeDelta.y);
+						dragMode = TimelineDragMode.TimelineHorizontal;
+					}
+				}
+			}
+			else if (dragMode == TimelineDragMode.TimelineVertical)
+			{
+				if (Input.GetMouseButtonUp(0))
+				{
+					dragMode = TimelineDragMode.None;
+					desiredCursor = null;
+				}
+
+				var resizeDelta = new Vector2(0, mouseDelta.y);
+				timelineContainer.sizeDelta += resizeDelta;
+			}
+			else if (dragMode == TimelineDragMode.TimelineHorizontal)
+			{
+				if (Input.GetMouseButtonUp(0))
+				{
+					dragMode = TimelineDragMode.None;
+					desiredCursor = null;
+				}
+
+				//NOTE(Simon): Clamp timeline size to 100px of either side of screen, so it can't go offscreen
+				timelineFirstColumnWidth.sizeDelta = new Vector2(Mathf.Clamp(timelineFirstColumnWidth.sizeDelta.x + mouseDelta.x, 150, Screen.width - 100), timelineFirstColumnWidth.sizeDelta.y);
+				for (int i = 0; i < interactionPoints.Count; i++)
+				{
+					var point = interactionPoints[i];
+					float fudgeFactor = 10;
+					float offset = point.timelineRow.tagShape.rectTransform.sizeDelta.x + fudgeFactor;
+					point.timelineRow.title.rectTransform.sizeDelta = new Vector2(timelineFirstColumnWidth.sizeDelta.x - offset, point.timelineRow.title.rectTransform.sizeDelta.y);
+				}
+
+				DrawLineAtTime(0, 2, Color.black);
+				timelineLabelsDirty = true;
+			}
+		}
+
+		//NOTE(Simon): Highlight interactionPoint on hover
+		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition) && dragMode == TimelineDragMode.None)
+		{
+			foreach (var point in interactionPoints)
+			{
+				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
+				var rect = point.timelineRow.title.GetComponent<RectTransform>();
+
+				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
+					&& editorState == EditorState.Active
+					&& point.panel != null)
+				{
+					HighlightPoint(point);
+
+					var rowCorners = new Vector3[4];
+					rectBackground.GetWorldCorners(rowCorners);
+					var start = new Vector2(rowCorners[0].x, (rowCorners[0].y + rowCorners[1].y) / 2);
+					var end = new Vector2(rowCorners[2].x - 3, (rowCorners[2].y + rowCorners[3].y) / 2);
+					var thickness = rowCorners[1].y - rowCorners[0].y;
+					//NOTE(Simon): Show a darker brackground on hover
+					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
+
+					//NOTE(Simon): If none are pinned, show currently hovered point
+					if (pinnedHoverPoint == null)
+					{
+						point.panel.SetActive(true);
 					}
 
-					DrawLineAtTime(0, 2, Color.black, -3);
-					timelineLabelsDirty = true;
+					point.panel.GetComponent<RectTransform>().anchoredPosition = new Vector2(10, timelineContainer.sizeDelta.y + 50);
+
+					if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
+					{
+						if (pinnedHoverPoint == point)
+						{
+							UnpinPoint();
+						}
+						else
+						{
+							UnpinPoint();
+
+							PinPoint(point);
+						}
+					}
 				}
 				else
 				{
-					var verticalRect = new Rect(new Vector2(0, timelineContainer.rect.height - 4),
-						new Vector2(timelineContainer.rect.width, 4));
-					var horizontalRect = new Rect(new Vector2(timelineOffsetPixels - 2, 0),
-						new Vector2(4, timelineContainer.rect.height - timelineHeader.sizeDelta.y));
-
-					if (verticalRect.Contains(Input.mousePosition))
+					if (pinnedHoverPoint == null && point.panel != null)
 					{
-						if (!Cursors.isOverridingCursor)
-						{
-							desiredCursor = Cursors.Instance.CursorResizeVertical;
-						}
-
-						if (Input.GetMouseButtonDown(0))
-						{
-							isResizingTimelineVertical = true;
-						}
-					}
-					else if (horizontalRect.Contains(Input.mousePosition))
-					{
-						DrawLineAtTime(0, 2, Color.black, -3);
-						if (!Cursors.isOverridingCursor)
-						{
-							desiredCursor = Cursors.Instance.CursorResizeHorizontal;
-						}
-
-						if (Input.GetMouseButtonDown(0))
-						{
-							isResizingTimelineHorizontal = true;
-						}
+						point.panel.SetActive(false);
 					}
 				}
 			}
@@ -1971,18 +2105,52 @@ public class Editor : MonoBehaviour
 		point.point.GetComponent<SpriteRenderer>().color = Color.red;
 	}
 
+	//NOTE(Simon): Positive topOffset is upwards
 	public void DrawLineAtTime(double time, float thickness, Color color, float topOffset = 0f)
 	{
 		var timePx = TimeToPx(time);
 
 		float containerHeight = timelineContainer.sizeDelta.y;
-		float headerHeight = Mathf.Max(0, timelineHeader.sizeDelta.y - timeline.localPosition.y);
+		float headerHeight = Mathf.Max(0, timeLabelHolder.sizeDelta.y - timeline.localPosition.y);
 
 		UILineRenderer.DrawLine(
 			new Vector2(timePx, 0),
-			new Vector2(timePx, containerHeight - headerHeight + 3 + topOffset),
+			new Vector2(timePx, containerHeight - headerHeight + 18 + topOffset),
 			thickness,
 			color);
+	}
+
+	//NOTE(Simon): thickness is default thickness, overlapThickness is thickness if mouse overlaps, checkedThickness is the area that is checked for an overlap (but line is not drawn at that thickness)
+	public bool DrawLineAtTimeCheckOverlap(double time, float thickness, float overlapThickness, float checkedThickness, Color color, Vector2 mousePos, float topOffset = 0f)
+	{
+		var timePx = TimeToPx(time);
+
+		float containerHeight = timelineContainer.sizeDelta.y;
+		float headerHeight = Mathf.Max(0, timeLabelHolder.sizeDelta.y - timeline.localPosition.y);
+		float lineHeight = containerHeight - headerHeight + 18 + topOffset;
+
+		var overlapRect = new Rect(timePx - (checkedThickness / 2f), 0, checkedThickness, lineHeight);
+
+		if (overlapRect.Contains(Input.mousePosition))
+		{
+			UILineRenderer.DrawLine(
+			new Vector2(timePx, 0),
+			new Vector2(timePx, lineHeight),
+			overlapThickness,
+			color);
+
+			return true;
+		}
+		else
+		{
+			UILineRenderer.DrawLine(
+			new Vector2(timePx, 0),
+			new Vector2(timePx, lineHeight),
+			thickness,
+			color);
+
+			return false;
+		}
 	}
 
 	public void OnMandatoryChanged(InteractionPointEditor point, bool mandatory)
@@ -2081,6 +2249,17 @@ public class Editor : MonoBehaviour
 		tagPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
+	public void ShowChapterPanel()
+	{
+		if (chapterPanel != null)
+		{
+			return;
+		}
+
+		chapterPanel = Instantiate(UIPanels.Instance.chapterManagerPanel);
+		chapterPanel.transform.SetParent(Canvass.main.transform, false);
+	}
+
 	public void ShowExportPanel()
 	{
 		exportPanel = Instantiate(UIPanels.Instance.exportPanel, Canvass.main.transform, false);
@@ -2133,6 +2312,7 @@ public class Editor : MonoBehaviour
 		}
 
 		SaveFile.WriteTags(path, TagManager.Instance.tags);
+		SaveFile.WriteChapters(path, ChapterManager.Instance.chapters);
 
 		CleanExtras();
 		UnsavedChangesTracker.Instance.unsavedChanges = false;
@@ -2167,6 +2347,10 @@ public class Editor : MonoBehaviour
 		var tagsPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var tags = SaveFile.ReadTags(tagsPath);
 		TagManager.Instance.SetTags(tags);
+		
+		var chaptersPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var chapters = SaveFile.ReadChapters(chaptersPath);
+		ChapterManager.Instance.SetChapters(chapters);
 
 		foreach (var point in data.points)
 		{
@@ -2302,8 +2486,17 @@ public class Editor : MonoBehaviour
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
+				case InteractionType.Chapter:
+				{
+					var panel = Instantiate(UIPanels.Instance.chapterPanel, Canvass.main.transform);
+					var chapterId = Int32.Parse(newInteractionPoint.body);
+					panel.Init(newInteractionPoint.title, chapterId);
+					newInteractionPoint.panel = panel.gameObject;
+					break;
+				}
 				default:
 				{
+					Debug.LogError($"Forgot to implement OpenFile() branch for  {newInteractionPoint.type}");
 					isValidPoint = false;
 					break;
 				}
@@ -2314,6 +2507,8 @@ public class Editor : MonoBehaviour
 				newInteractionPoint.panel.SetActive(false);
 				AddItemToTimeline(newInteractionPoint, true);
 				SetInteractionPointTag(newInteractionPoint);
+				var interactionTypeRenderer = newInteractionPoint.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true);
+				interactionTypeRenderer.sprite = InteractionTypeSprites.GetSprite(newInteractionPoint.type);
 			}
 			else
 			{
@@ -2356,12 +2551,12 @@ public class Editor : MonoBehaviour
 	private void SetInteractionPointTag(InteractionPointEditor point)
 	{
 		var shape = point.point.GetComponent<SpriteRenderer>();
-		var text = point.point.GetComponentInChildren<TextMesh>();
+		var interactionTypeRenderer = point.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true);
 		var tag = TagManager.Instance.GetTagById(point.tagId);
 
 		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
 		shape.color = tag.color;
-		text.color = tag.color.IdealTextColor();
+		interactionTypeRenderer.color = tag.color.IdealTextColor();
 	}
 
 	private IEnumerator UploadFile()

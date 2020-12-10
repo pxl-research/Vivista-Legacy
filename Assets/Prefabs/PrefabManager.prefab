@@ -59,6 +59,8 @@ MonoBehaviour:
     type: 3}
   tagPanel: {fileID: 8492929646453990575, guid: d32f2958c4f214c48880afca02996939,
     type: 3}
+  chapterManagerPanel: {fileID: 4787452447403405063, guid: ec855773e0470634a937f4fd4e94407e,
+    type: 3}
   textPanel: {fileID: 114804670035395096, guid: 68aee9630d16f3847ae9673fad651082,
     type: 3}
   textPanelEditor: {fileID: 114857279946337036, guid: 5c435d4d02e1c3a4f95af60a1b75a7f5,
@@ -94,4 +96,8 @@ MonoBehaviour:
   TabularDataPanel: {fileID: 8660734572250089207, guid: b258900f25720d7469bdcb6fc8e052f5,
     type: 3}
   tabularDataPanelEditor: {fileID: 2136346459895991725, guid: 64643fc252b442243b98b048a46f458d,
+    type: 3}
+  chapterPanel: {fileID: 5985276827738939110, guid: 6406e2a48ac0f71468649e982af1e91a,
+    type: 3}
+  chapterPanelEditor: {fileID: 1164318646736671676, guid: 91edac93ed6371a419bcaf7df5650826,
     type: 3}

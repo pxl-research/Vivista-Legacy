@@ -23,9 +23,9 @@ public class TextPanelEditor : MonoBehaviour
 	{
 		ResizeToFit();
 		title.onValueChanged.RemoveAllListeners();
-		title.onValueChanged.AddListener(delegate { OnInputChange(title); });
+		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		body.onValueChanged.RemoveAllListeners();
-		body.onValueChanged.AddListener(delegate { OnInputChange(body); });
+		body.onValueChanged.AddListener(_ => OnInputChange(body));
 	}
 
 	void ResizeToFit()

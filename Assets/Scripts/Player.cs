@@ -41,6 +41,7 @@ public class Player : MonoBehaviour
 
 	public GameObject interactionPointPrefab;
 	public GameObject indexPanelPrefab;
+	public GameObject chapterSelectorPrefab;
 	public GameObject imagePanelPrefab;
 	public GameObject textPanelPrefab;
 	public GameObject videoPanelPrefab;
@@ -50,6 +51,7 @@ public class Player : MonoBehaviour
 	public GameObject multipleChoiceAreaPanelPrefab;
 	public GameObject multipleChoiceImagePanelPrefab;
 	public GameObject tabularDataPanelPrefab;
+	public GameObject chapterPanelPrefab;
 	public GameObject cameraRig;
 	public GameObject projectorPrefab;
 
@@ -66,9 +68,11 @@ public class Player : MonoBehaviour
 	private FileLoader fileLoader;
 	private VideoController videoController;
 	private List<GameObject> videoList;
-
+	private ChapterSelectorPanel chapterSelector;
+	
 	public AudioMixer mixer;
 
+	
 	private GameObject indexPanel;
 	private Transform videoCanvas;
 	private GameObject projector;
@@ -259,13 +263,15 @@ public class Player : MonoBehaviour
 
 			//NOTE(Simon): Handle mandatory interactionPoints
 			{
-				double timeToNextPause = Double.MaxValue; 
-				//NOTE(Simon): Find the next unseen mandatory interaction
-				for (int i = 0; i < mandatoryInteractionPoints.Count; i++)
+				double timeToNextPause = Double.MaxValue;
+				var interactionsInChapter = MandatoryInteractionsForTime(videoController.currentTime);
+
+				//NOTE(Simon): Find the next unseen mandatory interaction in this chapter
+				for (int i = 0; i < interactionsInChapter.Count; i++)
 				{
-					if (!mandatoryInteractionPoints[i].isSeen && mandatoryInteractionPoints[i].endTime > videoController.currentTime)
+					if (!interactionsInChapter[i].isSeen && interactionsInChapter[i].endTime > videoController.currentTime)
 					{
-						timeToNextPause = mandatoryInteractionPoints[i].endTime - videoController.currentTime;
+						timeToNextPause = interactionsInChapter[i].endTime - videoController.currentTime;
 						break;
 					}
 				}
@@ -312,6 +318,8 @@ public class Player : MonoBehaviour
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
 					SetCanvasesActive(true);
+					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
+
 					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
 						StartCoroutine(FadevideoCanvasOut(videoCanvas));
@@ -385,6 +393,10 @@ public class Player : MonoBehaviour
 		var tagsPath = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString());
 		var tags = SaveFile.ReadTags(tagsPath);
 		TagManager.Instance.SetTags(tags);
+
+		var chaptersPath = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString());
+		var chapters = SaveFile.ReadChapters(chaptersPath);
+		ChapterManager.Instance.SetChapters(chapters);
 
 		//NOTE(Simon): Sort all interactionpoints based on their timing
 		data.points.Sort((x, y) => x.startTime != y.startTime
@@ -508,13 +520,22 @@ public class Player : MonoBehaviour
 					int columns = Int32.Parse(body[1]);
 
 					panel.GetComponent<TabularDataPanelSphere>().Init(newInteractionPoint.title, rows, columns, body[2].Split('\f'));
+					
+					newInteractionPoint.panel = panel;
+					break;
+				}
+				case InteractionType.Chapter:
+				{
+					var panel = Instantiate(chapterPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
+					int chapterId = Int32.Parse(newInteractionPoint.body);
+					panel.GetComponent<ChapterPanelSphere>().Init(newInteractionPoint.title, chapterId, this);
 					newInteractionPoint.panel = panel;
 					break;
 				}
 				default:
 				{
 					isValidPoint = false;
-					Debug.Log("Invalid interactionPoint encountered");
+					Debug.LogError("Invalid interactionPoint encountered");
 					break;
 				}
 			}
@@ -597,9 +618,9 @@ public class Player : MonoBehaviour
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
-		//NOTE(Simon): Add a number to interaction points
+		//NOTE(Simon): Add a sprite to interaction points, indicating InteractionType
+		point.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true).sprite = InteractionTypeSprites.GetSprite(point.type);
 		point.point.transform.GetChild(0).gameObject.SetActive(true);
-		point.point.GetComponentInChildren<TextMesh>().text = (++interactionPointCount).ToString();
 		point.panel.SetActive(false);
 		interactionPoints.Add(point);
 
@@ -609,12 +630,12 @@ public class Player : MonoBehaviour
 	private void SetInteractionPointTag(InteractionPointPlayer point)
 	{
 		var shape = point.point.GetComponent<SpriteRenderer>();
-		var text = point.point.GetComponentInChildren<TextMesh>();
+		var interactionTypeRenderer = point.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true);
 		var tag = TagManager.Instance.GetTagById(point.tagId);
 
 		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
 		shape.color = tag.color;
-		text.color = tag.color.IdealTextColor();
+		interactionTypeRenderer.color = tag.color.IdealTextColor();
 	}
 
 	private void RemoveInteractionPoint(InteractionPointPlayer point)
@@ -639,20 +660,54 @@ public class Player : MonoBehaviour
 		seekbarCollider.enabled = active;
 	}
 
-	public void OnSeek(double time)
+	public float OnSeek(double time)
 	{
-		var desiredTime = time;
-		//NOTE(Simon): Find the first unseen mandatory interaction, and set desiredTime to its endTime if we have seeked beyond that endTime
-		for (int i = 0; i < mandatoryInteractionPoints.Count; i++)
+		double desiredTime = time;
+		var interactionsInChapter = MandatoryInteractionsForTime(desiredTime);
+
+		//NOTE(Simon): Find the first unseen mandatory interaction in this chapter, and set desiredTime to its endTime if we have seeked beyond that endTime
+		for (int i = 0; i < interactionsInChapter.Count; i++)
 		{
-			if (!mandatoryInteractionPoints[i].isSeen && mandatoryInteractionPoints[i].endTime < desiredTime)
+			if (!interactionsInChapter[i].isSeen && interactionsInChapter[i].endTime < desiredTime)
 			{
-				desiredTime = mandatoryInteractionPoints[i].endTime - 0.1;
+				desiredTime = interactionsInChapter[i].endTime - 0.1;
 				break;
 			}
 		}
 
-		videoController.SeekNoTriggers(desiredTime);
+		return (float)desiredTime;
+	}
+
+	//NOTE(Simon): This filter returns all mandatory interactions in this chapter
+	public List<InteractionPointPlayer> MandatoryInteractionsForTime(double desiredTime)
+	{
+		var interactionsInChapter = new List<InteractionPointPlayer>();
+		if (mandatoryInteractionPoints.Count == 0)
+		{
+			return interactionsInChapter;
+		}
+
+		float nextChapterTime = ChapterManager.Instance.NextChapterTime(desiredTime);
+		float currentChapterTime = ChapterManager.Instance.CurrentChapterTime(desiredTime);
+
+		for (int i = 0; i < mandatoryInteractionPoints.Count; i++)
+		{
+			//NOTE(Simon): Ignore interactions before this chapter
+			if (mandatoryInteractionPoints[i].endTime < currentChapterTime)
+			{
+				continue;
+			}
+
+			//NOTE(Simon): Ignore interactions after this chapter
+			if (mandatoryInteractionPoints[i].endTime > nextChapterTime)
+			{
+				break;
+			}
+
+			interactionsInChapter.Add(mandatoryInteractionPoints[i]);
+		}
+
+		return interactionsInChapter;
 	}
 
 	public void OnVideoBrowserHologramUp()
@@ -688,6 +743,8 @@ public class Player : MonoBehaviour
 		SetCanvasesActive(false);
 		EventManager.OnSpace();
 		Seekbar.ClearBlips();
+		Destroy(chapterSelector);
+
 		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
 		videoController.Pause();
@@ -701,6 +758,7 @@ public class Player : MonoBehaviour
 		{
 			RemoveInteractionPoint(interactionPoints[j]);
 		}
+
 		interactionPoints.Clear();
 		mandatoryInteractionPoints.Clear();
 		interactionPointCount = 0;

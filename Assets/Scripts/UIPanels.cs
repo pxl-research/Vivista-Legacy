@@ -13,6 +13,7 @@ public class UIPanels : MonoBehaviour
 	public LoginPanel loginPanel;
 	public ExportPanel exportPanel;
 	public TagPanel tagPanel;
+	public ChapterManagerPanel chapterManagerPanel;
 
 	public TextPanel textPanel;
 	public TextPanelEditor textPanelEditor;
@@ -32,6 +33,8 @@ public class UIPanels : MonoBehaviour
 	public MultipleChoiceImagePanelEditor multipleChoiceImagePanelEditor;
 	public TabularDataPanel tabularDataPanel;
 	public TabularDataPanelEditor tabularDataPanelEditor;
+	public ChapterPanel chapterPanel;
+	public ChapterPanelEditor chapterPanelEditor;
 
 	private void Awake()
 	{

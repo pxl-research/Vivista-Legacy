@@ -62,7 +62,6 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 	public static void ReattachCompass()
 	{
-		// TODO(Lander): This is not tested enough
 		var seekbar = GameObject.Find("Seekbar Canvas").transform;
 		if (compass && seekbar)
 		{
