@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using UnityEngine.XR;
 
 public class VideoPanel : MonoBehaviour
 {
@@ -23,6 +24,9 @@ public class VideoPanel : MonoBehaviour
 	public Button increaseVolumeButton;
 	public AudioMixer mixer;
 	public AudioMixerGroup mixerGroup;
+
+	private Controller controllerLeft;
+	private Controller controllerRight;
 
 	private bool volumeChanging;
 	private bool increaseButtonPressed;
@@ -64,6 +68,12 @@ public class VideoPanel : MonoBehaviour
 		{
 			decreaseVolumeButton.onClick.AddListener(DecreaseVolume);
 			increaseVolumeButton.onClick.AddListener(IncreaseVolume);
+		}
+
+		if (XRSettings.enabled)
+		{
+			controllerLeft = GameObject.Find("LeftHand").GetComponentInChildren<Controller>();
+			controllerRight = GameObject.Find("RightHand").GetComponentInChildren<Controller>();
 		}
 
 		volumeSlider.onValueChanged.AddListener( _ => VolumeValueChanged());
@@ -147,6 +157,16 @@ public class VideoPanel : MonoBehaviour
 
 	private void CheckButtonStates()
 	{
+		if (XRSettings.enabled
+			&& controllerLeft != null && controllerRight != null
+			&& !(controllerLeft.triggerDown || controllerRight.triggerDown) && (increaseButtonPressed || decreaseButtonPressed))
+		{
+			increaseButtonPressed = false;
+			decreaseButtonPressed = false;
+			increaseVolumeButton.enabled = false;
+			decreaseVolumeButton.enabled = false;
+		}
+
 		if (increaseButtonPressed)
 		{
 			//NOTE(Simon): When button is down, immediately change volume
