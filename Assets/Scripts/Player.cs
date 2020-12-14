@@ -84,6 +84,7 @@ public class Player : MonoBehaviour
 	private string openVideo;
 
 	private float mandatoryPauseFadeTime = 1f;
+	private float mandatoryInteractionMessageStartTime;
 	private bool mandatoryPauseActive;
 	public GameObject mandatoryPauseMessage;
 	public GameObject mandatoryPauseMessageVR;
@@ -290,6 +291,10 @@ public class Player : MonoBehaviour
 					{
 						ShowMandatoryInteractionMessage();
 						mandatoryPauseActive = true;
+						if (XRSettings.enabled)
+						{
+							mandatoryInteractionMessageStartTime = Time.realtimeSinceStartup;
+						}
 					}
 				}
 				else
@@ -298,9 +303,27 @@ public class Player : MonoBehaviour
 					{
 						mandatoryPauseActive = false;
 						HideMandatoryInteractionMessage();
+
+						//NOTE(Jitse): Reset the mandatory interaction message popup position
+						if (XRSettings.enabled)
+						{
+							mandatoryInteractionMessageStartTime = 0;
+							mandatoryPauseMessageVR.transform.localPosition = new Vector3(-175, 400, 1.2f);
+							mandatoryPauseMessageVR.transform.localRotation = Quaternion.Euler(new Vector3(-0.35f, 0, 0));
+							mandatoryPauseMessageVR.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 100);
+						}
 					}
 
 					videoController.SetPlaybackSpeed(1f);
+				}
+
+				//NOTE(Jitse): Move the mandatory interaction message popup to a less visible place after 5 seconds
+				if (XRSettings.enabled && mandatoryInteractionMessageStartTime != 0 && Time.realtimeSinceStartup > mandatoryInteractionMessageStartTime + 5)
+				{
+					mandatoryInteractionMessageStartTime = 0;
+					mandatoryPauseMessageVR.transform.localPosition = new Vector3(-255, 20, 0);
+					mandatoryPauseMessageVR.transform.localRotation = Quaternion.Euler(Vector3.zero);
+					mandatoryPauseMessageVR.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 60);
 				}
 			}
 		}
@@ -575,6 +598,7 @@ public class Player : MonoBehaviour
 		float pointAngle = Mathf.Rad2Deg * Mathf.Atan2(point.position.x, point.position.z) - 90;
 		Canvass.sphereUIRenderer.GetComponent<UISphere>().Activate(pointAngle);
 
+		HideMandatoryInteractionMessage();
 		point.panel.SetActive(true);
 
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
@@ -597,6 +621,11 @@ public class Player : MonoBehaviour
 		activeInteractionPoint.panel.SetActive(false);
 		activeInteractionPoint = null;
 		videoController.Play();
+
+		if (mandatoryPauseActive)
+		{
+			ShowMandatoryInteractionMessage();
+		}
 
 		mainEventSystem.enabled = true;
 	}
@@ -678,7 +707,7 @@ public class Player : MonoBehaviour
 		return (float)desiredTime;
 	}
 
-	//NOTE(Simon): This filter returns all mandatory interactions in this chapter
+	//NOTE(Simon): This filter returns all mandatory interactions in this chapter.
 	public List<InteractionPointPlayer> MandatoryInteractionsForTime(double desiredTime)
 	{
 		var interactionsInChapter = new List<InteractionPointPlayer>();
