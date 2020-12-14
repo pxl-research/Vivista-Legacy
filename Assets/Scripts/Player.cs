@@ -311,6 +311,16 @@ public class Player : MonoBehaviour
 							mandatoryPauseMessageVR.transform.localPosition = new Vector3(-175, 400, 1.2f);
 							mandatoryPauseMessageVR.transform.localRotation = Quaternion.Euler(new Vector3(-0.35f, 0, 0));
 							mandatoryPauseMessageVR.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 100);
+							mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].center = new Vector3(175, -50, 0);
+							mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].size = new Vector3(350, 100, 0.1f);
+							mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[1].size = new Vector3(250, 30, 0.1f);
+
+							//NOTE(Jitse): Ensure the button has the correct size
+							var buttonRect = mandatoryPauseMessageVR.GetComponentInChildren<Hittable>().GetComponent<RectTransform>();
+							buttonRect.offsetMin = new Vector2(50, buttonRect.offsetMin.y);
+							buttonRect.offsetMax = new Vector2(-50, buttonRect.offsetMax.y);
+							buttonRect.offsetMax = new Vector2(buttonRect.offsetMax.x, 0);
+							buttonRect.offsetMin = new Vector2(buttonRect.offsetMin.x, 5);
 						}
 					}
 
@@ -324,6 +334,16 @@ public class Player : MonoBehaviour
 					mandatoryPauseMessageVR.transform.localPosition = new Vector3(-255, 20, 0);
 					mandatoryPauseMessageVR.transform.localRotation = Quaternion.Euler(Vector3.zero);
 					mandatoryPauseMessageVR.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 60);
+					mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].center = new Vector3(75, -30, 0);
+					mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].size = new Vector3(150, 60, 0.1f);
+					mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[1].size = new Vector3(110, 15, 0.1f);
+
+					//NOTE(Jitse): Ensure the button has the correct size
+					var buttonRect = mandatoryPauseMessageVR.GetComponentInChildren<Hittable>().GetComponent<RectTransform>();
+					buttonRect.offsetMin = new Vector2(5, buttonRect.offsetMin.y);
+					buttonRect.offsetMax = new Vector2(-5, buttonRect.offsetMax.y);
+					buttonRect.offsetMax = new Vector2(buttonRect.offsetMax.x, 0);
+					buttonRect.offsetMin = new Vector2(buttonRect.offsetMin.x, 5);
 				}
 			}
 		}
@@ -816,6 +836,18 @@ public class Player : MonoBehaviour
 		else
 		{
 			mandatoryPauseMessage.SetActive(false);
+		}
+	}
+
+	public void OpenMandatoryInteractionPoint()
+	{
+		for (int i = 0; i < mandatoryInteractionPoints.Count; i++)
+		{
+			if (!mandatoryInteractionPoints[i].isSeen)
+			{
+				ActivateInteractionPoint(mandatoryInteractionPoints[i]);
+				break;
+			}
 		}
 	}
 
