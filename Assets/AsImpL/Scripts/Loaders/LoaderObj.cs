@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Globalization;
-using System.Threading;
 
 namespace AsImpL
 {
@@ -261,7 +260,7 @@ namespace AsImpL
             for (int i = 0; i < lines.Length; i++)
             {
                 // update progress only sometimes
-                if (i % 7000 == 0)
+                if (i % 1000 == 0)
                 {
                     objLoadingProgress.percentage = LOAD_PHASE_PERC * i / lines.Length;
                     yield return null;
@@ -421,9 +420,7 @@ namespace AsImpL
 
             this.lines = lines;
             this.mtlData = mtlData;
-            Thread parseMaterialDataThread = new Thread(ParseMaterialDataThread);
-            parseMaterialDataThread.Start();
-            parseMaterialDataThread.Join();
+            ParseMaterialDataThread();
 		}
 
 		private void ParseMaterialDataThread()

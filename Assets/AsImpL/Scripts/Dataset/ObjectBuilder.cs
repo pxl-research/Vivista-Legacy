@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -729,13 +728,7 @@ namespace AsImpL
             }
             else if (md.opacityTex != null)
 			{
-                var opacityTexThread = new Thread(() =>
-                    {
-                        mode = OpacityTex(md, newMaterial);
-                    }
-                );
-                opacityTexThread.Start();
-                opacityTexThread.Join();
+                mode = OpacityTex(md, newMaterial);
             }
 
 			md.diffuseColor.a = md.overallAlpha;
@@ -797,9 +790,7 @@ namespace AsImpL
             //TODO(cont.): Can we improve this?
             if (md.specularTex != null)
 			{
-                var specularTexThread = new Thread(_ => SpecularTex(md, specularMode, newMaterial, metallic, smoothness));
-                specularTexThread.Start();
-                specularTexThread.Join();
+                SpecularTex(md, specularMode, newMaterial, metallic, smoothness);
             }
 
 			// replace the texture with Unity environment reflection

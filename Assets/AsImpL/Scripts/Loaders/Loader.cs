@@ -220,6 +220,7 @@ namespace AsImpL
                 + "\n    objects: " + loadStats.buildStats.objectsTime + " seconds"
                 );
             totalProgress.singleProgress.Remove(objLoadingProgress);
+
             OnLoaded(loadedModels[absolutePath], absolutePath);
         }
 

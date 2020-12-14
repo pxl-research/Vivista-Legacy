@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace AsImpL
 {
@@ -158,14 +157,8 @@ namespace AsImpL
 			int w = bumpMap.width;
 
             Texture2D normalMap = new Texture2D(w, h, TextureFormat.ARGB32, true);
-            var heightToNormalThread = new Thread(() =>
-            {
-                normalMap = HeightToNormal(amount, h, w, bumpMap, normalMap);
-            });
-            heightToNormalThread.Start();
-            heightToNormalThread.Join();
 
-			return normalMap;
+			return HeightToNormal(amount, h, w, bumpMap, normalMap); ;
 		}
 
 		private static Texture2D HeightToNormal(float amount, int h, int w, Texture2D bumpMap, Texture2D normalMap)
