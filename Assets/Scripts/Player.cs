@@ -87,7 +87,8 @@ public class Player : MonoBehaviour
 	private float mandatoryInteractionMessageStartTime;
 	private bool mandatoryPauseActive;
 	public GameObject mandatoryPauseMessage;
-	public GameObject mandatoryPauseMessageVR;
+	public GameObject mandatoryPauseMessageVRTop;
+	public GameObject mandatoryPauseMessageVRBottom;
 
 	private EventSystem mainEventSystem;
 
@@ -308,19 +309,7 @@ public class Player : MonoBehaviour
 						if (XRSettings.enabled)
 						{
 							mandatoryInteractionMessageStartTime = 0;
-							mandatoryPauseMessageVR.transform.localPosition = new Vector3(-175, 400, 1.2f);
-							mandatoryPauseMessageVR.transform.localRotation = Quaternion.Euler(new Vector3(-0.35f, 0, 0));
-							mandatoryPauseMessageVR.GetComponent<RectTransform>().sizeDelta = new Vector2(350, 100);
-							mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].center = new Vector3(175, -50, 0);
-							mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].size = new Vector3(350, 100, 0.1f);
-							mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[1].size = new Vector3(250, 30, 0.1f);
-
-							//NOTE(Jitse): Ensure the button has the correct size
-							var buttonRect = mandatoryPauseMessageVR.GetComponentInChildren<Hittable>().GetComponent<RectTransform>();
-							buttonRect.offsetMin = new Vector2(50, buttonRect.offsetMin.y);
-							buttonRect.offsetMax = new Vector2(-50, buttonRect.offsetMax.y);
-							buttonRect.offsetMax = new Vector2(buttonRect.offsetMax.x, 0);
-							buttonRect.offsetMin = new Vector2(buttonRect.offsetMin.x, 5);
+							HideMandatoryInteractionMessage();
 						}
 					}
 
@@ -331,19 +320,7 @@ public class Player : MonoBehaviour
 				if (XRSettings.enabled && mandatoryInteractionMessageStartTime != 0 && Time.realtimeSinceStartup > mandatoryInteractionMessageStartTime + 5)
 				{
 					mandatoryInteractionMessageStartTime = 0;
-					mandatoryPauseMessageVR.transform.localPosition = new Vector3(-255, 20, 0);
-					mandatoryPauseMessageVR.transform.localRotation = Quaternion.Euler(Vector3.zero);
-					mandatoryPauseMessageVR.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 60);
-					mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].center = new Vector3(75, -30, 0);
-					mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[0].size = new Vector3(150, 60, 0.1f);
-					mandatoryPauseMessageVR.GetComponentsInChildren<BoxCollider>()[1].size = new Vector3(110, 15, 0.1f);
-
-					//NOTE(Jitse): Ensure the button has the correct size
-					var buttonRect = mandatoryPauseMessageVR.GetComponentInChildren<Hittable>().GetComponent<RectTransform>();
-					buttonRect.offsetMin = new Vector2(5, buttonRect.offsetMin.y);
-					buttonRect.offsetMax = new Vector2(-5, buttonRect.offsetMax.y);
-					buttonRect.offsetMax = new Vector2(buttonRect.offsetMax.x, 0);
-					buttonRect.offsetMin = new Vector2(buttonRect.offsetMin.x, 5);
+					ShowBottomMandatoryInteractionMessage();
 				}
 			}
 		}
@@ -424,6 +401,12 @@ public class Player : MonoBehaviour
 				hit.transform.GetComponent<Hittable>().hitting = true;
 			}
 		}
+	}
+
+	private void ShowBottomMandatoryInteractionMessage()
+	{
+		mandatoryPauseMessageVRTop.SetActive(false);
+		mandatoryPauseMessageVRBottom.SetActive(true);
 	}
 
 	private bool OpenFile(string projectPath)
@@ -645,6 +628,11 @@ public class Player : MonoBehaviour
 		if (mandatoryPauseActive)
 		{
 			ShowMandatoryInteractionMessage();
+
+			if (XRSettings.enabled)
+			{
+				mandatoryInteractionMessageStartTime = Time.realtimeSinceStartup;
+			}
 		}
 
 		mainEventSystem.enabled = true;
@@ -819,7 +807,8 @@ public class Player : MonoBehaviour
 	{
 		if (XRSettings.enabled)
 		{
-			mandatoryPauseMessageVR.SetActive(true);
+			mandatoryPauseMessageVRTop.SetActive(true);
+			mandatoryPauseMessageVRBottom.SetActive(false);
 		}
 		else
 		{
@@ -831,7 +820,8 @@ public class Player : MonoBehaviour
 	{
 		if (XRSettings.enabled)
 		{
-			mandatoryPauseMessageVR.SetActive(false);
+			mandatoryPauseMessageVRTop.SetActive(false);
+			mandatoryPauseMessageVRBottom.SetActive(false);
 		}
 		else
 		{
