@@ -602,6 +602,7 @@ public class Player : MonoBehaviour
 		Canvass.sphereUIRenderer.GetComponent<UISphere>().Activate(pointAngle);
 
 		HideMandatoryInteractionMessage();
+		Camera.main.cullingMask &= ~(1 << LayerMask.NameToLayer("interactionPoints"));
 		point.panel.SetActive(true);
 
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
@@ -624,6 +625,8 @@ public class Player : MonoBehaviour
 		activeInteractionPoint.panel.SetActive(false);
 		activeInteractionPoint = null;
 		videoController.Play();
+
+		Camera.main.cullingMask |= 1 << LayerMask.NameToLayer("interactionPoints");
 
 		if (mandatoryPauseActive)
 		{
