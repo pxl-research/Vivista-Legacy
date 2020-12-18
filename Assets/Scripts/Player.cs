@@ -84,11 +84,18 @@ public class Player : MonoBehaviour
 	private string openVideo;
 
 	private float mandatoryPauseFadeTime = 1f;
+	private float mandatoryMessageDuration = 7.5f;
 	private float mandatoryInteractionMessageStartTime;
 	private bool mandatoryPauseActive;
 	public GameObject mandatoryPauseMessage;
 	public GameObject mandatoryPauseMessageVRTop;
 	public GameObject mandatoryPauseMessageVRBottom;
+	private Image mandatoryPauseMessageVRTopBackground;
+	private Image mandatoryPauseMessageVRBottomBackground;
+
+	private Color colorStart = new Color(0, 0, 0, 178);
+	private Color colorEnd = new Color(0.25f, 0.25f, 0.25f, 178);
+	private float lastColorChangeTime;
 
 	private EventSystem mainEventSystem;
 
@@ -121,6 +128,9 @@ public class Player : MonoBehaviour
 		OpenFilePanel();
 
 		mainEventSystem = EventSystem.current;
+
+		mandatoryPauseMessageVRTopBackground = mandatoryPauseMessageVRTop.GetComponent<Image>();
+		mandatoryPauseMessageVRBottomBackground = mandatoryPauseMessageVRBottomBackground.GetComponent<Image>();
 	}
 
 	void Update()
@@ -175,6 +185,50 @@ public class Player : MonoBehaviour
 
 						Canvass.seekbar.transform.position = new Vector3(x, y, z);
 						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
+					}
+				}
+
+				//NOTE(Jitse): Animate pulsing mandatory pause message
+				if (mandatoryPauseMessageVRTop.activeInHierarchy)
+				{
+					if (mandatoryPauseMessageVRTopBackground == null)
+					{
+						mandatoryPauseMessageVRTopBackground = mandatoryPauseMessageVRTop.GetComponent<Image>();
+					}
+
+					var ratio = (Time.time - lastColorChangeTime);
+					ratio = Mathf.Clamp01(ratio);
+					mandatoryPauseMessageVRTopBackground.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
+
+					if (ratio == 1f)
+					{
+						lastColorChangeTime = Time.time;
+
+						//NOTE(Jitse): Switch start and end colors.
+						var temp = colorStart;
+						colorStart = colorEnd;
+						colorEnd = temp;
+					}
+				}
+				else if (mandatoryPauseMessageVRBottom.activeInHierarchy)
+				{
+					if (mandatoryPauseMessageVRBottomBackground == null)
+					{
+						mandatoryPauseMessageVRBottomBackground = mandatoryPauseMessageVRBottom.GetComponent<Image>();
+					}
+
+					var ratio = (Time.time - lastColorChangeTime);
+					ratio = Mathf.Clamp01(ratio);
+					mandatoryPauseMessageVRBottomBackground.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
+
+					if (ratio == 1f)
+					{
+						lastColorChangeTime = Time.time;
+
+						//NOTE(Jitse): Switch start and end colors.
+						var temp = colorStart;
+						colorStart = colorEnd;
+						colorEnd = temp;
 					}
 				}
 			}
@@ -317,7 +371,7 @@ public class Player : MonoBehaviour
 				}
 
 				//NOTE(Jitse): Move the mandatory interaction message popup to a less visible place after 5 seconds
-				if (XRSettings.enabled && mandatoryInteractionMessageStartTime != 0 && Time.realtimeSinceStartup > mandatoryInteractionMessageStartTime + 5)
+				if (XRSettings.enabled && mandatoryInteractionMessageStartTime != 0 && Time.realtimeSinceStartup > mandatoryInteractionMessageStartTime + mandatoryMessageDuration && activeInteractionPoint == null)
 				{
 					mandatoryInteractionMessageStartTime = 0;
 					ShowBottomMandatoryInteractionMessage();
