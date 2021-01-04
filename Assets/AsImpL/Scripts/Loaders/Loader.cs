@@ -161,10 +161,6 @@ namespace AsImpL
 			objLoadingProgress.message = "Loading " + fileName + "...";
 			Debug.LogFormat("Loading {0}\n  from: {1}...", objName, absolutePath);
 
-			yield return null;
-
-			// TODO: implementation of a caching mechanism for models downloaded from an URL
-
 			// if the model was already loaded duplicate the existing object
 			if (buildOptions != null && buildOptions.reuseLoaded && loadedModels.ContainsKey(absolutePath) && loadedModels[absolutePath] != null)
 			{
@@ -206,6 +202,11 @@ namespace AsImpL
 			}
 
 			lastTime = Time.realtimeSinceStartup;
+
+			while (modelThread.ThreadState == ThreadState.Running)
+			{
+				yield return null;
+			}
 			Thread materialThread = null;
 			if (HasMaterialLibrary)
 			{
@@ -218,8 +219,8 @@ namespace AsImpL
 			lastTime = Time.realtimeSinceStartup;
 
 			while (modelThread.ThreadState == ThreadState.Running
-					&& (materialThread != null && materialThread.ThreadState == ThreadState.Running) 
-					|| materialThread == null)
+					&& ((materialThread != null && materialThread.ThreadState == ThreadState.Running) 
+					|| materialThread == null))
 			{
 				yield return null;
 			}
@@ -255,14 +256,14 @@ namespace AsImpL
 		/// </summary>
 		/// <param name="absolutePath">absolute file path</param>
 		/// <remarks>This is called by Load() method</remarks>
-		protected abstract IEnumerator LoadModelFile(string absolutePath);
+		protected abstract void LoadModelFile(string absolutePath);
 
 		/// <summary>
 		/// Load the material library from the given path.
 		/// </summary>
 		/// <param name="absolutePath">absolute file path</param>
 		/// <remarks>This is called by Load() method</remarks>
-		protected abstract IEnumerator LoadMaterialLibrary(string absolutePath);
+		protected abstract void LoadMaterialLibrary(string absolutePath);
 
 
 		/// <summary>
@@ -399,7 +400,6 @@ namespace AsImpL
 			ObjectBuilder.ProgressInfo info = new ObjectBuilder.ProgressInfo();
 
 			objLoadingProgress.message = "Loading materials...";
-			yield return null;
 #if UNITY_EDITOR
 			objectBuilder.alternativeTexPath = altTexPath;
 #endif

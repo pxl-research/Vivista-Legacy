@@ -9,418 +9,400 @@ using System.Globalization;
 
 namespace AsImpL
 {
-    /// <summary>
-    /// Class for loading OBJ files into Unity scene at run-time and in editor mode.
-    /// </summary>
-    /// <remarks>
-    /// Partially derived from "Runtime OBJ Loader"
-    /// (http://forum.unity3d.com/threads/free-runtime-obj-loader.365884/)
-    /// and from "runtime .OBJ file loader for Unity3D"
-    /// (https://github.com/hammmm/unity-obj-loader) and 
-    /// (https://github.com/cmdr2/unity-remote-obj-loader)
-    /// 
-    /// New features:
-    /// <list type="bullet">
-    /// <item><description>meshes with more than 65K vertices/indices are splitted and loaded</description></item>
-    /// <item><description>groups are loaded into game (sub) objects</description></item>
-    /// <item><description>extended material support</description></item>
-    /// <item><description>computation of normal maps and tangents</description></item>
-    /// <item><description>computation of albedo texture from diffuse and opacity textures</description></item>
-    /// <item><description>progressive loading</description></item>
-    /// <item><description>reusing data for multiple objects</description></item>
-    /// <item><description>create a loader for each model for parallel loading</description></item>
-    /// <item><description>support for asset import</description></item>
-    /// </list>
-    /// <seealso cref="DataSet"/>
-    /// <seealso cref="MaterialData"/>
-    /// <seealso cref="ObjectBuilder"/>
-    /// </remarks>
-    public class LoaderObj : Loader
-    {
-        private string mtlLib;
-        private string loadedText;
-        private MaterialData current;
-        private char[] separators;
-        private string[] lines;
-        private List<MaterialData> mtlData;
+	/// <summary>
+	/// Class for loading OBJ files into Unity scene at run-time and in editor mode.
+	/// </summary>
+	/// <remarks>
+	/// Partially derived from "Runtime OBJ Loader"
+	/// (http://forum.unity3d.com/threads/free-runtime-obj-loader.365884/)
+	/// and from "runtime .OBJ file loader for Unity3D"
+	/// (https://github.com/hammmm/unity-obj-loader) and 
+	/// (https://github.com/cmdr2/unity-remote-obj-loader)
+	/// 
+	/// New features:
+	/// <list type="bullet">
+	/// <item><description>meshes with more than 65K vertices/indices are splitted and loaded</description></item>
+	/// <item><description>groups are loaded into game (sub) objects</description></item>
+	/// <item><description>extended material support</description></item>
+	/// <item><description>computation of normal maps and tangents</description></item>
+	/// <item><description>computation of albedo texture from diffuse and opacity textures</description></item>
+	/// <item><description>progressive loading</description></item>
+	/// <item><description>reusing data for multiple objects</description></item>
+	/// <item><description>create a loader for each model for parallel loading</description></item>
+	/// <item><description>support for asset import</description></item>
+	/// </list>
+	/// <seealso cref="DataSet"/>
+	/// <seealso cref="MaterialData"/>
+	/// <seealso cref="ObjectBuilder"/>
+	/// </remarks>
+	public class LoaderObj : Loader
+	{
+		private string mtlLib;
+		private MaterialData current;
+		private char[] separators;
+		private string[] lines;
+		private List<MaterialData> mtlData;
 
-        /// <summary>
-        /// Parse dependencies of the given OBJ file.
-        /// </summary>
-        /// <param name="absolutePath">absolute file path</param>
-        /// <returns>The list of dependencies (textures files, if any).</returns>
-        public override string[] ParseTexturePaths(string absolutePath)
-        {
-            List<string> mtlTexPathList = new List<string>();
-            string basePath = GetDirName(absolutePath);
+		/// <summary>
+		/// Parse dependencies of the given OBJ file.
+		/// </summary>
+		/// <param name="absolutePath">absolute file path</param>
+		/// <returns>The list of dependencies (textures files, if any).</returns>
+		public override string[] ParseTexturePaths(string absolutePath)
+		{
+			List<string> mtlTexPathList = new List<string>();
+			string basePath = GetDirName(absolutePath);
 
-            string mtlLibName = ParseMaterialLibName(absolutePath);
+			string mtlLibName = ParseMaterialLibName(absolutePath);
 
-            if (!String.IsNullOrEmpty(mtlLibName))
-            {
-                //mtlDepPathList.Add(mtlLibName);
-                string mtlPath = basePath + mtlLibName;
-                string[] lines = File.ReadAllLines(mtlPath);
-                List<MaterialData> mtlData = new List<MaterialData>();
-                ParseMaterialData(lines, mtlData);
-                foreach (MaterialData mtl in mtlData)
-                {
-                    if (!String.IsNullOrEmpty(mtl.diffuseTexPath))
-                    {
-                        mtlTexPathList.Add(mtl.diffuseTexPath);
-                    }
-                    if (!String.IsNullOrEmpty(mtl.specularTexPath))
-                    {
-                        mtlTexPathList.Add(mtl.specularTexPath);
-                    }
-                    if (!String.IsNullOrEmpty(mtl.bumpTexPath))
-                    {
-                        mtlTexPathList.Add(mtl.bumpTexPath);
-                    }
-                    if (!String.IsNullOrEmpty(mtl.opacityTexPath))
-                    {
-                        mtlTexPathList.Add(mtl.opacityTexPath);
-                    }
-                }
-            }
+			if (!String.IsNullOrEmpty(mtlLibName))
+			{
+				//mtlDepPathList.Add(mtlLibName);
+				string mtlPath = basePath + mtlLibName;
+				string[] lines = File.ReadAllLines(mtlPath);
+				List<MaterialData> mtlData = new List<MaterialData>();
+				ParseMaterialData(lines, mtlData);
+				foreach (MaterialData mtl in mtlData)
+				{
+					if (!String.IsNullOrEmpty(mtl.diffuseTexPath))
+					{
+						mtlTexPathList.Add(mtl.diffuseTexPath);
+					}
+					if (!String.IsNullOrEmpty(mtl.specularTexPath))
+					{
+						mtlTexPathList.Add(mtl.specularTexPath);
+					}
+					if (!String.IsNullOrEmpty(mtl.bumpTexPath))
+					{
+						mtlTexPathList.Add(mtl.bumpTexPath);
+					}
+					if (!String.IsNullOrEmpty(mtl.opacityTexPath))
+					{
+						mtlTexPathList.Add(mtl.opacityTexPath);
+					}
+				}
+			}
 
-            return mtlTexPathList.ToArray();
-        }
-
-
-        protected override IEnumerator LoadModelFile(string absolutePath)
-        {
-            string url = absolutePath.Contains("//") ? absolutePath : "file:///" + absolutePath;
-            yield return LoadOrDownloadText(url);
-
-            if (String.IsNullOrEmpty(loadedText))
-            {
-                // loading errors are already notified by LoadOrDownloadText()
-                if (loadedText == "")
-                {
-                    Debug.LogError("Empty model file.");
-                }
-                // remove this progress to let complete the total loading process
-                totalProgress.singleProgress.Remove(objLoadingProgress);
-                yield break;
-            }
-            //Debug.LogFormat("Parsing geometry data in {0}...", www.url);
-
-            yield return ParseGeometryData(loadedText);
-        }
+			return mtlTexPathList.ToArray();
+		}
 
 
-        protected override IEnumerator LoadMaterialLibrary(string absolutePath)
-        {
-            string mtlPath;
-            string basePath = GetDirName(absolutePath);
-            if (absolutePath.Contains("//"))
-            {
-                int pos;
-                // handle the special case of a PHP URL containing "...?...=model.obj"
-                if (absolutePath.Contains("?"))
-                {
-                    // in this case try to get the library path reading until last "=".
-                    pos = absolutePath.LastIndexOf('=');
-                }
-                else
-                {
-                    pos = absolutePath.LastIndexOf('/');
-                }
-                mtlPath = absolutePath.Remove(pos + 1) + mtlLib;
-            }
-            else
-            {
-                if(Path.IsPathRooted(mtlLib))
-                {
-                    mtlPath = "file:///" + mtlLib;
-                }
-                else
-                {
-                    mtlPath = "file:///" + basePath + mtlLib;
-                }
-            }
-            yield return LoadOrDownloadText(mtlPath,false);
-            if (loadedText == null)
-            {
-                mtlLib = Path.GetFileName(mtlLib);
-                mtlPath = "file:///" + basePath + mtlLib;
-                Debug.LogWarningFormat("Material library {0} loaded from the same directory as the OBJ file.\n", mtlLib);
+		protected override void LoadModelFile(string absolutePath)
+		{
+			var text = File.ReadAllText(absolutePath);
 
-                yield return LoadOrDownloadText(mtlPath);
-            }
+			if (String.IsNullOrEmpty(text))
+			{
+				// loading errors are already notified by LoadOrDownloadText()
+				if (text == "")
+				{
+					Debug.LogError("Empty model file.");
+				}
+				// remove this progress to let complete the total loading process
+				totalProgress.singleProgress.Remove(objLoadingProgress);
+				return;
+			}
+			//Debug.LogFormat("Parsing geometry data in {0}...", www.url);
 
-            if (loadedText != null)
-            {
-                //Debug.LogFormat("Parsing material libray {0}...", loader.url);
-                objLoadingProgress.message = "Parsing material libray...";
-                ParseMaterialData(loadedText);
-            }
-
-        }
+			ParseGeometryData(text);
+		}
 
 
-        private void GetFaceIndicesByOneFaceLine(DataSet.FaceIndices[] faces, string[] p, bool isFaceIndexPlus)
-        {
-            if (isFaceIndexPlus)
-            {
-                for (int j = 1; j < p.Length; j++)
-                {
-                    string[] c = p[j].Split('/');
-                    DataSet.FaceIndices fi = new DataSet.FaceIndices();
-                    // vertex
-                    int vi = FastIntParse(c[0]);
-                    fi.vertIdx = vi - 1;
-                    // uv
-                    if (c.Length > 1 && c[1] != "")
-                    {
-                        int vu = FastIntParse(c[1]);
-                        fi.uvIdx = vu - 1;
-                    }
-                    // normal
-                    if (c.Length > 2 && c[2] != "")
-                    {
-                        int vn = FastIntParse(c[2]);
-                        fi.normIdx = vn - 1;
-                    }
-                    else
-                    {
-                        fi.normIdx = -1;
-                    }
-                    faces[j - 1] = fi;
-                }
-            }
-            else
-            { // for minus index
-                int vertexCount = dataSet.vertList.Count;
-                int uvCount = dataSet.uvList.Count;
-                for (int j = 1; j < p.Length; j++)
-                {
-                    string[] c = p[j].Split('/');
-                    DataSet.FaceIndices fi = new DataSet.FaceIndices();
-                    // vertex
-                    int vi = FastIntParse(c[0]);
-                    fi.vertIdx = vertexCount + vi;
-                    // uv
-                    if (c.Length > 1 && c[1] != "")
-                    {
-                        int vu = FastIntParse(c[1]);
-                        fi.uvIdx = uvCount + vu;
-                    }
-                    // normal
-                    if (c.Length > 2 && c[2] != "")
-                    {
-                        int vn = FastIntParse(c[2]);
-                        fi.normIdx = vertexCount + vn;
-                    }
-                    else
-                    {
-                        fi.normIdx = -1;
-                    }
-                    faces[j - 1] = fi;
-                }
-            }
-        }
+		protected override void LoadMaterialLibrary(string absolutePath)
+		{
+			string mtlPath;
+			string basePath = GetDirName(absolutePath);
+			
+			if (Path.IsPathRooted(mtlLib))
+			{
+				mtlPath = mtlLib;
+			}
+			else
+			{
+				mtlPath = basePath + mtlLib;
+			}
+
+			var text = File.ReadAllText(mtlPath);
+
+			if (text == "")
+			{
+				mtlLib = Path.GetFileName(mtlLib);
+				mtlPath = "file:///" + basePath + mtlLib;
+				Debug.LogWarningFormat("Material library {0} loaded from the same directory as the OBJ file.\n", mtlLib);
+
+				text = File.ReadAllText(mtlPath);
+			}
+
+			if (!String.IsNullOrEmpty(text))
+			{
+				//Debug.LogFormat("Parsing material libray {0}...", loader.url);
+				objLoadingProgress.message = "Parsing material libray...";
+				ParseMaterialData(text);
+			}
+
+		}
 
 
-        /// <summary>
-        /// Convert coordinates according to import options.
-        /// </summary>
-        private Vector3 ConvertVec3(float x, float y, float z)
+		private void GetFaceIndicesByOneFaceLine(DataSet.FaceIndices[] faces, string[] p, bool isFaceIndexPlus)
+		{
+			if (isFaceIndexPlus)
+			{
+				for (int j = 1; j < p.Length; j++)
+				{
+					string[] c = p[j].Split('/');
+					DataSet.FaceIndices fi = new DataSet.FaceIndices();
+					// vertex
+					int vi = FastIntParse(c[0]);
+					fi.vertIdx = vi - 1;
+					// uv
+					if (c.Length > 1 && c[1] != "")
+					{
+						int vu = FastIntParse(c[1]);
+						fi.uvIdx = vu - 1;
+					}
+					// normal
+					if (c.Length > 2 && c[2] != "")
+					{
+						int vn = FastIntParse(c[2]);
+						fi.normIdx = vn - 1;
+					}
+					else
+					{
+						fi.normIdx = -1;
+					}
+					faces[j - 1] = fi;
+				}
+			}
+			else
+			{ // for minus index
+				int vertexCount = dataSet.vertList.Count;
+				int uvCount = dataSet.uvList.Count;
+				for (int j = 1; j < p.Length; j++)
+				{
+					string[] c = p[j].Split('/');
+					DataSet.FaceIndices fi = new DataSet.FaceIndices();
+					// vertex
+					int vi = FastIntParse(c[0]);
+					fi.vertIdx = vertexCount + vi;
+					// uv
+					if (c.Length > 1 && c[1] != "")
+					{
+						int vu = FastIntParse(c[1]);
+						fi.uvIdx = uvCount + vu;
+					}
+					// normal
+					if (c.Length > 2 && c[2] != "")
+					{
+						int vn = FastIntParse(c[2]);
+						fi.normIdx = vertexCount + vn;
+					}
+					else
+					{
+						fi.normIdx = -1;
+					}
+					faces[j - 1] = fi;
+				}
+			}
+		}
+
+
+		/// <summary>
+		/// Convert coordinates according to import options.
+		/// </summary>
+		private Vector3 ConvertVec3(float x, float y, float z)
 		{
 			return ConvertVertAxis ? new Vector3(x, z, y) : new Vector3(x, y, -z);
 		}
 
 
-        /// <summary>
-        /// Parse a string to get a floating point number using the invariant culture.
-        /// </summary>
-        /// <param name="floatString">String with the number to be parsed</param>
-        /// <returns>The parsed floating point number.</returns>
-        private static float ParseFloat(string floatString)
-        {
-            return float.Parse(floatString, CultureInfo.InvariantCulture.NumberFormat);
-        }
+		/// <summary>
+		/// Parse a string to get a floating point number using the invariant culture.
+		/// </summary>
+		/// <param name="floatString">String with the number to be parsed</param>
+		/// <returns>The parsed floating point number.</returns>
+		private static float ParseFloat(string floatString)
+		{
+			return float.Parse(floatString, CultureInfo.InvariantCulture.NumberFormat);
+		}
 
 
-        /// <summary>
-        /// Parse the OBJ file to extract geometry data.
-        /// </summary>
-        /// <param name="objDataText">OBJ file text</param>
-        /// <returns>Execution is splitted into steps to not freeze the caller method.</returns>
-        protected IEnumerator ParseGeometryData(string objDataText)
-        {
-            string[] lines = objDataText.Split('\n');
+		/// <summary>
+		/// Parse the OBJ file to extract geometry data.
+		/// </summary>
+		/// <param name="objDataText">OBJ file text</param>
+		/// <returns>Execution is splitted into steps to not freeze the caller method.</returns>
+		protected void ParseGeometryData(string objDataText)
+		{
+			string[] lines = objDataText.Split('\n');
 
-            bool isFirstInGroup = true;
-            bool isFaceIndexPlus = true;
+			bool isFirstInGroup = true;
+			bool isFaceIndexPlus = true;
 
-            objLoadingProgress.message = "Parsing geometry data...";
+			objLoadingProgress.message = "Parsing geometry data...";
 
-            for (int i = 0; i < lines.Length; i++)
-            {
-                // update progress only sometimes
-                if (i % 1000 == 0)
-                {
-                    objLoadingProgress.percentage = LOAD_PHASE_PERC * i / lines.Length;
-                    yield return null;
-                }
+			for (int i = 0; i < lines.Length; i++)
+			{
+				// update progress only sometimes
+				if (i % 1000 == 0)
+				{
+					objLoadingProgress.percentage = LOAD_PHASE_PERC * i / lines.Length;
+				}
 
-                string line = Clean(lines[i]);
-
-
-                if (line.Length > 0 && line[0] == '#')
-                { // comment line
-                    continue;
-                }
-                string[] p = line.Split(' ');
-                if (p.Length == 0)
-                { // empty line
-                    continue;
-                }
-
-                string parameters = null;
-                if (line.Length > p[0].Length)
-                {
-                    parameters = line.Substring(p[0].Length + 1);
-                }
-
-                switch (p[0])
-                {
-                    case "o":
-                        dataSet.AddObject(parameters);
-                        isFirstInGroup = true;
-                        break;
-                    case "g":
-                        isFirstInGroup = true;
-                        dataSet.AddGroup(parameters);
-                        break;
-                    case "v":
-                        dataSet.AddVertex(ConvertVec3(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3])));
-                        if (p.Length >= 7)
-                        {
-                            // 7 for "v x y z r g b"
-                            // 8 for "v x y z r g b w"
-                            // w is the weight required for rational curves and surfaces. It is
-                            // not required for non - rational curves and surfaces.If you do not
-                            // specify a value for w, the default is 1.0. [http://paulbourke.net/dataformats/obj/]
-                            dataSet.AddColor(new Color(FastFloatParse(p[4]), FastFloatParse(p[5]), FastFloatParse(p[6]), 1f));
-                        }
-                        break;
-                    case "vt":
-                        dataSet.AddUV(new Vector2(FastFloatParse(p[1]), FastFloatParse(p[2])));
-                        break;
-                    case "vn":
-                        dataSet.AddNormal(ConvertVec3(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3])));
-                        break;
-                    case "f":
-                        {
-                            int numVerts = p.Length - 1;
-                            DataSet.FaceIndices[] face = new DataSet.FaceIndices[numVerts];
-                            if (isFirstInGroup)
-                            {
-                                isFirstInGroup = false;
-                                string[] c = p[1].Trim().Split('/');
-                                isFaceIndexPlus = (FastIntParse(c[0]) >= 0);
-                            }
-                            GetFaceIndicesByOneFaceLine(face, p, isFaceIndexPlus);
-                            if (numVerts == 3)
-                            {
-                                dataSet.AddFaceIndices(face[0]);
-                                dataSet.AddFaceIndices(face[2]);
-                                dataSet.AddFaceIndices(face[1]);
-                            }
-                            else
-                            {
-                                // Triangulate the polygon
-                                // TODO: Texturing and lighting work better with a triangulation that maximizes triangles areas.
-                                // TODO: the following true must be replaced to a proper option (disabled by default) as soon as a proper triangulation method is implemented.
-                                Triangulator.Triangulate(dataSet, face);
-                                // TODO: Maybe triangulation could be done in ObjectImporter instead.
-                            }
-                        }
-                        break;
-                    case "mtllib":
-                        if (!String.IsNullOrEmpty(parameters))
-                        {
-                            mtlLib = parameters;
-                        }
-                        break;
-                    case "usemtl":
-                        if (!String.IsNullOrEmpty(parameters))
-                        {
-                            dataSet.AddMaterialName(DataSet.FixMaterialName(parameters));
-                        }
-                        break;
-                }
-            }
-            objLoadingProgress.percentage = LOAD_PHASE_PERC;
-            //dataSet.PrintSummary();
-        }
+				string line = Clean(lines[i]);
 
 
-        /// <summary>
-        /// Extract the material library (file) name from the OBJ file.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private string ParseMaterialLibName(string path)
-        {
-            string[] lines = File.ReadAllLines(path);
+				if (line.Length > 0 && line[0] == '#')
+				{ // comment line
+					continue;
+				}
+				string[] p = line.Split(' ');
+				if (p.Length == 0)
+				{ // empty line
+					continue;
+				}
 
-            objLoadingProgress.message = "Parsing geometry data...";
+				string parameters = null;
+				if (line.Length > p[0].Length)
+				{
+					parameters = line.Substring(p[0].Length + 1);
+				}
 
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string l = lines[i].Trim();
+				switch (p[0])
+				{
+					case "o":
+						dataSet.AddObject(parameters);
+						isFirstInGroup = true;
+						break;
+					case "g":
+						isFirstInGroup = true;
+						dataSet.AddGroup(parameters);
+						break;
+					case "v":
+						dataSet.AddVertex(ConvertVec3(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3])));
+						if (p.Length >= 7)
+						{
+							// 7 for "v x y z r g b"
+							// 8 for "v x y z r g b w"
+							// w is the weight required for rational curves and surfaces. It is
+							// not required for non - rational curves and surfaces.If you do not
+							// specify a value for w, the default is 1.0. [http://paulbourke.net/dataformats/obj/]
+							dataSet.AddColor(new Color(FastFloatParse(p[4]), FastFloatParse(p[5]), FastFloatParse(p[6]), 1f));
+						}
+						break;
+					case "vt":
+						dataSet.AddUV(new Vector2(FastFloatParse(p[1]), FastFloatParse(p[2])));
+						break;
+					case "vn":
+						dataSet.AddNormal(ConvertVec3(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3])));
+						break;
+					case "f":
+					{
+						int numVerts = p.Length - 1;
+						DataSet.FaceIndices[] face = new DataSet.FaceIndices[numVerts];
+						if (isFirstInGroup)
+						{
+							isFirstInGroup = false;
+							string[] c = p[1].Trim().Split('/');
+							isFaceIndexPlus = (FastIntParse(c[0]) >= 0);
+						}
+						GetFaceIndicesByOneFaceLine(face, p, isFaceIndexPlus);
+						if (numVerts == 3)
+						{
+							dataSet.AddFaceIndices(face[0]);
+							dataSet.AddFaceIndices(face[2]);
+							dataSet.AddFaceIndices(face[1]);
+						}
+						else
+						{
+							// Triangulate the polygon
+							// TODO: Texturing and lighting work better with a triangulation that maximizes triangles areas.
+							// TODO: the following true must be replaced to a proper option (disabled by default) as soon as a proper triangulation method is implemented.
+							Triangulator.Triangulate(dataSet, face);
+							// TODO: Maybe triangulation could be done in ObjectImporter instead.
+						}
+					}
+					break;
+					case "mtllib":
+						if (!String.IsNullOrEmpty(parameters))
+						{
+							mtlLib = parameters;
+						}
+						break;
+					case "usemtl":
+						if (!String.IsNullOrEmpty(parameters))
+						{
+							dataSet.AddMaterialName(DataSet.FixMaterialName(parameters));
+						}
+						break;
+				}
+			}
+			objLoadingProgress.percentage = LOAD_PHASE_PERC;
+			//dataSet.PrintSummary();
+		}
 
-                if (l.StartsWith("mtllib"))
-                {
-                    return l.Substring("mtllib".Length).Trim();
-                }
-            }
-            return null;
-        }
+
+		/// <summary>
+		/// Extract the material library (file) name from the OBJ file.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		private string ParseMaterialLibName(string path)
+		{
+			string[] lines = File.ReadAllLines(path);
+
+			objLoadingProgress.message = "Parsing geometry data...";
+
+			for (int i = 0; i < lines.Length; i++)
+			{
+				string l = lines[i].Trim();
+
+				if (l.StartsWith("mtllib"))
+				{
+					return l.Substring("mtllib".Length).Trim();
+				}
+			}
+			return null;
+		}
 
 
-        /// <summary>
-        /// Check if a material library file is defined.
-        /// </summary>
-        protected override bool HasMaterialLibrary
-        {
-            get
-            {
-                return mtlLib != null;
-            }
-        }
+		/// <summary>
+		/// Check if a material library file is defined.
+		/// </summary>
+		protected override bool HasMaterialLibrary
+		{
+			get
+			{
+				return mtlLib != null;
+			}
+		}
 
 
-        /// <summary>
-        /// Parse the material library text to get material data.
-        /// </summary>
-        /// <param name="data">material library text (read from file)</param>
-        private void ParseMaterialData(string data)
-        {
-            objLoadingProgress.message = "Parsing material data...";
-            string[] lines = data.Split('\n');
-            materialData = new List<MaterialData>();
-            ParseMaterialData(lines, materialData);
-        }
+		/// <summary>
+		/// Parse the material library text to get material data.
+		/// </summary>
+		/// <param name="data">material library text (read from file)</param>
+		private void ParseMaterialData(string data)
+		{
+			objLoadingProgress.message = "Parsing material data...";
+			string[] lines = data.Split('\n');
+			materialData = new List<MaterialData>();
+			ParseMaterialData(lines, materialData);
+		}
 
 
-        /// <summary>
-        /// Parse the material library lines to get material data.
-        /// </summary>
-        /// <param name="lines">lines read from the material library file</param>
-        /// <param name="mtlData">list of material data</param>
-        private void ParseMaterialData(string[] lines, List<MaterialData> mtlData)
+		/// <summary>
+		/// Parse the material library lines to get material data.
+		/// </summary>
+		/// <param name="lines">lines read from the material library file</param>
+		/// <param name="mtlData">list of material data</param>
+		private void ParseMaterialData(string[] lines, List<MaterialData> mtlData)
 		{
 			current = new MaterialData();
 			separators = new char[] { ' ', '\t' };
 
-            this.lines = lines;
-            this.mtlData = mtlData;
-            ParseMaterial();
+			this.lines = lines;
+			this.mtlData = mtlData;
+			ParseMaterial();
 		}
 
 		private void ParseMaterial()
@@ -537,213 +519,176 @@ namespace AsImpL
 		/// <remarks>Only the bump map texture path is used here.</remarks>
 		/// <seealso cref="https://github.com/hammmm/unity-obj-loader"/>
 		private void ParseBumpParameters(string[] param, MaterialData mtlData)
-        {
-            Regex regexNumber = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
+		{
+			Regex regexNumber = new Regex(@"^[-+]?[0-9]*\.?[0-9]+$");
 
-            var bumpParams = new Dictionary<string, BumpParamDef>();
-            bumpParams.Add("bm", new BumpParamDef("bm", "string", 1, 1));
-            bumpParams.Add("clamp", new BumpParamDef("clamp", "string", 1, 1));
-            bumpParams.Add("blendu", new BumpParamDef("blendu", "string", 1, 1));
-            bumpParams.Add("blendv", new BumpParamDef("blendv", "string", 1, 1));
-            bumpParams.Add("imfchan", new BumpParamDef("imfchan", "string", 1, 1));
-            bumpParams.Add("mm", new BumpParamDef("mm", "string", 1, 1));
-            bumpParams.Add("o", new BumpParamDef("o", "number", 1, 3));
-            bumpParams.Add("s", new BumpParamDef("s", "number", 1, 3));
-            bumpParams.Add("t", new BumpParamDef("t", "number", 1, 3));
-            bumpParams.Add("texres", new BumpParamDef("texres", "string", 1, 1));
-            int pos = 1;
-            string filename = null;
-            while (pos < param.Length)
-            {
-                if (!param[pos].StartsWith("-"))
-                {
-                    filename = param[pos];
-                    pos++;
-                    continue;
-                }
-                // option processing
-                string optionName = param[pos].Substring(1);
-                pos++;
-                if (!bumpParams.ContainsKey(optionName))
-                {
-                    continue;
-                }
-                BumpParamDef def = bumpParams[optionName];
-                ArrayList args = new ArrayList();
-                int i = 0;
-                bool isOptionNotEnough = false;
-                for (; i < def.valueNumMin; i++, pos++)
-                {
-                    if (pos >= param.Length)
-                    {
-                        isOptionNotEnough = true;
-                        break;
-                    }
-                    if (def.valueType == "number")
-                    {
-                        Match match = regexNumber.Match(param[pos]);
-                        if (!match.Success)
-                        {
-                            isOptionNotEnough = true;
-                            break;
-                        }
-                    }
-                    args.Add(param[pos]);
-                }
-                if (isOptionNotEnough)
-                {
-                    Debug.Log("bump variable value not enough for option:" + optionName + " of material:" + mtlData.materialName);
-                    continue;
-                }
-                for (; i < def.valueNumMax && pos < param.Length; i++, pos++)
-                {
-                    if (def.valueType == "number")
-                    {
-                        Match match = regexNumber.Match(param[pos]);
-                        if (!match.Success)
-                        {
-                            break;
-                        }
-                    }
-                    args.Add(param[pos]);
-                }
-                // TODO: some processing of options
-                Debug.Log("found option: " + optionName + " of material: " + mtlData.materialName + " args: " + String.Concat(args.ToArray()));
-            }
-            // set the file name, if found
-            // TODO: other parsed parameters are not used for now
-            if (filename != null)
-            {
-                mtlData.bumpTexPath = filename;
-            }
-        }
-
-
-        private Color StringsToColor(string[] p)
-        {
-            return new Color(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3]));
-        }
+			var bumpParams = new Dictionary<string, BumpParamDef>();
+			bumpParams.Add("bm", new BumpParamDef("bm", "string", 1, 1));
+			bumpParams.Add("clamp", new BumpParamDef("clamp", "string", 1, 1));
+			bumpParams.Add("blendu", new BumpParamDef("blendu", "string", 1, 1));
+			bumpParams.Add("blendv", new BumpParamDef("blendv", "string", 1, 1));
+			bumpParams.Add("imfchan", new BumpParamDef("imfchan", "string", 1, 1));
+			bumpParams.Add("mm", new BumpParamDef("mm", "string", 1, 1));
+			bumpParams.Add("o", new BumpParamDef("o", "number", 1, 3));
+			bumpParams.Add("s", new BumpParamDef("s", "number", 1, 3));
+			bumpParams.Add("t", new BumpParamDef("t", "number", 1, 3));
+			bumpParams.Add("texres", new BumpParamDef("texres", "string", 1, 1));
+			int pos = 1;
+			string filename = null;
+			while (pos < param.Length)
+			{
+				if (!param[pos].StartsWith("-"))
+				{
+					filename = param[pos];
+					pos++;
+					continue;
+				}
+				// option processing
+				string optionName = param[pos].Substring(1);
+				pos++;
+				if (!bumpParams.ContainsKey(optionName))
+				{
+					continue;
+				}
+				BumpParamDef def = bumpParams[optionName];
+				ArrayList args = new ArrayList();
+				int i = 0;
+				bool isOptionNotEnough = false;
+				for (; i < def.valueNumMin; i++, pos++)
+				{
+					if (pos >= param.Length)
+					{
+						isOptionNotEnough = true;
+						break;
+					}
+					if (def.valueType == "number")
+					{
+						Match match = regexNumber.Match(param[pos]);
+						if (!match.Success)
+						{
+							isOptionNotEnough = true;
+							break;
+						}
+					}
+					args.Add(param[pos]);
+				}
+				if (isOptionNotEnough)
+				{
+					Debug.Log("bump variable value not enough for option:" + optionName + " of material:" + mtlData.materialName);
+					continue;
+				}
+				for (; i < def.valueNumMax && pos < param.Length; i++, pos++)
+				{
+					if (def.valueType == "number")
+					{
+						Match match = regexNumber.Match(param[pos]);
+						if (!match.Success)
+						{
+							break;
+						}
+					}
+					args.Add(param[pos]);
+				}
+				// TODO: some processing of options
+				Debug.Log("found option: " + optionName + " of material: " + mtlData.materialName + " args: " + String.Concat(args.ToArray()));
+			}
+			// set the file name, if found
+			// TODO: other parsed parameters are not used for now
+			if (filename != null)
+			{
+				mtlData.bumpTexPath = filename;
+			}
+		}
 
 
-        private IEnumerator LoadOrDownloadText(string url, bool notifyErrors = true)
-        {
-            loadedText = null;
-#if UNITY_2018_3_OR_NEWER
-            UnityWebRequest uwr = UnityWebRequest.Get(url);
-            yield return uwr.SendWebRequest();
-
-            if (uwr.isNetworkError || uwr.isHttpError)
-            {
-                if (notifyErrors)
-                {
-                    Debug.LogError(uwr.error);
-                }
-            }
-            else
-            {
-                // Get downloaded asset bundle
-                loadedText = uwr.downloadHandler.text;
-            }
-#else
-            WWW www = new WWW(url);
-            yield return www;
-            if (www.error != null)
-            {
-                if (notifyErrors)
-                {
-                    Debug.LogError("Error loading " + url + "\n" + www.error);
-                }
-            }
-            else
-            {
-                loadedText = www.text;
-            }
-#endif
-        }
+		private Color StringsToColor(string[] p)
+		{
+			return new Color(FastFloatParse(p[1]), FastFloatParse(p[2]), FastFloatParse(p[3]));
+		}
 
 
-        /// <summary>
-        /// Bump parameter definition
-        /// </summary>
-        /// <remarks>Not really used for material definition, for now.</remarks>
-        /// <see cref="https://github.com/hammmm/unity-obj-loader"/>
-        private class BumpParamDef
-        {
-            public string optionName;
-            public string valueType;
-            public int valueNumMin;
-            public int valueNumMax;
-            public BumpParamDef(string name, string type, int numMin, int numMax)
-            {
-                optionName = name;
-                valueType = type;
-                valueNumMin = numMin;
-                valueNumMax = numMax;
-            }
-        }
+		/// <summary>
+		/// Bump parameter definition
+		/// </summary>
+		/// <remarks>Not really used for material definition, for now.</remarks>
+		/// <see cref="https://github.com/hammmm/unity-obj-loader"/>
+		private class BumpParamDef
+		{
+			public string optionName;
+			public string valueType;
+			public int valueNumMin;
+			public int valueNumMax;
+			public BumpParamDef(string name, string type, int numMin, int numMax)
+			{
+				optionName = name;
+				valueType = type;
+				valueNumMin = numMin;
+				valueNumMax = numMax;
+			}
+		}
 
 
-        /// <summary>
-        /// Modified from https://codereview.stackexchange.com/a/76891. Faster than float.Parse
-        /// </summary>
-        public static float FastFloatParse(string input)
-        {
-            if (input.Contains("e") || input.Contains("E"))
-                return float.Parse(input, CultureInfo.InvariantCulture);
+		/// <summary>
+		/// Modified from https://codereview.stackexchange.com/a/76891. Faster than float.Parse
+		/// </summary>
+		public static float FastFloatParse(string input)
+		{
+			if (input.Contains("e") || input.Contains("E"))
+				return float.Parse(input, CultureInfo.InvariantCulture);
 
-            float result = 0;
-            int pos = 0;
-            int len = input.Length;
+			float result = 0;
+			int pos = 0;
+			int len = input.Length;
 
-            if (len == 0) return float.NaN;
-            char c = input[0];
-            float sign = 1;
-            if (c == '-')
-            {
-                sign = -1;
-                ++pos;
-                if (pos >= len) return float.NaN;
-            }
+			if (len == 0) return float.NaN;
+			char c = input[0];
+			float sign = 1;
+			if (c == '-')
+			{
+				sign = -1;
+				++pos;
+				if (pos >= len) return float.NaN;
+			}
 
-            while (true) // breaks inside on pos >= len or non-digit character
-            {
-                if (pos >= len) return sign * result;
-                c = input[pos++];
-                if (c < '0' || c > '9') break;
-                result = (result * 10.0f) + (c - '0');
-            }
+			while (true) // breaks inside on pos >= len or non-digit character
+			{
+				if (pos >= len) return sign * result;
+				c = input[pos++];
+				if (c < '0' || c > '9') break;
+				result = (result * 10.0f) + (c - '0');
+			}
 
-            if (c != '.' && c != ',') return float.NaN;
-            float exp = 0.1f;
-            while (pos < len)
-            {
-                c = input[pos++];
-                if (c < '0' || c > '9') return float.NaN;
-                result += (c - '0') * exp;
-                exp *= 0.1f;
-            }
-            return sign * result;
-        }
+			if (c != '.' && c != ',') return float.NaN;
+			float exp = 0.1f;
+			while (pos < len)
+			{
+				c = input[pos++];
+				if (c < '0' || c > '9') return float.NaN;
+				result += (c - '0') * exp;
+				exp *= 0.1f;
+			}
+			return sign * result;
+		}
 
-        /// <summary>
-        /// Modified from http://cc.davelozinski.com/c-sharp/fastest-way-to-convert-a-string-to-an-int. Faster than int.Parse
-        /// </summary>
-        public static int FastIntParse(string input)
-        {
-            int result = 0;
-            bool isNegative = (input[0] == '-');
+		/// <summary>
+		/// Modified from http://cc.davelozinski.com/c-sharp/fastest-way-to-convert-a-string-to-an-int. Faster than int.Parse
+		/// </summary>
+		public static int FastIntParse(string input)
+		{
+			int result = 0;
+			bool isNegative = (input[0] == '-');
 
-            for (int i = (isNegative) ? 1 : 0; i < input.Length; i++)
-                result = result * 10 + (input[i] - '0');
-            return (isNegative) ? -result : result;
-        }
+			for (int i = (isNegative) ? 1 : 0; i < input.Length; i++)
+				result = result * 10 + (input[i] - '0');
+			return (isNegative) ? -result : result;
+		}
 
-        public static string Clean(string str)
-        {
-            string rstr = str.Replace('\t', ' ');
-            while (rstr.Contains("  "))
-                rstr = rstr.Replace("  ", " ");
-            return rstr.Trim();
-        }
-    }
+		public static string Clean(string str)
+		{
+			string rstr = str.Replace('\t', ' ');
+			while (rstr.Contains("  "))
+				rstr = rstr.Replace("  ", " ");
+			return rstr.Trim();
+		}
+	}
 }
