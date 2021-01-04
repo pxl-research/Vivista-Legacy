@@ -72,7 +72,6 @@ public class Player : MonoBehaviour
 	
 	public AudioMixer mixer;
 
-	
 	private GameObject indexPanel;
 	private Transform videoCanvas;
 	private GameObject projector;
@@ -84,6 +83,7 @@ public class Player : MonoBehaviour
 	private string openVideo;
 
 	private float mandatoryPauseFadeTime = 1f;
+	private float mandatoryPauseAnimationInterval = 1f;
 	private float mandatoryMessageDuration = 7.5f;
 	private float mandatoryInteractionMessageStartTime;
 	private bool mandatoryPauseActive;
@@ -95,7 +95,7 @@ public class Player : MonoBehaviour
 
 	private Color colorStart = new Color(0, 0, 0, 178);
 	private Color colorEnd = new Color(0.25f, 0.25f, 0.25f, 178);
-	private float lastColorChangeTime;
+	private float lastMandatoryAnimationStart;
 
 	private EventSystem mainEventSystem;
 
@@ -189,41 +189,24 @@ public class Player : MonoBehaviour
 				}
 
 				//NOTE(Jitse): Animate pulsing mandatory pause message
+				Image pauseMessage = null;
 				if (mandatoryPauseMessageVRTop.activeInHierarchy)
 				{
-					if (mandatoryPauseMessageVRTopBackground == null)
-					{
-						mandatoryPauseMessageVRTopBackground = mandatoryPauseMessageVRTop.GetComponent<Image>();
-					}
-
-					var ratio = (Time.time - lastColorChangeTime);
-					ratio = Mathf.Clamp01(ratio);
-					mandatoryPauseMessageVRTopBackground.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
-
-					if (ratio == 1f)
-					{
-						lastColorChangeTime = Time.time;
-
-						//NOTE(Jitse): Switch start and end colors.
-						var temp = colorStart;
-						colorStart = colorEnd;
-						colorEnd = temp;
-					}
+					pauseMessage = mandatoryPauseMessageVRTopBackground;
 				}
 				else if (mandatoryPauseMessageVRBottom.activeInHierarchy)
 				{
-					if (mandatoryPauseMessageVRBottomBackground == null)
-					{
-						mandatoryPauseMessageVRBottomBackground = mandatoryPauseMessageVRBottom.GetComponent<Image>();
-					}
+					pauseMessage = mandatoryPauseMessageVRBottomBackground;
+				}
 
-					var ratio = (Time.time - lastColorChangeTime);
-					ratio = Mathf.Clamp01(ratio);
-					mandatoryPauseMessageVRBottomBackground.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
+				if (pauseMessage != null)
+				{
+					var ratio = (Time.time - lastMandatoryAnimationStart) / mandatoryPauseAnimationInterval;
+					pauseMessage.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
 
-					if (ratio == 1f)
+					if (ratio >= 1f)
 					{
-						lastColorChangeTime = Time.time;
+						lastMandatoryAnimationStart = Time.time;
 
 						//NOTE(Jitse): Switch start and end colors.
 						var temp = colorStart;
@@ -862,6 +845,8 @@ public class Player : MonoBehaviour
 
 	public void ShowMandatoryInteractionMessage()
 	{
+		lastMandatoryAnimationStart = Time.time;
+
 		if (XRSettings.enabled)
 		{
 			mandatoryPauseMessageVRTop.SetActive(true);
