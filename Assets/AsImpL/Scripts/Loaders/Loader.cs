@@ -193,7 +193,6 @@ namespace AsImpL
 			modelThread.Start();
 
 			//LoadModelFile(absolutePath);
-			loadStats.modelParseTime = Time.realtimeSinceStartup - lastTime;
 
 			if (objLoadingProgress.error)
 			{
@@ -201,12 +200,14 @@ namespace AsImpL
 				yield break;
 			}
 
-			lastTime = Time.realtimeSinceStartup;
 
 			while (modelThread.ThreadState == ThreadState.Running)
 			{
 				yield return null;
 			}
+			loadStats.modelParseTime = Time.realtimeSinceStartup - lastTime;
+			lastTime = Time.realtimeSinceStartup;
+
 			Thread materialThread = null;
 			if (HasMaterialLibrary)
 			{
@@ -215,15 +216,14 @@ namespace AsImpL
 				materialThread.Start();
 				//yield return LoadMaterialLibrary(absolutePath);
 			}
-			loadStats.materialsParseTime = Time.realtimeSinceStartup - lastTime;
-			lastTime = Time.realtimeSinceStartup;
 
-			while (modelThread.ThreadState == ThreadState.Running
-					&& ((materialThread != null && materialThread.ThreadState == ThreadState.Running) 
-					|| materialThread == null))
+			while ((materialThread != null && materialThread.ThreadState == ThreadState.Running) || materialThread == null)
 			{
 				yield return null;
 			}
+
+			loadStats.materialsParseTime = Time.realtimeSinceStartup - lastTime;
+			lastTime = Time.realtimeSinceStartup;
 
 			//TODO(Simon): Multithread
 			yield return Build(absolutePath, objName, parentObj);
