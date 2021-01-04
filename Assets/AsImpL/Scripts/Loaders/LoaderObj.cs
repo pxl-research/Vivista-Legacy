@@ -420,10 +420,10 @@ namespace AsImpL
 
             this.lines = lines;
             this.mtlData = mtlData;
-            ParseMaterialDataThread();
+            ParseMaterial();
 		}
 
-		private void ParseMaterialDataThread()
+		private void ParseMaterial()
 		{
 			for (int i = 0; i < lines.Length; i++)
 			{
