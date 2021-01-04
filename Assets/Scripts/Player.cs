@@ -130,7 +130,7 @@ public class Player : MonoBehaviour
 		mainEventSystem = EventSystem.current;
 
 		mandatoryPauseMessageVRTopBackground = mandatoryPauseMessageVRTop.GetComponent<Image>();
-		mandatoryPauseMessageVRBottomBackground = mandatoryPauseMessageVRBottomBackground.GetComponent<Image>();
+		mandatoryPauseMessageVRBottomBackground = mandatoryPauseMessageVRBottom.GetComponent<Image>();
 	}
 
 	void Update()
