@@ -168,27 +168,36 @@ namespace AsImpL
             Color col = Color.black;
             var data = bumpMap.GetPixels();
             var data2 = new Color[data.Length];
+            var grayscale = new float[data.Length];
+
+			for (int i = 0; i < h; i++)
+            {
+				for (int j = 0; j < w; j++)
+				{
+					grayscale[i * h + j] = data[i * h + j].grayscale;
+				}
+			}
 
             for (int y = 0; y < h; y++)
 			{
 				for (int x = 0; x < w; x++)
 				{
-					Vector3 n = Vector3.zero;
+					Vector3 n = new Vector3();
 					// CHANGE IN X
-					h1 = data[y * w + (x + w - 1) % w].grayscale;
-					h2 = data[y * w + x].grayscale;
-					h3 = data[y * w + (x + w + 1) % w].grayscale;
+					h1 = grayscale[y * w + (x + w - 1) % w];
+					h2 = grayscale[y * w + x];
+					h3 = grayscale[y * w + (x + w + 1) % w];
 
 					changeNeg = h2 - h1;
 					changePos = h3 - h2;
 
-					n.x = -(changePos + changeNeg) / 255.0f;
+					n.x = -(changePos + changeNeg);
 
 					// CHANGE IN Y
 
-					h1 = data[(y + h - 1) % h * w + y].grayscale;
-					h2 = data[y * w + y].grayscale;
-					h3 = data[(y + h + 1) % h * w + y].grayscale;
+					h1 = grayscale[(y + h - 1) % h * w + y];
+					h2 = grayscale[y * w + y];
+					h3 = grayscale[(y + h + 1) % h * w + y];
 
 					changeNeg = h2 - h1;
 					changePos = h3 - h2;
@@ -207,14 +216,17 @@ namespace AsImpL
 
 					// set the pixel
 
-					col.r = Mathf.Clamp01(n.x + 0.5f);
-					col.g = Mathf.Clamp01(n.y + 0.5f);
-					col.b = Mathf.Clamp01(n.z + 0.5f);
+                    //TODO(Simon): Do we need clamping?
+					//col.r = Mathf.Clamp01(n.x + 0.5f);
+					//col.g = Mathf.Clamp01(n.y + 0.5f);
+					//col.b = Mathf.Clamp01(n.z + 0.5f);
+
+                    col.r = (n.x + 0.5f);
+                    col.g = (n.y + 0.5f);
+                    col.b = (n.z + 0.5f);
 
 					col.a = col.r;
 					data2[y * w + x] = col;
-
-					//normalMap.SetPixel(x, y, col);
 				}
 			}
 

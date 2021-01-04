@@ -192,7 +192,6 @@ namespace AsImpL
 			var modelThread = new Thread(() => LoadModelFile(absolutePath));
 			modelThread.Start();
 
-			//LoadModelFile(absolutePath);
 
 			if (objLoadingProgress.error)
 			{
@@ -214,10 +213,9 @@ namespace AsImpL
 				//TODO(Simon): Multithread
 				materialThread = new Thread(() => LoadMaterialLibrary(absolutePath));
 				materialThread.Start();
-				//yield return LoadMaterialLibrary(absolutePath);
 			}
 
-			while ((materialThread != null && materialThread.ThreadState == ThreadState.Running) || materialThread == null)
+			while (materialThread != null && materialThread.ThreadState == ThreadState.Running)
 			{
 				yield return null;
 			}
