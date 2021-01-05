@@ -90,6 +90,7 @@ public class Player : MonoBehaviour
 	public GameObject mandatoryPauseMessage;
 	public GameObject mandatoryPauseMessageVRTop;
 	public GameObject mandatoryPauseMessageVRBottom;
+	private Image mandatoryPauseMessageBackground;
 	private Image mandatoryPauseMessageVRTopBackground;
 	private Image mandatoryPauseMessageVRBottomBackground;
 
@@ -129,6 +130,7 @@ public class Player : MonoBehaviour
 
 		mainEventSystem = EventSystem.current;
 
+		mandatoryPauseMessageBackground = mandatoryPauseMessage.GetComponent<Image>();
 		mandatoryPauseMessageVRTopBackground = mandatoryPauseMessageVRTop.GetComponent<Image>();
 		mandatoryPauseMessageVRBottomBackground = mandatoryPauseMessageVRBottom.GetComponent<Image>();
 	}
@@ -199,24 +201,18 @@ public class Player : MonoBehaviour
 					pauseMessage = mandatoryPauseMessageVRBottomBackground;
 				}
 
-				if (pauseMessage != null)
-				{
-					var ratio = (Time.time - lastMandatoryAnimationStart) / mandatoryPauseAnimationInterval;
-					pauseMessage.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
-
-					if (ratio >= 1f)
-					{
-						lastMandatoryAnimationStart = Time.time;
-
-						//NOTE(Jitse): Switch start and end colors.
-						var temp = colorStart;
-						colorStart = colorEnd;
-						colorEnd = temp;
-					}
-				}
+				AnimateMandatoryMessage(pauseMessage);
 			}
 			else
 			{
+				Image pauseMessage = null;
+				if (mandatoryPauseMessage.activeInHierarchy)
+				{
+					pauseMessage = mandatoryPauseMessageBackground;
+				}
+
+				AnimateMandatoryMessage(pauseMessage);
+
 				Canvass.seekbar.gameObject.SetActive(false);
 			}
 		}
@@ -436,6 +432,25 @@ public class Player : MonoBehaviour
 			if (hit.transform != null)
 			{
 				hit.transform.GetComponent<Hittable>().hitting = true;
+			}
+		}
+	}
+
+	private void AnimateMandatoryMessage(Image pauseMessage)
+	{
+		if (pauseMessage != null)
+		{
+			var ratio = (Time.time - lastMandatoryAnimationStart) / mandatoryPauseAnimationInterval;
+			pauseMessage.color = Color.Lerp(colorStart, colorEnd, ratio * ratio);
+
+			if (ratio >= 1f)
+			{
+				lastMandatoryAnimationStart = Time.time;
+
+				//NOTE(Jitse): Switch start and end colors.
+				var temp = colorStart;
+				colorStart = colorEnd;
+				colorEnd = temp;
 			}
 		}
 	}
