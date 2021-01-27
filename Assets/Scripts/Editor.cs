@@ -1333,10 +1333,8 @@ public class Editor : MonoBehaviour
 
 		point.timelineRow.mandatory.isOn = point.mandatory;
 		point.timelineRow.mandatory.onValueChanged.AddListener(x => OnMandatoryChanged(point, x));
-
-		float fudgeFactor = 10;
-		float offset = point.timelineRow.tagShape.rectTransform.sizeDelta.x + fudgeFactor;
-		point.timelineRow.title.rectTransform.sizeDelta = new Vector2(timelineFirstColumnWidth.sizeDelta.x - offset, point.timelineRow.title.rectTransform.sizeDelta.y);
+		
+		SetTimelineItemTitleWidth(point);
 	}
 
 	private void RemoveItemFromTimeline(InteractionPointEditor point)
@@ -2012,10 +2010,7 @@ public class Editor : MonoBehaviour
 				timelineFirstColumnWidth.sizeDelta = new Vector2(Mathf.Clamp(timelineFirstColumnWidth.sizeDelta.x + mouseDelta.x, 150, Screen.width - 100), timelineFirstColumnWidth.sizeDelta.y);
 				for (int i = 0; i < interactionPoints.Count; i++)
 				{
-					var point = interactionPoints[i];
-					float fudgeFactor = 10;
-					float offset = point.timelineRow.tagShape.rectTransform.sizeDelta.x + fudgeFactor;
-					point.timelineRow.title.rectTransform.sizeDelta = new Vector2(timelineFirstColumnWidth.sizeDelta.x - offset, point.timelineRow.title.rectTransform.sizeDelta.y);
+					SetTimelineItemTitleWidth(interactionPoints[i]);
 				}
 
 				DrawLineAtTime(0, 2, Color.black);
@@ -2852,6 +2847,15 @@ public class Editor : MonoBehaviour
 		string path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
 		ExplorerHelper.ShowPathInExplorer(path);
+	}
+
+	private void SetTimelineItemTitleWidth(InteractionPointEditor point)
+	{
+		float iconWidth = 102;
+		float tagShapeWidth = point.timelineRow.tagShape.rectTransform.sizeDelta.x;
+		float columnWidth = timelineFirstColumnWidth.sizeDelta.x;
+		float newWidth = columnWidth - tagShapeWidth - iconWidth;
+		point.timelineRow.title.rectTransform.sizeDelta = new Vector2(newWidth, point.timelineRow.title.rectTransform.sizeDelta.y);
 	}
 
 	public static string GenerateExtraGuid()
