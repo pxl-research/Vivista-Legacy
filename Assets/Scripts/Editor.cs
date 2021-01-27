@@ -171,6 +171,7 @@ public class Editor : MonoBehaviour
 	private ExportPanel exportPanel;
 
 	public RectTransform timelineContainer;
+	public RectTransform timelineScrollView;
 	public RectTransform timeline;
 	public RectTransform timeLabelHolder;
 	public RectTransform chapterLabelHolder;
@@ -1419,7 +1420,7 @@ public class Editor : MonoBehaviour
 			timelineWindowEndTime = windowMiddle + zoomedLength / 2;
 
 			timelineOffsetPixels = timelineFirstColumnWidth.rect.width;
-			timelineWidthPixels = timelineContainer.rect.width - timelineOffsetPixels;
+			timelineWidthPixels = timeline.rect.width - timelineOffsetPixels;
 		}
 
 		//NOTE(Simon): Timeline labels
@@ -1466,7 +1467,7 @@ public class Editor : MonoBehaviour
 						timeLabels[i].text = MathHelper.FormatSeconds(tickTime);
 						timeLabels[i].rectTransform.position = new Vector2(TimeToPx(tickTime), timeLabels[i].rectTransform.position.y);
 					}
-					DrawLineAtTime(tickTime, 1, new Color(0, 0, 0, 47f / 255));
+					DrawLineAtTime(tickTime, 1, new Color(0, 0, 0, 47f / 255), 10);
 				}
 				else
 				{
@@ -1824,7 +1825,7 @@ public class Editor : MonoBehaviour
 
 					//NOTE(Simon) Check if conditions are met to start a resize or drag operation on a timeline item
 					if (RectTransformUtility.RectangleContainsScreenPoint(indicatorRect, Input.mousePosition)
-						&& RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
+						&& RectTransformUtility.RectangleContainsScreenPoint(timeline, Input.mousePosition))
 					{
 						if (rectPixel.x < leftAreaX)
 						{
@@ -2019,25 +2020,28 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Highlight interactionPoint on hover
-		if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition) && dragMode == TimelineDragMode.None)
+		if (RectTransformUtility.RectangleContainsScreenPoint(timeline, Input.mousePosition) && dragMode == TimelineDragMode.None)
 		{
 			foreach (var point in interactionPoints)
 			{
 				var rectBackground = point.timelineRow.GetComponent<RectTransform>();
 				var rect = point.timelineRow.title.GetComponent<RectTransform>();
 
+				if (RectTransformUtility.RectangleContainsScreenPoint(rectBackground, Input.mousePosition))
+				{
+					HighlightPoint(point);
+				}
+
 				if (RectTransformUtility.RectangleContainsScreenPoint(rect, Input.mousePosition)
 					&& editorState == EditorState.Active
 					&& point.panel != null)
 				{
-					HighlightPoint(point);
-
 					var rowCorners = new Vector3[4];
 					rectBackground.GetWorldCorners(rowCorners);
 					var start = new Vector2(rowCorners[0].x, (rowCorners[0].y + rowCorners[1].y) / 2);
 					var end = new Vector2(rowCorners[2].x - 3, (rowCorners[2].y + rowCorners[3].y) / 2);
 					var thickness = rowCorners[1].y - rowCorners[0].y;
-					//NOTE(Simon): Show a darker brackground on hover
+					//NOTE(Simon): Show a darker background on hover
 					UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
 
 					//NOTE(Simon): If none are pinned, show currently hovered point
@@ -2105,12 +2109,11 @@ public class Editor : MonoBehaviour
 	{
 		var timePx = TimeToPx(time);
 
-		float containerHeight = timelineContainer.sizeDelta.y;
-		float headerHeight = Mathf.Max(0, timeLabelHolder.sizeDelta.y - timeline.localPosition.y);
+		float containerHeight = timelineScrollView.rect.height;
 
 		UILineRenderer.DrawLine(
 			new Vector2(timePx, 0),
-			new Vector2(timePx, containerHeight - headerHeight + 18 + topOffset),
+			new Vector2(timePx, containerHeight + topOffset),
 			thickness,
 			color);
 	}
