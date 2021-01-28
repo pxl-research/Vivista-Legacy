@@ -1711,7 +1711,7 @@ public class Editor : MonoBehaviour
 
 			if (dragMode == TimelineDragMode.Time)
 			{
-				time = PxToAbsTime(Input.mousePosition.x);
+				time = Mathf.Clamp(PxToAbsTime(Input.mousePosition.x), 0, (float)videoController.videoLength);
 				DrawLineAtTime(time, 4, new Color(0, 0, 0, 150f / 255));
 				desiredCursor = Cursors.Instance.CursorDrag;
 
