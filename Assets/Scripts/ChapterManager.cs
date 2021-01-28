@@ -56,7 +56,7 @@ public class ChapterManager : MonoBehaviour
 		return matches;
 	}
 
-	public bool AddChapter(string name, string description)
+	public bool AddChapter(string name, string description, out Chapter chapter)
 	{
 		bool error = false;
 		for (int i = 0; i < chapters.Count; i++)
@@ -75,17 +75,19 @@ public class ChapterManager : MonoBehaviour
 
 		if (error)
 		{
+			chapter = null;
 			return false;
 		}
 
 		indexCounter++;
-		chapters.Add(new Chapter
+		chapter = new Chapter
 		{
 			name = name,
 			description = description,
 			time = 1f,
 			id = indexCounter
-		});
+		};
+		chapters.Add(chapter);
 
 		UnsavedChangesTracker.Instance.unsavedChanges = true;
 		SortChaptersChronologically();
@@ -130,6 +132,11 @@ public class ChapterManager : MonoBehaviour
 		}
 
 		controller.Seek(chapter.time);
+	}
+
+	public void Refresh()
+	{
+		SortChaptersChronologically();
 	}
 
 	private void SortChaptersChronologically()

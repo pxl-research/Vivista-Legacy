@@ -17,11 +17,11 @@ public class ChapterManagerPanel : MonoBehaviour
 		newName.onValueChanged.AddListener(OnEditName);
 		newDescription.onValueChanged.AddListener(OnEditDescription);
 
-		var tags = ChapterManager.Instance.chapters;
+		var chapters = ChapterManager.Instance.chapters;
 
-		for (int i = 0; i < tags.Count; i++)
+		for (int i = 0; i < chapters.Count; i++)
 		{
-			AddChapterItem(tags[i].name, tags[i].description, tags[i].time);
+			AddChapterItem(chapters[i]);
 		}
 	}
 
@@ -30,14 +30,14 @@ public class ChapterManagerPanel : MonoBehaviour
 		var name = newName.text;
 		var description = newDescription.text;
 
-		var success = ChapterManager.Instance.AddChapter(name, description);
+		var success = ChapterManager.Instance.AddChapter(name, description, out var chapter);
 
 		if (success)
 		{
 			newName.text = "";
 			newDescription.text = "";
 
-			AddChapterItem(name, description, 0);
+			AddChapterItem(chapter);
 		}
 		else
 		{
@@ -45,12 +45,12 @@ public class ChapterManagerPanel : MonoBehaviour
 		}
 	}
 
-	public void AddChapterItem(string name, string description, float time)
+	public void AddChapterItem(Chapter chapter)
 	{
 		var chapterGo = Instantiate(chapterItemPrefab);
-		var chapterItem = chapterGo.GetComponent<ChapterItem>();
+		var chapterItem = chapterGo.GetComponent<ChapterItemEditable>();
 		chapterGo.transform.SetParent(chapterItemHolder.transform);
-		chapterItem.Init(name, description, time);
+		chapterItem.Init(chapter);
 		chapterItem.deleteButton.onClick.AddListener(() => OnRemove(chapterGo, name));
 	}
 

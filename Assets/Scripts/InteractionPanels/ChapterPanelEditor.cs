@@ -54,7 +54,7 @@ public class ChapterPanelEditor : MonoBehaviour
 		for (int i = 0; i < chapters.Count; i++)
 		{
 			var item = Instantiate(chapterItemPrefab, chapterSuggestionWrapper).GetComponent<ChapterItem>();
-			item.Init(chapters[i].name, chapters[i].description, chapters[i].time);
+			item.Init(chapters[i]);
 			int id = chapters[i].id;
 			item.GetComponent<Button>().onClick.AddListener(() => OnChapterPickerEnd(id));
 		}

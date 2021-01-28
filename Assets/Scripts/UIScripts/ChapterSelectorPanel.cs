@@ -22,7 +22,7 @@ public class ChapterSelectorPanel : MonoBehaviour
 		{
 			var chapter = chapters[i];
 			var chapterItem = Instantiate(chapterSelectorItemPrefab, content, false).GetComponent<ChapterItem>();
-			chapterItem.Init(chapter.name, chapter.name, chapter.time);
+			chapterItem.Init(chapter);
 			chapterItem.GetComponent<Button>().onClick.AddListener(() => ChapterManager.Instance.GoToChapter(chapter));
 		}
 

@@ -8,10 +8,10 @@ public class ChapterItem : MonoBehaviour
 	public Text descriptionLabel;
 	public Text timeLabel;
 
-	public void Init(string name, string description, float time)
+	public void Init(Chapter chapter)
 	{
-		nameLabel.text = name;
-		descriptionLabel.text = description;
-		timeLabel.text = MathHelper.FormatSeconds(time);
+		nameLabel.text = chapter.name;
+		descriptionLabel.text = chapter.description;
+		timeLabel.text = MathHelper.FormatSeconds(chapter.time);
 	}
 }
