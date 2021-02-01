@@ -7,9 +7,9 @@ public static class Config
 	[Serializable]
 	private class ConfigData
 	{
-		public float mainVideoVolume;
-		public float videoInteractionVolume;
-		public float audioInteractionVolume;
+		public float mainVideoVolume = 1f;
+		public float videoInteractionVolume = 1f;
+		public float audioInteractionVolume = 1f;
 	}
 
 	public static float MainVideoVolume
@@ -59,7 +59,7 @@ public static class Config
 		if (File.Exists(path))
 		{
 			string raw = File.ReadAllText(path);
-			data = JsonUtility.FromJson<ConfigData>(raw);
+			data = JsonUtility.FromJson<ConfigData>(raw) ?? new ConfigData();
 		}
 		else
 		{
