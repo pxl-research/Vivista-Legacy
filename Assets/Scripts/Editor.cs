@@ -1785,6 +1785,7 @@ public class Editor : MonoBehaviour
 					dragMode = TimelineDragMode.None;
 					chapterBeingDragged = null;
 					timeTooltip.ResetPosition();
+					ChapterManager.Instance.Refresh();
 				}
 			}
 			else

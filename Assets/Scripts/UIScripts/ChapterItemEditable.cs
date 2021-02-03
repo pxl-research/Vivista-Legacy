@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class ChapterItemEditable : MonoBehaviour
 {
 	public Button deleteButton;
-	public Text nameLabel;
-	public Text descriptionLabel;
+	public InputField nameLabel;
+	public InputField descriptionLabel;
 	public InputField timeLabel;
 
 	public bool invalid;
@@ -88,5 +88,27 @@ end:
 			chapter.time = time;
 			ChapterManager.Instance.Refresh();
 		}
+	}
+
+	public void OnNameChange(string value)
+	{
+		nameLabel.image.color = string.IsNullOrWhiteSpace(value) ? errorColor : Color.white;
+	}
+
+	public void OnNameChangeEnd(string value)
+	{
+		if (!string.IsNullOrWhiteSpace(value))
+		{
+			value = value.Replace('\n', ' ');
+			nameLabel.text = value;
+			chapter.name = value;
+		}
+	}
+
+	public void OnDescriptionChangeEnd(string value)
+	{
+		value = value.Replace('\n', ' ');
+		descriptionLabel.text = value;
+		chapter.description = value;
 	}
 }
