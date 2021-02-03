@@ -9,6 +9,7 @@ public class ChapterItemEditable : MonoBehaviour
 	public InputField nameLabel;
 	public InputField descriptionLabel;
 	public InputField timeLabel;
+	public Text chapterIndex;
 
 	public bool invalid;
 
@@ -22,6 +23,7 @@ public class ChapterItemEditable : MonoBehaviour
 		nameLabel.text = chapter.name;
 		descriptionLabel.text = chapter.description;
 		timeLabel.text = MathHelper.FormatSeconds(chapter.time);
+		chapterIndex.text = (transform.GetSiblingIndex() + 1).ToString();
 	}
 
 	public void OnTimeChange(string value)
