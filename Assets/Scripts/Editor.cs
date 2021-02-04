@@ -152,6 +152,7 @@ public class Editor : MonoBehaviour
 	public Guid currentProjectGuid => meta.guid;
 
 	public GameObject timeTooltipPrefab;
+	public GameObject textTooltipPrefab;
 	public GameObject interactionPointPrefab;
 	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
@@ -204,9 +205,11 @@ public class Editor : MonoBehaviour
 	private InteractionPointEditor timelineItemBeingDragged;
 	private InteractionPointEditor timelineItemBeingResized;
 	private bool isResizingStart;
-	private TimeTooltip timeTooltip;
 	public RectTransform timelineFirstColumnWidth;
 	private Chapter chapterBeingDragged;
+
+	private TimeTooltip timeTooltip;
+	private Tooltip textTooltip;
 
 	private Metadata meta;
 	private string userToken = "";
@@ -232,6 +235,9 @@ public class Editor : MonoBehaviour
 
 		timeTooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimeTooltip>();
 		timeTooltip.ResetPosition();
+
+		textTooltip = Instantiate(textTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<Tooltip>();
+		textTooltip.ResetPosition();
 
 		timelineLabelsDirty = true;
 
@@ -1793,19 +1799,32 @@ public class Editor : MonoBehaviour
 				//NOTE(Simon): Only draw an interactable line if we're not already interacting with a timelineItem
 				if (dragMode == TimelineDragMode.None)
 				{
+					bool hovering = false;
 					for (int i = 0; i < chapters.Count; i++)
 					{
 						if (RectTransformUtility.RectangleContainsScreenPoint(chapterLabels[i], Input.mousePosition))
 						{
+							hovering = true;
+
 							DrawLineAtTime(chapters[i].time, 4f, new Color(.7f, .3f, .3f));
 							desiredCursor = Cursors.Instance.CursorDrag;
+							
+							var tooltipPos = chapterLabels[i].position + new Vector3(0, 15);
+							textTooltip.SetText(chapters[i].name, tooltipPos);
 
 							if (Input.GetMouseButtonDown(0))
 							{
 								dragMode = TimelineDragMode.Chapter;
+								textTooltip.ResetPosition();
 								chapterBeingDragged = chapters[i];
 							}
+							break;
 						}
+					}
+
+					if (!hovering)
+					{
+						textTooltip.ResetPosition();
 					}
 				}
 			}

@@ -1461,6 +1461,8 @@ MonoBehaviour:
   editorState: 0
   timeTooltipPrefab: {fileID: 1003459771833592, guid: 74931ff51af60fa4dbc4257009bfff93,
     type: 3}
+  textTooltipPrefab: {fileID: 1003459771833592, guid: e70b21b6a92cb7f46b33411df54ce230,
+    type: 3}
   interactionPointPrefab: {fileID: 1057334565152188, guid: 799a1f08d99508c44a9ae065c5405a54,
     type: 3}
   timelineContainer: {fileID: 8269891125452661393}

@@ -23,9 +23,7 @@ public class TimeTooltip : MonoBehaviour
 	{
 		if (time1 != newTime1 || time2 != newTime2)
 		{
-			var newText = MathHelper.FormatMillis(newTime1);
-			newText += " - ";
-			newText += MathHelper.FormatMillis(newTime2);
+			var newText = $"{MathHelper.FormatMillis(newTime1)} - {MathHelper.FormatMillis(newTime2)}";
 			text.text = newText;
 			time1 = newTime1;
 			time2 = newTime2;
