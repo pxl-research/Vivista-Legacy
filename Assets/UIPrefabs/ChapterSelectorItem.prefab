@@ -117,7 +117,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 60}
+  m_SizeDelta: {x: 210.5, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &472791694917817504
 CanvasRenderer:
@@ -171,6 +171,8 @@ MonoBehaviour:
   nameLabel: {fileID: 472791694505050160}
   descriptionLabel: {fileID: 472791696418457230}
   timeLabel: {fileID: 472791695858483586}
+  normalColor: {r: 0.20000002, g: 0.20000002, b: 0.20000002, a: 1}
+  highlightColor: {r: 0.4, g: 0.4, b: 0.4, a: 1}
 --- !u!114 &4120970320916550941
 MonoBehaviour:
   m_ObjectHideFlags: 0

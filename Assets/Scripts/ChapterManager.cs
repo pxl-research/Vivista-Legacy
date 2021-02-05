@@ -160,13 +160,22 @@ public class ChapterManager : MonoBehaviour
 
 	public float CurrentChapterTime(double time)
 	{
-		float largestTime = 0;
-		//NOTE(Simon): Find largest chapter time smaller than or equal to input. (i.e. beginning of current chapter)
+		var chapter = ChapterForTime(time);
+
+		//NOTE(Simon): 0 represents a virtual chapter at time 0;
+		return chapter != null ? chapter.time : 0;
+	}
+
+	public Chapter ChapterForTime(double time)
+	{
+		Chapter chapter = null;
+
+		//NOTE(Simon): Find largest chapter time smaller than or equal to input. (i.e. beginning of chapter)
 		for (int i = 0; i < chapters.Count; i++)
 		{
 			if (chapters[i].time <= time)
 			{
-				largestTime = chapters[i].time;
+				chapter = chapters[i];
 			}
 			else
 			{
@@ -174,7 +183,6 @@ public class ChapterManager : MonoBehaviour
 			}
 		}
 
-		//NOTE(Simon): Zero represents a "virtual" chapter at the beginning of the video. Useful if no chapter was defined at the beginning.
-		return largestTime;
+		return chapter;
 	}
 }

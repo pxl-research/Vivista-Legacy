@@ -72,7 +72,6 @@ public class Player : MonoBehaviour
 	
 	public AudioMixer mixer;
 
-	
 	private GameObject indexPanel;
 	private Transform videoCanvas;
 	private GameObject projector;
@@ -319,6 +318,7 @@ public class Player : MonoBehaviour
 					Canvass.modalBackground.SetActive(false);
 					SetCanvasesActive(true);
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
+					chapterSelector.Init(videoController);
 
 					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
 					{
