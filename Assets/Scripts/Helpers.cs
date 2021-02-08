@@ -144,16 +144,31 @@ public static class MathHelper
 
 public class UIAnimation
 {
-	public static float animationLength = 0.25f;
+	public const float animationLength = 0.25f;
 
-	public static IEnumerator FadeIn(RectTransform transform, CanvasGroup canvas)
+	public static IEnumerator FadeIn(RectTransform transform, CanvasGroup canvas, float length = animationLength)
 	{
 		float animTime = 0;
 		float scaleOffset = .8f;
-		while (animTime < animationLength)
+		while (animTime < length)
 		{
 			animTime += Mathf.Clamp01(Time.deltaTime);
-			float step = MathHelper.smootherstep(0, animationLength, animTime);
+			float step = MathHelper.smootherstep(0, length, animTime);
+			float scale = scaleOffset + (step * .2f);
+			transform.localScale = new Vector3(scale, scale, 1);
+			canvas.alpha = step;
+			yield return new WaitForEndOfFrame();
+		}
+	}
+
+	public static IEnumerator FadeOut(RectTransform transform, CanvasGroup canvas, float length = animationLength)
+	{
+		float animTime = 0;
+		float scaleOffset = .8f;
+		while (animTime < length)
+		{
+			animTime += Mathf.Clamp01(Time.deltaTime);
+			float step = MathHelper.smootherstep(0, length, length - animTime);
 			float scale = scaleOffset + (step * .2f);
 			transform.localScale = new Vector3(scale, scale, 1);
 			canvas.alpha = step;

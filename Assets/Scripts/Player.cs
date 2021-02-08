@@ -302,6 +302,11 @@ public class Player : MonoBehaviour
 					videoController.SetPlaybackSpeed(1f);
 				}
 			}
+
+			//NOTE(Simon): Handle chapter transitions
+			{
+
+			}
 		}
 
 		if (playerState == PlayerState.Opening)
