@@ -1520,7 +1520,7 @@ MonoBehaviour:
   multipleChoiceImage: {fileID: 21300000, guid: d573217274a3d9542a574b5723d1a04e,
     type: 3}
   tabularData: {fileID: 21300000, guid: 50755414ab8f5ca41932e187e915320c, type: 3}
-  chapter: {fileID: 0}
+  chapter: {fileID: 21300000, guid: 3700d86a227c491409ac408fab10f680, type: 3}
 --- !u!1 &1915161241
 GameObject:
   m_ObjectHideFlags: 0
@@ -1953,6 +1953,21 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 4447290697689029927, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4447290697689029927, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
+        type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4447290697689029927, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4708326612372812490, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
         type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -2309,17 +2324,17 @@ PrefabInstance:
     - target: {fileID: 6468160090679731467, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6468160090679731467, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6468160090679731467, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -9
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6468160090679731467, guid: aab3be2d16499724cad8f16cf9eb9366,
         type: 3}
@@ -2402,12 +2417,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5216618106651781666, guid: 0cab7f5bbaadd8043a1815cb7676b360,
-        type: 3}
-      propertyPath: tabularDataPanel
-      value: 
-      objectReference: {fileID: 8660734572250089207, guid: b258900f25720d7469bdcb6fc8e052f5,
-        type: 3}
     - target: {fileID: 5216618106651781667, guid: 0cab7f5bbaadd8043a1815cb7676b360,
         type: 3}
       propertyPath: m_Name

@@ -127,6 +127,19 @@ public static class MathHelper
 	{
 		return Mathf.Log10(value) * 20;
 	}
+
+	public static void ClipWorldCorners(Vector3[] outerRect, Vector3[] innerRect)
+	{
+		float minX = outerRect[0].x;
+		float maxX = outerRect[3].x;
+		float minY = outerRect[0].y;
+		float maxY = outerRect[1].y;
+
+		innerRect[0] = new Vector3(Mathf.Clamp(innerRect[0].x, minX, maxX), Mathf.Clamp(innerRect[0].y, minY, maxY));
+		innerRect[1] = new Vector3(Mathf.Clamp(innerRect[1].x, minX, maxX), Mathf.Clamp(innerRect[1].y, minY, maxY));
+		innerRect[2] = new Vector3(Mathf.Clamp(innerRect[2].x, minX, maxX), Mathf.Clamp(innerRect[2].y, minY, maxY));
+		innerRect[3] = new Vector3(Mathf.Clamp(innerRect[3].x, minX, maxX), Mathf.Clamp(innerRect[3].y, minY, maxY));
+	}
 }
 
 public class UIAnimation

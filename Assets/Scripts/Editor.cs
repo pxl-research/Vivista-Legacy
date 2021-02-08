@@ -2127,14 +2127,23 @@ public class Editor : MonoBehaviour
 
 	public void HighlightTimelineRow(InteractionPointEditor point)
 	{
-		var rectBackground = point.timelineRow.GetComponent<RectTransform>();
 		var rowCorners = new Vector3[4];
-		rectBackground.GetWorldCorners(rowCorners);
-		var start = new Vector2(rowCorners[0].x, (rowCorners[0].y + rowCorners[1].y) / 2);
-		var end = new Vector2(rowCorners[2].x - 3, (rowCorners[2].y + rowCorners[3].y) / 2);
-		var thickness = rowCorners[1].y - rowCorners[0].y;
-		//NOTE(Simon): Show a darker background on hover
-		UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
+		var rowRect = point.timelineRow.GetComponent<RectTransform>();
+		rowRect.GetWorldCorners(rowCorners);
+
+		var timelineCorners = new Vector3[4];
+		timelineScrollView.GetComponent<RectTransform>().GetWorldCorners(timelineCorners);
+
+		MathHelper.ClipWorldCorners(timelineCorners, rowCorners);
+
+		//NOTE(Simon): If row rect contained within timeline rect
+		{
+			var start = new Vector2(rowCorners[0].x, (rowCorners[0].y + rowCorners[1].y) / 2);
+			var end = new Vector2(rowCorners[2].x - 3, (rowCorners[2].y + rowCorners[3].y) / 2);
+			var thickness = rowCorners[1].y - rowCorners[0].y;
+			//NOTE(Simon): Show a darker background on hover
+			UILineRenderer.DrawLine(start, end, thickness, new Color(0, 0, 0, 60 / 255f));
+		}
 	}
 
 	//NOTE(Simon): Positive topOffset is upwards
