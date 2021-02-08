@@ -14,8 +14,8 @@ MonoImporter:
       type: 3}
   - multipleChoiceImage: {fileID: 21300000, guid: d573217274a3d9542a574b5723d1a04e,
       type: 3}
-  - tabularData: {instanceID: 0}
-  - chapter: {instanceID: 0}
+  - tabularData: {fileID: 21300000, guid: 50755414ab8f5ca41932e187e915320c, type: 3}
+  - chapter: {fileID: 21300000, guid: 3700d86a227c491409ac408fab10f680, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
