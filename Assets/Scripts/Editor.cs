@@ -2047,7 +2047,7 @@ public class Editor : MonoBehaviour
 		}
 
 		//NOTE(Simon): Highlight interactionPoint on hover
-		if (RectTransformUtility.RectangleContainsScreenPoint(timeline, Input.mousePosition) && dragMode == TimelineDragMode.None)
+		if (RectTransformUtility.RectangleContainsScreenPoint(timelineScrollView, Input.mousePosition) && dragMode == TimelineDragMode.None)
 		{
 			foreach (var point in interactionPoints)
 			{
@@ -2094,6 +2094,15 @@ public class Editor : MonoBehaviour
 						point.panel.SetActive(false);
 					}
 				}
+			}
+		}
+		//NOTE(Simon): Hide any active panels if not hovering. Except for pinned panel
+		else
+		{
+			foreach (var point in interactionPoints)
+			{
+				point.panel?.SetActive(false);
+				pinnedHoverPoint?.panel.SetActive(true);
 			}
 		}
 
