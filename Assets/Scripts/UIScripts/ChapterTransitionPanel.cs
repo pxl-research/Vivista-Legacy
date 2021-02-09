@@ -22,6 +22,10 @@ public class ChapterTransitionPanel : MonoBehaviour
 
 	public void StartTransition()
 	{
+		Canvass.sphereUIWrapper.SetActive(true);
+		Canvass.sphereUIRenderer.SetActive(true);
+		Canvass.sphereUIPanelWrapper.SetActive(false);
+
 		StartCoroutine(Transition(OnFinish));
 	}
 
@@ -29,20 +33,19 @@ public class ChapterTransitionPanel : MonoBehaviour
 	{
 		float animTime = .5f;
 
-		Debug.Log("FadeIn");
-		yield return UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>(), animTime);
+		yield return UIAnimation.FadeIn(GetComponent<RectTransform>(), GetComponent<CanvasGroup>(), animTime, .99f);
 
-		Debug.Log("Waiting");
-		yield return new WaitForSeconds(6 * animTime);
+		yield return new WaitForSeconds(10 * animTime);
 
-		Debug.Log("FadeOut");
 		yield return UIAnimation.FadeOut(GetComponent<RectTransform>(), GetComponent<CanvasGroup>(), animTime);
 
 		onTransitionFinish();
+		Canvass.sphereUIWrapper.SetActive(false);
+		Canvass.sphereUIRenderer.SetActive(false);
+		Canvass.sphereUIPanelWrapper.SetActive(true);
 	}
 
 	public void OnFinish()
 	{
-		Debug.Log("Finish");
 	}
 }

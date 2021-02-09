@@ -146,7 +146,7 @@ public class UIAnimation
 {
 	public const float animationLength = 0.25f;
 
-	public static IEnumerator FadeIn(RectTransform transform, CanvasGroup canvas, float length = animationLength)
+	public static IEnumerator FadeIn(RectTransform transform, CanvasGroup canvas, float length = animationLength, float endOpacity = 1.0f)
 	{
 		float animTime = 0;
 		float scaleOffset = .8f;
@@ -156,13 +156,14 @@ public class UIAnimation
 			float step = MathHelper.smootherstep(0, length, animTime);
 			float scale = scaleOffset + (step * .2f);
 			transform.localScale = new Vector3(scale, scale, 1);
-			canvas.alpha = step;
+			canvas.alpha = step * endOpacity;
 			yield return new WaitForEndOfFrame();
 		}
 	}
 
 	public static IEnumerator FadeOut(RectTransform transform, CanvasGroup canvas, float length = animationLength)
 	{
+		float startOpacity = canvas.alpha;
 		float animTime = 0;
 		float scaleOffset = .8f;
 		while (animTime < length)
@@ -171,7 +172,7 @@ public class UIAnimation
 			float step = MathHelper.smootherstep(0, length, length - animTime);
 			float scale = scaleOffset + (step * .2f);
 			transform.localScale = new Vector3(scale, scale, 1);
-			canvas.alpha = step;
+			canvas.alpha = step * startOpacity;
 			yield return new WaitForEndOfFrame();
 		}
 	}
