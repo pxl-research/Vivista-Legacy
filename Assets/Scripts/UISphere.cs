@@ -46,7 +46,7 @@ public class UISphere : MonoBehaviour
 		fadeTimer = -delaySeconds;
 		if (canvasGroup == null)
 		{
-			canvasGroup = Canvass.sphereUICanvas.GetComponent<CanvasGroup>();
+			canvasGroup = Canvass.sphereUIPanelWrapper.GetComponent<CanvasGroup>();
 		}
 
 		while (fadeTimer < fadeLength)
@@ -63,7 +63,7 @@ public class UISphere : MonoBehaviour
 		fadeTimer = 0;
 		if (canvasGroup == null)
 		{
-			canvasGroup = Canvass.sphereUICanvas.GetComponent<CanvasGroup>();
+			canvasGroup = Canvass.sphereUIPanelWrapper.GetComponent<CanvasGroup>();
 		}
 
 		while (fadeTimer < fadeLength)

@@ -144,18 +144,24 @@ public class ChapterManager : MonoBehaviour
 		chapters.Sort((x, y) => x.time.CompareTo(y.time));
 	}
 
-	public float NextChapterTime(double time)
+	public Chapter NextChapter(double time)
 	{
 		//NOTE(Simon): Find smallest chapter time larger than input. (i.e. beginning of next chapter)
 		for (int i = 0; i < chapters.Count; i++)
 		{
 			if (chapters[i].time > time)
 			{
-				return chapters[i].time;
+				return chapters[i];
 			}
 		}
+		return null;
+	}
 
-		return Single.PositiveInfinity;
+	public float NextChapterTime(double time)
+	{
+		var nextChapter = NextChapter(time);
+
+		return nextChapter == null ? Single.PositiveInfinity : nextChapter.time;
 	}
 
 	public float CurrentChapterTime(double time)

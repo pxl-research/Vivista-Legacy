@@ -20,7 +20,7 @@ public class ChapterTransitionPanel : MonoBehaviour
 		text4.text = text;
 	}
 
-	public void StartTransition()
+	public void StartTransition(OnTransitionFinish OnFinish)
 	{
 		Canvass.sphereUIWrapper.SetActive(true);
 		Canvass.sphereUIRenderer.SetActive(true);
@@ -43,9 +43,5 @@ public class ChapterTransitionPanel : MonoBehaviour
 		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
 		Canvass.sphereUIPanelWrapper.SetActive(true);
-	}
-
-	public void OnFinish()
-	{
 	}
 }

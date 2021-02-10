@@ -69,6 +69,7 @@ public class Player : MonoBehaviour
 	private VideoController videoController;
 	private List<GameObject> videoList;
 	private ChapterSelectorPanel chapterSelector;
+	public ChapterTransitionPanel chapterTransitionPanel;
 	
 	public AudioMixer mixer;
 
@@ -82,8 +83,10 @@ public class Player : MonoBehaviour
 	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
 
-	private float mandatoryPauseFadeTime = 1f;
+	private float pauseFadeTime = 0.5f;
 	private bool mandatoryPauseActive;
+	private bool chapterTransitionActive;
+	private Chapter previousChapter;
 	public GameObject mandatoryPauseMessage;
 	public GameObject mandatoryPauseMessageVR;
 
@@ -261,6 +264,7 @@ public class Player : MonoBehaviour
 			}
 
 			//NOTE(Simon): Handle mandatory interactionPoints
+			if (!chapterTransitionActive)
 			{
 				double timeToNextPause = Double.MaxValue;
 				var interactionsInChapter = MandatoryInteractionsForTime(videoController.currentTime);
@@ -276,13 +280,9 @@ public class Player : MonoBehaviour
 				}
 
 				//NOTE(Simon): Set the playbackspeed. Speed will get lower the closer to the next pause we are.
-				if (timeToNextPause < mandatoryPauseFadeTime)
+				if (timeToNextPause < pauseFadeTime)
 				{
-					float speed = (float)(timeToNextPause / mandatoryPauseFadeTime);
-					if (timeToNextPause < .05f)
-					{
-						speed = 0;
-					}
+					float speed = VideoFadeGetCurrentSpeed(timeToNextPause);
 
 					videoController.SetPlaybackSpeed(speed);
 					if (!mandatoryPauseActive)
@@ -304,8 +304,17 @@ public class Player : MonoBehaviour
 			}
 
 			//NOTE(Simon): Handle chapter transitions
+			if (!chapterTransitionActive && !mandatoryPauseActive)
 			{
-
+				var currentChapter = ChapterManager.Instance.ChapterForTime(videoController.currentTime);
+				if (currentChapter != previousChapter)
+				{
+					videoController.SetPlaybackSpeed(0);
+					chapterTransitionActive = true;
+					chapterTransitionPanel.SetChapter(currentChapter);
+					chapterTransitionPanel.StartTransition(OnChapterTransitionFinish);
+					previousChapter = currentChapter;
+				}
 			}
 		}
 
@@ -386,6 +395,14 @@ public class Player : MonoBehaviour
 				hit.transform.GetComponent<Hittable>().hitting = true;
 			}
 		}
+	}
+
+	private void OnChapterTransitionFinish()
+	{
+		Debug.Log("Animation done");
+		videoController.SetPlaybackSpeed(1);
+		
+		chapterTransitionActive = false;
 	}
 
 	private bool OpenFile(string projectPath)
@@ -981,5 +998,16 @@ public class Player : MonoBehaviour
 		}
 		//NOTE(Kristof): Force Alpha to 0;
 		group.alpha = 0;
+	}
+
+	private float VideoFadeGetCurrentSpeed(double timeToNextPause)
+	{
+		float speed = (float)(timeToNextPause / pauseFadeTime);
+		if (timeToNextPause < .05f)
+		{
+			speed = 0;
+		}
+
+		return speed;
 	}
 }
