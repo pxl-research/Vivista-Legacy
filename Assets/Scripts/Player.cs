@@ -223,6 +223,7 @@ public class Player : MonoBehaviour
 			Seekbar.instance.RenderBlips(interactionPoints, trackedControllerLeft, trackedControllerRight);
 
 			//Note(Simon): Interaction with points
+			if (!chapterTransitionActive)
 			{
 				var reversedRay = interactionpointRay.ReverseRay();
 				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
@@ -235,10 +236,10 @@ public class Player : MonoBehaviour
 					bool pointActive = videoController.currentTime >= interactionPoints[i].startTime 
 									&& videoController.currentTime <= interactionPoints[i].endTime;
 					interactionPoints[i].point.SetActive(pointActive);
-					interactionPoints[i].point.GetComponentInChildren<MeshRenderer>(includeInactive: true).gameObject.SetActive(!interactionPoints[i].isSeen);
+					interactionPoints[i].point.GetComponent<InteractionPointRenderer>().SetPingActive(!interactionPoints[i].isSeen);
 				}
 
-				//NOTE(Simon): Interact with inactive interactionpoints
+				//NOTE(Simon): Activate hit interactionPoint
 				if (activeInteractionPoint == null && hit.transform != null)
 				{
 					var pointGO = hit.transform.gameObject;
@@ -637,27 +638,8 @@ public class Player : MonoBehaviour
 
 	private void AddInteractionPoint(InteractionPointPlayer point)
 	{
-		point.point.transform.LookAt(Vector3.zero, Vector3.up);
-		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
-
-		//NOTE(Simon): Add a sprite to interaction points, indicating InteractionType
-		point.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true).sprite = InteractionTypeSprites.GetSprite(point.type);
-		point.point.transform.GetChild(0).gameObject.SetActive(true);
-		point.panel.SetActive(false);
+		point.point.GetComponent<InteractionPointRenderer>().Init(point);
 		interactionPoints.Add(point);
-
-		SetInteractionPointTag(point);
-	}
-
-	private void SetInteractionPointTag(InteractionPointPlayer point)
-	{
-		var shape = point.point.GetComponent<SpriteRenderer>();
-		var interactionTypeRenderer = point.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true);
-		var tag = TagManager.Instance.GetTagById(point.tagId);
-
-		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
-		shape.color = tag.color;
-		interactionTypeRenderer.color = tag.color.IdealTextColor();
 	}
 
 	private void RemoveInteractionPoint(InteractionPointPlayer point)

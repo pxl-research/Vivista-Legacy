@@ -357,7 +357,6 @@ public class Editor : MonoBehaviour
 
 				lastPlacedPoint = point;
 				AddItemToTimeline(point, false);
-				SetInteractionPointTag(point);
 
 				interactionTypePicker = Instantiate(UIPanels.Instance.interactionTypePicker, Canvass.main.transform, false);
 
@@ -480,7 +479,6 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.FillingPanelDetails)
 		{
-			var lastPlacedPointPos = lastPlacedPoint.point.transform.position;
 			bool finished = false;
 			//NOTE(Simon): Some panels use Esc internally to cancel a child action. We don't want to also cancel the panel in that case.
 			bool allowCancel = true;
@@ -740,9 +738,8 @@ public class Editor : MonoBehaviour
 				lastPlacedPoint.tagId = interactionEditor.GetComponentInChildren<TagPicker>().currentTagId;
 				lastPlacedPoint.mandatory = interactionEditor.GetComponentInChildren<MandatoryPanel>().isMandatory;
 				lastPlacedPoint.timelineRow.mandatory.isOn = lastPlacedPoint.mandatory;
-				lastPlacedPoint.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true).sprite = InteractionTypeSprites.GetSprite(lastPlacedPoint.type);
 				lastPlacedPoint.filled = true;
-				SetInteractionPointTag(lastPlacedPoint);
+				lastPlacedPoint.point.GetComponent<InteractionPointRenderer>().Init(lastPlacedPoint);
 
 				Destroy(interactionEditor);
 				editorState = EditorState.Active;
@@ -763,7 +760,6 @@ public class Editor : MonoBehaviour
 			if (Physics.Raycast(ray, out hit, 100))
 			{
 				SetInteractionpointPosition(pointToMove.point, hit.point);
-				var trans = pointToMove.point.transform;
 				transform.position = hit.point;
 			}
 
@@ -1056,9 +1052,8 @@ public class Editor : MonoBehaviour
 				editorState = EditorState.Active;
 				pointToEdit.filled = true;
 
-				pointToEdit.panel.SetActive(false);
+				pointToEdit.point.GetComponent<InteractionPointRenderer>().Init(pointToEdit);
 
-				SetInteractionPointTag(pointToEdit);
 				UnsavedChangesTracker.Instance.unsavedChanges = true;
 			}
 		}
@@ -1338,7 +1333,7 @@ public class Editor : MonoBehaviour
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
-		//Note(Simon): By default, make interactionPoints invisible on load
+		//Note(Simon): By default, make interactionPoint panels invisible on load
 		interactionPoints.Add(point);
 		if (point.panel != null && hidden)
 		{
@@ -2553,11 +2548,8 @@ public class Editor : MonoBehaviour
 
 			if (isValidPoint)
 			{
-				newInteractionPoint.panel.SetActive(false);
+				newInteractionPoint.point.GetComponent<InteractionPointRenderer>().Init(newInteractionPoint);
 				AddItemToTimeline(newInteractionPoint, true);
-				SetInteractionPointTag(newInteractionPoint);
-				var interactionTypeRenderer = newInteractionPoint.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true);
-				interactionTypeRenderer.sprite = InteractionTypeSprites.GetSprite(newInteractionPoint.type);
 			}
 			else
 			{
