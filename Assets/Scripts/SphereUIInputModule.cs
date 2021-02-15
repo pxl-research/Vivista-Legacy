@@ -190,4 +190,17 @@ public class SphereUIInputModule: StandaloneInputModule
 			}
 		}
 	}
+
+	public Vector2 ScreenPointToSpherePoint(Vector2 screenPoint)
+	{
+		var direction = camera.ScreenPointToRay((Vector2)Input.mousePosition).direction;
+		float positionOffsetPx = offset / 360 * uiTexture.width;
+		var position = new Vector2
+		{
+			x = (uiTexture.width * (0.5f - Mathf.Atan2(direction.z, direction.x) / (2f * Mathf.PI)) - positionOffsetPx) % uiTexture.width,
+			y = uiTexture.height * (Mathf.Asin(direction.y) / Mathf.PI + 0.5f)
+		};
+
+		return position;
+	}
 }
