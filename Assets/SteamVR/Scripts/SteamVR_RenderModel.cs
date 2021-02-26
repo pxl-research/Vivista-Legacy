@@ -452,7 +452,12 @@ namespace Valve.VR
                         texture.Apply();
                     }
 
+#if UNITY_URP
+                    material = new Material(shader != null ? shader : Shader.Find("Universal Render Pipeline/Lit"));
+#else
                     material = new Material(shader != null ? shader : Shader.Find("Standard"));
+#endif
+
                     material.mainTexture = texture;
                     //material.hideFlags = HideFlags.DontUnloadUnusedAsset;
 
@@ -751,7 +756,7 @@ namespace Valve.VR
             {
                 Transform child = transform.GetChild(childIndex);
 
-                // Cache names since accessing an object's name allocate memory.
+                // Cache names since accessing an object's name allocates memory.
                 string componentName;
                 if (!nameCache.TryGetValue(child.GetInstanceID(), out componentName))
                 {
@@ -763,8 +768,8 @@ namespace Valve.VR
                 if (!renderModels.GetComponentStateForDevicePath(renderModelName, componentName, SteamVR_Input_Source.GetHandle(inputSource), ref controllerModeState, ref componentState))
                     continue;
 
-                child.localPosition = SteamVR_Utils.GetPosition(componentState.mTrackingToComponentRenderModel);
-                child.localRotation = SteamVR_Utils.GetRotation(componentState.mTrackingToComponentRenderModel);
+                child.localPosition = componentState.mTrackingToComponentRenderModel.GetPosition();
+                child.localRotation = componentState.mTrackingToComponentRenderModel.GetRotation();
 
                 Transform attach = null;
                 for (int childChildIndex = 0; childChildIndex < child.childCount; childChildIndex++)
@@ -784,8 +789,8 @@ namespace Valve.VR
 
                 if (attach != null)
                 {
-                    attach.position = transform.TransformPoint(SteamVR_Utils.GetPosition(componentState.mTrackingToComponentLocal));
-                    attach.rotation = transform.rotation * SteamVR_Utils.GetRotation(componentState.mTrackingToComponentLocal);
+                    attach.position = transform.TransformPoint(componentState.mTrackingToComponentLocal.GetPosition());
+                    attach.rotation = transform.rotation * componentState.mTrackingToComponentLocal.GetRotation();
 
                     initializedAttachPoints = true;
                 }
@@ -824,7 +829,7 @@ namespace Valve.VR
         }
 
         /// <summary>
-        /// Helper function to handle the inconvenient fact that the packing for RenderModel_t is 
+        /// Helper function to handle the inconvenient fact that the packing for RenderModel_t is
         /// different on Linux/OSX (4) than it is on Windows (8)
         /// </summary>
         /// <param name="pRenderModel">native pointer to the RenderModel_t</param>
@@ -846,7 +851,7 @@ namespace Valve.VR
         }
 
         /// <summary>
-        /// Helper function to handle the inconvenient fact that the packing for RenderModel_TextureMap_t is 
+        /// Helper function to handle the inconvenient fact that the packing for RenderModel_TextureMap_t is
         /// different on Linux/OSX (4) than it is on Windows (8)
         /// </summary>
         /// <param name="pRenderModel">native pointer to the RenderModel_TextureMap_t</param>

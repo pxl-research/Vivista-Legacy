@@ -70,7 +70,11 @@ namespace Valve.VR.InteractionSystem
 
 			animation = GetComponent<Animation>();
 
-			tintColorID = Shader.PropertyToID( "_TintColor" );
+#if UNITY_URP
+			tintColorID = Shader.PropertyToID( "_BaseColor" );
+#else
+			tintColorID = Shader.PropertyToID("_TintColor");
+#endif
 
 			moveLocationIcon.gameObject.SetActive( false );
 			switchSceneIcon.gameObject.SetActive( false );
@@ -221,11 +225,11 @@ namespace Valve.VR.InteractionSystem
 		{
 			if ( !string.IsNullOrEmpty( switchToScene ) )
 			{
-				Debug.Log("<b>[SteamVR Interaction]</b> TeleportPoint: Hook up your level loading logic to switch to new scene: " + switchToScene );
+				Debug.Log("<b>[SteamVR Interaction]</b> TeleportPoint: Hook up your level loading logic to switch to new scene: " + switchToScene, this);
 			}
 			else
 			{
-				Debug.LogError("<b>[SteamVR Interaction]</b> TeleportPoint: Invalid scene name to switch to: " + switchToScene );
+				Debug.LogError("<b>[SteamVR Interaction]</b> TeleportPoint: Invalid scene name to switch to: " + switchToScene, this);
 			}
 		}
 

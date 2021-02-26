@@ -69,7 +69,7 @@ namespace Valve.VR
 
         /// <summary><strong>[Shortcut to: SteamVR_Input_Sources.Any]</strong> (previous update) True when the boolean action is false and the last state was true</summary>
         public bool lastStateUp { get { return sourceMap[SteamVR_Input_Sources.Any].lastStateUp; } }
-        
+
 
         public SteamVR_Action_Boolean() { }
 
@@ -115,7 +115,7 @@ namespace Valve.VR
             return sourceMap[inputSource].lastState;
         }
 
-        /// <summary>Executes a function when the *functional* active state of this action (with the specified inputSource) changes. 
+        /// <summary>Executes a function when the *functional* active state of this action (with the specified inputSource) changes.
         /// This happens when the action is bound or unbound, or when the ActionSet changes state.</summary>
         /// <param name="functionToCall">A local function that receives the boolean action who's active state changes and the corresponding input source</param>
         /// <param name="inputSource">The device you would like to get data from. Any if the action is not device specific.</param>
@@ -124,7 +124,7 @@ namespace Valve.VR
             sourceMap[inputSource].onActiveChange += functionToCall;
         }
 
-        /// <summary>Stops executing a function when the *functional* active state of this action (with the specified inputSource) changes. 
+        /// <summary>Stops executing a function when the *functional* active state of this action (with the specified inputSource) changes.
         /// This happens when the action is bound or unbound, or when the ActionSet changes state.</summary>
         /// <param name="functionToStopCalling">The local function that you've setup to receive update events</param>
         /// <param name="inputSource">The device you would like to get data from. Any if the action is not device specific.</param>
@@ -213,6 +213,14 @@ namespace Valve.VR
             sourceMap[inputSource].onStateUp -= functionToStopCalling;
         }
 
+        /// <summary>
+        /// Remove all listeners registered in the source, useful for Dispose pattern
+        /// </summary>
+        public void RemoveAllListeners(SteamVR_Input_Sources input_Sources)
+        {
+            sourceMap[input_Sources].RemoveAllListeners();
+        }
+
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
         }
@@ -222,7 +230,7 @@ namespace Valve.VR
             InitAfterDeserialize();
         }
     }
-    
+
     public class SteamVR_Action_Boolean_Source_Map : SteamVR_Action_In_Source_Map<SteamVR_Action_Boolean_Source>
     {
     }
@@ -328,7 +336,7 @@ namespace Valve.VR
         }
 
         /// <summary>
-        /// <strong>[Should not be called by user code]</strong> 
+        /// <strong>[Should not be called by user code]</strong>
         /// Initializes the handle for the inputSource, the action data size, and any other related SteamVR data.
         /// </summary>
         public override void Initialize()
@@ -340,7 +348,39 @@ namespace Valve.VR
 
         }
 
-        /// <summary><strong>[Should not be called by user code]</strong> 
+        /// <summary>
+        /// Remove all listeners, useful for Dispose pattern
+        /// </summary>
+        public void RemoveAllListeners()
+        {
+            Delegate[] delegates;
+
+            if (onStateDown != null)
+            {
+                delegates = onStateDown.GetInvocationList();
+                if (delegates != null)
+                    foreach (Delegate existingDelegate in delegates)
+                        onStateDown -= (SteamVR_Action_Boolean.StateDownHandler)existingDelegate;
+            }
+
+            if (onStateUp != null)
+            {
+                delegates = onStateUp.GetInvocationList();
+                if (delegates != null)
+                    foreach (Delegate existingDelegate in delegates)
+                        onStateUp -= (SteamVR_Action_Boolean.StateUpHandler)existingDelegate;
+            }
+
+            if (onState != null)
+            {
+                delegates = onState.GetInvocationList();
+                if (delegates != null)
+                    foreach (Delegate existingDelegate in delegates)
+                        onState -= (SteamVR_Action_Boolean.StateHandler)existingDelegate;
+            }
+        }
+
+        /// <summary><strong>[Should not be called by user code]</strong>
         /// Updates the data for this action and this input source. Sends related events.
         /// </summary>
         public override void UpdateValue()
@@ -382,7 +422,7 @@ namespace Valve.VR
                 onActiveChange.Invoke(booleanAction, inputSource, activeBinding);
         }
     }
-    
+
     public interface ISteamVR_Action_Boolean : ISteamVR_Action_In_Source
     {
         /// <summary>The current value of the boolean action. Note: Will only return true if the action is also active.</summary>

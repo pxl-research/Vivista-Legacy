@@ -278,9 +278,9 @@ namespace Valve.VR
 
         private bool initialized = false;
 
-        private void Initialize()
+        private void Initialize(bool force = false)
         {
-            SteamVR_Input.InitializeFile(false, false);
+            SteamVR_Input.InitializeFile(force, false);
             InitializeEditorValues();
             initialized = true;
         }
@@ -293,6 +293,7 @@ namespace Valve.VR
                 SteamVR_CopyExampleInputFiles.CopyFiles(true);
                 System.Threading.Thread.Sleep(1000);
                 bool initializeSuccess = SteamVR_Input.InitializeFile();
+                EditorApplication.delayCall += SaveFile; 
                 return initializeSuccess;
             }
             else
@@ -378,7 +379,7 @@ namespace Valve.VR
         private void OnGUI()
         {
             if (headerLabelStyle == null)
-                headerLabelStyle = new GUIStyle(EditorStyles.boldLabel);
+                headerLabelStyle = new GUIStyle(EditorStyles.boldLabel); 
 
             CheckFileInitialized();
 
@@ -683,9 +684,12 @@ namespace Valve.VR
             EditorGUILayout.EndFadeGroup();
         }
 
+        private Vector2 setScrollPosition;
         private void DrawSets()
         {
             EditorGUILayout.LabelField("Action Sets", headerLabelStyle);
+
+            setScrollPosition = EditorGUILayout.BeginScrollView(setScrollPosition);
             EditorGUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
@@ -796,6 +800,8 @@ namespace Valve.VR
             GUILayout.FlexibleSpace();
 
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndScrollView();
         }
 
         private static MemberInfo GetMemberInfo<TModel, TItem>(TModel model, Expression<Func<TModel, TItem>> expr)
@@ -807,7 +813,7 @@ namespace Valve.VR
         {
             SteamVR_Input.actionFile.SaveHelperLists();
 
-            SteamVR_Input.actionFile.Save(SteamVR_Input.actionsFilePath);
+            SteamVR_Input.actionFile.Save(SteamVR_Input.GetActionsFilePath());
 
             SteamVR_Input_ActionManifest_Manager.CleanBindings(true);
 
@@ -859,7 +865,7 @@ namespace Valve.VR
 
 
             EditorGUILayout.LabelField("Actions manifest", headerLabelStyle);
-            EditorGUILayout.LabelField(string.Format("Path: {0}", SteamVR_Input.actionsFilePath));
+            EditorGUILayout.LabelField(string.Format("Path: {0}", SteamVR_Input.GetActionsFilePath(true)));
 
             DrawRefreshButton();
 

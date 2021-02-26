@@ -25,19 +25,27 @@ namespace Valve.VR
             }
         }
         
-        public virtual SteamVR_Action_Boolean Trigger
+        public virtual SteamVR_Action_Boolean Teleport
         {
             get
             {
-                return SteamVR_Actions.default_Trigger;
+                return SteamVR_Actions.default_Teleport;
             }
         }
         
-        public virtual SteamVR_Action_Boolean Grip
+        public virtual SteamVR_Action_Boolean GrabPinch
         {
             get
             {
-                return SteamVR_Actions.default_Grip;
+                return SteamVR_Actions.default_GrabPinch;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean GrabGrip
+        {
+            get
+            {
+                return SteamVR_Actions.default_GrabGrip;
             }
         }
         
@@ -65,11 +73,35 @@ namespace Valve.VR
             }
         }
         
-        public virtual SteamVR_Action_Boolean RotateLeft
+        public virtual SteamVR_Action_Single Squeeze
         {
             get
             {
-                return SteamVR_Actions.default_RotateLeft;
+                return SteamVR_Actions.default_Squeeze;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean HeadsetOnHead
+        {
+            get
+            {
+                return SteamVR_Actions.default_HeadsetOnHead;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean Grip
+        {
+            get
+            {
+                return SteamVR_Actions.default_Grip;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean Trigger
+        {
+            get
+            {
+                return SteamVR_Actions.default_Trigger;
             }
         }
         
@@ -78,6 +110,14 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.default_RotateRight;
+            }
+        }
+        
+        public virtual SteamVR_Action_Boolean RotateLeft
+        {
+            get
+            {
+                return SteamVR_Actions.default_RotateLeft;
             }
         }
         

@@ -53,7 +53,7 @@ namespace Valve.VR
         /// Note: Will only return non-zero if the action is also active.</summary>
         public Vector3 delta { get { return sourceMap[SteamVR_Input_Sources.Any].delta; } }
 
-        /// <summary><strong>[Shortcut to: SteamVR_Input_Sources.Any]</strong> The Vector3 value difference between the previous update and update before that. 
+        /// <summary><strong>[Shortcut to: SteamVR_Input_Sources.Any]</strong> The Vector3 value difference between the previous update and update before that.
         /// Note: Will only return non-zero if the action is also active.</summary>
         public Vector3 lastDelta { get { return sourceMap[SteamVR_Input_Sources.Any].lastDelta; } }
 
@@ -89,7 +89,7 @@ namespace Valve.VR
             return sourceMap[inputSource].lastDelta;
         }
 
-        /// <summary>Executes a function when the *functional* active state of this action (with the specified inputSource) changes. 
+        /// <summary>Executes a function when the *functional* active state of this action (with the specified inputSource) changes.
         /// This happens when the action is bound or unbound, or when the ActionSet changes state.</summary>
         /// <param name="functionToCall">A local function that receives the boolean action who's active state changes and the corresponding input source</param>
         /// <param name="inputSource">The device you would like to get data from. Any if the action is not device specific.</param>
@@ -98,7 +98,7 @@ namespace Valve.VR
             sourceMap[inputSource].onActiveChange += functionToCall;
         }
 
-        /// <summary>Stops executing a function when the *functional* active state of this action (with the specified inputSource) changes. 
+        /// <summary>Stops executing a function when the *functional* active state of this action (with the specified inputSource) changes.
         /// This happens when the action is bound or unbound, or when the ActionSet changes state.</summary>
         /// <param name="functionToStopCalling">The local function that you've setup to receive update events</param>
         /// <param name="inputSource">The device you would like to get data from. Any if the action is not device specific.</param>
@@ -171,6 +171,14 @@ namespace Valve.VR
             sourceMap[inputSource].onAxis -= functionToStopCalling;
         }
 
+        /// <summary>
+        /// Removes all listeners, useful for dispose pattern
+        /// </summary>
+        public void RemoveAllListeners(SteamVR_Input_Sources input_Sources)
+        {
+            sourceMap[input_Sources].RemoveAllListeners();
+        }
+
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
         }
@@ -180,7 +188,7 @@ namespace Valve.VR
             InitAfterDeserialize();
         }
     }
-    
+
     public class SteamVR_Action_Vector3_Source_Map : SteamVR_Action_In_Source_Map<SteamVR_Action_Vector3_Source>
     {
     }
@@ -208,19 +216,19 @@ namespace Valve.VR
         public event SteamVR_Action_Vector3.UpdateHandler onUpdate;
 
 
-        /// <summary>The current Vector3 value of the action. 
+        /// <summary>The current Vector3 value of the action.
         /// Note: Will only return non-zero if the action is also active.</summary>
         public Vector3 axis { get; protected set; }
 
-        /// <summary>The Vector3 value of the action from the previous update. 
+        /// <summary>The Vector3 value of the action from the previous update.
         /// Note: Will only return non-zero if the action is also active.</summary>
         public Vector3 lastAxis { get; protected set; }
 
-        /// <summary>The Vector3 value difference between this update and the previous update. 
+        /// <summary>The Vector3 value difference between this update and the previous update.
         /// Note: Will only return non-zero if the action is also active.</summary>
         public Vector3 delta { get; protected set; }
 
-        /// <summary>The Vector3 value difference between the previous update and update before that. 
+        /// <summary>The Vector3 value difference between the previous update and update before that.
         /// Note: Will only return non-zero if the action is also active.</summary>
         public Vector3 lastDelta { get; protected set; }
 
@@ -274,7 +282,7 @@ namespace Valve.VR
         }
 
         /// <summary>
-        /// <strong>[Should not be called by user code]</strong> 
+        /// <strong>[Should not be called by user code]</strong>
         /// Initializes the handle for the inputSource, the action data size, and any other related SteamVR data.
         /// </summary>
         public override void Initialize()
@@ -285,7 +293,39 @@ namespace Valve.VR
                 actionData_size = (uint)Marshal.SizeOf(typeof(InputAnalogActionData_t));
         }
 
-        /// <summary><strong>[Should not be called by user code]</strong> 
+        /// <summary>
+        /// Removes all listeners, useful for dispose pattern
+        /// </summary>
+        public void RemoveAllListeners()
+        {
+            Delegate[] delegates;
+
+            if (onAxis != null)
+            {
+                delegates = onAxis.GetInvocationList();
+                if (delegates != null)
+                    foreach (Delegate existingDelegate in delegates)
+                        onAxis -= (SteamVR_Action_Vector3.AxisHandler)existingDelegate;
+            }
+
+            if (onUpdate != null)
+            {
+                delegates = onUpdate.GetInvocationList();
+                if (delegates != null)
+                    foreach (Delegate existingDelegate in delegates)
+                        onUpdate -= (SteamVR_Action_Vector3.UpdateHandler)existingDelegate;
+            }
+
+            if (onChange != null)
+            {
+                delegates = onChange.GetInvocationList();
+                if (delegates != null)
+                    foreach (Delegate existingDelegate in delegates)
+                        onChange -= (SteamVR_Action_Vector3.ChangeHandler)existingDelegate;
+            }
+        }
+
+        /// <summary><strong>[Should not be called by user code]</strong>
         /// Updates the data for this action and this input source. Sends related events.
         /// </summary>
         public override void UpdateValue()
@@ -342,19 +382,19 @@ namespace Valve.VR
     /// </summary>
     public interface ISteamVR_Action_Vector3 : ISteamVR_Action_In_Source
     {
-        /// <summary>The current float value of the action. 
+        /// <summary>The current float value of the action.
         /// Note: Will only return non-zero if the action is also active.</summary>
         Vector3 axis { get; }
 
-        /// <summary>The float value of the action from the previous update. 
+        /// <summary>The float value of the action from the previous update.
         /// Note: Will only return non-zero if the action is also active.</summary>
         Vector3 lastAxis { get; }
 
-        /// <summary>The float value difference between this update and the previous update. 
+        /// <summary>The float value difference between this update and the previous update.
         /// Note: Will only return non-zero if the action is also active.</summary>
         Vector3 delta { get; }
 
-        /// <summary>The float value difference between the previous update and update before that. 
+        /// <summary>The float value difference between the previous update and update before that.
         /// Note: Will only return non-zero if the action is also active.</summary>
         Vector3 lastDelta { get; }
     }

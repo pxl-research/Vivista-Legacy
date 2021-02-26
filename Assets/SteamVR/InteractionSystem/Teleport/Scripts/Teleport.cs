@@ -149,8 +149,12 @@ namespace Valve.VR.InteractionSystem
 			pointerLineRenderer = GetComponentInChildren<LineRenderer>();
 			teleportPointerObject = pointerLineRenderer.gameObject;
 
-			int tintColorID = Shader.PropertyToID( "_TintColor" );
-			fullTintAlpha = pointVisibleMaterial.GetColor( tintColorID ).a;
+#if UNITY_URP
+			fullTintAlpha = 0.5f;
+#else
+			int tintColorID = Shader.PropertyToID("_TintColor");
+			fullTintAlpha = pointVisibleMaterial.GetColor(tintColorID).a;
+#endif
 
 			teleportArc = GetComponent<TeleportArc>();
 			teleportArc.traceLayerMask = traceLayerMask;
@@ -177,7 +181,7 @@ namespace Valve.VR.InteractionSystem
 
 			if ( player == null )
 			{
-				Debug.LogError("<b>[SteamVR Interaction]</b> Teleport: No Player instance found in map.");
+				Debug.LogError("<b>[SteamVR Interaction]</b> Teleport: No Player instance found in map.", this);
 				Destroy( this.gameObject );
 				return;
 			}
@@ -891,7 +895,12 @@ namespace Valve.VR.InteractionSystem
 			{
 				Vector3 playerFeetOffset = player.trackingOriginTransform.position - player.feetPositionGuess;
 				player.trackingOriginTransform.position = teleportPosition + playerFeetOffset;
-			}
+
+                if (player.leftHand.currentAttachedObjectInfo.HasValue)
+                    player.leftHand.ResetAttachedTransform(player.leftHand.currentAttachedObjectInfo.Value);
+                if (player.rightHand.currentAttachedObjectInfo.HasValue)
+                    player.rightHand.ResetAttachedTransform(player.rightHand.currentAttachedObjectInfo.Value);
+            }
 			else
 			{
 				teleportingToMarker.TeleportPlayer( pointedAtPosition );
