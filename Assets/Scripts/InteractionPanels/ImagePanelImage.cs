@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -70,7 +72,6 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
 	private IEnumerator TrackMouse()
 	{
-		
 		while (true)
 		{
 			var ray = GetComponentInParent<GraphicRaycaster>();
@@ -80,13 +81,42 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 			{
 				while (Application.isPlaying)
 				{
-					var localPos = input.ScreenPointToSpherePoint(Input.mousePosition);
+					var localPos = new List<Vector2>();
 
-					Vector2 relativePos;
+					if (XRSettings.enabled)
+					{
+						//NOTE(Simon): Prefers right controller over left
+						if (VRDevices.hasRightController)
+						{
+							localPos.Add(input.positions[SphereUIInputModule.rightControllerId]);
+						}
+						if (VRDevices.hasLeftController)
+						{
+							localPos.Add(input.positions[SphereUIInputModule.leftControllerId]);
+						}
+					}
+					else
+					{
+						localPos.Add(input.ScreenPointToSpherePoint(Input.mousePosition));
+					}
 
-					RectTransformUtility.ScreenPointToLocalPointInRectangle(transform as RectTransform, localPos, ray.eventCamera, out relativePos);
+					var relativePos = new List<Vector2>();
 
-					image.rectTransform.localPosition = relativePos;
+					foreach (var pos in localPos)
+					{
+						RectTransformUtility.ScreenPointToLocalPointInRectangle(transform as RectTransform, pos, ray.eventCamera, out var outPos);
+						relativePos.Add(outPos);
+					}
+
+					foreach(var pos in relativePos)
+					{
+						if (((RectTransform) transform).rect.Contains(pos))
+						{
+							image.rectTransform.localPosition = pos;
+							break;
+						}
+					}
+
 					yield return 0;
 				}
 			}

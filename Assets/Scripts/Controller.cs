@@ -92,6 +92,17 @@ public class Controller : MonoBehaviour
 				}
 			}
 		}
+
+		//NOTE(Simon): Check if controller is connected. If not, hide it.
+		if (inputSource == SteamVR_Input_Sources.LeftHand)
+		{
+			laser.SetActive(VRDevices.hasLeftController);
+		}
+
+		if (inputSource == SteamVR_Input_Sources.RightHand)
+		{
+			laser.SetActive(VRDevices.hasRightController);
+		}
 	}
 
 	private void LateUpdate()

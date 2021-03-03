@@ -33,6 +33,8 @@ public class VideoPanel : MonoBehaviour
 	private bool decreaseButtonPressed;
 	private float volumeButtonClickTime;
 
+	private bool isDonePreparing;
+
 	public void Update()
 	{
 		CheckButtonStates();
@@ -42,6 +44,9 @@ public class VideoPanel : MonoBehaviour
 		progressBar.value = time;
 		progressBar.maxValue = length;
 		timeDisplay.text = $"{MathHelper.FormatSeconds(time)} / {MathHelper.FormatSeconds(length)}";
+
+		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
+		bigButtonIcon.color = videoPlayer.isPlaying ? Color.clear : Color.white;
 	}
 
 	public void Init(string newTitle, string fullPath)
@@ -89,6 +94,9 @@ public class VideoPanel : MonoBehaviour
 
 	private void OnPrepareComplete(VideoPlayer source)
 	{
+		Debug.Log("Done preparing");
+
+		isDonePreparing = true;
 		var heightFactor = source.texture.height / videoSurface.rectTransform.rect.height;
 		var widthFactor = source.texture.width / videoSurface.rectTransform.rect.width;
 		var largestFactor = Mathf.Max(heightFactor, widthFactor);
@@ -104,8 +112,13 @@ public class VideoPanel : MonoBehaviour
 
 	private void OnEnable()
 	{
-		videoPlayer.prepareCompleted += OnPrepareComplete;
-		videoPlayer.Prepare();
+		if (!isDonePreparing)
+		{
+			Debug.Log("Begin preparing");
+			videoPlayer.prepareCompleted -= OnPrepareComplete;
+			videoPlayer.prepareCompleted += OnPrepareComplete;
+			videoPlayer.Prepare();
+		}
 
 		//NOTE(Simon): Make sure we have added the events
 		controlButton.onClick.RemoveListener(TogglePlay);
@@ -135,8 +148,7 @@ public class VideoPanel : MonoBehaviour
 			videoPlayer.Play();
 		}
 
-		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
-		bigButtonIcon.color = videoPlayer.isPlaying ? Color.clear : Color.white;
+		
 	}
 
 	public void DecreaseVolume()

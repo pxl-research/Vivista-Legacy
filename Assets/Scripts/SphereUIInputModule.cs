@@ -12,7 +12,7 @@ public class SphereUIInputModule: StandaloneInputModule
 
 	private Dictionary<int, PointerEventData> pointers;
 	private Dictionary<int, Vector3> directions;
-	private Dictionary<int, Vector2> positions;
+	public Dictionary<int, Vector2> positions;
 	private Dictionary<int, Vector2> positionResults;
 	private Dictionary<int, RaycastResult> raycastResults;
 	private Dictionary<int, PointerEventData.FramePressState> clickStates;
@@ -24,8 +24,8 @@ public class SphereUIInputModule: StandaloneInputModule
 	public float offset;
 
 	private const int gazeId = 1;
-	private const int rightControllerId = 2;
-	private const int leftControllerId = 3;
+	public const int rightControllerId = 2;
+	public const int leftControllerId = 3;
 
 
 	protected override void Awake()
