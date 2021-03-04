@@ -59,15 +59,23 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
 	public void OnPointerEnter(PointerEventData eventData)
 	{
-		StartCoroutine("TrackMouse");
-		StartCoroutine(AnimateZoom(2, 0.25f));
+		var input = FindObjectOfType<SphereUIInputModule>();
+		if (input != null)
+		{
+			StartCoroutine("TrackMouse");
+			StartCoroutine(AnimateZoom(2, 0.25f));
+		}
 	}
 
 	public void OnPointerExit(PointerEventData eventData)
 	{
-		StopCoroutine("TrackMouse");
-		StartCoroutine(AnimateZoom(1, 0.25f));
-		image.rectTransform.anchoredPosition = Vector2.zero;
+		var input = FindObjectOfType<SphereUIInputModule>();
+		if (input != null)
+		{
+			StopCoroutine("TrackMouse");
+			StartCoroutine(AnimateZoom(1, 0.25f));
+			image.rectTransform.anchoredPosition = Vector2.zero;
+		}
 	}
 
 	private IEnumerator TrackMouse()
@@ -123,6 +131,7 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 			else
 			{
 				Debug.LogWarning("Could not find GraphicRaycaster and/or StandaloneInputModule");
+				yield return 0;
 			}
 		}
 	}
