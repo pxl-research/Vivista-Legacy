@@ -1,77 +1,211 @@
 fileFormatVersion: 2
 guid: 824c536bbd2b09c459bea2a362460d9c
 ModelImporter:
-  serializedVersion: 23
-  fileIDToRecycleName:
-    100000: arm_lowwer_l
-    100002: arm_lowwer_r_001
-    100004: arm_upper_l
-    100006: arm_upper_r_001
-    100008: Armature
-    100010: Cube
-    100012: Cube_001
-    100014: //RootNode
-    100016: root
-    100018: Torus
-    100020: Armature_001
-    100022: Armature_002
-    100024: Armature_003
-    100026: Bone
-    100028: Bone_0
-    100030: Bone_1
-    100032: Bone_end
-    100034: Hologram
-    100036: Pedistal
-    100038: Projector
-    100040: Sphere
-    400000: arm_lowwer_l
-    400002: arm_lowwer_r_001
-    400004: arm_upper_l
-    400006: arm_upper_r_001
-    400008: Armature
-    400010: Cube
-    400012: Cube_001
-    400014: //RootNode
-    400016: root
-    400018: Torus
-    400020: Armature_001
-    400022: Armature_002
-    400024: Armature_003
-    400026: Bone
-    400028: Bone_0
-    400030: Bone_1
-    400032: Bone_end
-    400034: Hologram
-    400036: Pedistal
-    400038: Projector
-    400040: Sphere
-    2300000: Cube_001
-    3300000: Cube_001
-    4300000: Torus
-    4300002: Cube_001
-    4300004: Cube
-    4300006: Sphere
-    4300008: Pedistal
-    4300010: Projector
-    4300012: Hologram
-    7400000: Default Take
-    7400002: ArmatureAction
-    7400004: Armature_002_Armature_ArmatureAction_Armature_ArmatureAction
-    7400006: Armature_002_Armature_Fade_Armature_Fade
-    9500000: //RootNode
-    13700000: Cube
-    13700002: Torus
-    13700004: Hologram
-    13700006: Pedistal
-    13700008: Projector
-    13700010: Sphere
-    2186277476908879412: ImportLogs
+  serializedVersion: 19301
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: arm_lowwer_l
+  - first:
+      1: 100002
+    second: arm_lowwer_r_001
+  - first:
+      1: 100004
+    second: arm_upper_l
+  - first:
+      1: 100006
+    second: arm_upper_r_001
+  - first:
+      1: 100008
+    second: Armature
+  - first:
+      1: 100010
+    second: Cube
+  - first:
+      1: 100012
+    second: Cube_001
+  - first:
+      1: 100014
+    second: //RootNode
+  - first:
+      1: 100016
+    second: root
+  - first:
+      1: 100018
+    second: Torus
+  - first:
+      1: 100020
+    second: Armature_001
+  - first:
+      1: 100022
+    second: Armature_002
+  - first:
+      1: 100024
+    second: Armature_003
+  - first:
+      1: 100026
+    second: Bone
+  - first:
+      1: 100028
+    second: Bone_0
+  - first:
+      1: 100030
+    second: Bone_1
+  - first:
+      1: 100032
+    second: Bone_end
+  - first:
+      1: 100034
+    second: Hologram
+  - first:
+      1: 100036
+    second: Pedistal
+  - first:
+      1: 100038
+    second: Projector
+  - first:
+      1: 100040
+    second: Sphere
+  - first:
+      4: 400000
+    second: arm_lowwer_l
+  - first:
+      4: 400002
+    second: arm_lowwer_r_001
+  - first:
+      4: 400004
+    second: arm_upper_l
+  - first:
+      4: 400006
+    second: arm_upper_r_001
+  - first:
+      4: 400008
+    second: Armature
+  - first:
+      4: 400010
+    second: Cube
+  - first:
+      4: 400012
+    second: Cube_001
+  - first:
+      4: 400014
+    second: //RootNode
+  - first:
+      4: 400016
+    second: root
+  - first:
+      4: 400018
+    second: Torus
+  - first:
+      4: 400020
+    second: Armature_001
+  - first:
+      4: 400022
+    second: Armature_002
+  - first:
+      4: 400024
+    second: Armature_003
+  - first:
+      4: 400026
+    second: Bone
+  - first:
+      4: 400028
+    second: Bone_0
+  - first:
+      4: 400030
+    second: Bone_1
+  - first:
+      4: 400032
+    second: Bone_end
+  - first:
+      4: 400034
+    second: Hologram
+  - first:
+      4: 400036
+    second: Pedistal
+  - first:
+      4: 400038
+    second: Projector
+  - first:
+      4: 400040
+    second: Sphere
+  - first:
+      23: 2300000
+    second: Cube_001
+  - first:
+      33: 3300000
+    second: Cube_001
+  - first:
+      43: 4300000
+    second: Torus
+  - first:
+      43: 4300002
+    second: Cube_001
+  - first:
+      43: 4300004
+    second: Cube
+  - first:
+      43: 4300006
+    second: Sphere
+  - first:
+      43: 4300008
+    second: Pedistal
+  - first:
+      43: 4300010
+    second: Projector
+  - first:
+      43: 4300012
+    second: Hologram
+  - first:
+      74: 7400000
+    second: Default Take
+  - first:
+      74: 7400002
+    second: ArmatureAction
+  - first:
+      74: 7400004
+    second: Armature_002_Armature_ArmatureAction_Armature_ArmatureAction
+  - first:
+      74: 7400006
+    second: Armature_002_Armature_Fade_Armature_Fade
+  - first:
+      95: 9500000
+    second: //RootNode
+  - first:
+      137: 13700000
+    second: Cube
+  - first:
+      137: 13700002
+    second: Torus
+  - first:
+      137: 13700004
+    second: Hologram
+  - first:
+      137: 13700006
+    second: Pedistal
+  - first:
+      137: 13700008
+    second: Projector
+  - first:
+      137: 13700010
+    second: Sphere
+  - first:
+      41386430: 2186277476908879412
+    second: ImportLogs
+  - first:
+      74: -623603649343465320
+    second: Scene
   externalObjects:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Material
     second: {fileID: 2100000, guid: d530ebe9abc7ced478dd26b528c7924a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: No Name
+    second: {fileID: 2100000, guid: feaa478ebdb663a45966eca99cd23c06, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -83,7 +217,7 @@ ModelImporter:
       name: unnamed
     second: {fileID: 2100000, guid: e82cd21b34f3e41408eda63bfef8526e, type: 2}
   materials:
-    importMaterials: 1
+    materialImportMode: 1
     materialName: 0
     materialSearch: 1
     materialLocation: 0
@@ -115,34 +249,41 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1
     importLights: 1
+    fileIdsGeneration: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
     preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 1
-    previousCalculatedGlobalScale: 1
-    hasPreviousCalculatedGlobalScale: 1
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
   importAnimation: 1
-  copyAvatar: 0
   humanDescription:
-    serializedVersion: 2
+    serializedVersion: 3
     human: []
     skeleton: []
     armTwist: 0.5
@@ -152,14 +293,16 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
+    globalScale: 1
     rootMotionBoneName: 
-    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
+  avatarSetup: 1
   additionalBone: 0
   userData: 
   assetBundleName: 
