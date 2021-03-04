@@ -2041,7 +2041,7 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		//NOTE(Simon): Highlight interactionPoint on hover
+		//NOTE(Simon): Previews, pinning, Highlight interactionPoint on hover
 		if (RectTransformUtility.RectangleContainsScreenPoint(timelineScrollView, Input.mousePosition) && dragMode == TimelineDragMode.None)
 		{
 			foreach (var point in interactionPoints)
@@ -2096,8 +2096,11 @@ public class Editor : MonoBehaviour
 		{
 			foreach (var point in interactionPoints)
 			{
-				point.panel?.SetActive(false);
-				pinnedHoverPoint?.panel.SetActive(true);
+				if (point != pinnedHoverPoint)
+				{
+					point.panel?.SetActive(false);
+					//pinnedHoverPoint?.panel.SetActive(true);
+				}
 			}
 		}
 
@@ -2111,7 +2114,6 @@ public class Editor : MonoBehaviour
 	{
 		if (pinnedHoverPoint != null)
 		{
-			pinnedHoverPoint.panel.SetActive(false);
 			pinnedHoverPoint.timelineRow.title.fontStyle = FontStyle.Normal;
 			pinnedHoverPoint = null;
 		}

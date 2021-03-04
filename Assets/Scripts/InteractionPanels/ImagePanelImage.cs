@@ -62,8 +62,11 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 		var input = FindObjectOfType<SphereUIInputModule>();
 		if (input != null)
 		{
-			StartCoroutine("TrackMouse");
-			StartCoroutine(AnimateZoom(2, 0.25f));
+			if (loaded)
+			{
+				StartCoroutine("TrackMouse");
+				StartCoroutine(AnimateZoom(2, 0.25f));
+			}
 		}
 	}
 
