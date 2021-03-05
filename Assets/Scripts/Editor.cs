@@ -209,7 +209,7 @@ public class Editor : MonoBehaviour
 	private Chapter chapterBeingDragged;
 
 	private TimeTooltip timeTooltip;
-	private Tooltip textTooltip;
+	private TimelineTooltip textTooltip;
 
 	private Metadata meta;
 	private string userToken = "";
@@ -236,7 +236,7 @@ public class Editor : MonoBehaviour
 		timeTooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimeTooltip>();
 		timeTooltip.ResetPosition();
 
-		textTooltip = Instantiate(textTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<Tooltip>();
+		textTooltip = Instantiate(textTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimelineTooltip>();
 		textTooltip.ResetPosition();
 
 		timelineLabelsDirty = true;
