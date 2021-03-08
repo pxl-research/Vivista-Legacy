@@ -124,7 +124,7 @@
 		"sources": [],
 		"skeleton": []
 	},
-    "controller_type" : "vive_controller",
-    "description" : "",
-    "name" : "vive_controller"
+	"controller_type" : "vive_cosmos_controller",
+	"description" : "",
+	"name" : "vive_cosmos_controller"
 }
