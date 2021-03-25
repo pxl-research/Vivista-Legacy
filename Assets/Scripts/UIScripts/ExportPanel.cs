@@ -115,6 +115,7 @@ public class ExportPanel : MonoBehaviour
 		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, SaveFile.extraPath)));
 		files.AddRange(Directory.GetFiles(Path.Combine(projectPath, SaveFile.miniaturesPath)));
 		files.Add(Path.Combine(projectPath, SaveFile.metaFilename));
+		files.Add(Path.Combine(projectPath, SaveFile.chaptersFilename));
 		files.Add(Path.Combine(projectPath, SaveFile.tagsFilename));
 
 		//NOTE(Simon): If mode is "full", also include the base video and thumb image
