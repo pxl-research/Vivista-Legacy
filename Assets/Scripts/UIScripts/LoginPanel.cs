@@ -6,23 +6,29 @@ using UnityEngine.UI;
 
 public class LoginDetails
 {
-	public string username;
+	public string email;
 	public string password;
+}
+
+public class LoginResponse
+{
+	public string session;
+	public string error;
 }
 
 public class LoginPanel : MonoBehaviour 
 {
 	public bool answered;
-	public string answerToken;
 
-	public InputField loginUsername;
+	public InputField loginEmail;
 	public InputField loginPassword;
 	public Toggle loginRemember;
 	public Text loginError;
 
 	public InputField registerUsername;
+	public InputField registerEmail;
 	public InputField registerPassword;
-	public InputField registerRepeatPassword;
+	public InputField registerPasswordConfirmation;
 	public Text registerError;
 
 	private string loginDataPath;
@@ -37,7 +43,7 @@ public class LoginPanel : MonoBehaviour
 
 		if (loginDetails != null)
 		{
-			loginUsername.text = loginDetails.username;
+			loginEmail.text = loginDetails.email;
 			loginPassword.text = loginDetails.password;
 			loginRemember.isOn = true;
 		}
@@ -45,11 +51,11 @@ public class LoginPanel : MonoBehaviour
 
 	public void Login() 
 	{
-		var username = loginUsername.text;
+		var email = loginEmail.text;
 		var password = loginPassword.text;
 
 		loginError.color = errorColor;
-		if (String.IsNullOrEmpty(username))
+		if (String.IsNullOrEmpty(email))
 		{
 			loginError.text = "Please fill in a username";
 			return;
@@ -64,7 +70,7 @@ public class LoginPanel : MonoBehaviour
 		{
 			using (var file = File.CreateText(loginDataPath))
 			{
-				file.WriteLine(username);
+				file.WriteLine(email);
 				file.WriteLine(password);
 			}
 		}
@@ -73,21 +79,15 @@ public class LoginPanel : MonoBehaviour
 			File.Delete(loginDataPath);
 		}
 
-		var response = SendLoginRequest(username, password);
+		var (success, response) = SendLoginRequest(email, password);
 
-		if (response.Item1 == 401)
+		if (!success)
 		{
-			loginError.text = "Username does not exist, or password is wrong";
-			return;
-		}
-		if (response.Item1 != 200)
-		{
-			loginError.text = "An error happened in the server. Please try again later";
+			loginError.text = response;
 			return;
 		}
 
 		answered = true;
-		answerToken = response.Item2;
 
 		Toasts.AddToast(5, "Logged in");
 	}
@@ -95,8 +95,9 @@ public class LoginPanel : MonoBehaviour
 	public void Register() 
 	{
 		var username = registerUsername.text;
+		var email = registerEmail.text;
 		var password = registerPassword.text;
-		var repeatPassword = registerRepeatPassword.text;
+		var passwordConfirmation = registerPasswordConfirmation.text;
 
 		registerError.color = errorColor;
 		if (String.IsNullOrEmpty(username))
@@ -104,17 +105,27 @@ public class LoginPanel : MonoBehaviour
 			registerError.text = "Please fill in a username";
 			return;
 		}
+		if (String.IsNullOrEmpty(email))
+		{
+			registerError.text = "Please fill in an email";
+			return;
+		}
 		if (String.IsNullOrEmpty(password))
 		{
 			registerError.text = "Please fill in a password";
 			return;
 		}
-		if (String.IsNullOrEmpty(repeatPassword))
+		if (password.Length < Web.minPassLength)
+		{
+			registerError.text = $"Password should be at least {Web.minPassLength} characters long";
+			return;
+		}
+		if (String.IsNullOrEmpty(passwordConfirmation))
 		{
 			registerError.text = "Please repeat your password";
 			return;
 		}
-		if (password != repeatPassword)
+		if (password != passwordConfirmation)
 		{
 			registerError.text = "These passwords are not the same";
 			return;
@@ -123,22 +134,18 @@ public class LoginPanel : MonoBehaviour
 		var form = new WWWForm();
 		form.AddField("username", username);
 		form.AddField("password", password);
-		
+		form.AddField("password-confirmation", passwordConfirmation);
+		form.AddField("email", email);
+
 		using (var www = UnityWebRequest.Post(Web.registerUrl, form))
 		{
 			www.SendWebRequest();
 			//TODO(Simon): Async??
 			while (!www.isDone) { }
 
-			var status = www.responseCode;
-			if (status == 409)
+			if (www.responseCode != 200)
 			{
-				registerError.text = "This username is already taken.";
-				return;
-			}
-			if (status != 200)
-			{
-				registerError.text = "An error happened in the server. Please try again later";
+				registerError.text = www.downloadHandler.text;
 				return;
 			}
 			if (www.isNetworkError || www.isHttpError)
@@ -148,7 +155,8 @@ public class LoginPanel : MonoBehaviour
 			}
 
 			answered = true;
-			answerToken = www.downloadHandler.text;
+			var response = JsonUtility.FromJson<LoginResponse>(www.downloadHandler.text);
+			Web.sessionCookie = response.session;
 
 			Toasts.AddToast(5, "Registered succesfully");
 			Toasts.AddToast(5, "Logged in");
@@ -164,7 +172,7 @@ public class LoginPanel : MonoBehaviour
 		{
 			using (var file = File.OpenText(loginDataPath))
 			{
-				details.username = file.ReadLine();
+				details.email = file.ReadLine();
 				details.password = file.ReadLine();
 			}
 		}
@@ -177,14 +185,26 @@ public class LoginPanel : MonoBehaviour
 	}
 
 	//NOTE(Simon): Returns HTTP response code. 200 is good, anything else is bad
-	public static Tuple<int, string> SendLoginRequest(string username, string password)
+	public static (bool, string) SendLoginRequest(string email, string password)
 	{
-		using (var www = new UnityWebRequest($"{Web.loginUrl}?username={username}&password={password}", "POST", new DownloadHandlerBuffer(), null))
+		var form = new WWWForm();
+		form.AddField("email", email);
+		form.AddField("password", password);
+
+		using (var www = UnityWebRequest.Post(Web.loginUrl, form))
 		{
 			var request = www.SendWebRequest();
 			//TODO(Simon): Async?
 			while (!request.isDone) { }
-			return new Tuple<int, string>((int)www.responseCode, www.downloadHandler.text);
+
+			var response = JsonUtility.FromJson<LoginResponse>(www.downloadHandler.text);
+
+			if (www.responseCode == 200)
+			{
+				Web.sessionCookie = response.session;
+			}
+
+			return (www.responseCode == 200, response.error);
 		}
 	}
 }

@@ -1,7 +1,7 @@
 ﻿
 public static class Web
 {
-	public static string baseUrl =		"http://localhost:5000";
+	public static string baseUrl =		"http://localhost:5000/api";
 	public static string indexUrl =		baseUrl;
 	public static string metaUrl =		baseUrl + "/meta";
 	public static string videoUrl =		baseUrl + "/video";
@@ -10,4 +10,8 @@ public static class Web
 	public static string extraURL =		baseUrl + "/extra";
 	public static string registerUrl =	baseUrl + "/register";
 	public static string loginUrl =		baseUrl + "/login";
+
+	public static int minPassLength =	8;
+
+	public static string sessionCookie = "";
 }

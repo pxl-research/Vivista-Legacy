@@ -212,7 +212,6 @@ public class Editor : MonoBehaviour
 	private TimelineTooltip textTooltip;
 
 	private Metadata meta;
-	private string userToken = "";
 	private UploadStatus uploadStatus;
 	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
 
@@ -258,10 +257,9 @@ public class Editor : MonoBehaviour
 			var details = LoginPanel.GetSavedLogin();
 			if (details != null)
 			{
-				var response = LoginPanel.SendLoginRequest(details.username, details.password);
-				if (response.Item1 == 200)
+				var (success, _) = LoginPanel.SendLoginRequest(details.email, details.password);
+				if (success)
 				{
-					userToken = response.Item2;
 					Toasts.AddToast(5, "Logged in");
 				}
 			}
@@ -1178,7 +1176,6 @@ public class Editor : MonoBehaviour
 
 			if (loginPanel.answered)
 			{
-				userToken = loginPanel.answerToken;
 				Destroy(loginPanel.gameObject);
 				Canvass.modalBackground.SetActive(false);
 				editorState = EditorState.Active;
@@ -1200,7 +1197,6 @@ public class Editor : MonoBehaviour
 		{
 			if (loginPanel != null && loginPanel.answered)
 			{
-				userToken = loginPanel.answerToken;
 				Destroy(loginPanel.gameObject);
 				InitSaveProjectPanel();
 			}
@@ -2227,7 +2223,7 @@ public class Editor : MonoBehaviour
 
 	public void InitUpload()
 	{
-		if (String.IsNullOrEmpty(userToken))
+		if (String.IsNullOrEmpty(Web.sessionCookie))
 		{
 			InitLoginPanel();
 			editorState = EditorState.SavingThenUploading;
@@ -2613,7 +2609,6 @@ public class Editor : MonoBehaviour
 		uploadStatus.totalSize = SaveFile.DirectorySize(new DirectoryInfo(path));
 
 		var form = new WWWForm();
-		form.AddField("token", userToken);
 		form.AddField("uuid", meta.guid.ToString());
 		form.AddField("downloadSize", uploadStatus.totalSize.ToString());
 		form.AddBinaryData("meta", str, SaveFile.metaFilename);
@@ -2623,7 +2618,6 @@ public class Editor : MonoBehaviour
 
 		var vidSize = (int)FileSize(videoPath);
 		var thumbSize = (int)FileSize(thumbPath);
-
 
 		//TODO(Simon): Guard against big files
 		var videoData = new byte[vidSize];
@@ -2650,6 +2644,7 @@ public class Editor : MonoBehaviour
 		form.AddBinaryData("thumb", thumbData, SaveFile.thumbFilename, "multipart/form-data");
 
 		uploadStatus.request = UnityWebRequest.Post(Web.videoUrl, form);
+		uploadStatus.request.SetRequestHeader("Cookie", $"session={Web.sessionCookie}");
 
 		yield return uploadStatus.request.SendWebRequest();
 		var status = uploadStatus.request.responseCode;
@@ -2696,7 +2691,6 @@ public class Editor : MonoBehaviour
 		}
 
 		var form = new WWWForm();
-		form.AddField("token", userToken);
 		form.AddField("videoguid", meta.guid.ToString());
 		var guids = String.Join(",", extras.Select(x => x.Substring(x.LastIndexOf('\\') + 1)).ToArray());
 		form.AddField("extraguids", guids);
@@ -2726,6 +2720,7 @@ public class Editor : MonoBehaviour
 		}
 
 		uploadStatus.request = UnityWebRequest.Post(Web.extrasURL, form);
+		uploadStatus.request.SetRequestHeader("Cookie", $"session={Web.sessionCookie}");
 
 		yield return uploadStatus.request.SendWebRequest();
 
