@@ -2739,28 +2739,32 @@ public class Editor : MonoBehaviour
 	private void InitExtrasList()
 	{
 		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var extraFolder = Path.Combine(projectFolder, SaveFile.extraPath);
 		allExtras = new Dictionary<string, InteractionPointEditor>();
 
 		foreach (var point in interactionPoints)
 		{
-			if (!String.IsNullOrEmpty(point.filename))
+			//NOTE(Simon): Ignore points without files and points with miniatures
+			if (!String.IsNullOrEmpty(point.filename) 
+				&& (point.type != InteractionType.FindArea && point.type != InteractionType.MultipleChoiceArea))
 			{
 				var filesInPoint = point.filename.Split('\f');
 				foreach (var file in filesInPoint)
 				{
-					allExtras.Add(Path.Combine(projectFolder, file), point);
+					allExtras.Add(file, point);
 				}
 			}
 		}
 
-		//TODO(Simon): This gets the full path, but we expect the
+		var extraFolder = Path.Combine(projectFolder, SaveFile.extraPath);
 		var filenames = Directory.GetFiles(extraFolder);
 		foreach (var file in filenames)
 		{
-			if (!allExtras.ContainsKey(file))
+			//NOTE(Simon): Remove everything before "extra" in the paths
+			var relativePath = file.Substring(projectFolder.Length + 1);
+			if (!allExtras.ContainsKey(relativePath))
 			{
-				allExtras.Add(file, null);
+				//NOTE(Simon): If we add an extra at this point, it means it was not cleaned up properly in a previous session
+				allExtras.Add(relativePath, null);
 			}
 		}
 	}
@@ -2813,12 +2817,11 @@ public class Editor : MonoBehaviour
 	//NOTE(Simon): Accepts single filenames, or mutliple separated by '\f'. Should be the relative ("extra") path, i.e. /extra/<filename>.<ext>
 	private void SetExtrasToDeleted(string relativePaths)
 	{
-		var projectFolder = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var list = relativePaths.Split('\f');
 
 		foreach (var path in list)
 		{
-			allExtras[Path.Combine(projectFolder, path)] = null;
+			allExtras[path] = null;
 		}
 	}
 
