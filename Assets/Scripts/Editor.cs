@@ -1198,7 +1198,14 @@ public class Editor : MonoBehaviour
 			if (loginPanel != null && loginPanel.answered)
 			{
 				Destroy(loginPanel.gameObject);
-				InitSaveProjectPanel();
+				if (UnsavedChangesTracker.Instance.unsavedChanges)
+				{
+					InitSaveProjectPanel();
+				}
+				else
+				{
+					InitUploadPanel();
+				}
 			}
 			if (savePanel != null && savePanel.answered)
 			{
@@ -2230,7 +2237,15 @@ public class Editor : MonoBehaviour
 		}
 		else
 		{
-			InitSaveProjectPanel();
+			if (UnsavedChangesTracker.Instance.unsavedChanges)
+			{
+				InitSaveProjectPanel();
+			}
+			else
+			{
+				InitUploadPanel();
+			}
+
 			editorState = EditorState.SavingThenUploading;
 		}
 	}
