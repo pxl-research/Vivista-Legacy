@@ -2616,36 +2616,36 @@ public class Editor : MonoBehaviour
 	private IEnumerator UploadFile()
 	{
 		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var thumbPath = Path.Combine(path, SaveFile.thumbFilename);
 		var metaPath = Path.Combine(path, SaveFile.metaFilename);
+		var chaptersPath = Path.Combine(path, SaveFile.chaptersFilename);
+		var tagsPath = Path.Combine(path, SaveFile.tagsFilename);
 		var videoPath = Path.Combine(path, SaveFile.videoFilename);
 
-		var str = SaveFile.GetSaveFileContentsBinary(metaPath);
+		var metaData = SaveFile.GetSaveFileContentsBinary(metaPath);
+		var chaptersData = SaveFile.GetSaveFileContentsBinary(chaptersPath);
+		var tagsData = SaveFile.GetSaveFileContentsBinary(tagsPath);
 		uploadStatus.totalSize = SaveFile.DirectorySize(new DirectoryInfo(path));
 
 		var form = new WWWForm();
 		form.AddField("uuid", meta.guid.ToString());
 		form.AddField("downloadSize", uploadStatus.totalSize.ToString());
-		form.AddBinaryData("meta", str, SaveFile.metaFilename);
+		form.AddBinaryData("meta", metaData, SaveFile.metaFilename);
+		form.AddBinaryData("chapters", chaptersData, SaveFile.chaptersFilename);
+		form.AddBinaryData("tags", tagsData, SaveFile.tagsFilename);
 
 		//NOTE(Simon): Busy wait until file is saved
-		while (!File.Exists(thumbPath)) { yield return null; }
 
 		var vidSize = (int)FileSize(videoPath);
-		var thumbSize = (int)FileSize(thumbPath);
 
 		//TODO(Simon): Guard against big files
 		var videoData = new byte[vidSize];
-		var thumbData = new byte[thumbSize];
 
 		//TODO(Simon): This reads the full file into memory. BAD
-		using (var thumbStream = File.OpenRead(thumbPath))
 		using (var videoStream = File.OpenRead(videoPath))
 		{
 			try
 			{
 				videoStream.Read(videoData, 0, vidSize);
-				thumbStream.Read(thumbData, 0, thumbSize);
 			}
 			catch (Exception e)
 			{
@@ -2656,7 +2656,6 @@ public class Editor : MonoBehaviour
 		}
 
 		form.AddBinaryData("video", videoData, SaveFile.videoFilename, "multipart/form-data");
-		form.AddBinaryData("thumb", thumbData, SaveFile.thumbFilename, "multipart/form-data");
 
 		uploadStatus.request = UnityWebRequest.Post(Web.videoUrl, form);
 		uploadStatus.request.SetRequestHeader("Cookie", $"session={Web.sessionCookie}");
@@ -2670,7 +2669,7 @@ public class Editor : MonoBehaviour
 			yield break;
 		}
 
-		uploadStatus.uploaded = vidSize + thumbSize;
+		uploadStatus.uploaded = vidSize;
 		uploadStatus.request.Dispose();
 
 		uploadStatus.coroutine = StartCoroutine(UploadExtras());
@@ -2680,24 +2679,8 @@ public class Editor : MonoBehaviour
 	{
 		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 
-		//TODO(Simon): Get allExtras, and upload them
-		var extras = new List<string>();
-
-		foreach (var point in interactionPoints)
-		{
-			if (point.type == InteractionType.Image)
-			{
-				extras.Add(point.filename);
-			}
-			if (point.type == InteractionType.Video)
-			{
-				throw new NotImplementedException();
-			}
-			if (point.type == InteractionType.Audio)
-			{
-				throw new NotImplementedException();
-			}
-		}
+		//TODO(Simon): Get allExtras, and upload them. Extras have been cleaned by this point, because a save has happened
+		var extras = allExtras.Keys;
 
 		if (extras.Count == 0)
 		{
@@ -2707,13 +2690,13 @@ public class Editor : MonoBehaviour
 
 		var form = new WWWForm();
 		form.AddField("videoguid", meta.guid.ToString());
-		var guids = String.Join(",", extras.Select(x => x.Substring(x.LastIndexOf('\\') + 1)).ToArray());
+		var filenames = extras.Select(x => x.Substring(x.LastIndexOf('\\') + 1)).ToList();
+		var guids = String.Join(",", filenames.Select(x => Path.GetFileNameWithoutExtension(x)));
 		form.AddField("extraguids", guids);
 
-		foreach (var extra in extras)
+		foreach (var filename in filenames)
 		{
-			var filename = extra.Substring(extra.LastIndexOf('\\') + 1);
-			var extraPath = Path.Combine(path, extra);
+			var extraPath = Path.Combine(path, SaveFile.extraPath, filename);
 			var extraSize = (int)FileSize(extraPath);
 			var extraData = new byte[extraSize];
 

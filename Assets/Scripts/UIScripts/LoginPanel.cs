@@ -204,6 +204,11 @@ public class LoginPanel : MonoBehaviour
 				Web.sessionCookie = response.session;
 			}
 
+			if (www.responseCode == 0)
+			{
+				response = new LoginResponse { error = www.error };
+			}
+
 			return (www.responseCode == 200, response.error);
 		}
 	}
