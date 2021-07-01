@@ -124,7 +124,7 @@ public class VideoDownloadManager : MonoBehaviour
 		Directory.CreateDirectory(extraDirectory);
 
 		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + videoGuid, path = Path.Combine(directory, SaveFile.metaFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.videoUrl + "?videoid=" + videoGuid, path = Path.Combine(directory, SaveFile.videoFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = Web.downloadVideoUrl + "?videoid=" + videoGuid, path = Path.Combine(directory, SaveFile.videoFilename)});
 		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + videoGuid, path = Path.Combine(directory, SaveFile.thumbFilename)});
 
 		foreach (string file in files)

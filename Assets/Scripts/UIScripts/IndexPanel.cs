@@ -94,6 +94,32 @@ public class IndexPanel : MonoBehaviour
 
 	public void Start()
 	{
+		var cmd = Environment.GetCommandLineArgs();
+		string rawlink = cmd[cmd.Length - 1];
+		bool isQuicklink = rawlink.Contains("vivista://");
+		string quicklink = isQuicklink ? rawlink.Substring(rawlink.IndexOf("://") + "://".Length) : null;
+		var parts = isQuicklink ? quicklink.Split('/') : null;
+		string type = isQuicklink ? parts[0] : null;
+		string id = isQuicklink ? parts[1] : null;
+
+		if (type == "video" && !String.IsNullOrEmpty(id))
+		{
+			GuidHelpers.TryDecode(id, out var guid);
+			var url = $"{Web.videoUrl}?id={guid}";
+			var www = UnityWebRequest.Get(url);
+
+			www.SendWebRequest();
+
+			while (!www.isDone) { }
+
+			detailVideo = JsonUtility.FromJson<VideoSerialize>(www.downloadHandler.text);
+			if (detailVideo != null && detailVideo.id != null)
+			{
+				ShowVideoDetails(detailVideo);
+				return;
+			}
+		}
+
 		pageLabels = new List<GameObject>();
 		isLocal = true;
 
@@ -114,7 +140,7 @@ public class IndexPanel : MonoBehaviour
 				cleanName.Append(option[i]);
 			}
 
-			searchAge.options.Add(new Dropdown.OptionData { text = cleanName.ToString(), image = null });
+			searchAge.options.Add(new Dropdown.OptionData {text = cleanName.ToString(), image = null});
 		}
 
 		page = 1;
@@ -168,10 +194,7 @@ public class IndexPanel : MonoBehaviour
 				if (hovering && Input.GetMouseButtonDown(0))
 				{
 					detailVideo = loadedVideos.videos[i];
-					detailPanel = Instantiate(detailPanelPrefab);
-					detailPanel.transform.SetParent(Canvass.main.transform, false);
-
-					StartCoroutine(detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal));
+					ShowVideoDetails(detailVideo);
 				}
 			}
 		}
@@ -271,6 +294,14 @@ public class IndexPanel : MonoBehaviour
 			LoadPage();
 			lastFilterInteractionTime = float.MaxValue;
 		}
+	}
+
+	public void ShowVideoDetails(VideoSerialize video)
+	{
+		detailPanel = Instantiate(detailPanelPrefab);
+		detailPanel.transform.SetParent(Canvass.main.transform, false);
+
+		StartCoroutine(detailPanel.GetComponent<DetailPanel>().Init(detailVideo, gameObject, isLocal));
 	}
 
 	public void LoadPage()
