@@ -14,7 +14,7 @@ public static class MathHelper
 		time -= hours * (60 * 60);
 		var minutes = (int)(time / 60);
 		time -= minutes * 60;
-		var seconds = (int) time;
+		var seconds = (int)time;
 
 		var formatted = "";
 		if (hours > 0)
@@ -81,13 +81,13 @@ public static class MathHelper
 		{
 			return $"{elapsed.Minutes} minutes ago";
 		}
-	
+
 		return "Just now";
 	}
 
 	public static string FormatBytes(long bytes)
 	{
- 		var names = new[] {"B", "kB", "MB", "GB"};
+		var names = new[] { "B", "kB", "MB", "GB" };
 		var magnitude = (int)Mathf.Max(0, Mathf.Floor(Mathf.Log(bytes, 1024)));
 		var calculated = bytes / Mathf.Pow(1024f, magnitude);
 		var result = $"{calculated:0.##} {names[magnitude]}";
@@ -107,7 +107,7 @@ public static class MathHelper
 		float widthRatio = orignalSize.x / targetSize.x;
 		float heightRatio = orignalSize.y / targetSize.y;
 		float biggestRatio = Mathf.Max(heightRatio, widthRatio);
-		return new Vector2(orignalSize.x / biggestRatio, orignalSize.y/ biggestRatio);
+		return new Vector2(orignalSize.x / biggestRatio, orignalSize.y / biggestRatio);
 	}
 
 	public static float smoothstep(float edge0, float edge1, float x)
@@ -230,7 +230,7 @@ public static class ExplorerHelper
 
 public static class GameObjectHelper
 {
-	public static T GetOrAddComponent<T>(this GameObject go) where T:Component
+	public static T GetOrAddComponent<T>(this GameObject go) where T : Component
 	{
 		var component = go.GetComponent<T>();
 		if (component == null)
@@ -240,7 +240,7 @@ public static class GameObjectHelper
 
 		return component;
 	}
-	
+
 	public static T GetComponentInChildren<T>(this GameObject go, bool excludeSelf)
 	{
 		if (excludeSelf)
@@ -284,5 +284,32 @@ public static class GuidHelpers
 			guid = new Guid();
 			return false;
 		}
+	}
+}
+
+public static class FileHelpers
+{
+	public static long DirectorySize(DirectoryInfo directory)
+	{
+		long size = 0;
+		var files = directory.GetFiles();
+
+		foreach (var file in files)
+		{
+			size += file.Length;
+		}
+
+		var subDirectories = directory.GetDirectories();
+
+		foreach (var sub in subDirectories)
+		{
+			size += DirectorySize(sub);
+		}
+		return size;
+	}
+
+	public static long FileSize(string path)
+	{
+		return new FileInfo(path).Length;
 	}
 }

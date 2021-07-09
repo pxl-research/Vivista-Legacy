@@ -85,7 +85,7 @@ public static class SaveFile
 		return str;
 	}
 
-	public static byte[] GetSaveFileContentsBinary(string path)
+	public static byte[] GetFileContentsBinary(string path)
 	{
 		byte[] data;
 		using (var fileContents = File.OpenRead(path))
@@ -388,25 +388,6 @@ public static class SaveFile
 			value = json.Substring(startValue, (endValue - startValue) - 2),
 			endindex = endValue
 		};
-	}
-
-	public static long DirectorySize(DirectoryInfo directory)
-	{
-		long size = 0;
-		var files = directory.GetFiles();
-
-		foreach (var file in files)
-		{
-			size += file.Length;
-		}
-
-		var subDirectories = directory.GetDirectories();
-
-		foreach (var sub in subDirectories)
-		{
-			size += DirectorySize(sub);
-		}
-		return size;
 	}
 
 	//NOTE(Simon): Parses the input version to the compat version

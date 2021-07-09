@@ -106,7 +106,7 @@ public class VideoDownloadManager : MonoBehaviour
 			download.totalBytes = download.video.downloadsize;
 
 			client.DownloadStringCompleted += OnExtraListDownloaded;
-			client.DownloadStringAsync(new Uri(Web.extrasURL + "?videoid=" + video.id), download);
+			client.DownloadStringAsync(new Uri(Web.extrasUrl + "?videoid=" + video.id), download);
 		}
 	}
 
@@ -116,25 +116,26 @@ public class VideoDownloadManager : MonoBehaviour
 		var videoGuid = download.video.id;
 		download.client.DownloadStringCompleted -= OnExtraListDownloaded;
 
-		var files = JsonHelper.ToArray<string>(e.Result);
+		var extraFiles = JsonHelper.ToArray<string>(e.Result);
 
 		string directory = Path.Combine(dataPath, videoGuid);
 		string extraDirectory = Path.Combine(directory, "extra");
 		//NOTE(Simon): Creates all folders in path
 		Directory.CreateDirectory(extraDirectory);
 
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.metaUrl + "/" + videoGuid, path = Path.Combine(directory, SaveFile.metaFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.downloadVideoUrl + "?videoid=" + videoGuid, path = Path.Combine(directory, SaveFile.videoFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = Web.thumbnailUrl + "/" + videoGuid, path = Path.Combine(directory, SaveFile.thumbFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.metaUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.metaFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.chaptersUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.chaptersFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.tagsUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.tagsFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.downloadVideoUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.videoFilename)});
+		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.thumbnailUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.thumbFilename)});
 
-		foreach (string file in files)
+		foreach (string file in extraFiles)
 		{
-			Guid fileGuid;
-			if (Guid.TryParse(file, out fileGuid))
+			if (Guid.TryParse(file, out _))
 			{
 				download.filesToDownload.Enqueue(new DownloadItem
 				{
-					url = $"{Web.extraURL}/?videoid={videoGuid}&extraid={file}",
+					url = $"{Web.extraUrl}/?videoid={videoGuid}&extraid={file}",
 					path = Path.Combine(directory, "extra\\" + file)
 				});
 			}

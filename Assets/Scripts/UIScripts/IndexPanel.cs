@@ -406,7 +406,7 @@ public class IndexPanel : MonoBehaviour
 				{
 					title = data.meta.title,
 					description = data.meta.description,
-					downloadsize = SaveFile.DirectorySize(folderInfo),
+					downloadsize = FileHelpers.DirectorySize(folderInfo),
 					realTimestamp = folderInfo.LastWriteTime,
 					id = localVideos[i].Name,
 					compatibleVersion = !(data.meta.version > SaveFile.VERSION)

@@ -92,7 +92,7 @@ public class ExportPanel : MonoBehaviour
 	{
 		if (UnsavedChangesTracker.Instance.unsavedChanges)
 		{
-			if (!Editor.Instance.SaveToFile())
+			if (!Editor.Instance.SaveProject())
 			{
 				Toasts.AddToast(5, "File save failed, try again.");
 			}

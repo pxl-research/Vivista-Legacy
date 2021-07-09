@@ -137,7 +137,7 @@ public class ImportPanel : MonoBehaviour
 
 			if (!isCurrentProject)
 			{
-				bytesToCopy += SaveFile.DirectorySize(new DirectoryInfo(tempDestFolder));
+				bytesToCopy += FileHelpers.DirectorySize(new DirectoryInfo(tempDestFolder));
 
 				if (!Directory.Exists(realDestFolder))
 				{

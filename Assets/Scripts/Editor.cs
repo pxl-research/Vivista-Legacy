@@ -103,18 +103,6 @@ public class InteractionPointSerialize
 	}
 }
 
-public class UploadStatus
-{
-	public Coroutine coroutine;
-	public UnityWebRequest request;
-	public long totalSize;
-	public bool done;
-	public bool failed;
-	public string error;
-	public Queue<Timing> timings = new Queue<Timing>();
-	public long uploaded;
-}
-
 public struct Timing
 {
 	public float time;
@@ -212,7 +200,6 @@ public class Editor : MonoBehaviour
 	private TimelineTooltip textTooltip;
 
 	private Metadata meta;
-	private UploadStatus uploadStatus;
 	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
 
 
@@ -1088,7 +1075,7 @@ public class Editor : MonoBehaviour
 				meta.guid = newGuid;
 				meta.title = savePanel.answerTitle;
 
-				if (!SaveToFile())
+				if (!SaveProject())
 				{
 					Debug.LogError("Something went wrong while saving the file");
 					return;
@@ -1116,7 +1103,7 @@ public class Editor : MonoBehaviour
 				var guid = projectPanel.answerGuid;
 				var projectFolder = Path.Combine(Application.persistentDataPath, guid);
 
-				if (OpenFile(projectFolder))
+				if (OpenProject(projectFolder))
 				{
 					SetEditorActive(true);
 					Destroy(projectPanel.gameObject);
@@ -1153,7 +1140,7 @@ public class Editor : MonoBehaviour
 
 				File.Copy(explorerPanel.answerPath, videoPath);
 
-				if (OpenFile(projectFolder))
+				if (OpenProject(projectFolder))
 				{
 					Destroy(explorerPanel.gameObject);
 					SetEditorActive(true);
@@ -1212,7 +1199,7 @@ public class Editor : MonoBehaviour
 				savePanel.Init(true, meta.title);
 				meta.title = savePanel.answerTitle;
 
-				if (!SaveToFile())
+				if (!SaveProject())
 				{
 					Debug.LogError("Something went wrong while saving the file");
 					return;
@@ -2230,6 +2217,7 @@ public class Editor : MonoBehaviour
 
 	public void InitUpload()
 	{
+		Debug.Log($"frame {Time.frameCount}: Initting upload");
 		if (String.IsNullOrEmpty(Web.sessionCookie))
 		{
 			InitLoginPanel();
@@ -2252,12 +2240,13 @@ public class Editor : MonoBehaviour
 
 	private void InitUploadPanel()
 	{
-		uploadStatus = new UploadStatus();
-		uploadStatus.coroutine = StartCoroutine(UploadFile());
+		Debug.Log($"frame {Time.frameCount}: Initting uploadpanel");
 		uploadPanel = Instantiate(UIPanels.Instance.uploadPanel);
 		uploadPanel.transform.SetParent(Canvass.main.transform, false);
 		videoController.Pause();
 		Canvass.modalBackground.SetActive(true);
+
+		UploadProject();
 	}
 
 	public void InitOpenProjectPanel()
@@ -2325,7 +2314,7 @@ public class Editor : MonoBehaviour
 		editorState = EditorState.Exporting;
 	}
 
-	public bool SaveToFile(bool makeThumbnail = true)
+	public bool SaveProject(bool makeThumbnail = true)
 	{
 		string path = SaveFile.GetPathForTitle(meta.title);
 		string videoPath = Path.Combine(path, SaveFile.videoFilename);
@@ -2377,7 +2366,7 @@ public class Editor : MonoBehaviour
 		return success;
 	}
 
-	private bool OpenFile(string projectFolder)
+	private bool OpenProject(string projectFolder)
 	{
 		var data = SaveFile.OpenFile(projectFolder);
 		meta = data.meta;
@@ -2613,125 +2602,37 @@ public class Editor : MonoBehaviour
 		interactionTypeRenderer.color = tag.color.IdealTextColor();
 	}
 
-	private IEnumerator UploadFile()
+	private void UploadProject()
 	{
-		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var metaPath = Path.Combine(path, SaveFile.metaFilename);
-		var chaptersPath = Path.Combine(path, SaveFile.chaptersFilename);
-		var tagsPath = Path.Combine(path, SaveFile.tagsFilename);
-		var videoPath = Path.Combine(path, SaveFile.videoFilename);
+		Debug.Log($"frame {Time.frameCount}: building upload queue");
 
-		var metaData = SaveFile.GetSaveFileContentsBinary(metaPath);
-		var chaptersData = SaveFile.GetSaveFileContentsBinary(chaptersPath);
-		var tagsData = SaveFile.GetSaveFileContentsBinary(tagsPath);
-		uploadStatus.totalSize = SaveFile.DirectorySize(new DirectoryInfo(path));
+		var filesToUpload = new List<FileUpload>();
 
-		var form = new WWWForm();
-		form.AddField("uuid", meta.guid.ToString());
-		form.AddField("downloadSize", uploadStatus.totalSize.ToString());
-		form.AddBinaryData("meta", metaData, SaveFile.metaFilename);
-		form.AddBinaryData("chapters", chaptersData, SaveFile.chaptersFilename);
-		form.AddBinaryData("tags", tagsData, SaveFile.tagsFilename);
+		var projectPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
+		var extraPath = Path.Combine(projectPath, SaveFile.extraPath);
+		var miniaturesPath = Path.Combine(projectPath, SaveFile.miniaturesPath);
 
-		//NOTE(Simon): Busy wait until file is saved
+		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Video, SaveFile.videoFilename, Path.Combine(projectPath, SaveFile.videoFilename)));
+		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Meta, SaveFile.metaFilename, Path.Combine(projectPath, SaveFile.metaFilename)));
+		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Chapters, SaveFile.chaptersFilename, Path.Combine(projectPath, SaveFile.chaptersFilename)));
+		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Tags, SaveFile.tagsFilename, Path.Combine(projectPath, SaveFile.tagsFilename)));
 
-		var vidSize = (int)FileSize(videoPath);
-
-		//TODO(Simon): Guard against big files
-		var videoData = new byte[vidSize];
-
-		//TODO(Simon): This reads the full file into memory. BAD
-		using (var videoStream = File.OpenRead(videoPath))
-		{
-			try
-			{
-				videoStream.Read(videoData, 0, vidSize);
-			}
-			catch (Exception e)
-			{
-				uploadStatus.failed = true;
-				uploadStatus.error = "Something went wrong while loading the file form disk: " + e.Message;
-				yield break;
-			}
-		}
-
-		form.AddBinaryData("video", videoData, SaveFile.videoFilename, "multipart/form-data");
-
-		uploadStatus.request = UnityWebRequest.Post(Web.videoUrl, form);
-		uploadStatus.request.SetRequestHeader("Cookie", $"session={Web.sessionCookie}");
-
-		yield return uploadStatus.request.SendWebRequest();
-		var status = uploadStatus.request.responseCode;
-		if (status != 200)
-		{
-			uploadStatus.failed = true;
-			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: ";
-			yield break;
-		}
-
-		uploadStatus.uploaded = vidSize;
-		uploadStatus.request.Dispose();
-
-		uploadStatus.coroutine = StartCoroutine(UploadExtras());
-	}
-
-	private IEnumerator UploadExtras()
-	{
-		var path = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-
-		//TODO(Simon): Get allExtras, and upload them. Extras have been cleaned by this point, because a save has happened
 		var extras = allExtras.Keys;
-
-		if (extras.Count == 0)
+		foreach (var extra in extras)
 		{
-			uploadStatus.done = true;
-			yield break;
+			var filename = Path.GetFileName(extra);
+			filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Extra, filename, Path.Combine(extraPath, filename)));
 		}
 
-		var form = new WWWForm();
-		form.AddField("videoguid", meta.guid.ToString());
-		var filenames = extras.Select(x => x.Substring(x.LastIndexOf('\\') + 1)).ToList();
-		var guids = String.Join(",", filenames.Select(x => Path.GetFileNameWithoutExtension(x)));
-		form.AddField("extraguids", guids);
-
-		foreach (var filename in filenames)
+		var miniatures = Directory.GetFiles(miniaturesPath);
+		foreach (var miniature in miniatures)
 		{
-			var extraPath = Path.Combine(path, SaveFile.extraPath, filename);
-			var extraSize = (int)FileSize(extraPath);
-			var extraData = new byte[extraSize];
-
-			using (var extraStream = File.OpenRead(extraPath))
-			{
-				try
-				{
-					extraStream.Read(extraData, 0, extraSize);
-				}
-				catch (Exception e)
-				{
-					uploadStatus.failed = true;
-					uploadStatus.error = "Something went wrong while loading the file form disk: " + e.Message;
-					yield break;
-				}
-			}
-
-			form.AddBinaryData(filename, extraData, filename, "multipart/form-data");
+			var filename = Path.GetFileName(miniature);
+			filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Miniature, filename, Path.Combine(miniaturesPath, filename)));
 		}
 
-		uploadStatus.request = UnityWebRequest.Post(Web.extrasURL, form);
-		uploadStatus.request.SetRequestHeader("Cookie", $"session={Web.sessionCookie}");
-
-		yield return uploadStatus.request.SendWebRequest();
-
-		var status = uploadStatus.request.responseCode;
-		if (status != 200)
-		{
-			uploadStatus.failed = true;
-			uploadStatus.error = status == 401 ? "Not logged in " : "Something went wrong while uploading the file: " + uploadStatus.request.error;
-			Debug.LogError(uploadStatus.error);
-			yield break;
-		}
-
-		uploadStatus.done = true;
+		var routine = StartCoroutine(uploadPanel.StartUpload(filesToUpload));
+		uploadPanel.status.coroutine = routine;
 	}
 
 	private void InitExtrasList()
@@ -2841,43 +2742,28 @@ public class Editor : MonoBehaviour
 
 	private void UpdateUploadPanel()
 	{
-		if (uploadStatus.done)
+		if (uploadPanel.status.done)
 		{
 			editorState = EditorState.Active;
-			Destroy(uploadPanel.gameObject);
-			//TODO(Simon): temp fix. Make proper
-			try
-			{
-				uploadStatus.request.Dispose();
-			}
-			catch (Exception e)
-			{
-				Debug.LogError(e);
-			}
-			Canvass.modalBackground.SetActive(false);
+			uploadPanel.Dispose();
 			Toasts.AddToast(5, "Upload succesful");
 		}
-		else if (uploadStatus.failed)
+		else if (uploadPanel.status.failed)
 		{
 			editorState = EditorState.Active;
-			Destroy(uploadPanel.gameObject);
-			uploadStatus.request.Dispose();
-			Canvass.modalBackground.SetActive(false);
-			Toasts.AddToast(5, uploadStatus.error);
+			Toasts.AddToast(5, uploadPanel.status.error);
+			uploadPanel.Dispose();
 		}
 		else
 		{
-			uploadPanel.UpdatePanel(uploadStatus);
+			uploadPanel.UpdatePanel();
 		}
 
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
-			SetEditorActive(true);
-			StopCoroutine(uploadStatus.coroutine);
-			Destroy(uploadPanel.gameObject);
-			uploadStatus.request.Dispose();
-			Canvass.modalBackground.SetActive(false);
+			editorState = EditorState.Active;
 			Toasts.AddToast(5, "Upload cancelled");
+			uploadPanel.Dispose();
 		}
 	}
 
@@ -2962,8 +2848,4 @@ public class Editor : MonoBehaviour
 		return px / timelineWidthPixels * (timelineWindowEndTime - timelineWindowStartTime);
 	}
 
-	private static long FileSize(string path)
-	{
-		return new FileInfo(path).Length;
-	}
 }

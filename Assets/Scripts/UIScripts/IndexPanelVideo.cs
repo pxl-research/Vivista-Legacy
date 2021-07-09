@@ -56,7 +56,7 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 		else
 		{
-			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "/" + uuid);
+			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + uuid);
 		}
 
 		yield return imageDownload.SendWebRequest();

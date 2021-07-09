@@ -37,7 +37,7 @@ public class UnsavedChangesTracker : MonoBehaviour
 
 			panel.OnSave += () =>
 			{
-				if (Editor.Instance.SaveToFile(false))
+				if (Editor.Instance.SaveProject(false))
 				{
 					forceQuit = true;
 					Application.Quit();
