@@ -2,9 +2,11 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace TusDotNetClient
 {
@@ -88,6 +90,9 @@ namespace TusDotNetClient
 							totalBytesWritten += bytesWritten;
 
 							request.OnUploadProgressed(totalBytesWritten, segment.Count);
+
+							//FieldInfo type = requestStream.GetType().GetField("disposed", BindingFlags.NonPublic | BindingFlags.Instance);
+							//Debug.Log((bool)type.GetValue(requestStream));
 
 							await requestStream.WriteAsync(buffer, 0, bytesWritten, request.CancelToken).ConfigureAwait(false);
 

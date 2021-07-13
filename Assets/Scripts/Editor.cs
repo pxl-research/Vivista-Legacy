@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.EventSystems;
@@ -2606,33 +2607,32 @@ public class Editor : MonoBehaviour
 	{
 		Debug.Log($"frame {Time.frameCount}: building upload queue");
 
-		var filesToUpload = new List<FileUpload>();
+		var filesToUpload = new Queue<FileUpload>();
 
 		var projectPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
 		var extraPath = Path.Combine(projectPath, SaveFile.extraPath);
 		var miniaturesPath = Path.Combine(projectPath, SaveFile.miniaturesPath);
 
-		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Video, SaveFile.videoFilename, Path.Combine(projectPath, SaveFile.videoFilename)));
-		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Meta, SaveFile.metaFilename, Path.Combine(projectPath, SaveFile.metaFilename)));
-		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Chapters, SaveFile.chaptersFilename, Path.Combine(projectPath, SaveFile.chaptersFilename)));
-		filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Tags, SaveFile.tagsFilename, Path.Combine(projectPath, SaveFile.tagsFilename)));
+		filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Video, SaveFile.videoFilename, Path.Combine(projectPath, SaveFile.videoFilename)));
+		filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Meta, SaveFile.metaFilename, Path.Combine(projectPath, SaveFile.metaFilename)));
+		filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Chapters, SaveFile.chaptersFilename, Path.Combine(projectPath, SaveFile.chaptersFilename)));
+		filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Tags, SaveFile.tagsFilename, Path.Combine(projectPath, SaveFile.tagsFilename)));
 
 		var extras = allExtras.Keys;
 		foreach (var extra in extras)
 		{
 			var filename = Path.GetFileName(extra);
-			filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Extra, filename, Path.Combine(extraPath, filename)));
+			filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Extra, filename, Path.Combine(extraPath, filename)));
 		}
 
 		var miniatures = Directory.GetFiles(miniaturesPath);
 		foreach (var miniature in miniatures)
 		{
 			var filename = Path.GetFileName(miniature);
-			filesToUpload.Add(new FileUpload(meta.guid, UploadFileType.Miniature, filename, Path.Combine(miniaturesPath, filename)));
+			filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Miniature, filename, Path.Combine(miniaturesPath, filename)));
 		}
 
-		var routine = StartCoroutine(uploadPanel.StartUpload(filesToUpload));
-		uploadPanel.status.coroutine = routine;
+		uploadPanel.StartUpload2(filesToUpload);
 	}
 
 	private void InitExtrasList()
@@ -2745,8 +2745,8 @@ public class Editor : MonoBehaviour
 		if (uploadPanel.status.done)
 		{
 			editorState = EditorState.Active;
-			uploadPanel.Dispose();
 			Toasts.AddToast(5, "Upload succesful");
+			uploadPanel.Dispose();
 		}
 		else if (uploadPanel.status.failed)
 		{
@@ -2757,13 +2757,6 @@ public class Editor : MonoBehaviour
 		else
 		{
 			uploadPanel.UpdatePanel();
-		}
-
-		if (Input.GetKeyDown(KeyCode.Escape))
-		{
-			editorState = EditorState.Active;
-			Toasts.AddToast(5, "Upload cancelled");
-			uploadPanel.Dispose();
 		}
 	}
 

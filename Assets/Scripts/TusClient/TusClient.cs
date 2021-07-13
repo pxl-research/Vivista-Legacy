@@ -131,7 +131,7 @@ namespace TusDotNetClient
 				{
 					try
 					{
-						var offset = await GetFileOffset(url).ConfigureAwait(false);
+						long offset = await GetFileOffset(url).ConfigureAwait(false);
 
 						var sha = HashingImplementation == HashingImplementation.Sha1Managed
 							? (SHA1)new SHA1Managed()
@@ -176,8 +176,6 @@ namespace TusDotNetClient
 								}
 
 								offset = long.Parse(response.Headers[TusHeaderNames.UploadOffset]);
-
-								//reportProgress(offset, fileStream.Length);
 							}
 							catch (IOException ex)
 							{
@@ -298,6 +296,11 @@ namespace TusDotNetClient
 			var request = new TusHttpRequest(url, RequestMethod.Head, AdditionalHeaders);
 
 			var response = await TusHttpClient.PerformRequestAsync(request).ConfigureAwait(false);
+
+			if (response.StatusCode == HttpStatusCode.NotFound)
+			{
+				throw new FileNotFoundException("GetFileOffset failed. " + response.ResponseString);
+			}
 
 			if (response.StatusCode != HttpStatusCode.NoContent && response.StatusCode != HttpStatusCode.OK)
 			{

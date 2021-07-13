@@ -2,9 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 using TusDotNetClient;
 
@@ -36,14 +39,20 @@ public class FileUpload
 
 public class UploadStatus
 {
+	public Guid projectId;
 	public Coroutine coroutine;
-	public ulong totalSize;
+	public Task task;
+	public ulong totalSizeBytes;
 	public ulong currentFileProgressBytes;
 	public bool done;
 	public bool failed;
 	public string error;
 	public Queue<Timing> timings = new Queue<Timing>();
-	public ulong uploaded;
+	public ulong uploadedBytes;
+	public Queue<FileUpload> filesToUpload;
+	public List<FileUpload> filesUploaded;
+	public FileUpload fileInProgress;
+	public string fileInProgressId;
 }
 
 public class UploadPanel : MonoBehaviour 
@@ -61,105 +70,213 @@ public class UploadPanel : MonoBehaviour
 	private const float timeBetweenUpdates = 1/10f;
 
 	public UploadStatus status;
-
-	public IEnumerator StartUpload(List<FileUpload> filesToUpload)
+	
+	public async void StartUpload2(Queue<FileUpload> filesToUpload)
 	{
-		Debug.Log($"frame {Time.frameCount}: Beginning upload");
 		Assert.IsNull(status, "status should be null");
 
 		status = new UploadStatus();
-		ulong totalSize = 0;
+		status.filesUploaded = new List<FileUpload>();
+		status.filesToUpload = filesToUpload;
+		status.projectId = filesToUpload.Peek().projectGuid;
+		UpdateStatusBySavedProgress(status);
 
-		foreach (var file in filesToUpload)
+		status.totalSizeBytes = ProjectSizeFromStatus(status);
+
+		var client = new TusClient();
+		while (status.filesToUpload.Count != 0)
+		{
+			if (status.failed)
+			{
+				return;
+			}
+
+			bool shouldResume = false;
+			if (status.fileInProgress == null)
+			{
+				status.fileInProgress = status.filesToUpload.Dequeue();
+			}
+			else
+			{
+				shouldResume = true;
+			}
+
+			var headers = client.AdditionalHeaders;
+			headers.Clear();
+			headers.Add("guid", status.fileInProgress.projectGuid.ToString());
+			headers.Add("type", status.fileInProgress.type.ToString());
+			headers.Add("Cookie", $"session={Web.sessionCookie}");
+			headers.Add("filename", status.fileInProgress.filename);
+
+			var filesize = FileHelpers.FileSize(status.fileInProgress.path);
+			//NOTE(Simon): If we;re not resuming, get a new fileId from the server
+			if (!shouldResume)
+			{
+				(int code, string message) createResult;
+				try
+				{
+					createResult = await client.CreateAsync(Web.fileUrl, filesize);
+				}
+				catch (Exception e)
+				{
+					WriteUploadProgress(status);
+					status.failed = true;
+					status.error = "Something went wrong while trying to upload this project. Please try again later";
+					Debug.Log(e);
+					return;
+				}
+
+				if (createResult.code != 200)
+				{
+					WriteUploadProgress(status);
+					status.failed = true;
+					status.error = $"HTTP error {createResult.code}: {createResult.message}";
+				}
+
+				status.fileInProgressId = createResult.message;
+				
+			}
+
+			if (status.failed)
+			{
+				return;
+			}
+
+			try
+			{
+				var uploadOp = client.UploadAsync(status.fileInProgressId, File.OpenRead(status.fileInProgress.path), 20);
+				uploadOp.Progressed += OnUploadProgress;
+				var _ = await uploadOp;
+			}
+			catch (Exception e)
+			{
+				WriteUploadProgress(status);
+				status.failed = true;
+				status.error = "Something went wrong while trying to upload this project. Please try again alter";
+				Debug.Log(e);
+				return;
+			}
+
+			//NOTE(Simon): Trigger Task completion
+			status.filesUploaded.Add(status.fileInProgress);
+			status.fileInProgress = null;
+
+			status.uploadedBytes += (ulong)filesize;
+			status.currentFileProgressBytes = 0;
+		}
+
+		if (!status.failed)
+		{
+			status.done = true;
+			ClearUploadProgress();
+			Dispose();
+		}
+
+		Dispose();
+	}
+
+
+	private void WriteUploadProgress(UploadStatus status)
+	{
+		var projectPath = Path.Combine(Application.persistentDataPath, status.projectId.ToString());
+		var filePath = Path.Combine(projectPath, ".uploadProgress");
+
+		var buffer = new StringBuilder();
+
+		foreach (var file in status.filesUploaded)
+		{
+			buffer.AppendLine(file.filename);
+		}
+
+		if (status.fileInProgress != null)
+		{
+			buffer.AppendLine(status.fileInProgress.filename);
+			buffer.AppendLine(status.fileInProgressId);
+		}
+
+		using (var stream = File.Create(filePath))
+		{
+			var bytes = Encoding.ASCII.GetBytes(buffer.ToString());
+
+			stream.Write(bytes, 0, bytes.Length);
+		}
+	}
+
+	private void ClearUploadProgress()
+	{
+		var projectPath = Path.Combine(Application.persistentDataPath, status.projectId.ToString());
+		var filePath = Path.Combine(projectPath, ".uploadProgress");
+
+		File.Delete(filePath);
+	}
+
+	private void UpdateStatusBySavedProgress(UploadStatus status)
+	{
+		var projectPath = Path.Combine(Application.persistentDataPath, status.projectId.ToString());
+		var filePath = Path.Combine(projectPath, ".uploadProgress");
+
+		if (File.Exists(filePath))
+		{
+			var lines = File.ReadAllLines(filePath);
+
+			string fileInProgress = null;
+
+			//NOTE(Simon): If last entry starts with http, the last two entries are the file in progress and its serverId. So remove them from the array
+			if (lines[lines.Length - 1].StartsWith("http"))
+			{
+				fileInProgress = lines[lines.Length - 2];
+				status.fileInProgressId = lines[lines.Length - 1];
+
+				var newArray = new string[lines.Length - 2];
+				Array.Copy(lines, newArray, lines.Length - 2);
+				lines = newArray;
+
+			}
+
+			//NOTE(Simon): Remove already uploaded items from filesToUpload, and add them to filesUploaded
+			var newQueue = new Queue<FileUpload>();
+			while (status.filesToUpload.Count > 0)
+			{
+				var item = status.filesToUpload.Dequeue();
+
+				if (lines.Contains(item.filename))
+				{
+					status.filesUploaded.Add(item);
+				}
+				else if (item.filename == fileInProgress)
+				{
+					status.fileInProgress = item;
+				}
+				else
+				{
+					newQueue.Enqueue(item);
+				}
+			}
+
+			status.filesToUpload = newQueue;
+		}
+	}
+
+	private ulong ProjectSizeFromStatus(UploadStatus status)
+	{
+		ulong totalSize = 0;
+		foreach (var file in status.filesToUpload)
+		{
+			totalSize += (ulong)FileHelpers.FileSize(file.path);
+		}
+		foreach (var file in status.filesUploaded)
 		{
 			totalSize += (ulong)FileHelpers.FileSize(file.path);
 		}
 
-		status.totalSize = totalSize;
-
-		if (true)
+		if (status.fileInProgress != null)
 		{
-			var client = new TusClient();
-			foreach (var file in filesToUpload)
-			{
-				if (status.failed)
-				{
-					Debug.Log($"frame {Time.frameCount}: Ending uploads because of error");
-					yield return null;
-				}
-				else
-				{
-					var headers = client.AdditionalHeaders;
-					headers.Clear();
-					headers.Add("guid", file.projectGuid.ToString());
-					headers.Add("type", file.type.ToString());
-					headers.Add("Cookie", $"session={Web.sessionCookie}");
-					headers.Add("filename", file.filename);
-
-					var filesize = FileHelpers.FileSize(file.path);
-					var op = client.CreateAsync(Web.fileUrl, filesize);
-
-					while (!op.IsCompleted)
-					{
-						yield return new WaitForEndOfFrame();
-					}
-
-					(int code, string message) createResult;
-
-					try
-					{
-						createResult = op.Result;
-						if (createResult.code != 200)
-						{
-							status.failed = true;
-							status.error = $"HTTP error {createResult.code}: {createResult.message}";
-						}
-					}
-					catch (Exception e)
-					{
-						status.failed = true;
-						status.error = "Something went wrong while trying to upload this project. Please try again later";
-						Debug.Log(e);
-						yield break;
-					}
-
-					if (status.failed)
-					{
-						Debug.Log($"frame {Time.frameCount}: Ending uploads because of error");
-						yield return null;
-					}
-
-					var upload = client.UploadAsync(createResult.message, File.OpenRead(file.path), 20);
-					upload.Progressed += OnUploadProgress;
-
-					while (!upload.Operation.IsCompleted)
-					{
-						yield return new WaitForEndOfFrame();
-					}
-
-					try
-					{
-						//NOTE(Simon): Trigger Task completion
-						var _ = upload.Operation.Result;
-						status.uploaded += (ulong)filesize;
-						status.currentFileProgressBytes = 0;
-					}
-					catch (Exception e)
-					{
-						status.failed = true;
-						status.error = "Something went wrong while trying to upload this project. Please try again alter";
-						Debug.Log(e);
-						yield break;
-					}
-				}
-			}
-
-			if (!status.failed)
-			{
-				status.done = true;
-			}
+			totalSize += (ulong)FileHelpers.FileSize(status.fileInProgress.path);
 		}
+
+		return totalSize;
 	}
+
 
 	private void OnUploadProgress(long bytestransferred, long bytestotal)
 	{
@@ -170,7 +287,7 @@ public class UploadPanel : MonoBehaviour
 	{
 		time += Time.deltaTime;
 
-		ulong totalUploaded = status.uploaded + status.currentFileProgressBytes;
+		ulong totalUploaded = status.uploadedBytes + status.currentFileProgressBytes;
 		
 		var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
 		status.timings.Enqueue(newestTiming);
@@ -182,11 +299,11 @@ public class UploadPanel : MonoBehaviour
 
 		float currentSpeed = (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time);
 		float speed = status.timings.Count >= 2 ? currentSpeed: float.NaN;
-		float timeRemaining = (status.totalSize - totalUploaded) / speed;
-		progressBar.SetProgress(totalUploaded / (float)status.totalSize);
+		float timeRemaining = (status.totalSizeBytes - totalUploaded) / speed;
+		progressBar.SetProgress(totalUploaded / (float)status.totalSizeBytes);
 
 		//TODO(Simon): Show kB and GB when appropriate
-		progressMB.text = $"{totalUploaded / megabyte:F2}/{status.totalSize / megabyte:F2}MB";
+		progressMB.text = $"{totalUploaded / megabyte:F2}/{status.totalSizeBytes / megabyte:F2}MB";
 
 		time += Time.deltaTime;
 
@@ -209,14 +326,14 @@ public class UploadPanel : MonoBehaviour
 
 	public void Dispose()
 	{
+		if (status.filesToUpload.Count > 0 || status.fileInProgress != null)
+		{
+			WriteUploadProgress(status);
+		}
+
 		if (status == null)
 		{
 			return;
-		}
-
-		if (status.coroutine != null)
-		{
-			StopCoroutine(status.coroutine);
 		}
 
 		status = null;
