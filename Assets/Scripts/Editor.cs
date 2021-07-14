@@ -2713,7 +2713,7 @@ public class Editor : MonoBehaviour
 		}
 	}
 
-	//NOTE(Simon): Accepts single filenames, or mutliple separated by '\f'. Should be the relative ("extra") path, i.e. /extra/<filename>.<ext>
+	//NOTE(Simon): Accepts single filenames, or multiple separated by '\f'. Should be the relative ("extra") path, i.e. /extra/<filename>.<ext>
 	private void SetExtrasToDeleted(string relativePaths)
 	{
 		var list = relativePaths.Split('\f');

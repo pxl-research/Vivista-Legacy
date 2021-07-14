@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
@@ -40,19 +38,19 @@ public class FileUpload
 public class UploadStatus
 {
 	public Guid projectId;
-	public Coroutine coroutine;
-	public Task task;
-	public ulong totalSizeBytes;
-	public ulong currentFileProgressBytes;
 	public bool done;
 	public bool failed;
 	public string error;
-	public Queue<Timing> timings = new Queue<Timing>();
+	public ulong totalSizeBytes;
 	public ulong uploadedBytes;
+	public ulong currentFileProgressBytes;
+
 	public Queue<FileUpload> filesToUpload;
 	public List<FileUpload> filesUploaded;
 	public FileUpload fileInProgress;
 	public string fileInProgressId;
+
+	public Queue<Timing> timings = new Queue<Timing>();
 }
 
 public class UploadPanel : MonoBehaviour 
@@ -70,7 +68,7 @@ public class UploadPanel : MonoBehaviour
 	private const float timeBetweenUpdates = 1/10f;
 
 	public UploadStatus status;
-	
+
 	public async void StartUpload2(Queue<FileUpload> filesToUpload)
 	{
 		Assert.IsNull(status, "status should be null");
@@ -175,7 +173,6 @@ public class UploadPanel : MonoBehaviour
 		Dispose();
 	}
 
-
 	private void WriteUploadProgress(UploadStatus status)
 	{
 		var projectPath = Path.Combine(Application.persistentDataPath, status.projectId.ToString());
@@ -277,7 +274,6 @@ public class UploadPanel : MonoBehaviour
 		return totalSize;
 	}
 
-
 	private void OnUploadProgress(long bytestransferred, long bytestotal)
 	{
 		status.currentFileProgressBytes = (ulong)bytestransferred;
@@ -326,17 +322,15 @@ public class UploadPanel : MonoBehaviour
 
 	public void Dispose()
 	{
-		if (status.filesToUpload.Count > 0 || status.fileInProgress != null)
+		if (status != null)
 		{
-			WriteUploadProgress(status);
-		}
+			if (status.filesToUpload.Count > 0 || status.fileInProgress != null)
+			{
+				WriteUploadProgress(status);
+			}
 
-		if (status == null)
-		{
-			return;
+			status = null;
 		}
-
-		status = null;
 
 		Canvass.modalBackground.SetActive(false);
 		Destroy(gameObject);
