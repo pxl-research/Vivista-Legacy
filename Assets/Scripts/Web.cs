@@ -15,6 +15,7 @@ public static class Web
 	public static string extraUrl =			baseUrl + "/extra";
 	public static string registerUrl =		baseUrl + "/register";
 	public static string loginUrl =			baseUrl + "/login";
+	public static string bugReportUrl =		baseUrl + "/report_bug";
 
 	public static int minPassLength =		8;
 

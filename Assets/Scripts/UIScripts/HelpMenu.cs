@@ -29,8 +29,7 @@ public class HelpMenu : MonoBehaviour
 
 	public void ReportBug()
 	{
-		//TODO(Simon): Enable again once implemented on server side
-		return;
+		Canvass.modalBackground.SetActive(true);
 		Instantiate(bugReportPanelPrefab, Canvass.main.transform, false);
 	}
 }
