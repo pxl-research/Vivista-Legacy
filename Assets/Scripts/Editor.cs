@@ -2632,7 +2632,7 @@ public class Editor : MonoBehaviour
 			filesToUpload.Enqueue(new FileUpload(meta.guid, UploadFileType.Miniature, filename, Path.Combine(miniaturesPath, filename)));
 		}
 
-		uploadPanel.StartUpload2(filesToUpload);
+		uploadPanel.StartUpload(filesToUpload);
 	}
 
 	private void InitExtrasList()

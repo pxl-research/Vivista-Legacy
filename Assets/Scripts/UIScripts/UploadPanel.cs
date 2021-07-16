@@ -69,7 +69,7 @@ public class UploadPanel : MonoBehaviour
 
 	public UploadStatus status;
 
-	public async void StartUpload2(Queue<FileUpload> filesToUpload)
+	public async void StartUpload(Queue<FileUpload> filesToUpload)
 	{
 		Assert.IsNull(status, "status should be null");
 
@@ -171,6 +171,11 @@ public class UploadPanel : MonoBehaviour
 		}
 
 		Dispose();
+	}
+
+	public void FinishUpload()
+	{
+		
 	}
 
 	private void WriteUploadProgress(UploadStatus status)
