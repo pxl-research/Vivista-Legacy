@@ -167,10 +167,7 @@ public class UploadPanel : MonoBehaviour
 		{
 			status.done = true;
 			ClearUploadProgress();
-			Dispose();
 		}
-
-		Dispose();
 	}
 
 	public void FinishUpload()
