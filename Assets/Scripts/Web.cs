@@ -10,8 +10,8 @@ public static class Web
 	public static string downloadVideoUrl =	baseUrl + "/download_video";
 	public static string thumbnailUrl =		baseUrl + "/thumbnail";
 	public static string fileUrl =			baseUrl + "/file";
+	public static string finishUploadUrl =	baseUrl + "/finish_upload";
 	public static string extrasUrl =		baseUrl + "/extras";
-	public static string miniaturesUrl =	baseUrl + "/miniatures";
 	public static string extraUrl =			baseUrl + "/extra";
 	public static string registerUrl =		baseUrl + "/register";
 	public static string loginUrl =			baseUrl + "/login";
@@ -20,4 +20,5 @@ public static class Web
 	public static int minPassLength =		8;
 
 	public static string sessionCookie =	"";
+	public static string formattedCookieHeader => $"session={sessionCookie}";
 }

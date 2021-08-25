@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 using TusDotNetClient;
+using UnityEngine.Networking;
 
 public enum UploadFileType
 {
@@ -103,7 +104,7 @@ public class UploadPanel : MonoBehaviour
 			headers.Clear();
 			headers.Add("guid", status.fileInProgress.projectGuid.ToString());
 			headers.Add("type", status.fileInProgress.type.ToString());
-			headers.Add("Cookie", $"session={Web.sessionCookie}");
+			headers.Add("Cookie", Web.formattedCookieHeader);
 			headers.Add("filename", status.fileInProgress.filename);
 
 			var filesize = FileHelpers.FileSize(status.fileInProgress.path);
@@ -132,7 +133,6 @@ public class UploadPanel : MonoBehaviour
 				}
 
 				status.fileInProgressId = createResult.message;
-				
 			}
 
 			if (status.failed)
@@ -165,14 +165,36 @@ public class UploadPanel : MonoBehaviour
 
 		if (!status.failed)
 		{
-			status.done = true;
 			ClearUploadProgress();
+			var finishedSuccefully = FinishUpload();
+			if (finishedSuccefully)
+			{
+				status.done = true;
+			}
+			else
+			{
+				status.failed = true;
+				status.error = "Something went wrong while finishing the upload. Try again later";
+			}
 		}
 	}
 
-	public void FinishUpload()
+	public bool FinishUpload()
 	{
+		var form = new WWWForm();
 		
+		form.AddField("id", status.projectId.ToString());
+
+		using (var www = UnityWebRequest.Post(Web.finishUploadUrl, form))
+		{
+			www.SetRequestHeader("Cookie", Web.formattedCookieHeader);
+			var request = www.SendWebRequest();
+			while (!request.isDone)
+			{
+			}
+
+			return www.responseCode == 200;
+		}
 	}
 
 	private void WriteUploadProgress(UploadStatus status)
