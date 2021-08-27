@@ -106,7 +106,7 @@ public class VideoDownloadManager : MonoBehaviour
 			download.totalBytes = download.video.downloadsize;
 
 			client.DownloadStringCompleted += OnExtraListDownloaded;
-			client.DownloadStringAsync(new Uri(Web.extrasUrl + "?videoid=" + video.id), download);
+			client.DownloadStringAsync(new Uri(Web.filesUrl + "?videoid=" + video.id), download);
 		}
 	}
 
@@ -116,36 +116,22 @@ public class VideoDownloadManager : MonoBehaviour
 		var videoGuid = download.video.id;
 		download.client.DownloadStringCompleted -= OnExtraListDownloaded;
 
-		var extraFiles = JsonHelper.ToArray<string>(e.Result);
+		var files = JsonHelper.ToArray<string>(e.Result);
 
 		string directory = Path.Combine(dataPath, videoGuid);
-		string extraDirectory = Path.Combine(directory, "extra");
-		//NOTE(Simon): Creates all folders in path
-		Directory.CreateDirectory(extraDirectory);
 
-		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.metaUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.metaFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.chaptersUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.chaptersFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.tagsUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.tagsFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.downloadVideoUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.videoFilename)});
-		download.filesToDownload.Enqueue(new DownloadItem {url = $"{Web.thumbnailUrl}?videoid={videoGuid}", path = Path.Combine(directory, SaveFile.thumbFilename)});
-
-		foreach (string file in extraFiles)
+		foreach (string file in files)
 		{
-			if (Guid.TryParse(file, out _))
+			download.filesToDownload.Enqueue(new DownloadItem
 			{
-				download.filesToDownload.Enqueue(new DownloadItem
-				{
-					url = $"{Web.extraUrl}/?videoid={videoGuid}&extraid={file}",
-					path = Path.Combine(directory, "extra\\" + file)
-				});
-			}
+				url = $"{Web.fileUrl}?videoid={videoGuid}&filename={file}",
+				path = Path.Combine(directory, file)
+			});
 		}
 
 		download.client.DownloadFileCompleted += OnFileDownloaded;
 		download.client.DownloadProgressChanged += OnProgress;
-		var item = download.filesToDownload.Dequeue();
-		download.currentlyDownloading = item;
-		download.client.DownloadFileAsync(new Uri(item.url), item.path, download);
+		StartNextDownload(download);
 	}
 
 	private void OnFileDownloaded(object sender, AsyncCompletedEventArgs e)
@@ -161,14 +147,20 @@ public class VideoDownloadManager : MonoBehaviour
 		}
 		else if (download.filesToDownload.Count > 0)
 		{
-			var item = download.filesToDownload.Dequeue();
-			download.currentlyDownloading = item;
-			download.client.DownloadFileAsync(new Uri(item.url), item.path, download);
+			StartNextDownload(download);
 		}
 		else
 		{
 			download.progress = 1f;
 		}
+	}
+
+	private void StartNextDownload(Download download)
+	{
+		var item = download.filesToDownload.Dequeue();
+		Directory.CreateDirectory(Path.GetDirectoryName(item.path));
+		download.currentlyDownloading = item;
+		download.client.DownloadFileAsync(new Uri(item.url), item.path, download);
 	}
 
 	private void OnProgress(object sender, DownloadProgressChangedEventArgs e)
