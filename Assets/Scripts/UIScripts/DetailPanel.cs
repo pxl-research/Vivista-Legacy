@@ -65,7 +65,7 @@ public class DetailPanel : MonoBehaviour
 		}
 		else
 		{
-			imageDownload = UnityWebRequest.Get(Web.thumbnailUrl + "/" + video.id);
+			imageDownload = UnityWebRequest.Get(Web.thumbnailUrl + "?id=" + video.id);
 		}
 
 		yield return imageDownload.SendWebRequest();

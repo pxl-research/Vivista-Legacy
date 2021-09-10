@@ -66,7 +66,7 @@ public class UploadPanel : MonoBehaviour
 	const int kilobyte = 1024;
 	const int megabyte = 1024 * 1024;
 	const int gigabyte = 1024 * 1024 * 1024;
-	private const float timeBetweenUpdates = 1/10f;
+	private const float timeBetweenUpdates = 1/5f;
 
 	public UploadStatus status;
 
@@ -81,8 +81,10 @@ public class UploadPanel : MonoBehaviour
 		UpdateStatusBySavedProgress(status);
 
 		status.totalSizeBytes = ProjectSizeFromStatus(status);
+		status.uploadedBytes = BytesUploadedFromStatus(status);
 
 		var client = new TusClient();
+
 		while (status.filesToUpload.Count != 0)
 		{
 			if (status.failed)
@@ -298,6 +300,18 @@ public class UploadPanel : MonoBehaviour
 		return totalSize;
 	}
 
+	private ulong BytesUploadedFromStatus(UploadStatus status)
+	{
+		ulong size = 0;
+
+		foreach (var file in status.filesUploaded)
+		{
+			size += (ulong)FileHelpers.FileSize(file.path);
+		}
+
+		return size;
+	}
+
 	private void OnUploadProgress(long bytestransferred, long bytestotal)
 	{
 		status.currentFileProgressBytes = (ulong)bytestransferred;
@@ -323,7 +337,7 @@ public class UploadPanel : MonoBehaviour
 		progressBar.SetProgress(totalUploaded / (float)status.totalSizeBytes);
 
 		//TODO(Simon): Show kB and GB when appropriate
-		progressMB.text = $"{totalUploaded / megabyte:F2}/{status.totalSizeBytes / megabyte:F2}MB";
+		progressMB.text = $"{totalUploaded / (float)megabyte:F2}/{status.totalSizeBytes / (float)megabyte:F2}MB";
 
 		time += Time.deltaTime;
 

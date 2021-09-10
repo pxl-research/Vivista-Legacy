@@ -167,7 +167,7 @@ public class VideoDownloadManager : MonoBehaviour
 	{
 		//NOTE(Simon): EventArgs only holds the total bytes downloaded of the currently downloading file.
 		//NOTE(cont.): So we can't easily figure out how many bytes we've downloaded in total. So first we check if bytesReceives < previousBytesReceived.
-		//NOTE(cont.): This means a new file ahs started downloading. In that case, reset previousBytesReceived.
+		//NOTE(cont.): This means a new file has started downloading. In that case, reset previousBytesReceived.
 		//NOTE(cont.): Then calculate the delta and add it to the total
 		var download = (Download)e.UserState;
 		if (e.BytesReceived < download.previousBytesDownloaded)

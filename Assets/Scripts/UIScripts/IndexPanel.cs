@@ -115,6 +115,7 @@ public class IndexPanel : MonoBehaviour
 			detailVideo = JsonUtility.FromJson<VideoSerialize>(www.downloadHandler.text);
 			if (detailVideo != null && detailVideo.id != null)
 			{
+				detailVideo.realTimestamp = DateTime.Parse(detailVideo.timestamp);
 				ShowVideoDetails(detailVideo);
 				return;
 			}
