@@ -65,17 +65,14 @@ public class IndexPanel : MonoBehaviour
 	public Text noVideos;
 	public GameObject serverConnectionError;
 	public GameObject filters;
+	public GameObject modalBackground;
 
-	public Button2 localButton;
-	public Button2 internetButton;
 	public bool isLocal;
 	public bool isFinishedLoadingVideos;
 
 	public Dropdown2 searchAge;
 
-	private float downloadedMessageTime;
-	private const float downloadedMessageRefreshTime = 1.0f;
-	private float lastFilterInteractionTime;
+	private float lastFilterInteractionTime = float.MaxValue;
 	private const float filterInteractionRefreshTime = 0.4f;
 
 	private int page = 1;
@@ -94,32 +91,9 @@ public class IndexPanel : MonoBehaviour
 
 	public void Start()
 	{
-		var cmd = Environment.GetCommandLineArgs();
-		string rawlink = cmd[cmd.Length - 1];
-		bool isQuicklink = rawlink.Contains("vivista://");
-		string quicklink = isQuicklink ? rawlink.Substring(rawlink.IndexOf("://") + "://".Length) : null;
-		var parts = isQuicklink ? quicklink.Split('/') : null;
-		string type = isQuicklink ? parts[0] : null;
-		string id = isQuicklink ? parts[1] : null;
+		OpenVideoFromCmdArgument();
 
-		if (type == "video" && !String.IsNullOrEmpty(id))
-		{
-			GuidHelpers.TryDecode(id, out var guid);
-			var url = $"{Web.videoUrl}?id={guid}";
-			var www = UnityWebRequest.Get(url);
-
-			www.SendWebRequest();
-
-			while (!www.isDone) { }
-
-			detailVideo = JsonUtility.FromJson<VideoSerialize>(www.downloadHandler.text);
-			if (detailVideo != null && detailVideo.id != null)
-			{
-				detailVideo.realTimestamp = DateTime.Parse(detailVideo.timestamp);
-				ShowVideoDetails(detailVideo);
-				return;
-			}
-		}
+		SetLocal();
 
 		pageLabels = new List<GameObject>();
 		isLocal = true;
@@ -147,6 +121,36 @@ public class IndexPanel : MonoBehaviour
 		page = 1;
 	}
 
+	private void OpenVideoFromCmdArgument()
+	{
+		var cmd = Environment.GetCommandLineArgs();
+		string rawlink = cmd[cmd.Length - 1];
+		bool isQuicklink = rawlink.Contains("vivista://");
+		string quicklink = isQuicklink ? rawlink.Substring(rawlink.IndexOf("://") + "://".Length) : null;
+		var parts = isQuicklink ? quicklink.Split('/') : null;
+		string type = isQuicklink ? parts[0] : null;
+		string id = isQuicklink ? parts[1] : null;
+
+		if (type == "video" && !String.IsNullOrEmpty(id))
+		{
+			GuidHelpers.TryDecode(id, out var guid);
+			var url = $"{Web.videoUrl}?id={guid}";
+			var www = UnityWebRequest.Get(url);
+
+			www.SendWebRequest();
+
+			while (!www.isDone) { }
+
+			detailVideo = JsonUtility.FromJson<VideoSerialize>(www.downloadHandler.text);
+			if (detailVideo != null && detailVideo.id != null)
+			{
+				detailVideo.realTimestamp = DateTime.Parse(detailVideo.timestamp);
+				ShowVideoDetails(detailVideo);
+				return;
+			}
+		}
+	}
+
 	public void Update()
 	{
 		if (detailPanel != null)
@@ -159,11 +163,14 @@ public class IndexPanel : MonoBehaviour
 			}
 			if (panel.answered)
 			{
-				answered = true;
-				answerVideoId = panel.answerVideoId;
-				//TODO(Simon): Does this work if destroy is triggered at wrong time? e.g. destroy before this.answered can be read
-				Destroy(detailPanel);
-				detailPanel = null;
+				if (panel.answerEnableVR)
+				{
+					PlayVideoVR(detailVideo);
+				}
+				else
+				{
+					PlayVideo(detailVideo);
+				}
 			}
 		}
 
@@ -171,33 +178,6 @@ public class IndexPanel : MonoBehaviour
 		if (spinner.gameObject.activeSelf)
 		{
 			spinner.rectTransform.Rotate(0, 0, -1f);
-		}
-
-		//Note(Simon): Video Hovering & clicking
-		if (videoContainer.activeSelf)
-		{
-			for (int i = 0; i < videos.Count; i++)
-			{
-				var rect = new Vector3[4];
-				videos[i].GetComponent<RectTransform>().GetWorldCorners(rect);
-
-				bool hovering;
-
-				//NOTE(Simon): Check if hovering
-				hovering = Input.mousePosition.x > rect[0].x && Input.mousePosition.x < rect[2].x && Input.mousePosition.y > rect[0].y && Input.mousePosition.y < rect[2].y && !searchAge.isOpen();
-
-				//TODO: Get this to work with Hittable
-				if (!XRSettings.enabled)
-				{
-					videos[i].GetComponent<Image>().color = hovering ? new Color(0, 0, 0, 0.1f) : new Color(0, 0, 0, 0f);
-				}
-
-				if (hovering && Input.GetMouseButtonDown(0))
-				{
-					detailVideo = loadedVideos.videos[i];
-					ShowVideoDetails(detailVideo);
-				}
-			}
 		}
 
 		//Note(Simon): Pages & labels
@@ -266,17 +246,6 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		//NOTE(Simon): "Downloaded" message display
-		foreach (var video in videos)
-		{
-			downloadedMessageTime += Time.deltaTime;
-			if ((downloadedMessageTime > downloadedMessageRefreshTime) && isFinishedLoadingVideos)
-			{
-				video.GetComponent<IndexPanelVideo>().Refresh();
-				downloadedMessageTime = 0;
-			}
-		}
-
 		//NOTE(Simon): Wait until to-be-imported video is copied
 		if (importPanel != null)
 		{
@@ -299,6 +268,7 @@ public class IndexPanel : MonoBehaviour
 
 	public void ShowVideoDetails(VideoSerialize video)
 	{
+		detailVideo = video;
 		detailPanel = Instantiate(detailPanelPrefab);
 		detailPanel.transform.SetParent(Canvass.main.transform, false);
 
@@ -371,10 +341,7 @@ public class IndexPanel : MonoBehaviour
 		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)videosPerPage));
 		page = loadedVideos.page;
 
-		//Note(Simon): Videos
-		{
-			StartCoroutine(BuildVideoGameObjects(false));
-		}
+		BuildVideoGameObjects(false);
 	}
 
 	public void LoadLocalPageInternal()
@@ -435,15 +402,7 @@ public class IndexPanel : MonoBehaviour
 		totalVideos = loadedVideos.totalcount;
 		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)videosPerPage));
 
-		//Note(Simon): Videos
-		{
-			StartCoroutine(BuildVideoGameObjects(true));
-		}
-	}
-
-	public List<GameObject> LoadedVideos()
-	{
-		return videos;
+		BuildVideoGameObjects(true);
 	}
 
 	public void Previous()
@@ -508,19 +467,13 @@ public class IndexPanel : MonoBehaviour
 	public void SetLocal()
 	{
 		isLocal = true;
-		localButton.GetComponent<Image>().color = new Color(1, 1, 1);
-		internetButton.GetComponent<Image>().color = new Color(200f / 255, 200f / 255, 200f / 255);
 		filters.SetActive(false);
-		LoadPage();
 	}
 
 	public void SetInternet()
 	{
 		isLocal = false;
-		localButton.GetComponent<Image>().color = new Color(200f / 255, 200f / 255, 200f / 255);
-		internetButton.GetComponent<Image>().color = new Color(1, 1, 1);
 		filters.SetActive(true);
-		LoadPage();
 	}
 
 	public void StartImportVideo()
@@ -532,7 +485,24 @@ public class IndexPanel : MonoBehaviour
 		importPanel = Instantiate(UIPanels.Instance.importPanel, Canvass.main.transform, false);
 	}
 
-	private IEnumerator BuildVideoGameObjects(bool isLocal)
+	public void PlayVideo(VideoSerialize video)
+	{
+		answered = true;
+		answerVideoId = video.id;
+		if (detailPanel != null)
+		{
+			Destroy(detailPanel);
+			detailPanel = null;
+		}
+	}
+
+	public void PlayVideoVR(VideoSerialize video)
+	{
+		StartCoroutine(Player.Instance.EnableVR());
+		PlayVideo(video);
+	}
+
+	private void BuildVideoGameObjects(bool isLocal)
 	{
 		isFinishedLoadingVideos = false;
 
@@ -553,13 +523,7 @@ public class IndexPanel : MonoBehaviour
 		for (int i = 0; i < videosThisPage.Count; i++)
 		{
 			var v = videosThisPage[i];
-			StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, isLocal));
-			//TODO(Simon): Is this needed?
-			//NOTE(Kristof): Space out SetData over some time to prevent lag spike in VR
-			if (XRSettings.enabled)
-			{
-				yield return new WaitForSeconds(0.1f);
-			}
+			StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, isLocal, this));
 		}
 
 		isFinishedLoadingVideos = true;

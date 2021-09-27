@@ -36,6 +36,7 @@ public class InteractionPointPlayer
 
 public class Player : MonoBehaviour
 {
+	public static Player Instance;
 	public static PlayerState playerState;
 	public static List<Hittable> hittables;
 
@@ -53,7 +54,7 @@ public class Player : MonoBehaviour
 	public GameObject tabularDataPanelPrefab;
 	public GameObject chapterPanelPrefab;
 	public GameObject cameraRig;
-	public GameObject projectorPrefab;
+	//public GameObject projectorPrefab;
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
@@ -64,18 +65,18 @@ public class Player : MonoBehaviour
 
 	private List<InteractionPointPlayer> interactionPoints;
 	private List<InteractionPointPlayer> mandatoryInteractionPoints;
-	private List<GameObject> videoPositions;
+	//private List<GameObject> videoPositions;
 	private FileLoader fileLoader;
 	private VideoController videoController;
-	private List<GameObject> videoList;
+	//private List<GameObject> videoList;
 	private ChapterSelectorPanel chapterSelector;
 	public ChapterTransitionPanel chapterTransitionPanel;
 	
 	public AudioMixer mixer;
 
 	private GameObject indexPanel;
-	private Transform videoCanvas;
-	private GameObject projector;
+	//private Transform videoCanvas;
+	//private GameObject projector;
 
 	private SaveFileData data;
 
@@ -100,14 +101,12 @@ public class Player : MonoBehaviour
 
 	void Start()
 	{
-		StartCoroutine(EnableVr());
+		Instance = this;
+
+		//StartCoroutine(EnableVr());
 		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
-
-		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
-		trackedControllerRight = controllerRight.GetComponent<Controller>();
-		trackedControllerLeft.OnRotate += RotateCamera;
-		trackedControllerRight.OnRotate += RotateCamera;
+		Seekbar.compass.SetActive(false);
 
 		interactionPoints = new List<InteractionPointPlayer>();
 		mandatoryInteractionPoints = new List<InteractionPointPlayer>();
@@ -121,6 +120,12 @@ public class Player : MonoBehaviour
 		OpenFilePanel();
 
 		mainEventSystem = EventSystem.current;
+
+
+		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
+		trackedControllerRight = controllerRight.GetComponent<Controller>();
+		trackedControllerLeft.OnRotate += RotateCamera;
+		trackedControllerRight.OnRotate += RotateCamera;
 	}
 
 	void Update()
@@ -335,13 +340,13 @@ public class Player : MonoBehaviour
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
 					chapterSelector.Init(videoController);
 
-					if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
-					{
-						StartCoroutine(FadevideoCanvasOut(videoCanvas));
-						EventManager.OnSpace();
-						videoPositions.Clear();
-						Seekbar.ReattachCompass();
-					}
+					//if (VRDevices.loadedSdk > VRDevices.LoadedSdk.None)
+					//{
+					//	StartCoroutine(FadevideoCanvasOut(videoCanvas));
+					//	EventManager.OnSpace();
+					//	videoPositions.Clear();
+					//	Seekbar.ReattachCompass();
+					//}
 				}
 				else
 				{
@@ -582,6 +587,8 @@ public class Player : MonoBehaviour
 
 		StartCoroutine(UpdatePointPositions());
 
+		Seekbar.compass.SetActive(true);
+
 		return true;
 	}
 
@@ -714,28 +721,28 @@ public class Player : MonoBehaviour
 		return interactionsInChapter;
 	}
 
-	public void OnVideoBrowserHologramUp()
-	{
-		if (videoList == null)
-		{
-			StartCoroutine(LoadVideos());
-			projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
-		}
-	}
-
-	public void OnVideoBrowserAnimStop()
-	{
-		if (!projector.GetComponent<AnimateProjector>().state)
-		{
-			projector.transform.localScale = Vector3.zero;
-
-			for (var i = videoCanvas.childCount - 1; i >= 0; i--)
-			{
-				Destroy(videoCanvas.GetChild(i).gameObject);
-			}
-			videoList = null;
-		}
-	}
+	//public void OnVideoBrowserHologramUp()
+	//{
+	//	if (videoList == null)
+	//	{
+	//		StartCoroutine(LoadVideos());
+	//		projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
+	//	}
+	//}
+	//
+	//public void OnVideoBrowserAnimStop()
+	//{
+	//	if (!projector.GetComponent<AnimateProjector>().state)
+	//	{
+	//		projector.transform.localScale = Vector3.zero;
+	//
+	//		for (var i = videoCanvas.childCount - 1; i >= 0; i--)
+	//		{
+	//			Destroy(videoCanvas.GetChild(i).gameObject);
+	//		}
+	//		videoList = null;
+	//	}
+	//}
 
 	public void RotateCamera(int direction)
 	{
@@ -745,11 +752,12 @@ public class Player : MonoBehaviour
 	public void BackToBrowser()
 	{
 		SetCanvasesActive(false);
-		EventManager.OnSpace();
+		//EventManager.OnSpace();
+		Seekbar.compass.SetActive(false);
 		Seekbar.ClearBlips();
 		Destroy(chapterSelector);
 
-		projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+		//projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
 		videoController.Pause();
 
@@ -826,31 +834,32 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	private IEnumerator EnableVr()
+	//https://stackoverflow.com/questions/36702228/enable-disable-vr-from-code
+	public IEnumerator EnableVR()
 	{
+		XRSettings.enabled = true;
 		var supportedDevices = XRSettings.supportedDevices;
 		//NOTE(Simon): We start with None as the default in the player settings. But in player we want to load OpenVR first (and in the future other APIs?) so reverse the array
-		Array.Reverse(supportedDevices);
+		//Array.Reverse(supportedDevices);
 		XRSettings.LoadDeviceByName(supportedDevices);
 		
 		//NOTE(Kristof): wait one frame to allow the device to be loaded
-		yield return null;
+		//yield return new WaitForEndOfFrame();
 
 		if (XRSettings.loadedDeviceName.Equals("OpenVR"))
 		{
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
-			XRSettings.enabled = true;
 			SteamVR.Initialize(true);
 
 			//NOTE(Kristof): Instantiate the projector
-			{
-				projector = Instantiate(projectorPrefab);
-				projector.transform.position = new Vector3(4.5f, 0, 0);
-				projector.transform.eulerAngles = new Vector3(0, 270, 0);
-				projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-
-				projector.GetComponent<AnimateProjector>().Subscribe(this);
-			}
+			//{
+			//	projector = Instantiate(projectorPrefab);
+			//	projector.transform.position = new Vector3(4.5f, 0, 0);
+			//	projector.transform.eulerAngles = new Vector3(0, 270, 0);
+			//	projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+			//	
+			//	projector.GetComponent<AnimateProjector>().Subscribe(this);
+			//}
 
 			//NOTE(Kristof): Hide the main and seekbar canvas when in VR (they are toggled back on again after the lobby)
 			SetCanvasesActive(false);
@@ -866,121 +875,128 @@ public class Player : MonoBehaviour
 			controllerLeft.SetActive(false);
 			controllerRight.SetActive(false);
 		}
-	}
 
-	private IEnumerator LoadVideos()
-	{
-		var panel = indexPanel.GetComponentInChildren<IndexPanel>();
-		if (panel != null)
-		{
-			while (!panel.isFinishedLoadingVideos)
-			{
-				//NOTE(Kristof): Wait for IndexPanel to finish instantiating videos GameObjects
-				yield return null;
-			}
+		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
+		trackedControllerRight = controllerRight.GetComponent<Controller>();
+		trackedControllerLeft.OnRotate += RotateCamera;
+		trackedControllerRight.OnRotate += RotateCamera;
 
-			//NOTE(Kristof): ask the IndexPanel to pass the loaded videos
-			var videos = panel.LoadedVideos();
-			if (videos != null)
-			{
-				videoPositions = videoPositions ?? new List<GameObject>();
-				videoList = videos;
-
-				videoCanvas = projector.transform.root.Find("VideoCanvas").transform;
-				videoCanvas.gameObject.GetComponent<Canvas>().sortingLayerName = "UIPanels";
-				StartCoroutine(FadevideoCanvasIn(videoCanvas));
-
-				for (int i = 0; i < videoList.Count; i++)
-				{
-					//NOTE(Kristof): Determine the next angle to put a video
-					//NOTE 45f			offset serves to skip the dead zone
-					//NOTE (i) * 33.75	place a video every 33.75 degrees 
-					//NOTE 90f			camera rig rotation offset
-					var nextAngle = 45f + (i * 33.75f) + 90f;
-					var angle = -nextAngle * Mathf.PI / 180;
-					var x = 9.8f * Mathf.Cos(angle);
-					var z = 9.8f * Mathf.Sin(angle);
-
-					//NOTE(Kristof): Parent object that sets location
-					if (videoPositions.Count < i + 1)
-					{
-						videoPositions.Add(new GameObject("videoPosition"));
-					}
-					videoPositions[i].transform.SetParent(videoCanvas);
-					videoPositions[i].transform.localScale = Vector3.one;
-					videoPositions[i].transform.localPosition = new Vector3(x, 0, z);
-					videoPositions[i].transform.LookAt(Camera.main.transform);
-					videoPositions[i].transform.localEulerAngles += new Vector3(-videoPositions[i].transform.localEulerAngles.x, 0, 0);
-
-					//NOTE(Kristof): Positioning the video relative to parent object
-					var trans = videoList[i].GetComponent<RectTransform>();
-					trans.SetParent(videoPositions[i].transform);
-					trans.anchorMin = Vector2.up;
-					trans.anchorMax = Vector2.up;
-					trans.pivot = new Vector2(0.5f, 0.5f);
-					trans.gameObject.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
-					trans.localPosition = Vector3.zero;
-					trans.localEulerAngles = new Vector3(0, 180, 0);
-					trans.localScale = new Vector3(0.018f, 0.018f, 0.018f);
-				}
-			}
-		}
 		yield return null;
 	}
 
-	public IEnumerator PageSelector(int i)
-	{
-		switch (i)
-		{
-			case -1:
-				indexPanel.GetComponent<IndexPanel>().Previous();
-				break;
-			case 1:
-				indexPanel.GetComponent<IndexPanel>().Next();
-				break;
-		}
-
-		//NOTE(Kristof): Wait for IndexPanel to destroy IndexPanelVideos
-		yield return null;
-
-		for (var index = videoPositions.Count - 1; index >= 0; index--)
-		{
-			var pos = videoPositions[index];
-			if (pos.transform.childCount == 0)
-			{
-				Destroy(pos);
-				videoPositions.Remove(pos);
-			}
-		}
-		StartCoroutine(LoadVideos());
-		projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
-	}
-
-	private static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
-	{
-		var group = videoCanvas.GetComponent<CanvasGroup>();
-
-		for (float i = 0; i <= 1; i += Time.deltaTime * 1.5f)
-		{
-			group.alpha = i;
-			yield return null;
-		}
-		videoCanvas.root.Find("UICanvas").gameObject.SetActive(true);
-	}
-
-	private static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
-	{
-		videoCanvas.root.Find("UICanvas").gameObject.SetActive(false);
-		var group = videoCanvas.GetComponent<CanvasGroup>();
-
-		for (float i = 1; i >= 0; i -= Time.deltaTime * 1.5f)
-		{
-			group.alpha = i;
-			yield return null;
-		}
-		//NOTE(Kristof): Force Alpha to 0;
-		group.alpha = 0;
-	}
+	//private IEnumerator LoadVideos()
+	//{
+	//	var panel = indexPanel.GetComponentInChildren<IndexPanel>();
+	//	if (panel != null)
+	//	{
+	//		while (!panel.isFinishedLoadingVideos)
+	//		{
+	//			//NOTE(Kristof): Wait for IndexPanel to finish instantiating videos GameObjects
+	//			yield return null;
+	//		}
+	//
+	//		//NOTE(Kristof): ask the IndexPanel to pass the loaded videos
+	//		var videos = panel.LoadedVideos();
+	//		if (videos != null)
+	//		{
+	//			videoPositions = videoPositions ?? new List<GameObject>();
+	//			videoList = videos;
+	//
+	//			videoCanvas = projector.transform.root.Find("VideoCanvas").transform;
+	//			videoCanvas.gameObject.GetComponent<Canvas>().sortingLayerName = "UIPanels";
+	//			StartCoroutine(FadevideoCanvasIn(videoCanvas));
+	//
+	//			for (int i = 0; i < videoList.Count; i++)
+	//			{
+	//				//NOTE(Kristof): Determine the next angle to put a video
+	//				//NOTE 45f			offset serves to skip the dead zone
+	//				//NOTE (i) * 33.75	place a video every 33.75 degrees 
+	//				//NOTE 90f			camera rig rotation offset
+	//				var nextAngle = 45f + (i * 33.75f) + 90f;
+	//				var angle = -nextAngle * Mathf.PI / 180;
+	//				var x = 9.8f * Mathf.Cos(angle);
+	//				var z = 9.8f * Mathf.Sin(angle);
+	//
+	//				//NOTE(Kristof): Parent object that sets location
+	//				if (videoPositions.Count < i + 1)
+	//				{
+	//					videoPositions.Add(new GameObject("videoPosition"));
+	//				}
+	//				videoPositions[i].transform.SetParent(videoCanvas);
+	//				videoPositions[i].transform.localScale = Vector3.one;
+	//				videoPositions[i].transform.localPosition = new Vector3(x, 0, z);
+	//				videoPositions[i].transform.LookAt(Camera.main.transform);
+	//				videoPositions[i].transform.localEulerAngles += new Vector3(-videoPositions[i].transform.localEulerAngles.x, 0, 0);
+	//
+	//				//NOTE(Kristof): Positioning the video relative to parent object
+	//				var trans = videoList[i].GetComponent<RectTransform>();
+	//				trans.SetParent(videoPositions[i].transform);
+	//				trans.anchorMin = Vector2.up;
+	//				trans.anchorMax = Vector2.up;
+	//				trans.pivot = new Vector2(0.5f, 0.5f);
+	//				trans.gameObject.GetComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.MiddleCenter;
+	//				trans.localPosition = Vector3.zero;
+	//				trans.localEulerAngles = new Vector3(0, 180, 0);
+	//				trans.localScale = new Vector3(0.018f, 0.018f, 0.018f);
+	//			}
+	//		}
+	//	}
+	//	yield return null;
+	//}
+	//
+	//public IEnumerator PageSelector(int i)
+	//{
+	//	switch (i)
+	//	{
+	//		case -1:
+	//			indexPanel.GetComponent<IndexPanel>().Previous();
+	//			break;
+	//		case 1:
+	//			indexPanel.GetComponent<IndexPanel>().Next();
+	//			break;
+	//	}
+	//
+	//	//NOTE(Kristof): Wait for IndexPanel to destroy IndexPanelVideos
+	//	yield return null;
+	//
+	//	for (var index = videoPositions.Count - 1; index >= 0; index--)
+	//	{
+	//		var pos = videoPositions[index];
+	//		if (pos.transform.childCount == 0)
+	//		{
+	//			Destroy(pos);
+	//			videoPositions.Remove(pos);
+	//		}
+	//	}
+	//	StartCoroutine(LoadVideos());
+	//	projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
+	//}
+	//
+	//private static IEnumerator FadevideoCanvasIn(Transform videoCanvas)
+	//{
+	//	var group = videoCanvas.GetComponent<CanvasGroup>();
+	//
+	//	for (float i = 0; i <= 1; i += Time.deltaTime * 1.5f)
+	//	{
+	//		group.alpha = i;
+	//		yield return null;
+	//	}
+	//	videoCanvas.root.Find("UICanvas").gameObject.SetActive(true);
+	//}
+	//
+	//private static IEnumerator FadevideoCanvasOut(Transform videoCanvas)
+	//{
+	//	videoCanvas.root.Find("UICanvas").gameObject.SetActive(false);
+	//	var group = videoCanvas.GetComponent<CanvasGroup>();
+	//
+	//	for (float i = 1; i >= 0; i -= Time.deltaTime * 1.5f)
+	//	{
+	//		group.alpha = i;
+	//		yield return null;
+	//	}
+	//	//NOTE(Kristof): Force Alpha to 0;
+	//	group.alpha = 0;
+	//}
 
 	private float VideoFadeGetCurrentSpeed(double timeToNextPause)
 	{

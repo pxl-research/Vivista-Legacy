@@ -17,12 +17,14 @@ public class DetailPanel : MonoBehaviour
 	public Text downloadSize;
 	public VideoSerialize video;
 	public Button playButton;
+	public Button playInVRButton;
 	public Button downloadButton;
 	public Button deleteButton;
 
 	public bool answered;
 	public string answerVideoId;
-	
+	public bool answerEnableVR;
+
 	private UnityWebRequest imageDownload;
 	private GameObject indexPanel;
 	private float time;
@@ -41,9 +43,7 @@ public class DetailPanel : MonoBehaviour
 	public IEnumerator Init(VideoSerialize videoToDownload, GameObject indexPanel, bool isLocal)
 	{
 		this.indexPanel = indexPanel;
-		//NOTE(Simon): Move offscreen. We can't disable it just yet. It's still running _this_ coroutine. Disable at end of function
-		var indexPanelPos = this.indexPanel.transform.localPosition;
-		this.indexPanel.transform.localPosition = new Vector2(10000, 10000);
+		indexPanel.GetComponent<IndexPanel>().modalBackground.SetActive(true);
 
 		video = videoToDownload;
 
@@ -57,6 +57,7 @@ public class DetailPanel : MonoBehaviour
 		if (video.title == "Corrupted file")
 		{
 			playButton.interactable = false;
+			playInVRButton.interactable = false;
 		}
 
 		if (isLocal)
@@ -86,8 +87,6 @@ public class DetailPanel : MonoBehaviour
 			thumb.color = Color.white;
 		}
 
-		this.indexPanel.SetActive(false);
-		this.indexPanel.transform.localPosition = indexPanelPos;
 		Refresh();
 	}
 	
@@ -96,12 +95,14 @@ public class DetailPanel : MonoBehaviour
 		bool downloaded = Directory.Exists(Path.Combine(Application.persistentDataPath, video.id));
 		downloadButton.gameObject.SetActive(!downloaded);
 		playButton.gameObject.SetActive(downloaded);
+		playInVRButton.gameObject.SetActive(downloaded);
 		deleteButton.gameObject.SetActive(downloaded);
 	}
 
 	public void Back()
 	{
 		indexPanel.SetActive(true);
+		indexPanel.GetComponent<IndexPanel>().modalBackground.SetActive(false);
 		shouldClose = true;
 	}
 
@@ -109,7 +110,18 @@ public class DetailPanel : MonoBehaviour
 	{
 		answered = true;
 		answerVideoId = video.id;
+		answerEnableVR = false;
 		indexPanel.SetActive(true);
+		indexPanel.GetComponent<IndexPanel>().modalBackground.SetActive(false);
+	}
+
+	public void PlayInVR()
+	{
+		answered = true;
+		answerVideoId = video.id;
+		answerEnableVR = true;
+		indexPanel.SetActive(true);
+		indexPanel.GetComponent<IndexPanel>().modalBackground.SetActive(false);
 	}
 
 	public void Delete()

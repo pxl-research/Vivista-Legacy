@@ -1,8 +1,23 @@
-﻿
-public static class Web
+﻿using System;
+using System.IO;
+using UnityEngine;
+
+public class Web : MonoBehaviour
 {
-	//public static string baseUrl =			"http://localhost:5000/api";
-	public static string baseUrl =			"http://10.50.70.240/api";
+	public static string baseUrl 
+	{
+		get 
+		{
+			if (String.IsNullOrEmpty(_baseUrl))
+			{
+				_baseUrl = File.ReadAllText(Path.Combine(Application.streamingAssetsPath, "server.txt")).Trim() + "/api";
+				return _baseUrl;
+			}
+			return _baseUrl;
+		}
+	}
+	private static string _baseUrl = "";
+
 	public static string indexUrl =			baseUrl + "/videos";
 	public static string videoUrl =			baseUrl + "/video";
 	public static string thumbnailUrl =		baseUrl + "/thumbnail";

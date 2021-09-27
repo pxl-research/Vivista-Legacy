@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
@@ -14,39 +15,39 @@ public class IndexPanelVideo : MonoBehaviour
 	public Text sizeText;
 	public Text lengthText;
 	public Text timestampText;
-	public Text DownloadedText;
 	public Image thumbnailImage;
+	public Button button;
+	public RectTransform buttonHolder;
 
 	private UnityWebRequest imageDownload;
-	private string uuid;
+	private VideoSerialize video;
+	private IndexPanel indexPanel;
 
 	private bool isLocal;
 
-	public IEnumerator SetData(VideoSerialize video, bool local)
+	public IEnumerator SetData(VideoSerialize video, bool local, IndexPanel indexPanel)
 	{
 		titleText.text = video.title;
 		authorText.text = video.username;
 		sizeText.text = MathHelper.FormatBytes(video.downloadsize);
 		lengthText.text = MathHelper.FormatSeconds(video.length);
 		timestampText.text = MathHelper.FormatTimestampToTimeAgo(video.realTimestamp);
-		uuid = video.id;
 		isLocal = local;
+		this.video = video;
+		this.indexPanel = indexPanel;
 
 		if (video.title == "Corrupted file")
 		{
 			titleText.color = Color.red;
 		}
 
-		//TODO(Kristof): Prevent being able to open it without VR (will be fixed if we use raycasts from mouse instead of mouse events)
 		if (!video.compatibleVersion)
 		{
-			gameObject.GetComponent<Hittable>().enabled = false;
 			error.transform.parent.gameObject.SetActive(true);
-			error.GetComponent<Text>().text = $"This project uses a version that's higher than the player's. Please update the player. [{uuid}]";
+			error.GetComponent<Text>().text = $"This project uses a version that's higher than the player's. Please update the player. [{video.id}]";
 		}
 		else
 		{
-			gameObject.GetComponent<Hittable>().enabled = true;
 			error.transform.parent.gameObject.SetActive(false);
 		}
 
@@ -56,7 +57,7 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 		else
 		{
-			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + uuid);
+			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + video.id);
 		}
 
 		yield return imageDownload.SendWebRequest();
@@ -82,32 +83,30 @@ public class IndexPanelVideo : MonoBehaviour
 
 		imageDownload.Dispose();
 		imageDownload = null;
-
-		Refresh();
 	}
 
-	public void Refresh()
+	public void OnPointerEnter()
 	{
-		DownloadedText.enabled = Directory.Exists(Path.Combine(Application.persistentDataPath, uuid));
+		buttonHolder.gameObject.SetActive(true);
 	}
 
-	public void OnHit()
+	public void OnPointerExit()
 	{
-		var indexPanel = Canvass.main.GetComponentInChildren<IndexPanel>();
-		if (indexPanel != null)
-		{
-			indexPanel.answered = true;
-			indexPanel.answerVideoId = uuid;
-		}
+		buttonHolder.gameObject.SetActive(false);
 	}
 
-	public void OnHoverStart()
+	public void ShowVideoDetails()
 	{
-		GetComponent<Image>().color = new Color(0, 0, 0, 0.3f);
+		indexPanel.ShowVideoDetails(video);
 	}
 
-	public void OnHoverExit()
+	public void PlayVideo()
 	{
-		GetComponent<Image>().color = new Color(0, 0, 0, 0f);
+		indexPanel.PlayVideo(video);
+	}
+
+	public void PlayVideoInVr()
+	{
+		indexPanel.PlayVideoVR(video);
 	}
 }

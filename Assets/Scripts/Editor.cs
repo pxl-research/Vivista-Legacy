@@ -2655,6 +2655,7 @@ public class Editor : MonoBehaviour
 		}
 
 		var extraFolder = Path.Combine(projectFolder, SaveFile.extraPath);
+		Directory.CreateDirectory(extraFolder);
 		var filenames = Directory.GetFiles(extraFolder);
 		foreach (var file in filenames)
 		{
