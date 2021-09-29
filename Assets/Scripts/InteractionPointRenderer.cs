@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.XR.Management;
 
 public class InteractionPointRenderer : MonoBehaviour
 {
@@ -6,9 +7,13 @@ public class InteractionPointRenderer : MonoBehaviour
 	public SpriteRenderer mandatory;
 	public GameObject ping;
 
+	private bool viewed;
+	private Vector3 startScale;
+
 	void Start()
 	{
-		gameObject.transform.localScale = UnityEngine.XR.XRSettings.enabled ? new Vector3(5f,5f,5f) : new Vector3(10f, 10f, 10f);
+		gameObject.transform.localScale = XRGeneralSettings.Instance.Manager.activeLoader != null ? new Vector3(5f,5f,5f) : new Vector3(10f, 10f, 10f);
+		startScale = transform.localScale;
 	}
 
 	public void Init(InteractionPointEditor point)
@@ -20,6 +25,14 @@ public class InteractionPointRenderer : MonoBehaviour
 		mandatory.enabled = point.mandatory;
 	}
 
+	public void Update()
+	{
+		if (!viewed)
+		{
+			transform.localScale = startScale * (1 + Mathf.SmoothStep(0, 0.3f, Mathf.PingPong(Time.time, 1)));
+		}
+	}
+
 	public void Init(InteractionPointPlayer point)
 	{
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
@@ -27,7 +40,7 @@ public class InteractionPointRenderer : MonoBehaviour
 
 		//NOTE(Simon): Add a sprite to interaction points, indicating InteractionType
 		interactionType.sprite = InteractionTypeSprites.GetSprite(point.type);
-		ping.SetActive(true);
+		ping.SetActive(false);
 		point.panel.SetActive(false);
 
 		mandatory.enabled = point.mandatory;
@@ -47,6 +60,11 @@ public class InteractionPointRenderer : MonoBehaviour
 
 	public void SetPingActive(bool active)
 	{
-		ping.SetActive(active);
+		//ping.SetActive(active);
+		if (!active)
+		{
+			viewed = true;
+			transform.localScale = startScale;
+		}
 	}
 }
