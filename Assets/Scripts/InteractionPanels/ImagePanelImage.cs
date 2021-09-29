@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.XR;
+using UnityEngine.XR.Management;
 
 public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -94,7 +95,7 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 				{
 					var localPos = new List<Vector2>();
 
-					if (XRSettings.enabled)
+					if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 					{
 						//NOTE(Simon): Prefers right controller over left
 						if (VRDevices.hasRightController)

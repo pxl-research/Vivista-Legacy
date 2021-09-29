@@ -27,6 +27,11 @@ public class IndexPanelVideo : MonoBehaviour
 
 	public IEnumerator SetData(VideoSerialize video, bool local, IndexPanel indexPanel)
 	{
+		if (video.id == this.video?.id)
+		{
+			yield break;
+		}
+
 		titleText.text = video.title;
 		authorText.text = video.username;
 		sizeText.text = MathHelper.FormatBytes(video.downloadsize);

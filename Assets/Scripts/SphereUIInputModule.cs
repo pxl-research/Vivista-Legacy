@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR;
+using UnityEngine.XR.Management;
 
 public class SphereUIInputModule: StandaloneInputModule
 {
@@ -72,7 +73,7 @@ public class SphereUIInputModule: StandaloneInputModule
 
 		//NOTE(Simon): There could be more than 1 inputdevice (VR controllers for example), so store them all in a list
 		directions.Clear();
-		if (XRSettings.enabled)
+		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
 			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
 			{

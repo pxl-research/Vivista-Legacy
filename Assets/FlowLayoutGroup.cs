@@ -1,4 +1,6 @@
 ﻿//https://stackoverflow.com/questions/38336835/correct-flowlayoutgroup-in-unity3d-as-per-horizontallayoutgroup-etc
+
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +10,12 @@ public class FlowLayoutGroup : LayoutGroup
 	private int numCellsX, numCellsY;
 	private float totalWidth;
 	private float totalHeight;
+
+	private bool maxChildCountValid;
+	private int maxChildCount;
+
+	public delegate void LayoutChange();
+	public LayoutChange OnLayoutChange;
 
 	private Vector2 _cellSize = new Vector2(100, 100);
 	public Vector2 cellSize
@@ -32,6 +40,7 @@ public class FlowLayoutGroup : LayoutGroup
 	protected override void OnValidate()
 	{
 		base.OnValidate();
+		maxChildCountValid = false;
 	}
 #endif
 
@@ -97,5 +106,22 @@ public class FlowLayoutGroup : LayoutGroup
 				totalHeight += rectChildren[i].rect.height + spacing.y;
 			}
 		}
+		maxChildCountValid = false;
+	}
+
+	public int CalcMaxChildren(Vector2 childSize)
+	{
+		if (!maxChildCountValid)
+		{
+			float width = rectTransform.rect.size.x;
+			float height = rectTransform.rect.size.y;
+
+			int cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x) / (childSize.x + spacing.x)));
+			int cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y) / (childSize.y + spacing.y)));
+
+			maxChildCount = cellCountX * cellCountY;
+		}
+
+		return maxChildCount;
 	}
 }

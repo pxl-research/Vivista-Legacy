@@ -77,8 +77,11 @@ public class IndexPanel : MonoBehaviour
 
 	private int page = 1;
 	private int numPages = 1;
-	private int videosPerPage = 9;
+	private int videosPerPage => videoContainer.GetComponent<FlowLayoutGroup>().CalcMaxChildren(videoPrefab.GetComponent<RectTransform>().sizeDelta);
 	private int totalVideos = 1;
+
+	int lastScreenWidth;
+	int lastScreenHeight;
 
 	private int searchParamAgeDays;
 	private string searchParamText;
@@ -92,6 +95,8 @@ public class IndexPanel : MonoBehaviour
 	public void Start()
 	{
 		OpenVideoFromCmdArgument();
+
+		videoContainer.GetComponent<FlowLayoutGroup>().OnLayoutChange += OnLayoutChange;
 
 		SetLocal();
 
@@ -119,6 +124,9 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		page = 1;
+
+		lastScreenWidth = Screen.width;
+		lastScreenHeight = Screen.height;
 	}
 
 	private void OpenVideoFromCmdArgument()
@@ -193,7 +201,7 @@ public class IndexPanel : MonoBehaviour
 			}
 			while (pageLabels.Count > labelsNeeded)
 			{
-				var pageLabel = pageLabels[pageLabels.Count];
+				var pageLabel = pageLabels[pageLabels.Count - 1];
 				pageLabels.RemoveAt(pageLabels.Count - 1);
 				Destroy(pageLabel);
 			}
@@ -263,6 +271,13 @@ public class IndexPanel : MonoBehaviour
 		{
 			LoadPage();
 			lastFilterInteractionTime = float.MaxValue;
+		}
+
+		if (lastScreenWidth != Screen.width || lastScreenHeight != Screen.height)
+		{
+			lastScreenWidth = Screen.width;
+			lastScreenHeight = Screen.height;
+			OnLayoutChange();
 		}
 	}
 
@@ -527,5 +542,10 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		isFinishedLoadingVideos = true;
+	}
+
+	private void OnLayoutChange()
+	{
+		LoadPage();
 	}
 }

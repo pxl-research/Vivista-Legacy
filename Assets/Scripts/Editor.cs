@@ -10,6 +10,7 @@ using UnityEngine.Audio;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.XR.Management;
 using Debug = UnityEngine.Debug;
 
 public enum EditorState
@@ -209,7 +210,7 @@ public class Editor : MonoBehaviour
 		Physics.autoSimulation = false;
 		Instance = this;
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
-		UnityEngine.XR.XRSettings.enabled = false;
+		XRGeneralSettings.Instance.Manager.DeinitializeLoader();
 		Screen.SetResolution(Screen.width - 50, Screen.height - 50, FullScreenMode.Windowed);
 	}
 

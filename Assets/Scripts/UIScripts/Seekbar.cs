@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.XR;
+using UnityEngine.XR.Management;
 
 public class Seekbar : MonoBehaviour, IPointerUpHandler
 {
@@ -49,7 +50,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 	{
 		curSeekbarHeight = maxSeekbarHeight;
 		startRotation = 0;
-		if (XRSettings.enabled)
+		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
 			ReattachCompass();
 		}
@@ -104,7 +105,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		}
 
 		// TODO(Lander): Actually make use of the start position, and no hardcoded values
-		float rotation = (XRSettings.enabled ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
+		float rotation = (XRGeneralSettings.Instance.Manager.activeLoader != null ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
 		if (!isEditor && compass.transform.parent != Canvass.seekbar)
 		{
 			rotation -= 90;
@@ -202,7 +203,7 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 			float blipAngle = point.point.transform.eulerAngles.y;
 			// TODO(Lander): Rely on a start position of a video instead
-			float angle = (XRSettings.enabled ? forwardAngle : 90) - blipAngle;
+			float angle = (XRGeneralSettings.Instance.Manager.activeLoader != null ? forwardAngle : 90) - blipAngle;
 			activeBlips[i].transform.localEulerAngles = new Vector3(0, 0, angle);
 		}
 

@@ -18,13 +18,17 @@ DefaultDirName={autopf}\Vivista Player
 DefaultGroupName=Vivista
 AllowNoIcons=yes
 ; Remove the following line to run in administrative install mode (install for all users.)
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=commandline
 OutputDir=C:\Users\Simon\Git\Vivista\builds\installers
 OutputBaseFilename=VivistaPlayer
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+
+[Registry]
+Root: HKCR; Subkey: "vivista"; ValueType: string; ValueName: "URL Protocol"  
+Root: HKCR; Subkey: "vivista\shell\open\command"; ValueType: string; ValueData: "{app}\{#MyAppExeName} --video-id ""%1"""
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

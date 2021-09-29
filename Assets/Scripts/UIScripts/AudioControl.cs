@@ -4,6 +4,7 @@ using UnityEngine.Audio;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.XR;
+using UnityEngine.XR.Management;
 
 public class AudioControl : MonoBehaviour
 {
@@ -63,7 +64,7 @@ public class AudioControl : MonoBehaviour
 			increaseVolumeButton.onClick.AddListener(IncreaseVolume);
 		}
 
-		if (XRSettings.enabled)
+		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
 			controllerLeft = GameObject.Find("LeftHand").GetComponentInChildren<Controller>();
 			controllerRight = GameObject.Find("RightHand").GetComponentInChildren<Controller>();
@@ -84,7 +85,7 @@ public class AudioControl : MonoBehaviour
 	
 	private void CheckButtonStates()
 	{
-		if (XRSettings.enabled 
+		if (XRGeneralSettings.Instance.Manager.activeLoader != null
 			&& controllerLeft != null && controllerRight != null 
 			&& !(controllerLeft.triggerDown || controllerRight.triggerDown) && (increaseButtonPressed || decreaseButtonPressed))
 		{

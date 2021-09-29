@@ -19,7 +19,6 @@ public class AutomatedBuild : EditorWindow
 			target = BuildTarget.StandaloneWindows64, 
 			options = 0 
 		};
-		PlayerSettings.virtualRealitySupported = false;
 		PlayerSettings.fullScreenMode = UnityEngine.FullScreenMode.Windowed;
 		PlayerSettings.defaultIsNativeResolution = true;
 		PlayerSettings.usePlayerLog = true;
@@ -34,7 +33,6 @@ public class AutomatedBuild : EditorWindow
 			target = BuildTarget.StandaloneWindows64, 
 			options = 0 
 		};
-		PlayerSettings.virtualRealitySupported = true;
 		BuildPipeline.BuildPlayer(options);
 
 		ShowInWindowsExplorer("builds/" + branch);
@@ -54,7 +52,6 @@ public class AutomatedBuild : EditorWindow
 			target = BuildTarget.StandaloneOSX, 
 			options = 0 
 		};
-		PlayerSettings.virtualRealitySupported = false;
 		PlayerSettings.fullScreenMode = UnityEngine.FullScreenMode.Windowed;
 		PlayerSettings.defaultIsNativeResolution = true;
 		PlayerSettings.usePlayerLog = true;
@@ -69,7 +66,6 @@ public class AutomatedBuild : EditorWindow
 			target = BuildTarget.StandaloneOSX, 
 			options = 0 
 		};
-		PlayerSettings.virtualRealitySupported = false;
 		BuildPipeline.BuildPlayer(options);
 
 		ShowInWindowsExplorer("builds/" + branch);
