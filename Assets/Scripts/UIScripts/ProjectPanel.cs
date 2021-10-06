@@ -31,6 +31,7 @@ public class ProjectPanel : MonoBehaviour
 	public Button importButton;
 
 	private ImportPanel importPanel;
+	private ConfirmationPanel confirmDeletePanel;
 
 	public GameObject filenameItemPrefab;
 
@@ -78,7 +79,9 @@ public class ProjectPanel : MonoBehaviour
 			var file = files[i];
 			var listItem = file.listItem;
 
-			if (RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition))
+			bool rectContainsMouse = RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition);
+
+			if (rectContainsMouse)
 			{
 				listItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
 			}
@@ -92,8 +95,7 @@ public class ProjectPanel : MonoBehaviour
 				listItem.GetComponent<Image>().color = new Color(210 / 255f, 210 / 255f, 210 / 255f);
 			}
 
-			if (RectTransformUtility.RectangleContainsScreenPoint(listItem.GetComponent<RectTransform>(), Input.mousePosition)
-				&& Input.GetMouseButtonDown(0))
+			if (rectContainsMouse && Input.GetMouseButtonDown(0))
 			{
 				if (lastClickIndex == i && lastClickDelta < .5)
 				{
@@ -114,13 +116,34 @@ public class ProjectPanel : MonoBehaviour
 			{
 				Destroy(importPanel.gameObject);
 				RefreshProjectList();
-				transform.localScale = new Vector3(1, 1, 1);
+				transform.localScale = Vector3.one;
 			}
 
 			if (importPanel.allowCancel && Input.GetKeyDown(KeyCode.Escape))
 			{
 				Destroy(importPanel.gameObject);
-				transform.localScale = new Vector3(1, 1, 1);
+				transform.localScale = Vector3.one;
+			}
+		}
+
+		if (confirmDeletePanel != null)
+		{
+			if (confirmDeletePanel.answered)
+			{
+				if (confirmDeletePanel.answerValue)
+				{
+					var file = files[selectedIndex];
+					string path = Path.Combine(Application.persistentDataPath, file.guid);
+					Directory.Delete(path, true);
+
+					Destroy(file.listItem);
+					files.RemoveAt(selectedIndex);
+
+					SetIndex(selectedIndex);
+				}
+
+				Destroy(confirmDeletePanel.gameObject);
+				transform.localScale = Vector3.one;
 			}
 		}
 	}
@@ -230,21 +253,16 @@ public class ProjectPanel : MonoBehaviour
 	public void StartImport()
 	{
 		importPanel = Instantiate(UIPanels.Instance.importPanel, Canvass.main.transform, false);
-		transform.localScale = new Vector3(0, 0, 0);
+		transform.localScale = Vector3.zero;
 	}
 
 	public void Delete()
 	{
 		if (selectedIndex != -1)
 		{
-			var file = files[selectedIndex];
-			var path = Path.Combine(Application.persistentDataPath, file.guid);
-			Directory.Delete(path, true);
-
-			Destroy(file.listItem);
-			files.RemoveAt(selectedIndex);
-
-			SetIndex(selectedIndex);
+			confirmDeletePanel = Instantiate(UIPanels.Instance.confirmationPanel, Canvass.main.transform, false);
+			confirmDeletePanel.Init($"Are you sure you want to delete \"{files[selectedIndex].title}\"?", "Delete", "Keep");
+			transform.localScale = Vector3.zero;
 		}
 	}
 
