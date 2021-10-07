@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.XR.Management;
 
 public class InteractionPointRenderer : MonoBehaviour
@@ -10,10 +11,14 @@ public class InteractionPointRenderer : MonoBehaviour
 	private bool viewed;
 	private Vector3 startScale;
 
+	private bool isEditor;
+
 	void Start()
 	{
 		gameObject.transform.localScale = XRGeneralSettings.Instance.Manager.activeLoader != null ? new Vector3(5f,5f,5f) : new Vector3(10f, 10f, 10f);
 		startScale = transform.localScale;
+
+		isEditor = SceneManager.GetActiveScene().name.Equals("Editor");
 	}
 
 	public void Init(InteractionPointEditor point)
@@ -27,7 +32,7 @@ public class InteractionPointRenderer : MonoBehaviour
 
 	public void Update()
 	{
-		if (!viewed)
+		if (!viewed && !isEditor)
 		{
 			transform.localScale = startScale * (1 + Mathf.SmoothStep(0, 0.3f, Mathf.PingPong(Time.time, 1)));
 		}
