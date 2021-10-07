@@ -17,7 +17,7 @@ public class MultipleChoicePanel : MonoBehaviour
 	private readonly Color darkGreyColour =  new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
-	public void Init(string newQuestion, string[] newAnswers)
+	public void Init(string newQuestion, int correctAnswer, string[] newAnswers)
 	{
 		var existingToggles = answerPanel.GetComponentsInChildren<Toggle>();
 
@@ -27,7 +27,13 @@ public class MultipleChoicePanel : MonoBehaviour
 		}
 
 		question.text = newQuestion;
-		correctAnswer = Convert.ToInt32(newAnswers[0]);
+
+		if (newAnswers == null || newAnswers.Length <= 0)
+		{
+			return;
+		}
+
+		this.correctAnswer = correctAnswer;
 		answers = new string[newAnswers.Length - 1];
 
 		//NOTE(Simon): newAnswers from index 1, because index 0 contains the correct answer
@@ -64,6 +70,5 @@ public class MultipleChoicePanel : MonoBehaviour
 				toggles[i].transform.GetComponentsInChildren<Text>()[1].color = darkGreyColour;
 			}
 		}
-
 	}
 }

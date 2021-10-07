@@ -107,8 +107,6 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 		title.text = newTitle;
 		areas = newAreas;
 
-		var watch = Stopwatch.StartNew();
-
 		foreach (var area in areas)
 		{
 			var areaRenderer = Instantiate(areaRendererPrefab).GetComponent<AreaRenderer>();

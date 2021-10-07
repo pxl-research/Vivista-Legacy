@@ -476,8 +476,10 @@ public class Player : MonoBehaviour
 				}
 				case InteractionType.MultipleChoice:
 				{
+					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
+					int correct = Int32.Parse(split[0]);
 					var panel = Instantiate(multipleChoicePrefab, Canvass.sphereUIPanelWrapper.transform);
-					panel.GetComponent<MultipleChoicePanelSphere>().Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
+					panel.GetComponent<MultipleChoicePanelSphere>().Init(newInteractionPoint.title, correct, split[1].Split('\f'));
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -501,8 +503,8 @@ public class Player : MonoBehaviour
 				case InteractionType.MultipleChoiceArea:
 				{
 					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
-					var correct = Int32.Parse(split[0]);
-					var areaJson = split[1];
+					int correct = Int32.Parse(split[0]);
+					string areaJson = split[1];
 					var panel = Instantiate(multipleChoiceAreaPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, areaJson);
 
@@ -514,9 +516,9 @@ public class Player : MonoBehaviour
 				{
 					var panel = Instantiate(multipleChoiceImagePanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					var filenames = newInteractionPoint.filename.Split('\f');
-					var correct = Int32.Parse(newInteractionPoint.body);
+					int correct = Int32.Parse(newInteractionPoint.body);
 					var urls = new List<string>();
-					foreach (var file in filenames)
+					foreach (string file in filenames)
 					{
 						string url = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), file));
 						urls.Add(url);

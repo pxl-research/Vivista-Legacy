@@ -36,7 +36,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		answerInputs = new List<InputField>();
 
 		var answers = new string[0];
-		if (initialAnswers == null)
+		if (initialAnswers == null || initialAnswers.Length <= 1)
 		{
 			answerCorrect = 0;
 		}

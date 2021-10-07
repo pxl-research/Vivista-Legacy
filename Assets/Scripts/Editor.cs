@@ -2467,9 +2467,10 @@ public class Editor : MonoBehaviour
 				}
 				case InteractionType.MultipleChoice:
 				{
+					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
+					var correct = Int32.Parse(split[0]);
 					var panel = Instantiate(UIPanels.Instance.multipleChoicePanel, Canvass.main.transform);
-					//TODO(Simon): SPlit here, not in panel
-					panel.Init(newInteractionPoint.title, newInteractionPoint.body.Split('\f'));
+					panel.Init(newInteractionPoint.title, correct, split[1].Split('\f'));
 					newInteractionPoint.panel = panel.gameObject;
 					break;
 				}
