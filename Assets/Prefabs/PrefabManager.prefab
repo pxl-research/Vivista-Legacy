@@ -61,6 +61,8 @@ MonoBehaviour:
     type: 3}
   chapterManagerPanel: {fileID: 4787452447403405063, guid: ec855773e0470634a937f4fd4e94407e,
     type: 3}
+  settingsPanel: {fileID: -3763060410261266293, guid: d184cc9f1c2fbbc48a24c17f260638c8,
+    type: 3}
   confirmationPanel: {fileID: 7744003129353109152, guid: a655105c99aec894d98f3ba22d41f739,
     type: 3}
   textPanel: {fileID: 114804670035395096, guid: 68aee9630d16f3847ae9673fad651082,

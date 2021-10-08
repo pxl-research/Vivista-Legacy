@@ -14,6 +14,7 @@ public class UIPanels : MonoBehaviour
 	public ExportPanel exportPanel;
 	public TagPanel tagPanel;
 	public ChapterManagerPanel chapterManagerPanel;
+	public SettingsPanel settingsPanel;
 	public ConfirmationPanel confirmationPanel;
 
 	public TextPanel textPanel;

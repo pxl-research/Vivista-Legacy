@@ -10,6 +10,9 @@ public static class Config
 		public float mainVideoVolume = 1f;
 		public float videoInteractionVolume = 1f;
 		public float audioInteractionVolume = 1f;
+		public bool showOnlyCurrentInteractions = false;
+		public bool invertMouseVertical = false;
+		public bool invertMouseHorizontal = false;
 	}
 
 	public static float MainVideoVolume
@@ -38,6 +41,36 @@ public static class Config
 		set
 		{
 			data.audioInteractionVolume = Mathf.Clamp01(value);
+			SaveConfig();
+		}
+	}
+
+	public static bool ShowOnlyCurrentInteractions 
+	{
+		get => data.showOnlyCurrentInteractions;
+		set 
+		{
+			data.showOnlyCurrentInteractions = value;
+			SaveConfig();
+		}
+	}
+
+	public static bool InvertMouseVertical
+	{
+		get => data.invertMouseVertical;
+		set
+		{
+			data.invertMouseVertical = value;
+			SaveConfig();
+		}
+	}
+
+	public static bool InvertMouseHorizontal
+	{
+		get => data.invertMouseHorizontal;
+		set
+		{
+			data.invertMouseHorizontal = value;
 			SaveConfig();
 		}
 	}

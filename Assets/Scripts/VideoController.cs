@@ -95,7 +95,7 @@ public class VideoController : MonoBehaviour
 		{
 			volumeSliderVR = volumeControlVR.GetComponentInChildren<Slider>();
 			volumeSliderVR.interactable = false;
-			volumeSliderVR.value = Config.MainVideoVolume;
+			volumeSliderVR.SetValueWithoutNotify(Config.MainVideoVolume);
 			volumeSliderVR.onValueChanged.AddListener(_ => VolumeValueChangedVR());
 		}
 		if (decreaseVolumeGo != null && increaseVolumeGo != null)
@@ -111,7 +111,7 @@ public class VideoController : MonoBehaviour
 
 		}
 
-		volumeSlider.value = Config.MainVideoVolume;
+		volumeSlider.SetValueWithoutNotify(Config.MainVideoVolume);
 		volumeSlider.onValueChanged.AddListener(_ => VolumeValueChanged());
 	}
 

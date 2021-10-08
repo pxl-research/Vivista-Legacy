@@ -84,7 +84,7 @@ public class VideoPanel : MonoBehaviour
 
 		volumeSlider.onValueChanged.AddListener( _ => VolumeValueChanged());
 		mixer.SetFloat(Config.videoInteractionMixerChannelName, MathHelper.LinearToLogVolume(Config.VideoInteractionVolume));
-		volumeSlider.value = Config.VideoInteractionVolume;
+		volumeSlider.SetValueWithoutNotify(Config.VideoInteractionVolume);
 
 		//NOTE(Simon): Make sure we have added the events
 		controlButton.onClick.RemoveListener(TogglePlay);

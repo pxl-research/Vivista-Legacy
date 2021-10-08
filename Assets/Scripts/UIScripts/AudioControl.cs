@@ -71,7 +71,7 @@ public class AudioControl : MonoBehaviour
 		}
 
 		volumeSlider.onValueChanged.AddListener(_ => VolumeValueChanged());
-		volumeSlider.value = Config.AudioInteractionVolume;
+		volumeSlider.SetValueWithoutNotify(Config.AudioInteractionVolume);
 		mixer.SetFloat(Config.audioInteractionMixerChannelName, MathHelper.LinearToLogVolume(Config.AudioInteractionVolume));
 	}
 

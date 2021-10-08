@@ -122,7 +122,7 @@ public static class MathHelper
 		return x * x * x * (x * (x * 6 - 15) + 10);
 	}
 
-	//NOTE(Simon): Convert a linear(wrong) volume value to a logarithmic(correct) volume value
+	//NOTE(Simon): Convert a linear(UI) volume value to a logarithmic(mixer) volume value
 	public static float LinearToLogVolume(float value)
 	{
 		return Mathf.Log10(value) * 20;

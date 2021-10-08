@@ -160,6 +160,7 @@ public class Editor : MonoBehaviour
 	private TagPanel tagPanel;
 	private ChapterManagerPanel chapterPanel;
 	private ExportPanel exportPanel;
+	private SettingsPanel settingsPanel;
 
 	public RectTransform timelineContainer;
 	public RectTransform timelineScrollView;
@@ -2313,6 +2314,17 @@ public class Editor : MonoBehaviour
 		exportPanel.Init(meta.guid);
 		Canvass.modalBackground.SetActive(true);
 		editorState = EditorState.Exporting;
+	}
+
+	public void ShowSettingsPanel()
+	{
+		if (settingsPanel != null)
+		{
+			return;
+		}
+
+		settingsPanel = Instantiate(UIPanels.Instance.settingsPanel);
+		settingsPanel.transform.SetParent(Canvass.main.transform, false);
 	}
 
 	public bool SaveProject(bool makeThumbnail = true)
