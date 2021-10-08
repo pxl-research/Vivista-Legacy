@@ -571,8 +571,7 @@ public class Editor : MonoBehaviour
 						lastPlacedPoint.body += String.Join("\f", editor.answerAnswers);
 						lastPlacedPoint.panel = panel.gameObject;
 
-						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.Init(editor.answerQuestion, lastPlacedPoint.body.Split('\f'));
+						panel.Init(editor.answerQuestion, editor.answerCorrect, editor.answerAnswers);
 
 						finished = true;
 					}
@@ -879,7 +878,7 @@ public class Editor : MonoBehaviour
 						pointToEdit.panel = panel.gameObject;
 
 						//NOTE(Kristof): Init after building the correct body string because the function expect the correct answer index to be passed with the string
-						panel.Init(editor.answerQuestion, pointToEdit.body.Split('\f'));
+						panel.Init(editor.answerQuestion, editor.answerCorrect, editor.answerAnswers);
 						finished = true;
 					}
 					break;
