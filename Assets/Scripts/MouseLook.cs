@@ -58,9 +58,12 @@ public class MouseLook : MonoBehaviour
 			{
 				if (Input.GetMouseButton(1) && !EventSystem.current.IsPointerOverGameObject())
 				{
+					int invertHorizontal = Config.InvertMouseHorizontal ? -1 : 1;
+					int invertVertical = Config.InvertMouseVertical ? -1 : 1;
+
 					float zoomFactor = Camera.main.fieldOfView / 120f;
-					mouseRotX += mouseDelta.x * sensivity * zoomFactor;
-					mouseRotY += mouseDelta.y * sensivity * zoomFactor;
+					mouseRotX += invertHorizontal * mouseDelta.x * sensivity * zoomFactor;
+					mouseRotY += invertVertical * mouseDelta.y * sensivity * zoomFactor;
 					mouseRotX = ClampAngle(mouseRotX, minX, maxX);
 					mouseRotY = ClampAngle(mouseRotY, minY, maxY);
 
