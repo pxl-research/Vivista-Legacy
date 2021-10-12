@@ -21,6 +21,22 @@ public class SettingsPanel : MonoBehaviour
 		invertMouseHorizontalToggle.SetIsOnWithoutNotify(Config.InvertMouseHorizontal);
 	}
 
+	public void Update()
+	{
+		if (mainVideoVolumeSlider.value != Config.MainVideoVolume)
+		{
+			mainVideoVolumeSlider.SetValueWithoutNotify(Config.MainVideoVolume);
+		}
+		if (audioInteractionVolumeSlider.value != Config.AudioInteractionVolume)
+		{
+			audioInteractionVolumeSlider.SetValueWithoutNotify(Config.AudioInteractionVolume);
+		}
+		if (videoInteractionVolumeSlider.value != Config.VideoInteractionVolume)
+		{
+			videoInteractionVolumeSlider.SetValueWithoutNotify(Config.VideoInteractionVolume);
+		}
+	}
+
 	public void UpdateMainVideoVolume(float value)
 	{
 		Config.MainVideoVolume = (value);

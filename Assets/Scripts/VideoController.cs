@@ -96,7 +96,6 @@ public class VideoController : MonoBehaviour
 			volumeSliderVR = volumeControlVR.GetComponentInChildren<Slider>();
 			volumeSliderVR.interactable = false;
 			volumeSliderVR.SetValueWithoutNotify(Config.MainVideoVolume);
-			volumeSliderVR.onValueChanged.AddListener(_ => VolumeValueChangedVR());
 		}
 		if (decreaseVolumeGo != null && increaseVolumeGo != null)
 		{
@@ -108,7 +107,6 @@ public class VideoController : MonoBehaviour
 			increaseVolumeButton.onHitDown.AddListener(OnPointerDownIncreaseButton);
 			decreaseVolumeButton.onHitUp.AddListener(OnPointerUpVolumeButton);
 			increaseVolumeButton.onHitUp.AddListener(OnPointerUpVolumeButton);
-
 		}
 
 		volumeSlider.SetValueWithoutNotify(Config.MainVideoVolume);
@@ -136,6 +134,13 @@ public class VideoController : MonoBehaviour
 		videoLength = video.frameCount / video.frameRate;
 		rawCurrentTime = videoLength * (video.frame / (double)video.frameCount);
 		currentFractionalTime = video.frameCount > 0 ? video.frame / (double)video.frameCount : 0;
+
+		if (volumeSlider.value != Config.MainVideoVolume)
+		{
+			volumeSlider.SetValueWithoutNotify(Config.MainVideoVolume);
+			volumeSliderVR?.SetValueWithoutNotify(Config.MainVideoVolume);
+			mixer.SetFloat(Config.mainVideoMixerChannelName, MathHelper.LinearToLogVolume(volumeSlider.value));
+		}
 	}
 
 	//NOTE(Simon): if keepAspect == true, the screenshot will be resized to keep the correct aspectratio, and still fit within the requested size.
@@ -430,12 +435,6 @@ public class VideoController : MonoBehaviour
 		Config.MainVideoVolume = volumeSlider.value;
 	}
 
-	public void VolumeValueChangedVR()
-	{
-		mixer.SetFloat(Config.mainVideoMixerChannelName, MathHelper.LinearToLogVolume(volumeSliderVR.value));
-		Config.MainVideoVolume = volumeSliderVR.value;
-	}
-
 	public void OnPointerDownIncreaseButton()
 	{
 		if (!increaseButtonPressed)
@@ -459,5 +458,4 @@ public class VideoController : MonoBehaviour
 		decreaseButtonPressed = false;
 		increaseButtonPressed = false;
 	}
-
 }

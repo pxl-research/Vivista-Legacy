@@ -48,6 +48,12 @@ public class VideoPanel : MonoBehaviour
 
 		controlButton.GetComponent<RawImage>().texture = videoPlayer.isPlaying ? iconPause : iconPlay;
 		bigButtonIcon.color = videoPlayer.isPlaying ? Color.clear : Color.white;
+
+		if (volumeSlider.value != Config.VideoInteractionVolume)
+		{
+			volumeSlider.SetValueWithoutNotify(Config.VideoInteractionVolume);
+			mixer.SetFloat(Config.videoInteractionMixerChannelName, MathHelper.LinearToLogVolume(volumeSlider.value));
+		}
 	}
 
 	public void Init(string newTitle, string fullPath)

@@ -81,6 +81,12 @@ public class AudioControl : MonoBehaviour
 
 		playButtonImage.texture = audioSource.isPlaying ? iconPause : iconPlay;
 		ShowAudioPlayTime();
+
+		if (volumeSlider.value != Config.AudioInteractionVolume)
+		{
+			volumeSlider.SetValueWithoutNotify(Config.AudioInteractionVolume);
+			mixer.SetFloat(Config.audioInteractionMixerChannelName, MathHelper.LinearToLogVolume(volumeSlider.value));
+		}
 	}
 	
 	private void CheckButtonStates()
