@@ -267,6 +267,17 @@ public class Editor : MonoBehaviour
 			point.point.GetComponent<SpriteRenderer>().color = TagManager.Instance.GetTagColorById(point.tagId);
 		}
 
+		if (Config.ShowOnlyCurrentInteractions)
+		{
+			foreach (var point in interactionPoints)
+			{
+				bool shouldBeActive = point.startTime <= videoController.currentTime && point.endTime >= videoController.currentTime;
+				point.point.SetActive(shouldBeActive);
+			}
+
+			pointToMove?.point.SetActive(true);
+		}
+
 		if (videoController.videoLoaded)
 		{
 			UpdateTimeline();
