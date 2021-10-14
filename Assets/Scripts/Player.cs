@@ -278,12 +278,11 @@ public class Player : MonoBehaviour
 					}
 				}
 
-				//NOTE(Simon): Set the playbackspeed. Speed will get lower the closer to the next pause we are.
 				if (timeToNextPause < pauseFadeTime)
 				{
-					float speed = VideoFadeGetCurrentSpeed(timeToNextPause);
-
-					videoController.SetPlaybackSpeed(speed);
+					//float speed = VideoFadeGetCurrentSpeed(timeToNextPause);
+					//
+					videoController.SetPlaybackSpeed(0f);
 					if (!mandatoryPauseActive)
 					{
 						ShowMandatoryInteractionMessage();
