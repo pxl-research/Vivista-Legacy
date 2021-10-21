@@ -1,16 +1,14 @@
 ﻿using UnityEngine;
-using Valve.VR;
+using VRstudios;
 
 public class Controller : MonoBehaviour
 {
-	public SteamVR_Input_Sources inputSource;
+	public XRController inputSource;
 
 	public GameObject laser;
-	//public GameObject model;
 	public GameObject controllerUI;
 	public GameObject hoveredGo;
 	public GameObject cursor;
-	//public Material highlightMaterial;
 
 	public bool uiHovering;
 	public bool compassAttached;
@@ -28,34 +26,28 @@ public class Controller : MonoBehaviour
 	private Vector3 initialCursorScale;
 	private Plane measuringPlane;
 
-	//private MeshRenderer trigger;
-	//private MeshRenderer thumbstick;
-	//private Material baseMaterial;
-
-	private bool gripDown;
+	private float lastRotateTime;
+	private int lastRotateDirection;
 
 	private int layerMask;
 
-	// Use this for initialization
 	void Start()
 	{
 		initialCursorScale = cursor.transform.localScale;
 		measuringPlane = new Plane();
 
-		SteamVR_Actions.default_Trigger[inputSource].onStateDown += OnTriggerDown;
-		SteamVR_Actions.default_Trigger[inputSource].onStateUp += OnTriggerUp;
-		SteamVR_Actions.default_Grip[inputSource].onStateUp += OnGripDown;
-		SteamVR_Actions.default_RotateLeft[inputSource].onStateDown += OnRotateLeft;
-		SteamVR_Actions.default_RotateRight[inputSource].onStateDown += OnRotateRight;
+		XRInput.ButtonTriggerDownEvent += OnTriggerDown;
+		XRInput.ButtonTriggerUpEvent += OnTriggerUp;
+		XRInput.ButtonGripDownEvent += OnGripDown;
+		XRInput.JoystickActiveEvent += OnRotateDown;
 
 		layerMask = LayerMask.GetMask("UI", "WorldUI", "interactionPoints");
 	}
 
-	// Update is called once per frame
 	void Update()
 	{
 		//NOTE(Simon): Set laser direction based on controller type
-		if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.Vive)
+		if (VRDevices.loadedControllerSet == XRInputControllerType.HTCVive)
 		{
 			laser.transform.localPosition = new Vector3(0, 0, 0.1f);
 			laser.transform.localEulerAngles = new Vector3(90, 0, 0);
@@ -71,7 +63,7 @@ public class Controller : MonoBehaviour
 				uiHovering = true;
 				hoveredGo = hit.transform.gameObject;
 				laser.transform.localScale = new Vector3(laser.transform.localScale.x, hit.distance, laser.transform.localScale.z);
-				SetCursorLocation(hit.point, hit.distance);
+				SetCursorLocation(hit.point);
 			}
 			else
 			{
@@ -81,7 +73,7 @@ public class Controller : MonoBehaviour
 					uiHovering = true;
 					hoveredGo = hit.transform.gameObject;
 					laser.transform.localScale = new Vector3(laser.transform.localScale.x, rayLength - hit.distance, laser.transform.localScale.z);
-					SetCursorLocation(hit.point, rayLength - hit.distance);
+					SetCursorLocation(hit.point);
 				}
 				else
 				{
@@ -94,12 +86,12 @@ public class Controller : MonoBehaviour
 		}
 
 		//NOTE(Simon): Check if controller is connected. If not, hide it.
-		if (inputSource == SteamVR_Input_Sources.LeftHand)
+		if (inputSource == XRController.Left)
 		{
 			laser.SetActive(VRDevices.hasLeftController);
 		}
 
-		if (inputSource == SteamVR_Input_Sources.RightHand)
+		if (inputSource == XRController.Right)
 		{
 			laser.SetActive(VRDevices.hasRightController);
 		}
@@ -108,17 +100,15 @@ public class Controller : MonoBehaviour
 	private void LateUpdate()
 	{
 		//NOTE(Simon): triggerPressed should only be true in the frame the trigger was pressed. So reset their state if state was changed last frame.
-		if (SteamVR_Actions.default_Trigger[inputSource].stateDown)
+		if (inputSource == XRController.Left && VRDevices.hasLeftController
+			|| inputSource == XRController.Right && VRDevices.hasRightController)
 		{
 			triggerPressed = false;
-		}
-		if (SteamVR_Actions.default_Trigger[inputSource].stateUp)
-		{
 			triggerReleased = false;
 		}
 	}
 
-	public void SetCursorLocation(Vector3 position, float distance)
+	public void SetCursorLocation(Vector3 position)
 	{
 		//NOTE(Simon): Radius proportional to laser length
 		{
@@ -141,56 +131,71 @@ public class Controller : MonoBehaviour
 		return new Ray(laser.transform.position, laser.transform.up);
 	}
 
-	private void OnRotateLeft(SteamVR_Action_Boolean steamVrActionBoolean, SteamVR_Input_Sources fromSource)
+	private void OnRotateDown(XRControllerSide side, Vector2 value)
 	{
-		OnRotate?.Invoke(-1);
-	}
-
-	private void OnRotateRight(SteamVR_Action_Boolean steamVrActionBoolean, SteamVR_Input_Sources fromSource)
-	{
-		OnRotate?.Invoke(1);
-	}
-
-	private void OnGripDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
-	{
-		var compass = Seekbar.compass.transform;
-
-		//NOTE(Simon): Attach to, or remove from controller the compass
-		if (compass && controllerUI)
+		if (IsEventForThisController(side))
 		{
+			int direction = (int)Mathf.Sign(value.x);
+			if (lastRotateTime + 0.5f < Time.time || direction != lastRotateDirection)
+			{
+				if (Mathf.Abs(value.x) > 0.5)
+				{
+					Debug.Log("Rotate down, event, " + side);
+					OnRotate?.Invoke(direction);
+					lastRotateDirection = direction;
+					lastRotateTime = Time.time;
+				}
+			}
+		}
+	}
+
+	private void OnGripDown(XRControllerSide side)
+	{
+		if (IsEventForThisController(side))
+		{
+			Debug.Log("Grip down, event, " + side);
+
+			//NOTE(Simon): Attach to, or remove from controller the compass
 			if (compassAttached)
 			{
-				Seekbar.ReattachCompass();
+				Seekbar.AttachCompassToSeekbar();
 				compassAttached = false;
 			}
 			else
 			{
-				compass.SetParent(controllerUI.transform);
-				compass.localScale = new Vector3(0.001f, 0.001f, 0.001f);
-				compass.localPosition = Vector3.zero;
-				compass.localEulerAngles = Vector3.zero;
-				compass.GetChild(0).gameObject.SetActive(false);
-
-				compass.gameObject.SetActive(true);
+				Seekbar.AttachCompassToController(controllerUI);
 				compassAttached = true;
 			}
 		}
 	}
 
-	private void OnTriggerDown(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	private void OnTriggerDown(XRControllerSide side)
 	{
-		//NOTE(Simon): Make laser fat when pressing trigger
-		laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
-		triggerDown = true;
-		triggerPressed = true;
+		if (IsEventForThisController(side))
+		{
+			Debug.Log("Trigger down, event, " + side);
+			//NOTE(Simon): Make laser fat when pressing trigger
+			laser.transform.localScale = new Vector3(2, laser.transform.localScale.y, 2);
+			triggerDown = true;
+			triggerPressed = true;
+		}
 	}
 
-	private void OnTriggerUp(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+	private void OnTriggerUp(XRControllerSide side)
 	{
-		//NOTE(Simon): Make laser skinny when releasing trigger
-		laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
-		triggerDown = false;
-		triggerReleased = true;
+		if (IsEventForThisController(side))
+		{
+			Debug.Log("Trigger up, event, " + side);
+			//NOTE(Simon): Make laser skinny when releasing trigger
+			laser.transform.localScale = new Vector3(1, laser.transform.localScale.y, 1);
+			triggerDown = false;
+			triggerReleased = true;
+		}
 	}
 
+	private bool IsEventForThisController(XRControllerSide side)
+	{
+		return side == XRControllerSide.Left && inputSource == XRController.Left
+				|| side == XRControllerSide.Right && inputSource == XRController.Right;
+	}
 }

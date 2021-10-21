@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using UnityEngine.XR;
+﻿using System;
+using VRstudios;
 
 public static class VRDevices
 {
@@ -9,85 +9,45 @@ public static class VRDevices
 		OpenVr
 	}
 
-	public enum LoadedControllerSet
-	{
-		NoControllers,
-		Vive,
-		Oculus
-	}
-
 	public static LoadedSdk loadedSdk;
-	public static LoadedControllerSet loadedControllerSet;
+	public static XRInputControllerType loadedControllerSet;
 
 	public static bool hasLeftController;
 	public static bool hasRightController;
+	public static bool hasNoControllers => !hasLeftController || !hasRightController;
 
 	public static void BeginHandlingVRDeviceEvents()
 	{
 		//NOTE(Simon): First unassign the event handler, to make sure only 1 is ever connected
-		InputDevices.deviceConnected -= OnDeviceConnect;
-		InputDevices.deviceConnected += OnDeviceConnect;
-		InputDevices.deviceDisconnected -= OnDeviceDisconnect;
-		InputDevices.deviceDisconnected += OnDeviceDisconnect;
+		XRInput.ControllerConnectedCallback-= OnDeviceConnect;
+		XRInput.ControllerConnectedCallback += OnDeviceConnect;
+		XRInput.ControllerDisconnectedMethod -= OnDeviceDisconnect;
+		XRInput.ControllerDisconnectedMethod += OnDeviceDisconnect;
 	}
 
-	public static void OnDeviceConnect(InputDevice device)
+	public static void OnDeviceConnect(Guid id, XRControllerSide side, XRInputControllerType type)
 	{
-		//TODO(Simon): This should be more robust
-		var name = device.name.ToLowerInvariant();
-		if (name.Contains("left"))
+		if (side == XRControllerSide.Left)
 		{
-			Debug.Log("left controller connected: " + device.name);
 			hasLeftController = true;
 		}
-		if (name.Contains("right"))
+		if (side == XRControllerSide.Right)
 		{
-			Debug.Log("right controller connected: " + device.name);
 			hasRightController = true;
 		}
-		if (name.Contains("oculus"))
-		{
-			Debug.Log("oculus device connected: " + device.name);
-			loadedControllerSet = LoadedControllerSet.Oculus;
-		}
-		else if (name.Contains("vive"))
-		{
-			Debug.Log("vive device connected: " + device.name);
-			loadedControllerSet = LoadedControllerSet.Vive;
-		}
+
+		loadedControllerSet = type;
 	}
 
-	public static void OnDeviceDisconnect(InputDevice device)
+	public static void OnDeviceDisconnect(Guid id, XRControllerSide side, XRInputControllerType type)
 	{
-		var name = device.name.ToLowerInvariant();
-		if (name.Contains("left"))
+		if (side == XRControllerSide.Left)
 		{
 			hasLeftController = false;
 		}
-		if (name.Contains("right"))
+		if (side == XRControllerSide.Right)
 		{
 			hasRightController = false;
 		}
 	}
-
-	//public static void SetControllerTutorialMode(GameObject controller, bool enabled)
-	//{
-	//	GameObject[] controllerArray = { controller };
-	//	SetControllersTutorialMode(controllerArray, enabled);
-	//}
-	//
-	//public static void SetControllersTutorialMode(GameObject[] controllers, bool enabled)
-	//{
-	//	foreach (var controller in controllers)
-	//	{
-	//		if (enabled)
-	//		{
-	//			controller.GetComponent<Controller>().TutorialHighlight();
-	//		}
-	//		else
-	//		{
-	//			controller.GetComponent<Controller>().ResetMaterial();
-	//		}
-	//	}
-	//}
 }

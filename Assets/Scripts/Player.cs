@@ -8,7 +8,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
-using Valve.VR;
+//using Valve.VR;
+using VRstudios;
 
 public enum PlayerState
 {
@@ -54,7 +55,7 @@ public class Player : MonoBehaviour
 	public GameObject multipleChoiceImagePanelPrefab;
 	public GameObject tabularDataPanelPrefab;
 	public GameObject chapterPanelPrefab;
-	public GameObject cameraRig;
+	public GameObject cameraOrigin;
 
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
@@ -96,10 +97,10 @@ public class Player : MonoBehaviour
 	{
 		Instance = this;
 
-		//StartCoroutine(EnableVr());
 		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
-		Seekbar.compass.SetActive(false);
+		Seekbar.instance.compass.SetActive(false);
+		Seekbar.instanceVR.compass.SetActive(false);
 
 		interactionPoints = new List<InteractionPointPlayer>();
 		mandatoryInteractionPoints = new List<InteractionPointPlayer>();
@@ -108,12 +109,10 @@ public class Player : MonoBehaviour
 		videoController = fileLoader.controller;
 		videoController.OnSeek += OnSeek;
 		videoController.mixer = mixer;
-		VideoControls.videoController = videoController;
 
 		OpenIndexPanel();
 
 		mainEventSystem = EventSystem.current;
-
 
 		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
 		trackedControllerRight = controllerRight.GetComponent<Controller>();
@@ -123,77 +122,16 @@ public class Player : MonoBehaviour
 
 	void Update()
 	{
-		//NOTE(Kristof): VR specific behaviour
-		{
-			if (XRGeneralSettings.Instance.Manager.activeLoader != null)
-			{
-				videoController.transform.position = Camera.main.transform.position;
-				Canvass.seekbar.gameObject.SetActive(true);
+		bool isVR = VRDevices.loadedSdk != VRDevices.LoadedSdk.None;
+		Seekbar.instance.gameObject.SetActive(!isVR);
+		Seekbar.instanceVR.gameObject.SetActive(isVR);
 
-				//NOTE(Kristof): Rotating the seekbar
-				{
-					//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
-					var seekbarAngle = Vector2.SignedAngle(new Vector2(Canvass.seekbar.transform.position.x, Canvass.seekbar.transform.position.z), Vector2.up);
+		//NOTE(Simon): Sync videoController/videoMesh pos with camera pos. 
+		videoController.transform.position = Camera.main.transform.position;
 
-					var fov = Camera.main.fieldOfView;
-					//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking towards
-					var cameraAngle = Camera.main.transform.eulerAngles.y;
-
-					//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
-					var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
-					var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
-
-					var angle = Mathf.Min(distanceLeft, distanceRight);
-
-					if (isSeekbarOutOfView)
-					{
-						if (angle < 2.5f)
-						{
-							isSeekbarOutOfView = false;
-						}
-					}
-					else
-					{
-						if (angle > fov)
-						{
-							isSeekbarOutOfView = true;
-						}
-					}
-
-					if (isSeekbarOutOfView)
-					{
-						float newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
-
-						//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
-						//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
-						float radianAngle = (-newAngle + 90) * Mathf.PI / 180;
-						float x = 1.8f * Mathf.Cos(radianAngle);
-						float y = Camera.main.transform.position.y - 2f;
-						float z = 1.8f * Mathf.Sin(radianAngle);
-
-						Canvass.seekbar.transform.position = new Vector3(x, y, z);
-						Canvass.seekbar.transform.eulerAngles = new Vector3(30, newAngle, 0);
-					}
-				}
-			}
-			else
-			{
-				Canvass.seekbar.gameObject.SetActive(false);
-			}
-		}
-
-		//NOTE(Simon): Zoom when not using HMD
-		if (XRGeneralSettings.Instance.Manager.activeLoader == null)
-		{
-			if (Input.mouseScrollDelta.y != 0)
-			{
-				Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 20, 120);
-			}
-		}
-
-		Ray interactionpointRay = new Ray();
+		var interactionpointRay = new Ray();
 		//NOTE(Kristof): Deciding on which object the Ray will be based on
-		//TODO(Simon): Prefers right over left controller
+		//NOTE(Simon): Prefers right over left controller
 		{
 			if (trackedControllerLeft != null && trackedControllerLeft.triggerPressed)
 			{
@@ -205,7 +143,7 @@ public class Player : MonoBehaviour
 				interactionpointRay = trackedControllerRight.CastRay();
 			}
 
-			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers && Input.GetMouseButtonUp(0))
+			if (VRDevices.hasNoControllers && Input.GetMouseButtonUp(0))
 			{
 				interactionpointRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 			}
@@ -213,12 +151,19 @@ public class Player : MonoBehaviour
 
 		if (playerState == PlayerState.Watching)
 		{
-			if (Input.GetKeyDown(KeyCode.Space) && VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+			if (Input.GetKeyDown(KeyCode.Space) && isVR)
 			{
 				videoController.TogglePlay();
 			}
 
-			Seekbar.instance.RenderBlips(interactionPoints, trackedControllerLeft, trackedControllerRight);
+			if (isVR)
+			{
+				Seekbar.instance.RenderBlips(interactionPoints);
+			}
+			else
+			{
+				Seekbar.instanceVR.RenderBlips(interactionPoints);
+			}
 
 			//Note(Simon): Interaction with points
 			if (!chapterTransitionActive)
@@ -280,8 +225,6 @@ public class Player : MonoBehaviour
 
 				if (timeToNextPause < pauseFadeTime)
 				{
-					//float speed = VideoFadeGetCurrentSpeed(timeToNextPause);
-					//
 					videoController.SetPlaybackSpeed(0f);
 					if (!mandatoryPauseActive)
 					{
@@ -328,7 +271,6 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
-					SetCanvasesActive(true);
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
 					chapterSelector.Init(videoController);
 				}
@@ -382,7 +324,11 @@ public class Player : MonoBehaviour
 			//NOTE(Simon): Set hitting and hovering in hittables
 			if (hit.transform != null)
 			{
-				hit.transform.GetComponent<Hittable>().hitting = true;
+				var hittable = hit.transform.GetComponent<Hittable>();
+				if (hittable != null)
+				{
+					hittable.hitting = true;
+				}
 			}
 		}
 	}
@@ -573,7 +519,14 @@ public class Player : MonoBehaviour
 
 		StartCoroutine(UpdatePointPositions());
 
-		Seekbar.compass.SetActive(true);
+		if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+		{
+			Seekbar.instance.compass.SetActive(true);
+		}
+		else
+		{
+			Seekbar.instanceVR.compass.SetActive(true);
+		}
 
 		return true;
 	}
@@ -645,18 +598,6 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	private void SetCanvasesActive(bool active)
-	{
-		var seekbarCollider = Canvass.seekbar.gameObject.GetComponent<BoxCollider>();
-
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
-		{
-			Canvass.main.enabled = active;
-		}
-		Canvass.seekbar.enabled = active;
-		seekbarCollider.enabled = active;
-	}
-
 	public float OnSeek(double time)
 	{
 		double desiredTime = time;
@@ -707,38 +648,15 @@ public class Player : MonoBehaviour
 		return interactionsInChapter;
 	}
 
-	//public void OnVideoBrowserHologramUp()
-	//{
-	//	if (videoList == null)
-	//	{
-	//		StartCoroutine(LoadVideos());
-	//		projector.GetComponent<AnimateProjector>().TogglePageButtons(indexPanel);
-	//	}
-	//}
-	//
-	//public void OnVideoBrowserAnimStop()
-	//{
-	//	if (!projector.GetComponent<AnimateProjector>().state)
-	//	{
-	//		projector.transform.localScale = Vector3.zero;
-	//
-	//		for (var i = videoCanvas.childCount - 1; i >= 0; i--)
-	//		{
-	//			Destroy(videoCanvas.GetChild(i).gameObject);
-	//		}
-	//		videoList = null;
-	//	}
-	//}
-
 	public void RotateCamera(int direction)
 	{
-		cameraRig.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
+		cameraOrigin.transform.localEulerAngles += direction * new Vector3(0, 30, 0);
 	}
 
 	public void BackToBrowser()
 	{
-		SetCanvasesActive(false);
-		Seekbar.compass.SetActive(false);
+		Seekbar.instance.compass.SetActive(false);
+		Seekbar.instanceVR.compass.SetActive(false);
 		Seekbar.ClearBlips();
 		Destroy(chapterSelector.gameObject);
 
@@ -819,30 +737,14 @@ public class Player : MonoBehaviour
 	//https://stackoverflow.com/questions/36702228/enable-disable-vr-from-code
 	public IEnumerator EnableVR()
 	{
+		XRGeneralSettings.Instance.Manager.DeinitializeLoader();
 		StartCoroutine(XRGeneralSettings.Instance.Manager.InitializeLoader());
 
 		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
 			XRGeneralSettings.Instance.Manager.StartSubsystems();
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
-			//SteamVR.Initialize(true);
 
-			//NOTE(Kristof): Instantiate the projector
-			//{
-			//	projector = Instantiate(projectorPrefab);
-			//	projector.transform.position = new Vector3(4.5f, 0, 0);
-			//	projector.transform.eulerAngles = new Vector3(0, 270, 0);
-			//	projector.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-			//	
-			//	projector.GetComponent<AnimateProjector>().Subscribe(this);
-			//}
-
-			//NOTE(Kristof): Hide the main and seekbar canvas when in VR 
-			SetCanvasesActive(false);
-
-			Canvass.seekbar.transform.position = new Vector3(1.8f, Camera.main.transform.position.y - 2f, 0);
-
-			fileLoader.MoveSeekbarToVRPos();
 			VRDevices.BeginHandlingVRDeviceEvents();
 		}
 		else

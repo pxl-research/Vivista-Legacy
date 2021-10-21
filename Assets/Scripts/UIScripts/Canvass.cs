@@ -2,24 +2,24 @@
 
 public class Canvass : MonoBehaviour
 { 
-	public static Canvas main						=> _main					?? (_main = GameObject.Find("Canvas").GetComponent<Canvas>());
+	public static Canvas main						=> _main					??= GameObject.Find("Canvas").GetComponent<Canvas>();
 	private static Canvas _main;
 
-	public static Canvas seekbar					=> _seekbar					?? (_seekbar = GameObject.Find("Seekbar Canvas").GetComponent<Canvas>());
-	private static Canvas _seekbar;
+	public static Canvas seekbarVR					=> _seekbarVR				??= Seekbar.instances.Find(x => x.isVRSeekbar).GetComponent<Canvas>();
+	private static Canvas _seekbarVR;
 
-	public static GameObject modalBackground		=> _modalBackground			?? (_modalBackground = main.transform.Find("ModalBackground").gameObject);
+	public static GameObject modalBackground		=> _modalBackground			??= main.transform.Find("ModalBackground").gameObject;
 	private static GameObject _modalBackground;
 
-	public static GameObject sphereUIWrapper		=> _sphereUIWrapper			?? (_sphereUIWrapper = GameObject.Find("SphereUI"));
+	public static GameObject sphereUIWrapper		=> _sphereUIWrapper			??= GameObject.Find("SphereUI");
 	private static GameObject _sphereUIWrapper;
 	
-	public static GameObject sphereUICanvas			=>_sphereUICanvas			?? (_sphereUICanvas = GameObject.Find("SphereUICanvas"));
+	public static GameObject sphereUICanvas			=>_sphereUICanvas			??= GameObject.Find("SphereUICanvas");
 	private static GameObject _sphereUICanvas;
 
-	public static GameObject sphereUIRenderer		=>_sphereUIRenderer			?? (_sphereUIRenderer = GameObject.Find("SphereUIRenderer"));
+	public static GameObject sphereUIRenderer		=>_sphereUIRenderer			??= GameObject.Find("SphereUIRenderer");
 	private static GameObject _sphereUIRenderer;
 
-	public static GameObject sphereUIPanelWrapper	=> _sphereUIPanelWrapper	?? (_sphereUIPanelWrapper = sphereUIWrapper.transform.Find("SphereUICanvas/PanelWrapper").gameObject);
+	public static GameObject sphereUIPanelWrapper	=> _sphereUIPanelWrapper	??= sphereUIWrapper.transform.Find("SphereUICanvas/PanelWrapper").gameObject;
 	private static GameObject _sphereUIPanelWrapper;
 }

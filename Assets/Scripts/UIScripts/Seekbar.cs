@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
 
-public class Seekbar : MonoBehaviour, IPointerUpHandler
+public class Seekbar : MonoBehaviour
 {
 	public GameObject blipPrefab;
 
@@ -20,17 +20,25 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 	public Text blipCounter;
 	private bool isEditor;
 
-	public bool hovering = false;
+	public Texture iconPlay;
+	public Texture iconPause;
+	public RawImage playImage;
+
+	private bool isSeekbarOutOfView;
+	public bool isVRSeekbar;
+
+	public bool hovering;
 	public float minSeekbarHeight = 0.1f;
 	public float curSeekbarHeight;
 	public float maxSeekbarHeight = 0.33f;
 	public float seekbarAnimationDuration = 0.2f;
-	public float startRotation;
 	public float lastSmoothTime;
 
-	public float timeSinceLastTextUpdate = 0;
+	public float timeSinceLastTextUpdate;
 
-	public static GameObject compass;
+	public GameObject compass;
+	public static List<Seekbar> instances = new List<Seekbar>();
+	public static Seekbar instanceVR;
 	public static Seekbar instance;
 
 	private static List<GameObject> activeBlips;
@@ -39,20 +47,27 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 	void Awake()
 	{
 		compass = compassBackground;
-		if (instance != null)
+		if (isVRSeekbar)
 		{
-			Debug.LogError("There can only be one seekbar");
+			instanceVR = this;
 		}
-		instance = this;
+		else
+		{
+			instance = this;
+		}
+
+		if (!instances.Contains(this))
+		{
+			instances.Add(this);
+		}
 	}
-	
+
 	public void Start()
 	{
 		curSeekbarHeight = maxSeekbarHeight;
-		startRotation = 0;
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
+		if (VRDevices.loadedSdk != VRDevices.LoadedSdk.None)
 		{
-			ReattachCompass();
+			AttachCompassToSeekbar();
 		}
 
 		activeBlips = new List<GameObject>();
@@ -61,12 +76,13 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		isEditor = SceneManager.GetActiveScene().name.Equals("Editor");
 	}
 
-	public static void ReattachCompass()
+	public static void AttachCompassToSeekbar()
 	{
-		var seekbar = GameObject.Find("Seekbar Canvas").transform;
+		var seekbar = instances.Find(x => x.isVRSeekbar);
+		var compass = seekbar.compass;
 		if (compass && seekbar)
 		{
-			compass.transform.SetParent(seekbar);
+			compass.transform.SetParent(seekbar.transform);
 			compass.transform.localScale = new Vector3(0.5f, 0.5f, 0);
 			compass.transform.localPosition = Vector3.zero;
 			compass.transform.localEulerAngles = Vector3.zero;
@@ -74,52 +90,119 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		}
 	}
 
-	public void Update()
+	public static void AttachCompassToController(GameObject controllerUI)
 	{
-		Vector2 mousePos = Input.mousePosition;
-		float maxMousePos = GetComponent<RectTransform>().rect.width;
-		float timeAtMouse = mousePos.x / maxMousePos;
+		var compass = instances.Find(x => x.isVRSeekbar).compass;
+		compass.transform.SetParent(controllerUI.transform);
+		compass.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+		compass.transform.localPosition = Vector3.zero;
+		compass.transform.localEulerAngles = Vector3.zero;
+		compass.transform.GetChild(0).gameObject.SetActive(false);
 
-		hovering = RectTransformUtility.RectangleContainsScreenPoint(seekbarBackground.parent.GetComponent<RectTransform>(), mousePos);
-		bool onSeekbar = RectTransformUtility.RectangleContainsScreenPoint(seekbarBackground, mousePos);
-
-		float newHeight = hovering
-			? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
-			: curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
-
-		float smoothedTime = Mathf.Lerp(lastSmoothTime, (float)videoController.currentFractionalTime, 0.5f);
-
-		curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
-		seekbarCurrent.anchorMax = new Vector2(smoothedTime, seekbarCurrent.anchorMax.y);
-		seekbarBackground.anchorMax = new Vector2(seekbarBackground.anchorMax.x, curSeekbarHeight);
-		seekbarPreview.anchorMax = new Vector2(onSeekbar ? timeAtMouse : 0, seekbarPreview.anchorMax.y);
-
-		if (onSeekbar)
-		{
-			timeText.text = $" {MathHelper.FormatSeconds(videoController.TimeForFraction(timeAtMouse))} / {MathHelper.FormatSeconds(videoController.videoLength)}";
-		}
-		else if (timeSinceLastTextUpdate > 0.5)
-		{
-			timeText.text = $" {MathHelper.FormatSeconds(videoController.rawCurrentTime)} / {MathHelper.FormatSeconds(videoController.videoLength)}";
-			timeSinceLastTextUpdate = 0;
-		}
-
-		// TODO(Lander): Actually make use of the start position, and no hardcoded values
-		float rotation = (XRGeneralSettings.Instance.Manager.activeLoader != null ? compass.transform.parent.eulerAngles.y : Camera.main.transform.rotation.eulerAngles.y) - startRotation;
-		if (!isEditor && compass.transform.parent != Canvass.seekbar)
-		{
-			rotation -= 90;
-		}
-
-		compassForeground.transform.localEulerAngles = new Vector3(0, 0, -(rotation));
-
-		timeSinceLastTextUpdate += Time.deltaTime;
-		lastSmoothTime = smoothedTime;
+		compass.gameObject.SetActive(true);
 	}
 
-	public void OnPointerUp(PointerEventData e)
+	public void Update()
 	{
-		var pos = e.pressPosition.x;
+		playImage.texture = videoController.playing ? iconPause : iconPlay;
+
+		//NOTE(Simon): Update time display and handle seekbar hovers
+		{
+			Vector2 mousePos = Input.mousePosition;
+			float maxMousePos = GetComponent<RectTransform>().rect.width;
+			float timeAtMouse = mousePos.x / maxMousePos;
+
+			hovering = RectTransformUtility.RectangleContainsScreenPoint(seekbarBackground.parent.GetComponent<RectTransform>(), mousePos);
+			bool onSeekbar = RectTransformUtility.RectangleContainsScreenPoint(seekbarBackground, mousePos);
+
+			float newHeight = hovering
+				? curSeekbarHeight + ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration))
+				: curSeekbarHeight - ((maxSeekbarHeight - minSeekbarHeight) * (Time.deltaTime / seekbarAnimationDuration));
+
+			float smoothedTime = Mathf.Lerp(lastSmoothTime, (float) videoController.currentFractionalTime, 0.5f);
+
+			curSeekbarHeight = Mathf.Clamp(newHeight, minSeekbarHeight, maxSeekbarHeight);
+			seekbarCurrent.anchorMax = new Vector2(smoothedTime, seekbarCurrent.anchorMax.y);
+			seekbarBackground.anchorMax = new Vector2(seekbarBackground.anchorMax.x, curSeekbarHeight);
+			seekbarPreview.anchorMax = new Vector2(onSeekbar ? timeAtMouse : 0, seekbarPreview.anchorMax.y);
+
+			if (onSeekbar)
+			{
+				timeText.text = $" {MathHelper.FormatSeconds(videoController.TimeForFraction(timeAtMouse))} / {MathHelper.FormatSeconds(videoController.videoLength)}";
+			}
+			else if (timeSinceLastTextUpdate > 0.5)
+			{
+				timeText.text = $" {MathHelper.FormatSeconds(videoController.rawCurrentTime)} / {MathHelper.FormatSeconds(videoController.videoLength)}";
+				timeSinceLastTextUpdate = 0;
+			}
+
+			timeSinceLastTextUpdate += Time.deltaTime;
+			lastSmoothTime = smoothedTime;
+		}
+
+		//NOTE(Simon): Update compass rotation
+		{
+			// TODO(Lander): Actually make use of the start position, and no hardcoded values
+			float rotation = Camera.main.transform.rotation.eulerAngles.y + 0;
+			if (!isEditor && isVRSeekbar)
+			{
+				rotation -= 90;
+			}
+
+			compassForeground.transform.localEulerAngles = new Vector3(0, 0, -(rotation));
+		}
+
+		//NOTE(Kristof): Rotating the seekbar
+		if (VRDevices.loadedSdk != VRDevices.LoadedSdk.None && isVRSeekbar)
+		{
+			//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
+			var seekbarAngle = Vector2.SignedAngle(new Vector2(transform.position.x, transform.position.z), Vector2.up);
+
+			var fov = Camera.main.fieldOfView;
+			//NOTE(Kristof): Camera rotation tells you to which angle on the circle the camera is looking towards
+			var cameraAngle = Camera.main.transform.eulerAngles.y;
+
+			//NOTE(Kristof): Calculate the absolute degree angle from the camera to the seekbar
+			var distanceLeft = Mathf.Abs((cameraAngle - seekbarAngle + 360) % 360);
+			var distanceRight = Mathf.Abs((cameraAngle - seekbarAngle - 360) % 360);
+
+			var angle = Mathf.Min(distanceLeft, distanceRight);
+
+			if (isSeekbarOutOfView)
+			{
+				if (angle < 2.5f)
+				{
+					isSeekbarOutOfView = false;
+				}
+			}
+			else
+			{
+				if (angle > fov)
+				{
+					isSeekbarOutOfView = true;
+				}
+			}
+
+			if (isSeekbarOutOfView)
+			{
+				float newAngle = Mathf.LerpAngle(seekbarAngle, cameraAngle, 0.025f);
+
+				//NOTE(Kristof): Angle needs to be reversed, in Unity postive angles go clockwise while they go counterclockwise in the unit circle (cos and sin)
+				//NOTE(Kristof): We also need to add an offset of 90 degrees because in Unity 0 degrees is in front of you, in the unit circle it is (1,0) on the axis
+				float radianAngle = (-newAngle + 90) * Mathf.PI / 180;
+				float x = 1.8f * Mathf.Cos(radianAngle);
+				float y = Camera.main.transform.position.y - 2f;
+				float z = 1.8f * Mathf.Sin(radianAngle);
+
+				transform.position = new Vector3(x, y, z);
+				transform.eulerAngles = new Vector3(30, newAngle, 0);
+			}
+		}
+	}
+
+	public void OnPointerUp()
+	{
+		var pos = Input.mousePosition.x;
 		var max = GetComponent<RectTransform>().rect.width;
 
 		var fractionalTime = pos / max;
@@ -127,10 +210,19 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		videoController.SeekFractional(fractionalTime);
 	}
 
+	public void Skip(float amount)
+	{
+		videoController.SeekRelative(amount);
+	}
+
+	public void TogglePlay()
+	{
+		videoController.TogglePlay();
+	}
+
 	public GameObject CreateBlip()
 	{
 		var blip = Instantiate(blipPrefab);
-		blip.transform.SetParent(compass.transform);
 		blip.transform.localEulerAngles = Vector3.zero;
 		blip.transform.localScale = Vector3.one;
 		blip.transform.localPosition = Vector3.zero;
@@ -149,23 +241,8 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 		}
 	}
 
-	public void RenderBlips(List<InteractionPointPlayer> interactionPoints, Controller left, Controller right)
+	public void RenderBlips(List<InteractionPointPlayer> interactionPoints)
 	{
-		float forwardAngle;
-		//Note(lander): Compass rotation
-		{
-			if (left || right)
-			{
-				forwardAngle = right.compassAttached
-					? right.transform.eulerAngles.y
-					: left.transform.eulerAngles.y;
-			}
-			else
-			{
-				forwardAngle = compass.transform.parent.localEulerAngles.y;
-			}
-		}
-
 		var activePoints = new List<InteractionPointPlayer>();
 
 		//NOTE(Simon): Count active points
@@ -203,8 +280,9 @@ public class Seekbar : MonoBehaviour, IPointerUpHandler
 
 			float blipAngle = point.point.transform.eulerAngles.y;
 			// TODO(Lander): Rely on a start position of a video instead
-			float angle = (XRGeneralSettings.Instance.Manager.activeLoader != null ? forwardAngle : 90) - blipAngle;
+			float angle = (VRDevices.loadedSdk == VRDevices.LoadedSdk.None ? compass.transform.parent.localEulerAngles.y : 90) - blipAngle;
 			activeBlips[i].transform.localEulerAngles = new Vector3(0, 0, angle);
+			activeBlips[i].transform.SetParent(compass.transform, false);
 		}
 
 		//NOTE(Simon): Deactivate unneeded blips

@@ -75,16 +75,13 @@ public class SphereUIInputModule: StandaloneInputModule
 		directions.Clear();
 		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
-			if (VRDevices.loadedControllerSet == VRDevices.LoadedControllerSet.NoControllers)
-			{
-				directions.Add(gazeId, camera.ScreenPointToRay(new Vector2(Screen.width, Screen.height)).direction);
-			}
-			else
+			if (!VRDevices.hasNoControllers)
 			{
 				if (VRDevices.hasRightController)
 				{
 					directions.Add(rightControllerId, rightController.GetComponent<Controller>().CastRay().direction);
 				}
+
 				if (VRDevices.hasLeftController)
 				{
 					directions.Add(leftControllerId, leftController.GetComponent<Controller>().CastRay().direction);

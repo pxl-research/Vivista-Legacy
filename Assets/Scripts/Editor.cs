@@ -240,7 +240,6 @@ public class Editor : MonoBehaviour
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
 		videoController = fileLoader.controller;
 		videoController.mixer = mixer;
-		VideoControls.videoController = videoController;
 		
 		//NOTE(Simon): Login if details were remembered
 		{
