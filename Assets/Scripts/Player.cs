@@ -57,6 +57,8 @@ public class Player : MonoBehaviour
 	public GameObject chapterPanelPrefab;
 	public GameObject cameraOrigin;
 
+	public GameObject XRInputPrefab;
+
 	public GameObject controllerLeft;
 	public GameObject controllerRight;
 	private Controller trackedControllerLeft;
@@ -74,7 +76,6 @@ public class Player : MonoBehaviour
 
 	private SaveFileData data;
 
-	private bool isSeekbarOutOfView;
 	private InteractionPointPlayer activeInteractionPoint;
 	private string openVideo;
 
@@ -151,18 +152,18 @@ public class Player : MonoBehaviour
 
 		if (playerState == PlayerState.Watching)
 		{
-			if (Input.GetKeyDown(KeyCode.Space) && isVR)
+			if (Input.GetKeyDown(KeyCode.Space) && !isVR)
 			{
 				videoController.TogglePlay();
 			}
 
 			if (isVR)
 			{
-				Seekbar.instance.RenderBlips(interactionPoints);
+				Seekbar.instanceVR.RenderBlips(interactionPoints);
 			}
 			else
 			{
-				Seekbar.instanceVR.RenderBlips(interactionPoints);
+				Seekbar.instance.RenderBlips(interactionPoints);
 			}
 
 			//Note(Simon): Interaction with points
@@ -515,6 +516,7 @@ public class Player : MonoBehaviour
 			}
 		}
 
+		//NOTE(Simon): For mandatoryInteractionPoints it makes more sense to sort by endTime
 		mandatoryInteractionPoints.Sort((x, y) => x.endTime.CompareTo(y.endTime));
 
 		StartCoroutine(UpdatePointPositions());
@@ -655,10 +657,15 @@ public class Player : MonoBehaviour
 
 	public void BackToBrowser()
 	{
+		StartCoroutine(DisableVR());
+
 		Seekbar.instance.compass.SetActive(false);
 		Seekbar.instanceVR.compass.SetActive(false);
 		Seekbar.ClearBlips();
-		Destroy(chapterSelector.gameObject);
+		if (chapterSelector != null)
+		{
+			Destroy(chapterSelector.gameObject);
+		}
 
 		videoController.Pause();
 
@@ -737,6 +744,7 @@ public class Player : MonoBehaviour
 	//https://stackoverflow.com/questions/36702228/enable-disable-vr-from-code
 	public IEnumerator EnableVR()
 	{
+		Instantiate(XRInputPrefab);
 		XRGeneralSettings.Instance.Manager.DeinitializeLoader();
 		StartCoroutine(XRGeneralSettings.Instance.Manager.InitializeLoader());
 
@@ -746,6 +754,8 @@ public class Player : MonoBehaviour
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
 
 			VRDevices.BeginHandlingVRDeviceEvents();
+			controllerLeft.SetActive(true);
+			controllerRight.SetActive(true);
 		}
 		else
 		{
@@ -756,10 +766,21 @@ public class Player : MonoBehaviour
 
 		trackedControllerLeft = controllerLeft.GetComponent<Controller>();
 		trackedControllerRight = controllerRight.GetComponent<Controller>();
-		trackedControllerLeft.OnRotate += RotateCamera;
-		trackedControllerRight.OnRotate += RotateCamera;
 
 		yield return null;
+	}
+
+	public IEnumerator DisableVR()
+	{
+		if (VRDevices.loadedSdk != VRDevices.LoadedSdk.None)
+		{
+			Destroy(XRInput.singleton.gameObject);
+			yield return new WaitForEndOfFrame();
+			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
+			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
+			controllerLeft.SetActive(false);
+			controllerRight.SetActive(false);
+		}
 	}
 
 	private float VideoFadeGetCurrentSpeed(double timeToNextPause)

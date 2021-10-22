@@ -279,7 +279,6 @@ public class Seekbar : MonoBehaviour
 			}
 
 			float blipAngle = point.point.transform.eulerAngles.y;
-			// TODO(Lander): Rely on a start position of a video instead
 			float angle = (VRDevices.loadedSdk == VRDevices.LoadedSdk.None ? compass.transform.parent.localEulerAngles.y : 90) - blipAngle;
 			activeBlips[i].transform.localEulerAngles = new Vector3(0, 0, angle);
 			activeBlips[i].transform.SetParent(compass.transform, false);

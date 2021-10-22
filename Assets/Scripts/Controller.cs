@@ -97,6 +97,14 @@ public class Controller : MonoBehaviour
 		}
 	}
 
+	private void OnDisable()
+	{
+		laser.SetActive(false);
+		uiHovering = false;
+		hoveredGo = null;
+		triggerDown = false;
+	}
+
 	private void LateUpdate()
 	{
 		//NOTE(Simon): triggerPressed should only be true in the frame the trigger was pressed. So reset their state if state was changed last frame.

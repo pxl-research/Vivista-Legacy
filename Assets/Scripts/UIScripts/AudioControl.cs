@@ -111,10 +111,10 @@ public class AudioControl : MonoBehaviour
 			}
 	
 			//NOTE(Simon): Every {time interval} change volume
-			if (Time.realtimeSinceStartup > volumeButtonClickTime + 0.15)
+			if (Time.time > volumeButtonClickTime + 0.5)
 			{
 				volumeChanging = false;
-				volumeButtonClickTime = Time.realtimeSinceStartup;
+				volumeButtonClickTime = Time.time;
 			}
 			
 			if (Input.GetMouseButtonUp(0))
@@ -132,10 +132,10 @@ public class AudioControl : MonoBehaviour
 			}
 
 			//NOTE(Simon): Every {time interval} change volume
-			if (Time.realtimeSinceStartup > volumeButtonClickTime + 0.15)
+			if (Time.time > volumeButtonClickTime + 0.5)
 			{
 				volumeChanging = false;
-				volumeButtonClickTime = Time.realtimeSinceStartup;
+				volumeButtonClickTime = Time.time;
 			}
 
 			if (Input.GetMouseButtonUp(0))
