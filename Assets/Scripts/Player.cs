@@ -71,6 +71,7 @@ public class Player : MonoBehaviour
 	private ChapterSelectorPanel chapterSelector;
 	public ChapterTransitionPanel chapterTransitionPanel;
 	private GameObject indexPanel;
+	public GameObject chapterSelectorHolderVR;
 
 	public AudioMixer mixer;
 
@@ -272,7 +273,13 @@ public class Player : MonoBehaviour
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
+
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
+					if (isVR)
+					{
+						chapterSelector.transform.SetParent(chapterSelectorHolderVR.transform, false);
+						chapterSelector.transform.localPosition = Vector3.zero;
+					}
 					chapterSelector.Init(videoController);
 				}
 				else
