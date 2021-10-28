@@ -19,7 +19,7 @@ public class AudioSlider : MonoBehaviour
 	private bool volumeChanging;
 	private bool hitClicked;
 	private float oldAudioValue;
-	private IEnumerator coroutineVolumeSlider;
+	private Coroutine coroutineVolumeSlider;
 
 	void Start()
 	{
@@ -30,7 +30,7 @@ public class AudioSlider : MonoBehaviour
 		slider.fillRect.gameObject.SetActive(false);
 		background.gameObject.SetActive(false);
 
-		coroutineVolumeSlider = ShowSlider(2f);
+		coroutineVolumeSlider = StartCoroutine(ShowSlider(2f));
 	}
 
 	private void OnEnable()
@@ -176,8 +176,7 @@ public class AudioSlider : MonoBehaviour
 	private void RefreshSliderCoroutine()
 	{
 		StopCoroutine(coroutineVolumeSlider);
-		coroutineVolumeSlider = ShowSlider(2f);
-		StartCoroutine(coroutineVolumeSlider);
+		coroutineVolumeSlider = StartCoroutine(ShowSlider(2f));
 	}
 
 	private IEnumerator ShowSlider(float delay)

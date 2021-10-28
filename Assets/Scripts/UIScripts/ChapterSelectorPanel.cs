@@ -35,6 +35,7 @@ public class ChapterSelectorPanel : MonoBehaviour
 			chapterItems.Add(chapterItem);
 			chapterItem.Init(chapter);
 			chapterItem.GetComponent<Button>().onClick.AddListener(() => ChapterManager.Instance.GoToChapter(chapter));
+			chapterItem.GetComponent<Hittable>().onHitDown.AddListener(() => ChapterManager.Instance.GoToChapter(chapter));
 		}
 
 		ToggleCollapse();

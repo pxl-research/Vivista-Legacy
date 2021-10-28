@@ -89,11 +89,19 @@ public class Controller : MonoBehaviour
 		if (inputSource == XRController.Left)
 		{
 			laser.SetActive(VRDevices.hasLeftController);
+			if (!VRDevices.hasLeftController)
+			{
+				HideCursor();
+			}
 		}
 
 		if (inputSource == XRController.Right)
 		{
 			laser.SetActive(VRDevices.hasRightController);
+			if (!VRDevices.hasRightController)
+			{
+				HideCursor();
+			}
 		}
 	}
 

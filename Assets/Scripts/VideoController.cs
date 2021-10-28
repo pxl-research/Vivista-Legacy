@@ -39,6 +39,7 @@ public class VideoController : MonoBehaviour
 	private bool decreaseButtonPressed;
 	private float volumeButtonClickTime;
 	private bool volumeSliderDisabled;
+	private float volumeSliderSpeed = 0.5f;
 
 	public bool videoLoaded;
 
@@ -405,14 +406,14 @@ public class VideoController : MonoBehaviour
 
 	public void DecreaseVolume()
 	{
-		volumeSlider.value -= 0.1f;
-		volumeSliderVR.value -= 0.1f;
+		volumeSlider.value -= volumeSliderSpeed * Time.deltaTime;
+		volumeSliderVR.value -= volumeSliderSpeed * Time.deltaTime;
 	}
 
 	public void IncreaseVolume()
 	{
-		volumeSlider.value += 0.1f;
-		volumeSliderVR.value += 0.1f;
+		volumeSlider.value += volumeSliderSpeed * Time.deltaTime;
+		volumeSliderVR.value += volumeSliderSpeed * Time.deltaTime;
 	}
 
 	public void VolumeValueChanged()

@@ -111,6 +111,7 @@ public class ChapterManager : MonoBehaviour
 
 	public void SetChapters(List<Chapter> newChapters)
 	{
+		Debug.Log("Setting chapters");
 		chapters = newChapters;
 
 		for (int i = 0; i < chapters.Count; i++)
@@ -126,6 +127,7 @@ public class ChapterManager : MonoBehaviour
 
 	public void GoToChapter(Chapter chapter)
 	{
+		Debug.Log("Hit");
 		if (controller == null)
 		{
 			controller = GameObject.Find("FileLoader").GetComponent<FileLoader>().controller;

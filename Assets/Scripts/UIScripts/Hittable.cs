@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(BoxCollider))]
 public class Hittable : MonoBehaviour
 {
 	public UnityEvent onHit;
@@ -22,7 +23,6 @@ public class Hittable : MonoBehaviour
 	private bool oldHitting;
 	private bool oldHovering;
 
-	// Use this for initialization
 	void Start()
 	{
 		if (!SceneManager.GetActiveScene().name.Equals("Editor"))
