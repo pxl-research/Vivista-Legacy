@@ -11,6 +11,15 @@
         "com.unity.xr.openxr": "1.2.8"
       }
     },
+    "com.microsoft.mixedreality.openxr": {
+      "version": "file:MixedReality/com.microsoft.mixedreality.openxr-1.1.2.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.unity.xr.openxr": "1.2.8",
+        "com.unity.xr.arfoundation": "4.1.7"
+      }
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
@@ -68,6 +77,16 @@
         "com.unity.modules.ui": "1.0.0",
         "com.unity.modules.imgui": "1.0.0"
       }
+    },
+    "com.unity.xr.arfoundation": {
+      "version": "4.1.7",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.xr.arsubsystems": "4.1.7",
+        "com.unity.xr.management": "4.0.1"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.xr.arsubsystems": {
       "version": "4.1.7",
