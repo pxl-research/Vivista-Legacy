@@ -30,7 +30,7 @@ public class AudioSlider : MonoBehaviour
 		slider.fillRect.gameObject.SetActive(false);
 		background.gameObject.SetActive(false);
 
-		coroutineVolumeSlider = StartCoroutine(ShowSlider(2f));
+		//coroutineVolumeSlider = StartCoroutine(ShowSlider(2f));
 	}
 
 	private void OnEnable()

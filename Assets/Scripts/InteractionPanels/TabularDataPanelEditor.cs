@@ -87,6 +87,7 @@ public class TabularDataPanelEditor : MonoBehaviour
 			}
 		}
 	}
+
 	public void AddRow()
 	{
 		//NOTE(Jitse): Enable all cells in this row
@@ -96,7 +97,7 @@ public class TabularDataPanelEditor : MonoBehaviour
 		}
 
 		rowNumbersWrapper.GetChild(answerRows).gameObject.SetActive(true);
-		
+
 		answerRows++;
 
 		SetButtonStates();

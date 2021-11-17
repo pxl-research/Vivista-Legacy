@@ -60,11 +60,13 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: b75f0a342b5197e4283538a89ac8386d, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 4fbf7ebde7328bd418480ea4a9ddd294, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -127,6 +129,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Navigation:
     m_Mode: 3
+    m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
@@ -181,6 +184,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 6033532446189972451}
+          m_TargetAssemblyTypeName: 
           m_MethodName: OnDragSlider
           m_Mode: 1
           m_Arguments:
@@ -196,6 +200,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 6033532446189972451}
+          m_TargetAssemblyTypeName: 
           m_MethodName: OnPointerUpSlider
           m_Mode: 1
           m_Arguments:
@@ -211,6 +216,7 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 6033532446189972451}
+          m_TargetAssemblyTypeName: 
           m_MethodName: OnPointerDownSlider
           m_Mode: 1
           m_Arguments:
@@ -318,6 +324,8 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -345,6 +353,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Navigation:
     m_Mode: 3
+    m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
@@ -375,6 +384,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 6033532446189972451}
+        m_TargetAssemblyTypeName: 
         m_MethodName: Mute
         m_Mode: 1
         m_Arguments:
@@ -445,11 +455,13 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: b75f0a342b5197e4283538a89ac8386d, type: 3}
-  m_Type: 3
+  m_Sprite: {fileID: 21300000, guid: 4fbf7ebde7328bd418480ea4a9ddd294, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 1
@@ -554,6 +566,8 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -622,3 +636,6 @@ MonoBehaviour:
   icon: {fileID: 6692626112250678847}
   iconMuted: {fileID: 21300000, guid: 2d0293493c21fc44f9996200154057be, type: 3}
   iconDefault: {fileID: 21300000, guid: f5478a4ae4b1f4744be918ba9174719c, type: 3}
+  icon66: {fileID: 0}
+  icon33: {fileID: 0}
+  icon0: {fileID: 0}

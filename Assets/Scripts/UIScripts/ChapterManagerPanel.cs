@@ -10,6 +10,7 @@ public class ChapterManagerPanel : MonoBehaviour
 	public InputField newName;
 	public InputField newDescription;
 
+	private static Color defaultColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	void Start()
@@ -23,6 +24,8 @@ public class ChapterManagerPanel : MonoBehaviour
 		{
 			AddChapterItem(chapters[i]);
 		}
+
+		defaultColor = newName.image.color;
 	}
 
 	public void OnAdd()
@@ -62,12 +65,12 @@ public class ChapterManagerPanel : MonoBehaviour
 
 	public void OnEditName(string _)
 	{
-		newName.image.color = Color.white;
+		newName.image.color = defaultColor;
 	}
 
 	public void OnEditDescription(string _)
 	{
-		newDescription.image.color = Color.white;
+		newDescription.image.color = defaultColor;
 	}
 
 	public void Close()

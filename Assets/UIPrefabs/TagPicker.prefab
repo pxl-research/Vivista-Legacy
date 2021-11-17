@@ -61,7 +61,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 144106804a337ea46b171143fb5a9403, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tagBackground: {fileID: 21300000, guid: b1ce3bd81b938d14e9aa17b5c2ba2e7a, type: 3}
+  tagBackground: {fileID: 21300000, guid: 4fbf7ebde7328bd418480ea4a9ddd294, type: 3}
   tagSuggestionWrapper: {fileID: 6033892235769167890}
   pickTagButton: {fileID: 700840662702608480}
   tagFilter: {fileID: 877450298878443927}
@@ -661,14 +661,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9, g: 0.9, b: 0.9, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10911, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: 4fbf7ebde7328bd418480ea4a9ddd294, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1

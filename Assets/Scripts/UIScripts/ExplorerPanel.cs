@@ -507,10 +507,10 @@ public class ExplorerPanel : MonoBehaviour
 
 			button.colors = new ColorBlock
 			{
-				normalColor = selectedColor,
-				pressedColor = normalColor,
+				normalColor = normalColor,
+				pressedColor = selectedColor,
 				selectedColor = selectedColor,
-				highlightedColor = new Color(normalColor.r, normalColor.g, normalColor.b, .8f),
+				highlightedColor = selectedColor,
 				colorMultiplier = 1f,
 				fadeDuration = 0f
 			};

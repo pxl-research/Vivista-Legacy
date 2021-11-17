@@ -11,8 +11,10 @@ public class FileLoader : MonoBehaviour
 	public void Start()
 	{
 		controller = Instantiate(videoMesh).GetComponent<VideoController>();
-		Seekbar.instance.videoController = controller;
-		Seekbar.instanceVR.videoController = controller;
+		foreach (var instance in Seekbar.instances)
+		{
+			instance.videoController = controller;
+		}
 	}
 
 	public void LoadFile(string filename)

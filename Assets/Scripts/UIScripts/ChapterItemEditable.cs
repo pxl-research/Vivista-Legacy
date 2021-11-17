@@ -15,10 +15,13 @@ public class ChapterItemEditable : MonoBehaviour
 
 	private Chapter chapter;
 
+	private static Color defaultColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void Init(Chapter chapter)
 	{
+		defaultColor = descriptionLabel.image.color;
+
 		this.chapter = chapter;
 		nameLabel.text = chapter.name;
 		descriptionLabel.text = chapter.description;
@@ -84,7 +87,7 @@ public class ChapterItemEditable : MonoBehaviour
 		}
 
 end:
-		timeLabel.image.color = invalid ? errorColor : Color.white;
+		timeLabel.image.color = invalid ? errorColor : defaultColor;
 		if (!invalid)
 		{
 			chapter.time = time;
@@ -94,7 +97,7 @@ end:
 
 	public void OnNameChange(string value)
 	{
-		nameLabel.image.color = string.IsNullOrWhiteSpace(value) ? errorColor : Color.white;
+		nameLabel.image.color = string.IsNullOrWhiteSpace(value) ? errorColor : defaultColor;
 	}
 
 	public void OnNameChangeEnd(string value)
