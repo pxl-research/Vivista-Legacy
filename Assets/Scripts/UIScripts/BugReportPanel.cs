@@ -16,12 +16,15 @@ public class BugReportPanel : MonoBehaviour
 		public bool success;
 	}
 
+	private static Color defaultColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void Start()
 	{
 		problemInput.onValueChanged.AddListener(delegate { OnInputChange(problemInput); });
 		reproduction.onValueChanged.AddListener(delegate { OnInputChange(reproduction); });
+
+		defaultColor = problemInput.image.color;
 	}
 
 	public void OnSubmit()
@@ -83,7 +86,13 @@ public class BugReportPanel : MonoBehaviour
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 		errorMessage.gameObject.SetActive(false);
+	}
+
+	public void Close()
+	{
+		Destroy(gameObject);
+		Canvass.modalBackground.SetActive(false);
 	}
 }

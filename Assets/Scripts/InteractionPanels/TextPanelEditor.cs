@@ -6,12 +6,12 @@ public class TextPanelEditor : MonoBehaviour
 {
 	public InputField title;
 	public InputField body;
-	public Button done;
 
 	public bool answered;
 	public string answerTitle;
 	public string answerBody;
 
+	private static Color defaultColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -26,6 +26,8 @@ public class TextPanelEditor : MonoBehaviour
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		body.onValueChanged.RemoveAllListeners();
 		body.onValueChanged.AddListener(_ => OnInputChange(body));
+
+		defaultColor = title.image.color;
 	}
 
 	void ResizeToFit()
@@ -70,6 +72,6 @@ public class TextPanelEditor : MonoBehaviour
 	{
 		ResizeToFit();
 
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

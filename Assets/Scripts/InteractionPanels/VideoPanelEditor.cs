@@ -4,8 +4,6 @@ using UnityEngine.UI;
 
 public class VideoPanelEditor : MonoBehaviour {
 
-	public Button done;
-
 	public InputField url;
 	public InputField title;
 
@@ -18,6 +16,7 @@ public class VideoPanelEditor : MonoBehaviour {
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
+	private static Color defaultColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -47,6 +46,8 @@ public class VideoPanelEditor : MonoBehaviour {
 
 	public void Init(string initialTitle, string initialUrl)
 	{
+		defaultColor = url.image.color;
+
 		title.text = initialTitle;
 		url.text = initialUrl;
 
@@ -90,6 +91,6 @@ public class VideoPanelEditor : MonoBehaviour {
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

@@ -26,6 +26,8 @@ public class ImagePanelEditor : MonoBehaviour
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
 
+	private static Color defaultColor;
+	private static Color defaultPanelColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -60,7 +62,7 @@ public class ImagePanelEditor : MonoBehaviour
 
 				//NOTE(Simon): Reset the background color, in case it was red/invalid previously
 				var background = imageAlbumList.parent.parent.GetComponent<Image>();
-				background.color = Color.white;
+				background.color = defaultPanelColor;
 			}
 		}
 
@@ -74,6 +76,9 @@ public class ImagePanelEditor : MonoBehaviour
 
 	public void Init(string initialTitle, List<string> initialURLs)
 	{
+		defaultColor = title.image.color;
+		defaultPanelColor = imageAlbumList.parent.parent.GetComponent<Image>().color;
+
 		title.text = initialTitle;
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 
@@ -187,6 +192,6 @@ public class ImagePanelEditor : MonoBehaviour
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

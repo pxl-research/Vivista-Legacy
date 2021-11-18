@@ -24,6 +24,9 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	private ExplorerPanel explorerPanel;
 	private ImageEditorState imageEditorState;
 
+	private static Color defaultColor;
+	private static Color defaultPanelColor;
+	private static Color defaultToggleColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -33,6 +36,9 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 
 	public void Init(string initialTitle, List<string> initialAnswers, int initialCorrect = -1)
 	{
+		defaultColor = question.image.color;
+		defaultPanelColor = imageAlbumList.parent.parent.GetComponent<Image>().color;
+
 		entries = new List<MultipleChoiceImageEntry>();
 		question.text = initialTitle;
 		toggleGroup = gameObject.AddComponent<ToggleGroup2>();
@@ -80,7 +86,7 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 
 				//NOTE(Simon): Reset the background color, in case it was red/invalid previously
 				var background = imageAlbumList.parent.parent.GetComponent<Image>();
-				background.color = Color.white;
+				background.color = defaultPanelColor;
 			}
 		}
 
@@ -106,13 +112,13 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 	private void CreateNewEntry(string path, bool correct)
 	{
 		var albumEntry = Instantiate(multipleChoiceImageEntryPrefab, imageAlbumList).GetComponent<MultipleChoiceImageEntry>();
+		defaultToggleColor = albumEntry.toggle.image.color;
 		albumEntry.toggle.SetIsOnWithoutNotify(correct);
 		StartCoroutine(albumEntry.SetUrl(path));
 
 		toggleGroup.RegisterToggle(albumEntry.toggle);
 		albumEntry.toggle.group = toggleGroup;
 		albumEntry.deleteButton.onClick.AddListener(() => DeleteAlbumEntry(albumEntry.gameObject));
-
 
 		entries.Add(albumEntry);
 	}
@@ -144,7 +150,7 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 				answerCorrect = i;
 			}
 
-			toggles[i].image.color = Color.white;
+			toggles[i].image.color = defaultToggleColor;
 		}
 	}
 
@@ -189,6 +195,6 @@ public class MultipleChoiceImagePanelEditor : MonoBehaviour
 
 	public void OnInputChangeColor(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

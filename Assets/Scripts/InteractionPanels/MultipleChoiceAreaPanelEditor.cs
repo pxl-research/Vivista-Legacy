@@ -27,6 +27,9 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 	private Guid guid;
 	
+	private static Color defaultColor;
+	private static Color defaultPanelColor;
+	private static Color defaultToggleColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -36,6 +39,9 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas, int newCorrect)
 	{
+		defaultColor = title.image.color;
+		defaultPanelColor = areaList.parent.parent.GetComponent<Image>().color;
+
 		guid = newGuid;
 		title.text = newTitle;
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
@@ -61,6 +67,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				entry.toggle.group = toggleGroup;
 
 				entry.toggle.SetIsOnWithoutNotify(i == answerCorrect);
+				defaultToggleColor = entry.toggle.image.color;
 			}
 		}
 		else
@@ -93,6 +100,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				entry.toggle.group = toggleGroup;
 
 				answerAreas.Add(areaPicker.answerArea);
+				defaultToggleColor = entry.toggle.image.color;
 			}
 
 			areaPicker.Dispose();
@@ -101,7 +109,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 			//NOTE(Simon): Reset the background color, in case it was red/invalid previously
 			var background = areaList.parent.parent.GetComponent<Image>();
-			background.color = Color.white;
+			background.color = defaultPanelColor;
 
 			if (editing) { editing = false; }
 		}
@@ -157,7 +165,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				answerCorrect = i;
 			}
 
-			toggles[i].image.color = Color.white;
+			toggles[i].image.color = defaultToggleColor;
 		}
 	}
 
@@ -197,6 +205,6 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

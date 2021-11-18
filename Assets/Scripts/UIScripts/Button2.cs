@@ -7,7 +7,8 @@ public enum SelectState
 	Highlighted,
 	Pressed,
 	Disabled,
-	Released
+	Released,
+	Selected
 }
 
 public class Button2 : Button 
@@ -26,6 +27,8 @@ public class Button2 : Button
 					return SelectState.Pressed;
 				case SelectionState.Disabled:
 					return SelectState.Disabled;
+				case SelectionState.Selected:
+					return SelectState.Selected;
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

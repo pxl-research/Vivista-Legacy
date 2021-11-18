@@ -27,6 +27,7 @@ public class TabularDataPanelEditor : MonoBehaviour
 	private const int MAXCOLUMNS = 5;
 	private const int MAXROWS = 20;
 
+	private static Color defaultColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -36,6 +37,8 @@ public class TabularDataPanelEditor : MonoBehaviour
 
 	public void Init(string initialTitle, int rows, int columns, List<string> initialTabularData = null)
 	{
+		defaultColor = title.image.color;
+
 		//NOTE(Jitse): Check to see if data not corrupt.
 		if (!(initialTabularData == null || initialTabularData.Count < 1 || initialTabularData.Count > MAXROWS * MAXCOLUMNS))
 		{
@@ -190,7 +193,7 @@ public class TabularDataPanelEditor : MonoBehaviour
 	{
 		float minGridCellSizeX = 50;
 		float minGridCellSizeY = 50;
-		float availableSpaceX = 410;
+		float availableSpaceX = 380;
 		float availableSpaceY = 220;
 
 		return new Vector2(Mathf.Max(availableSpaceX / columns, minGridCellSizeX),
@@ -207,6 +210,6 @@ public class TabularDataPanelEditor : MonoBehaviour
 
 	public void OnInputChangeColor(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

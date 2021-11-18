@@ -48,6 +48,8 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	private Guid guid;
 
+	private static Color defaultColor;
+	private static Color defaultPanelColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -57,6 +59,9 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	public void Init(string newTitle, Guid newGuid, List<Area> newAreas)
 	{
+		defaultColor = title.image.color;
+		defaultPanelColor = areaList.parent.parent.GetComponent<Image>().color;
+
 		guid = newGuid;
 		title.text = newTitle;
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
@@ -111,7 +116,7 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 				//NOTE(Simon): Reset the background color, in case it was red/invalid previously
 				var background = areaList.parent.parent.GetComponent<Image>();
-				background.color = Color.white;
+				background.color = defaultPanelColor;
 			}
 
 			areaPicker.Dispose();
@@ -177,6 +182,6 @@ public class FindAreaPanelEditor : MonoBehaviour
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

@@ -19,6 +19,7 @@ public class AudioPanelEditor : MonoBehaviour
 	private ExplorerPanel explorerPanel;
 	private bool fileOpening;
 
+	private static Color defaultColor = new Color(1, 0.8f, 0.8f, 1f);
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -51,6 +52,8 @@ public class AudioPanelEditor : MonoBehaviour
 
 	public void Init(string initialTitle, string initialUrl)
 	{
+		defaultColor = title.image.color;
+
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
 		url.onValueChanged.AddListener(_ => OnInputChange(url));
 
@@ -102,6 +105,6 @@ public class AudioPanelEditor : MonoBehaviour
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

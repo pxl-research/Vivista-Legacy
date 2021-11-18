@@ -19,8 +19,9 @@ public class ChapterPanelEditor : MonoBehaviour
 	public string answerTitle;
 	public int answerChapterId;
 
-	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 	private static Color defaultColor;
+	private static Color defaultChapterColor;
+	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void Init(string newTitle, int newChapterId = -1)
 	{
@@ -34,7 +35,8 @@ public class ChapterPanelEditor : MonoBehaviour
 		title.text = newTitle;
 
 		title.onValueChanged.AddListener(_ => OnInputChange(title));
-		defaultColor = chapterBackground.color;
+		defaultChapterColor = chapterBackground.color;
+		defaultColor = title.image.color;
 	}
 
 	public void OnChapterPickerBegin()
@@ -69,7 +71,7 @@ public class ChapterPanelEditor : MonoBehaviour
 
 		var chapter = ChapterManager.Instance.GetChapterById(chapterId);
 		FillChapterDetails(chapter);
-		chapterBackground.color = defaultColor;
+		chapterBackground.color = defaultChapterColor;
 	}
 
 	private void FillChapterDetails(Chapter chapter)
@@ -105,6 +107,6 @@ public class ChapterPanelEditor : MonoBehaviour
 
 	public void OnInputChange(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 }

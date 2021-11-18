@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class MultipleChoicePanelEditor : MonoBehaviour
 {
-
 	public Transform layoutPanelTransform;
 	public InputField question;
 	public GameObject answerPanelPrefab;
@@ -23,6 +22,8 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	private const int MAXANSWERS = 6;
 	private ToggleGroup2 toggleGroup;
 
+	private static Color defaultColor;
+	private static Color defaultToggleColor;
 	private static Color errorColor = new Color(1, 0.8f, 0.8f, 1f);
 
 	public void OnEnable()
@@ -56,6 +57,8 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 		question.onValueChanged.AddListener(_ => OnInputChangeColor(question));
 		addAnswerButton.onClick.AddListener(() => OnButtonChangeColor(addAnswerButton));
+
+		defaultColor = question.image.color;
 	}
 
 	public void AddAnswer()
@@ -67,7 +70,8 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 	{
 		var answerPanel = Instantiate(answerPanelPrefab, answerWrapper);
 		var toggle = answerPanel.GetComponentInChildren<Toggle>();
-		toggle.isOn = isCorrect;
+		defaultToggleColor = toggle.image.color;
+		toggle.SetIsOnWithoutNotify(isCorrect);
 		toggle.group = toggleGroup;
 		toggle.onValueChanged.AddListener(ResetTogglesColor);
 		answerPanel.GetComponentInChildren<Button>().onClick.AddListener(delegate { RemoveAnswer(answerPanel.gameObject); });
@@ -151,7 +155,7 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 
 	public void OnInputChangeColor(InputField input)
 	{
-		input.image.color = Color.white;
+		input.image.color = defaultColor;
 	}
 
 	public void ResetTogglesColor(bool _)
@@ -159,12 +163,12 @@ public class MultipleChoicePanelEditor : MonoBehaviour
 		var toggles = toggleGroup.GetAllToggles();
 		foreach (var toggle in toggles)
 		{
-			toggle.image.color = Color.white;
+			toggle.image.color = defaultToggleColor;
 		}
 	}
 
 	public void OnButtonChangeColor(Button button)
 	{
-		button.image.color = Color.white;
+		button.image.color = defaultColor;
 	}
 }
