@@ -182,6 +182,15 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
+		if (importPanel != null)
+		{
+			if (importPanel.allowCancel && Input.GetKeyDown(KeyCode.Escape))
+			{
+				Destroy(importPanel.gameObject);
+				transform.localScale = Vector3.one;
+			}
+		}
+
 		//Note(Simon): Spinner animation
 		if (spinner.gameObject.activeSelf)
 		{

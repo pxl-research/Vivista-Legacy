@@ -38,6 +38,11 @@ public class DetailPanel : MonoBehaviour
 			Refresh();
 			time = 0;
 		}
+
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Back();
+		}
 	}
 
 	public IEnumerator Init(VideoSerialize videoToDownload, GameObject indexPanel, bool isLocal)
