@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: PXL
-  productName: 360Video
+  productName: Vivista
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -140,8 +140,6 @@ PlayerSettings:
   preloadedAssets:
   - {fileID: 0}
   - {fileID: 7341398003791539776, guid: c15f9ddd0a83cf34db7cfb8679709ea5, type: 2}
-  - {fileID: 0}
-  - {fileID: 7304268807809498308, guid: 18a1ce2aa90c4b146911586a5f7e7758, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1

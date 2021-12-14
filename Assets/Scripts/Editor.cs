@@ -213,6 +213,8 @@ public class Editor : MonoBehaviour
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
 		XRGeneralSettings.Instance.Manager.DeinitializeLoader();
 		Screen.SetResolution(Screen.width - 50, Screen.height - 50, FullScreenMode.Windowed);
+
+		MoveProjectsToCorrectFolder();
 	}
 
 	private void Start()
@@ -2762,6 +2764,49 @@ public class Editor : MonoBehaviour
 
 		allExtras.Add(newFilename, point);
 		return newFilename;
+	}
+
+	//NOTE(Simon): At first, this project had the name "360video", and thus Unity stored projects at %userprofile%/AppData/LocalLow/PXL/360video.
+	//NOTE(cont.): Now the project is officially called "Vivista". So users that had projects at the old location will not see these projects anymore.
+	//NOTE(cont.): This function checks if the old folder exists, en moves all data in it to the new folder.
+	private static void MoveProjectsToCorrectFolder()
+	{
+		var source = new DirectoryInfo(Environment.ExpandEnvironmentVariables("%userprofile%\\AppData\\LocalLow\\PXL\\360Video"));
+		string dest = Application.persistentDataPath;
+
+		if (Directory.Exists(source.FullName)) 
+		{
+			foreach (var entry in source.GetFileSystemInfos())
+			{
+				if (File.Exists(entry.FullName))
+				{
+					var from = entry.FullName;
+					var to = Path.Combine(dest, entry.Name);
+
+					if (File.Exists(to))
+					{
+						Debug.Log($"{to} already exists");
+						File.Copy(from, to, true);
+						File.Delete(from);
+					}
+					else
+					{
+						File.Move(from, to);
+					}
+				}
+				if (Directory.Exists(entry.FullName))
+				{
+					var from = entry.FullName;
+					var to = Path.Combine(dest, entry.Name);
+					Directory.Move(from, to);
+				}
+			}
+
+			if (Directory.GetFileSystemEntries(source.FullName).Length == 0)
+			{
+				Directory.Delete(source.FullName);
+			}
+		}
 	}
 
 	private void UpdateUploadPanel()
