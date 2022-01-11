@@ -12,12 +12,10 @@ public class MultipleChoiceAreaEntry : MonoBehaviour
 	public string miniatureUrl;
 	public Area area;
 
-	private bool initialized;
 	private static Vector2 defaultImageSize = new Vector2(200, 200);
 
 	public IEnumerator SetArea(Area NewArea, string newMiniatureUrl, bool hideButtons = false)
 	{
-		if (initialized) { yield break; }
 		miniatureUrl = newMiniatureUrl;
 		area = NewArea;
 
@@ -57,6 +55,5 @@ public class MultipleChoiceAreaEntry : MonoBehaviour
 			editButton.gameObject.SetActive(false);
 			toggle.interactable = false;
 		}
-		initialized = true;
 	}
 }

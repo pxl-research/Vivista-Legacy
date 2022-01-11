@@ -61,7 +61,9 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				var entry = go.GetComponent<MultipleChoiceAreaEntry>();
 				StartCoroutine(entry.SetArea(answerAreas[i], fullPath));
 
+				entry.deleteButton.onClick.RemoveAllListeners();
 				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
+				entry.editButton.onClick.RemoveAllListeners();
 				entry.editButton.onClick.AddListener(() => OnEditArea(go));
 				toggleGroup.RegisterToggle(entry.toggle);
 				entry.toggle.group = toggleGroup;
@@ -80,6 +82,7 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 	void Update()
 	{
+		Debug.Log(answerAreas.Count);
 		if (areaPicker != null && areaPicker.answered)
 		{
 			//NOTE(Simon): If areaPicker was not cancelled
@@ -94,12 +97,17 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 				areaPicker.answerArea.miniatureName = filename;
 				StartCoroutine(entry.SetArea(areaPicker.answerArea, fullPath));
 
+				entry.deleteButton.onClick.RemoveAllListeners();
 				entry.deleteButton.onClick.AddListener(() => OnDeleteArea(go));
+				entry.editButton.onClick.RemoveAllListeners();
 				entry.editButton.onClick.AddListener(() => OnEditArea(go));
 				toggleGroup.RegisterToggle(entry.toggle);
 				entry.toggle.group = toggleGroup;
 
-				answerAreas.Add(areaPicker.answerArea);
+				if (!editing)
+				{
+					answerAreas.Add(areaPicker.answerArea);
+				}
 				defaultToggleColor = entry.toggle.image.color;
 			}
 

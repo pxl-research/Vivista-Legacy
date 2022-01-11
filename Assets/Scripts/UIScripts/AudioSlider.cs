@@ -175,7 +175,11 @@ public class AudioSlider : MonoBehaviour
 
 	private void RefreshSliderCoroutine()
 	{
-		StopCoroutine(coroutineVolumeSlider);
+		if (coroutineVolumeSlider != null)
+		{
+			StopCoroutine(coroutineVolumeSlider);
+		}
+
 		coroutineVolumeSlider = StartCoroutine(ShowSlider(2f));
 	}
 

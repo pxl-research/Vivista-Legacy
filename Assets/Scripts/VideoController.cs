@@ -118,9 +118,9 @@ public class VideoController : MonoBehaviour
 	{
 		CheckButtonStates();
 
-		videoLength = video.frameCount / video.frameRate;
-		rawCurrentTime = videoLength * (video.frame / (double)video.frameCount);
+		videoLength = video.frameCount > 0 ? video.frameCount / video.frameRate : 0;
 		currentFractionalTime = video.frameCount > 0 ? video.frame / (double)video.frameCount : 0;
+		rawCurrentTime = videoLength * currentFractionalTime;
 
 		if (volumeSlider.value != Config.MainVideoVolume)
 		{

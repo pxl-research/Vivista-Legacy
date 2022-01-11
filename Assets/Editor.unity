@@ -1194,6 +1194,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1281955957556123503}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &809484855 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8203446107617080107, guid: aab3be2d16499724cad8f16cf9eb9366,
+    type: 3}
+  m_PrefabInstance: {fileID: 1281955957556123503}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &849251652
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1552,7 +1564,7 @@ PrefabInstance:
         type: 3}
       propertyPath: playImage
       value: 
-      objectReference: {fileID: 240906259}
+      objectReference: {fileID: 809484855}
     - target: {fileID: 114933417644068934, guid: 952afe5089bbb844f9d3402123092fb5,
         type: 3}
       propertyPath: compassBackground
@@ -1911,6 +1923,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 849251652}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1792931919 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114933417644068934, guid: 952afe5089bbb844f9d3402123092fb5,
+    type: 3}
+  m_PrefabInstance: {fileID: 1523726097}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7e26b436acaf96409df3c2cc5e20386, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1802637135
 GameObject:
   m_ObjectHideFlags: 0
@@ -2812,6 +2836,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8203446107617080104, guid: aab3be2d16499724cad8f16cf9eb9366,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1792931919}
+    - target: {fileID: 8203446107617080104, guid: aab3be2d16499724cad8f16cf9eb9366,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: TogglePlay
+      objectReference: {fileID: 0}
+    - target: {fileID: 8203446107617080104, guid: aab3be2d16499724cad8f16cf9eb9366,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Seekbar, Assembly-CSharp
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aab3be2d16499724cad8f16cf9eb9366, type: 3}

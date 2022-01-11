@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,10 +33,7 @@ public class MultipleChoicePanelSphere : MonoBehaviour
 		}
 
 		this.correctAnswer = correctAnswer;
-		answers = new string[newAnswers.Length - 1];
-
-		//NOTE(Simon): newAnswers from index 1, because index 0 contains the correct answer
-		Array.Copy(newAnswers, 1, answers, 0, answers.Length);
+		answers = newAnswers;
 
 		for (var index = 0; index < answers.Length; index++)
 		{

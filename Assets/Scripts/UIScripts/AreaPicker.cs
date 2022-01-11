@@ -147,17 +147,20 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		}
 		else if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask("Area")))
 		{
-			eligibleForPlacement = false;
-			Cursors.isOverridingCursor = true;
-			Cursor.SetCursor(Cursors.Instance.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
-			indicator.SetActive(false);
-
-			if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+			if (hit.transform.gameObject != areaRenderer)
 			{
-				isDragging = true;
-				dragStartPost = hit.transform.position;
-				dragObject = hit.transform.gameObject;
-				dragIndex = answerArea.vertices.IndexOf(dragStartPost);
+				eligibleForPlacement = false;
+				Cursors.isOverridingCursor = true;
+				Cursor.SetCursor(Cursors.Instance.CursorDrag, new Vector2(15, 15), CursorMode.Auto);
+				indicator.SetActive(false);
+
+				if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+				{
+					isDragging = true;
+					dragStartPost = hit.transform.position;
+					dragObject = hit.transform.gameObject;
+					dragIndex = answerArea.vertices.IndexOf(dragStartPost);
+				}
 			}
 		}
 		else if (Physics.Raycast(ray, out hit, 100f))
@@ -223,5 +226,6 @@ public class AreaPicker : MonoBehaviour, IDisposable
 	{
 		Destroy(goContainer);
 		Destroy(areaRenderer.gameObject);
+		Destroy(gameObject);
 	}
 }

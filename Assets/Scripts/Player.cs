@@ -93,6 +93,8 @@ public class Player : MonoBehaviour
 	{
 		hittables = new List<Hittable>();
 		Physics.autoSimulation = false;
+
+		SaveFile.MoveProjectsToCorrectFolder();
 	}
 
 	void Start()
@@ -274,6 +276,7 @@ public class Player : MonoBehaviour
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
 
+					chapterTransitionActive = false;
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
 					if (isVR)
 					{
@@ -571,12 +574,15 @@ public class Player : MonoBehaviour
 
 	public void DeactivateActiveInteractionPoint()
 	{
-		Canvass.sphereUIRenderer.GetComponent<UISphere>().Deactivate();
-		activeInteractionPoint.panel.SetActive(false);
-		activeInteractionPoint = null;
-		videoController.Play();
+		if (activeInteractionPoint != null)
+		{
+			Canvass.sphereUIRenderer.GetComponent<UISphere>().Deactivate();
+			activeInteractionPoint.panel.SetActive(false);
+			activeInteractionPoint = null;
+			videoController.Play();
 
-		mainEventSystem.enabled = true;
+			mainEventSystem.enabled = true;
+		}
 	}
 
 	public void SuspendInteractionPoint()
@@ -665,6 +671,8 @@ public class Player : MonoBehaviour
 	public void BackToBrowser()
 	{
 		StartCoroutine(DisableVR());
+
+		previousChapter = null;
 
 		Seekbar.instance.compass.SetActive(false);
 		Seekbar.instanceVR.compass.SetActive(false);
