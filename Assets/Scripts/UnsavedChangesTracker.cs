@@ -64,4 +64,10 @@ public class UnsavedChangesTracker : MonoBehaviour
 		return true;
 	}
 
+	//NOTE(Simon): Will not ask for confirmation and won't save unsaved changes
+	public void ForceQuit()
+	{
+		forceQuit = true;
+		Application.Quit();
+	}
 }

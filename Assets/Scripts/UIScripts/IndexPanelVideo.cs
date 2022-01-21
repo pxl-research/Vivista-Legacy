@@ -65,28 +65,31 @@ public class IndexPanelVideo : MonoBehaviour
 			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + video.id);
 		}
 
-		yield return imageDownload.SendWebRequest();
+		using (imageDownload)
+		{
+			yield return imageDownload.SendWebRequest();
 
-		if (imageDownload == null)
-		{
-			Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
-		}
-		if (imageDownload.isNetworkError || imageDownload.isHttpError)
-		{
-			Debug.Log("Failed to download thumbnail " + imageDownload.url + ": " + imageDownload.error);
-		}
-		else if (imageDownload.isDone)
-		{
-			var texture = DownloadHandlerTexture.GetContent(imageDownload);
-			thumbnailImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			thumbnailImage.color = Color.white;
-		}
-		else
-		{
-			Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
+			if (imageDownload == null)
+			{
+				Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
+			}
+
+			if (imageDownload.isNetworkError || imageDownload.isHttpError)
+			{
+				Debug.Log("Failed to download thumbnail " + imageDownload.url + ": " + imageDownload.error);
+			}
+			else if (imageDownload.isDone)
+			{
+				var texture = DownloadHandlerTexture.GetContent(imageDownload);
+				thumbnailImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+				thumbnailImage.color = Color.white;
+			}
+			else
+			{
+				Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
+			}
 		}
 
-		imageDownload.Dispose();
 		imageDownload = null;
 	}
 

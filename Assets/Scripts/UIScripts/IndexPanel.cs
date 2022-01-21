@@ -143,18 +143,21 @@ public class IndexPanel : MonoBehaviour
 		{
 			GuidHelpers.TryDecode(id, out var guid);
 			var url = $"{Web.videoUrl}?id={guid}";
-			var www = UnityWebRequest.Get(url);
-
-			www.SendWebRequest();
-
-			while (!www.isDone) { }
-
-			detailVideo = JsonUtility.FromJson<VideoSerialize>(www.downloadHandler.text);
-			if (detailVideo != null && detailVideo.id != null)
+			using (var request = UnityWebRequest.Get(url))
 			{
-				detailVideo.realTimestamp = DateTime.Parse(detailVideo.timestamp);
-				ShowVideoDetails(detailVideo);
-				return;
+				request.SendWebRequest();
+
+				while (!request.isDone)
+				{
+				}
+
+				detailVideo = JsonUtility.FromJson<VideoSerialize>(request.downloadHandler.text);
+				if (detailVideo != null && detailVideo.id != null)
+				{
+					detailVideo.realTimestamp = DateTime.Parse(detailVideo.timestamp);
+					ShowVideoDetails(detailVideo);
+					return;
+				}
 			}
 		}
 	}
@@ -339,31 +342,33 @@ public class IndexPanel : MonoBehaviour
 			url += $"&author={searchParamAuthor}";
 		}
 
-		var www = UnityWebRequest.Get(url);
-
-		yield return www.SendWebRequest();
-		spinner.gameObject.SetActive(false);
-
-		if (www.isNetworkError || www.isHttpError)
+		using (var request = UnityWebRequest.Get(url))
 		{
-			serverConnectionError.SetActive(true);
-			yield break;
+
+			yield return request.SendWebRequest();
+			spinner.gameObject.SetActive(false);
+
+			if (request.isNetworkError || request.isHttpError)
+			{
+				serverConnectionError.SetActive(true);
+				yield break;
+			}
+
+			loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(request.downloadHandler.text);
+
+			videoContainer.SetActive(true);
+			noVideos.enabled = loadedVideos.videos.Count == 0;
+
+			for (int i = offset; i < loadedVideos.videos.Count; i++)
+			{
+				var video = loadedVideos.videos[i];
+				video.realTimestamp = DateTime.Parse(video.timestamp);
+			}
+
+			totalVideos = loadedVideos.totalcount;
+			numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float) videosPerPage));
+			page = loadedVideos.page;
 		}
-
-		loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(www.downloadHandler.text);
-
-		videoContainer.SetActive(true);
-		noVideos.enabled = loadedVideos.videos.Count == 0;
-
-		for (int i = offset; i < loadedVideos.videos.Count; i++)
-		{
-			var video = loadedVideos.videos[i];
-			video.realTimestamp = DateTime.Parse(video.timestamp);
-		}
-
-		totalVideos = loadedVideos.totalcount;
-		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)videosPerPage));
-		page = loadedVideos.page;
 
 		BuildVideoGameObjects(false);
 	}

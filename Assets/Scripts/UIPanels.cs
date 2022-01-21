@@ -16,6 +16,7 @@ public class UIPanels : MonoBehaviour
 	public ChapterManagerPanel chapterManagerPanel;
 	public SettingsPanel settingsPanel;
 	public ConfirmationPanel confirmationPanel;
+	public AutoUpdatePanel autoUpdatePanel;
 
 	public TextPanel textPanel;
 	public TextPanelEditor textPanelEditor;

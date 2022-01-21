@@ -13,8 +13,8 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 	public string url;
 	public RawImage image;
 
-	private UnityWebRequest www;
-	private bool loaded = false;
+	private UnityWebRequest request;
+	private bool loaded;
 	private static Vector2 defaultImageSize = new Vector2(500, 500);
 	private Vector2 originalSize;
 
@@ -34,12 +34,12 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
 			Texture2D texture;
 
-			using (www = UnityWebRequestTexture.GetTexture(url))
+			using (request = UnityWebRequestTexture.GetTexture(url))
 			{
-				yield return www.SendWebRequest();
+				yield return request.SendWebRequest();
 
 				loaded = true;
-				texture = DownloadHandlerTexture.GetContent(www);
+				texture = DownloadHandlerTexture.GetContent(request);
 			}
 
 			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), defaultImageSize);

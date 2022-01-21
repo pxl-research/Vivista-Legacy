@@ -161,6 +161,7 @@ public class Editor : MonoBehaviour
 	private ChapterManagerPanel chapterPanel;
 	private ExportPanel exportPanel;
 	private SettingsPanel settingsPanel;
+	public GameObject updateAvailableNotification;
 
 	public RectTransform timelineContainer;
 	public RectTransform timelineScrollView;
@@ -215,6 +216,7 @@ public class Editor : MonoBehaviour
 		Screen.SetResolution(Screen.width - 50, Screen.height - 50, FullScreenMode.Windowed);
 
 		SaveFile.MoveProjectsToCorrectFolder();
+		StartCoroutine(AutoUpdatePanel.IsUpdateAvailable(ShowUpdateNoticeIfNecessary));
 	}
 
 	private void Start()
@@ -2867,4 +2869,19 @@ public class Editor : MonoBehaviour
 		return px / timelineWidthPixels * (timelineWindowEndTime - timelineWindowStartTime);
 	}
 
+	//NOTE(Simon): This is used as a callback, which is why it receives the seemingly unnecessary 'shouldShow' parameter
+	public void ShowUpdateNoticeIfNecessary(bool shouldShow)
+	{
+		if (shouldShow)
+		{
+			updateAvailableNotification.SetActive(true);
+			updateAvailableNotification.GetComponent<Button>().onClick.AddListener(InitUpdatePanel);
+		}
+	}
+
+	public void InitUpdatePanel()
+	{
+		Canvass.modalBackground.SetActive(true);
+		Instantiate(UIPanels.Instance.autoUpdatePanel, Canvass.main.transform, false);
+	}
 }

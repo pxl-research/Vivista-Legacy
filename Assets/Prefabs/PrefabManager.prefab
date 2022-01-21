@@ -65,6 +65,8 @@ MonoBehaviour:
     type: 3}
   confirmationPanel: {fileID: 7744003129353109152, guid: a655105c99aec894d98f3ba22d41f739,
     type: 3}
+  autoUpdatePanel: {fileID: 8468715470224104370, guid: ae9b88f335a887b43bc76067192e137d,
+    type: 3}
   textPanel: {fileID: 114804670035395096, guid: 68aee9630d16f3847ae9673fad651082,
     type: 3}
   textPanelEditor: {fileID: 114857279946337036, guid: 5c435d4d02e1c3a4f95af60a1b75a7f5,

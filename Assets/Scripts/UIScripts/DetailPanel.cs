@@ -74,25 +74,28 @@ public class DetailPanel : MonoBehaviour
 			imageDownload = UnityWebRequest.Get(Web.thumbnailUrl + "?id=" + video.id);
 		}
 
-		yield return imageDownload.SendWebRequest();
-
-		if (imageDownload.isNetworkError)
+		using (imageDownload)
 		{
-			Debug.Log("Failed to download thumbnail: " + imageDownload.error);
-			imageDownload.Dispose();
-			imageDownload = null;
-		}
-		else if (imageDownload.isDone || imageDownload.downloadProgress >= 1f)
-		{
-			var texture = new Texture2D(1, 1);
-			texture.LoadImage(imageDownload.downloadHandler.data);
-			thumb.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			imageDownload.Dispose();
-			imageDownload = null;
-			thumb.color = Color.white;
-		}
+			yield return imageDownload.SendWebRequest();
 
-		Refresh();
+			if (imageDownload.isNetworkError)
+			{
+				Debug.Log("Failed to download thumbnail: " + imageDownload.error);
+				imageDownload.Dispose();
+				imageDownload = null;
+			}
+			else if (imageDownload.isDone || imageDownload.downloadProgress >= 1f)
+			{
+				var texture = new Texture2D(1, 1);
+				texture.LoadImage(imageDownload.downloadHandler.data);
+				thumb.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+				imageDownload.Dispose();
+				imageDownload = null;
+				thumb.color = Color.white;
+			}
+
+			Refresh();
+		}
 	}
 	
 	public void Refresh()
