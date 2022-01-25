@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -66,6 +67,8 @@ public class IndexPanel : MonoBehaviour
 	public GameObject serverConnectionError;
 	public GameObject filters;
 	public GameObject modalBackground;
+	public GameObject updateAvailableNotification;
+
 
 	public bool isLocal;
 	public bool isFinishedLoadingVideos;
@@ -127,6 +130,8 @@ public class IndexPanel : MonoBehaviour
 
 		lastScreenWidth = Screen.width;
 		lastScreenHeight = Screen.height;
+
+		StartCoroutine(AutoUpdatePanel.IsUpdateAvailable(ShowUpdateNoticeIfNecessary));
 	}
 
 	private void OpenVideoFromCmdArgument()
@@ -561,5 +566,28 @@ public class IndexPanel : MonoBehaviour
 	private void OnLayoutChange()
 	{
 		LoadPage();
+	}
+
+	//NOTE(Simon): This is used as a callback, which is why it receives the seemingly unnecessary 'shouldShow' parameter
+	public void ShowUpdateNoticeIfNecessary(bool shouldShow)
+	{
+		updateAvailableNotification.SetActive(shouldShow);
+		if (shouldShow)
+		{
+			updateAvailableNotification.GetComponent<Button>().onClick.AddListener(InitUpdatePanel);
+		}
+	}
+
+	public void InitUpdatePanel()
+	{
+		EventSystem.current.SetSelectedGameObject(null);
+		modalBackground.SetActive(true);
+		var panel = Instantiate(UIPanels.Instance.autoUpdatePanel, Canvass.main.transform, false).GetComponent<AutoUpdatePanel>();
+		panel.Init(AutoUpdatePanel.VivistaApplication.Player, OnUpdateCancel);
+	}
+
+	public void OnUpdateCancel()
+	{
+		modalBackground.SetActive(false);
 	}
 }

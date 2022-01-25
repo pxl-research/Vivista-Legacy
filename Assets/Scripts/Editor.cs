@@ -10,8 +10,12 @@ using UnityEngine.Audio;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 using UnityEngine.XR.Management;
+using Button = UnityEngine.UI.Button;
+using Cursor = UnityEngine.Cursor;
 using Debug = UnityEngine.Debug;
+using Slider = UnityEngine.UI.Slider;
 
 public enum EditorState
 {
@@ -2872,16 +2876,23 @@ public class Editor : MonoBehaviour
 	//NOTE(Simon): This is used as a callback, which is why it receives the seemingly unnecessary 'shouldShow' parameter
 	public void ShowUpdateNoticeIfNecessary(bool shouldShow)
 	{
+		updateAvailableNotification.SetActive(shouldShow);
 		if (shouldShow)
 		{
-			updateAvailableNotification.SetActive(true);
 			updateAvailableNotification.GetComponent<Button>().onClick.AddListener(InitUpdatePanel);
 		}
 	}
 
 	public void InitUpdatePanel()
 	{
+		EventSystem.current.SetSelectedGameObject(null);
 		Canvass.modalBackground.SetActive(true);
-		Instantiate(UIPanels.Instance.autoUpdatePanel, Canvass.main.transform, false);
+		var panel = Instantiate(UIPanels.Instance.autoUpdatePanel, Canvass.main.transform, false).GetComponent<AutoUpdatePanel>();
+		panel.Init(AutoUpdatePanel.VivistaApplication.Editor, OnUpdateCancel);
+	}
+
+	public void OnUpdateCancel()
+	{
+		Canvass.modalBackground.SetActive(false);
 	}
 }

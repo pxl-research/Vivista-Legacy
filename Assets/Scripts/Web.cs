@@ -5,10 +5,10 @@ using UnityEngine;
 public class Web : MonoBehaviour
 {
 	//Note(Simon): This is used for requests that always need to go to the main public server, such as requests to check for updates
-	//public static string baseUrlPublic = "vivista.net/api";
-	public static string baseUrlPublic = "localhost:5000/api";
-	//public static string baseUrlPublicFiles = "vivista.net";
-	public static string baseUrlPublicFiles = "localhost:5000";
+	public static string baseUrlPublic = "vivista.net/api";
+	//public static string baseUrlPublic = "localhost:5000/api";
+	public static string baseUrlPublicFiles = "vivista.net";
+	//public static string baseUrlPublicFiles = "localhost:5000";
 
 	public static string baseUrl 
 	{
