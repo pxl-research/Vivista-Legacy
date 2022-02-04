@@ -1176,11 +1176,6 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.LoggingIn)
 		{
-			if (loginPanel == null)
-			{
-				InitLoginPanel();
-			}
-
 			if (loginPanel.answered)
 			{
 				Destroy(loginPanel.gameObject);
@@ -1232,12 +1227,17 @@ public class Editor : MonoBehaviour
 			}
 			if (uploadPanel != null)
 			{
-				UpdateUploadPanel();
+				if (uploadPanel.done)
+				{
+					editorState = EditorState.Active;
+					uploadPanel.Dispose();
+					Canvass.modalBackground.SetActive(false);
+				}
 			}
 
 			if (Input.GetKeyUp(KeyCode.Escape))
 			{
-				//NOTE(Simon): If already uploading, don't allow cancel
+				//NOTE(Simon): Only allow cancel if we're not already uploading
 				if (uploadPanel == null)
 				{
 					if (loginPanel != null)
@@ -1307,7 +1307,7 @@ public class Editor : MonoBehaviour
 		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.L) && AreFileOpsAllowed())
 #endif
 		{
-			editorState = EditorState.LoggingIn;
+			InitLoginPanel();
 		}
 	}
 
@@ -2283,6 +2283,8 @@ public class Editor : MonoBehaviour
 		Canvass.modalBackground.SetActive(true);
 		loginPanel = Instantiate(UIPanels.Instance.loginPanel);
 		loginPanel.transform.SetParent(Canvass.main.transform, false);
+
+		editorState = EditorState.LoggingIn;
 	}
 
 	public void InitSaveProjectPanel(bool uploading = false)
@@ -2770,26 +2772,6 @@ public class Editor : MonoBehaviour
 
 		allExtras.Add(newFilename, point);
 		return newFilename;
-	}
-
-	private void UpdateUploadPanel()
-	{
-		if (uploadPanel.status.done)
-		{
-			editorState = EditorState.Active;
-			Toasts.AddToast(5, "Upload succesful");
-			uploadPanel.Dispose();
-		}
-		else if (uploadPanel.status.failed)
-		{
-			editorState = EditorState.Active;
-			Toasts.AddToast(5, uploadPanel.status.error);
-			uploadPanel.Dispose();
-		}
-		else
-		{
-			uploadPanel.UpdatePanel();
-		}
 	}
 
 	private void ResetInteractionPointTemp()

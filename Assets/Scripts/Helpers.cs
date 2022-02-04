@@ -85,12 +85,17 @@ public static class MathHelper
 		return "Just now";
 	}
 
+	public static string FormatBytes(ulong bytes)
+	{
+		return FormatBytes((long)bytes);
+	}
+
 	public static string FormatBytes(long bytes)
 	{
 		var names = new[] { "B", "kB", "MB", "GB" };
-		var magnitude = (int)Mathf.Max(0, Mathf.Floor(Mathf.Log(bytes, 1024)));
-		var calculated = bytes / Mathf.Pow(1024f, magnitude);
-		var result = $"{calculated:0.##} {names[magnitude]}";
+		int magnitude = (int)Mathf.Max(0, Mathf.Floor(Mathf.Log(bytes, 1024)));
+		float calculated = bytes / Mathf.Pow(1024f, magnitude);
+		string result = $"{calculated:0.##} {names[magnitude]}";
 		return result;
 	}
 

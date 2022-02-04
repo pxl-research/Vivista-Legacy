@@ -12,9 +12,12 @@ public class ChapterPanel : MonoBehaviour
 	{
 		var chapter = ChapterManager.Instance.GetChapterById(newChapterId);
 
-		title.text = newTitle;
-		chapterName.text = chapter.name;
-		chapterDescription.text = chapter.description;
-		chapterTime.text = MathHelper.FormatSeconds(chapter.time);
+		if (chapter != null)
+		{
+			title.text = newTitle;
+			chapterName.text = chapter.name;
+			chapterDescription.text = chapter.description;
+			chapterTime.text = MathHelper.FormatSeconds(chapter.time);
+		}
 	}
 }

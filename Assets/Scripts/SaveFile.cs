@@ -315,8 +315,8 @@ public static class SaveFile
 	{
 		try
 		{
-			string tagsname = Path.Combine(projectFolder, chaptersFilename);
-			using (var file = File.CreateText(tagsname))
+			string chaptersName = Path.Combine(projectFolder, chaptersFilename);
+			using (var file = File.CreateText(chaptersName))
 			{
 				file.Write(JsonHelper.ToJson(chapters.ToArray()));
 			}

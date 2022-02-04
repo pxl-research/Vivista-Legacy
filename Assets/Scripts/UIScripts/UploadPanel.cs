@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -41,7 +40,6 @@ public class UploadStatus
 	public Guid projectId;
 	public bool done;
 	public bool failed;
-	public string error;
 	public ulong totalSizeBytes;
 	public ulong uploadedBytes;
 	public ulong currentFileProgressBytes;
@@ -60,15 +58,17 @@ public class UploadPanel : MonoBehaviour
 	public Text progressTime;
 	public Text progressSpeed;
 	public ProgressBar progressBar;
+	public Text resultMessage;
+	public Button viewOnWebsite;
+	public Button tryAgain;
 
-	public float time;
+	private float time;
+	//NOTE(Simon): This is used to signal other scripts that we're done. As apposed to status.done which is to be used internally
+	public bool done;
 
-	const int kilobyte = 1024;
-	const int megabyte = 1024 * 1024;
-	const int gigabyte = 1024 * 1024 * 1024;
 	private const float timeBetweenUpdates = 1/5f;
 
-	public UploadStatus status;
+	private UploadStatus status;
 
 	public async void StartUpload(Queue<FileUpload> filesToUpload)
 	{
@@ -110,7 +110,8 @@ public class UploadPanel : MonoBehaviour
 			headers.Add("filename", status.fileInProgress.filename);
 
 			var filesize = FileHelpers.FileSize(status.fileInProgress.path);
-			//NOTE(Simon): If we;re not resuming, get a new fileId from the server
+
+			//NOTE(Simon): If we're not resuming, get a new fileId from the server
 			if (!shouldResume)
 			{
 				(int code, string message) createResult;
@@ -120,26 +121,20 @@ public class UploadPanel : MonoBehaviour
 				}
 				catch (Exception e)
 				{
-					WriteUploadProgress(status);
-					status.failed = true;
-					status.error = "Something went wrong while trying to upload this project. Please try again later";
-					Debug.Log(e);
+					FailUpload("Something went wrong while trying to upload this project. Please try again later", e);
 					return;
 				}
 
 				if (createResult.code != 200)
 				{
-					WriteUploadProgress(status);
-					status.failed = true;
-					status.error = $"HTTP error {createResult.code}: {createResult.message}";
+					status.filesToUpload.Enqueue(status.fileInProgress);
+					status.fileInProgress = null;
+
+					FailUpload($"HTTP error {createResult.code}: {createResult.message}");
+					return;
 				}
 
 				status.fileInProgressId = createResult.message;
-			}
-
-			if (status.failed)
-			{
-				return;
 			}
 
 			try
@@ -150,34 +145,28 @@ public class UploadPanel : MonoBehaviour
 			}
 			catch (Exception e)
 			{
-				WriteUploadProgress(status);
-				status.failed = true;
-				status.error = "Something went wrong while trying to upload this project. Please try again alter";
-				Debug.Log(e);
+				FailUpload("Something went wrong while trying to upload this project. Please try again later", e);
 				return;
 			}
 
-			//NOTE(Simon): Trigger Task completion
 			status.filesUploaded.Add(status.fileInProgress);
 			status.fileInProgress = null;
 
 			status.uploadedBytes += (ulong)filesize;
 			status.currentFileProgressBytes = 0;
+
+			//NOTE(Simon): After finishing a file, write progress to disk
+			WriteUploadProgress(status);
 		}
 
-		if (!status.failed)
+		ClearUploadProgress();
+		if (FinishUpload())
 		{
-			ClearUploadProgress();
-			var finishedSuccefully = FinishUpload();
-			if (finishedSuccefully)
-			{
-				status.done = true;
-			}
-			else
-			{
-				status.failed = true;
-				status.error = "Something went wrong while finishing the upload. Try again later";
-			}
+			SucceedUpload();
+		}
+		else
+		{
+			FailUpload("Something went wrong while finishing the upload. Please try again later");
 		}
 	}
 
@@ -187,20 +176,55 @@ public class UploadPanel : MonoBehaviour
 		
 		form.AddField("id", status.projectId.ToString());
 
-		using (var www = UnityWebRequest.Post(Web.finishUploadUrl, form))
-		{
-			www.SetRequestHeader("Cookie", Web.formattedCookieHeader);
-			var request = www.SendWebRequest();
-			while (!request.isDone)
-			{
-			}
+		using var www = UnityWebRequest.Post(Web.finishUploadUrl, form);
 
-			return www.responseCode == 200;
+		www.SetRequestHeader("Cookie", Web.formattedCookieHeader);
+		var request = www.SendWebRequest();
+		while (!request.isDone)
+		{
 		}
+
+		return www.responseCode == 200;
+	}
+
+	private void FailUpload(string error, Exception e = null)
+	{
+		if (e != null)
+		{
+			Debug.Log(e);
+		}
+
+		status.failed = true;
+
+		progressTime.text = "Error";
+		progressSpeed.text = "";
+		resultMessage.text = error;
+
+		viewOnWebsite.gameObject.SetActive(false);
+		tryAgain.gameObject.SetActive(true);
+	}
+
+	private void SucceedUpload()
+	{
+		status.done = true;
+
+		progressTime.text = "Finished uploading";
+		progressSpeed.text = "";
+
+		resultMessage.text = "Project upload succesful";
+
+		viewOnWebsite.gameObject.SetActive(true);
+		tryAgain.gameObject.SetActive(false);
 	}
 
 	private void WriteUploadProgress(UploadStatus status)
 	{
+		//NOTE(Simon): If no files were uploaded and none are in progress (e.g. in case of failure to create file on server), don't write any progress to disk.
+		if (status.filesUploaded.Count == 0 && status.fileInProgress == null)
+		{
+			return;
+		}
+
 		var projectPath = Path.Combine(Application.persistentDataPath, status.projectId.ToString());
 		var filePath = Path.Combine(projectPath, ".uploadProgress");
 
@@ -247,6 +271,13 @@ public class UploadPanel : MonoBehaviour
 			//NOTE(Simon): If last entry starts with http, the last two entries are the file in progress and its serverId. So remove them from the array
 			if (lines[lines.Length - 1].StartsWith("http"))
 			{
+				//NOTE(Simon): If the line contains a domain different to the currently connected one, the uploadProgress is invalid.
+				if (!lines[lines.Length - 1].StartsWith(Web.apiRootUrl))
+				{
+					ClearUploadProgress();
+					return;
+				}
+
 				fileInProgress = lines[lines.Length - 2];
 				status.fileInProgressId = lines[lines.Length - 1];
 
@@ -317,43 +348,46 @@ public class UploadPanel : MonoBehaviour
 		status.currentFileProgressBytes = (ulong)bytestransferred;
 	}
 
-	public void UpdatePanel()
+	public void Update()
 	{
-		time += Time.deltaTime;
-
-		ulong totalUploaded = status.uploadedBytes + status.currentFileProgressBytes;
-		
-		var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
-		status.timings.Enqueue(newestTiming);
-	
-		while (status.timings.Count > 1 && status.timings.Peek().time < Time.realtimeSinceStartup - 1)
+		if (!status.done && !status.failed)
 		{
-			status.timings.Dequeue();
-		}
+			time += Time.deltaTime;
 
-		float currentSpeed = (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time);
-		float speed = status.timings.Count >= 2 ? currentSpeed: float.NaN;
-		float timeRemaining = (status.totalSizeBytes - totalUploaded) / speed;
-		progressBar.SetProgress(totalUploaded / (float)status.totalSizeBytes);
+			ulong totalUploaded = status.uploadedBytes + status.currentFileProgressBytes;
 
-		//TODO(Simon): Show kB and GB when appropriate
-		progressMB.text = $"{totalUploaded / (float)megabyte:F2}/{status.totalSizeBytes / (float)megabyte:F2}MB";
+			var newestTiming = new Timing {time = Time.realtimeSinceStartup, totalUploaded = totalUploaded};
+			status.timings.Enqueue(newestTiming);
 
-		time += Time.deltaTime;
-
-		if (time > timeBetweenUpdates)
-		{
-			if (!float.IsInfinity(timeRemaining) && !float.IsNaN(timeRemaining))
+			while (status.timings.Count > 1 && status.timings.Peek().time < Time.realtimeSinceStartup - 1)
 			{
-				time %= timeBetweenUpdates;
-				progressTime.text = $"{timeRemaining:F0} seconds remaining";
-				progressSpeed.text = $"{speed / megabyte:F2}MB/s";
+				status.timings.Dequeue();
 			}
-			else
+
+			float currentSpeed = (newestTiming.totalUploaded - status.timings.Peek().totalUploaded) / (newestTiming.time - status.timings.Peek().time);
+			float speed = status.timings.Count >= 2 ? currentSpeed : float.NaN;
+			float timeRemaining = (status.totalSizeBytes - totalUploaded) / speed;
+			progressBar.SetProgress(totalUploaded / (float) status.totalSizeBytes);
+
+			//TODO(Simon): Show kB and GB when appropriate
+			progressMB.text = $"{MathHelper.FormatBytes(totalUploaded)}/{MathHelper.FormatBytes(status.totalSizeBytes)}";
+
+			time += Time.deltaTime;
+
+			if (time > timeBetweenUpdates)
 			{
-				time %= timeBetweenUpdates;
-				progressTime.text = "Connecting...";
-				progressSpeed.text = "Connecting...";
+				if (!float.IsInfinity(timeRemaining) && !float.IsNaN(timeRemaining))
+				{
+					time %= timeBetweenUpdates;
+					progressTime.text = $"{timeRemaining:F0} seconds remaining";
+					progressSpeed.text = $"{MathHelper.FormatBytes((long) speed)}/s";
+				}
+				else
+				{
+					time %= timeBetweenUpdates;
+					progressTime.text = "Connecting...";
+					progressSpeed.text = "Connecting...";
+				}
 			}
 		}
 	}
@@ -370,7 +404,6 @@ public class UploadPanel : MonoBehaviour
 			status = null;
 		}
 
-		Canvass.modalBackground.SetActive(false);
 		Destroy(gameObject);
 	}
 }

@@ -7,14 +7,19 @@ public class MenuBar : MonoBehaviour
 	public List<Button> menuBarItems;
 	public List<GameObject> menuBarPanels;
 
+	public Button debugMenu;
+
 	public void Start()
 	{
 		Debug.Assert(menuBarItems.Count == menuBarPanels.Count, "Make sure you have a menu bar panel for each menu bar button. Also make sure their ordering is the same");
+#if UNITY_EDITOR
+		ActivateDebugMenu();
+#endif
 
 		for (int i = 0; i < menuBarItems.Count; i++)
 		{
 			int index = i;
-			menuBarItems[i].onClick.AddListener(delegate { OnMenuBarItemClick(index); });
+			menuBarItems[i].onClick.AddListener(() => { OnMenuBarItemClick(index); });
 
 			menuBarPanels[i].SetActive(false);
 
@@ -48,5 +53,10 @@ public class MenuBar : MonoBehaviour
 		{
 			p.SetActive(false);
 		}
+	}
+
+	private void ActivateDebugMenu()
+	{
+		debugMenu.gameObject.SetActive(true);
 	}
 }

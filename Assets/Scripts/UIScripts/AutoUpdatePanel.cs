@@ -112,7 +112,7 @@ public class AutoUpdatePanel : MonoBehaviour
 				yield break;
 			}
 
-			var url = Web.baseUrlPublicFiles + UrlRequest.downloadHandler.text.Replace("\"", "");
+			var url = Web.wwwrootUrl + UrlRequest.downloadHandler.text.Replace("\"", "");
 
 			using (downloadRequest = UnityWebRequest.Get(url))
 			{
