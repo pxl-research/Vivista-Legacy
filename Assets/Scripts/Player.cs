@@ -65,6 +65,7 @@ public class Player : MonoBehaviour
 	private Controller trackedControllerRight;
 
 	private List<InteractionPointPlayer> interactionPoints;
+	private List<InteractionPointPlayer> activeInteractionPoints;
 	private List<InteractionPointPlayer> mandatoryInteractionPoints;
 	private FileLoader fileLoader;
 	private VideoController videoController;
@@ -155,6 +156,8 @@ public class Player : MonoBehaviour
 
 		if (playerState == PlayerState.Watching)
 		{
+			activeInteractionPoints = GetActiveInteractionPoints();
+
 			if (Input.GetKeyDown(KeyCode.Space) && !isVR)
 			{
 				videoController.TogglePlay();
@@ -162,11 +165,11 @@ public class Player : MonoBehaviour
 
 			if (isVR)
 			{
-				Seekbar.instanceVR.RenderBlips(interactionPoints);
+				Seekbar.instanceVR.RenderBlips(activeInteractionPoints);
 			}
 			else
 			{
-				Seekbar.instance.RenderBlips(interactionPoints);
+				Seekbar.instance.RenderBlips(activeInteractionPoints);
 			}
 
 			//Note(Simon): Interaction with points
@@ -174,16 +177,18 @@ public class Player : MonoBehaviour
 			{
 				var reversedRay = interactionpointRay.ReverseRay();
 				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
-
 				Physics.Raycast(reversedRay, out var hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				//NOTE(Simon): Update visible interactionpoints
-				for (int i = 0; i < interactionPoints.Count; i++)
+				foreach (var point in activeInteractionPoints)
 				{
-					bool pointActive = videoController.currentTime >= interactionPoints[i].startTime 
-									&& videoController.currentTime <= interactionPoints[i].endTime;
-					interactionPoints[i].point.SetActive(pointActive);
-					interactionPoints[i].point.GetComponent<InteractionPointRenderer>().SetPingActive(!interactionPoints[i].isSeen);
+					point.point.SetActive(true);
+					point.point.GetComponent<InteractionPointRenderer>().SetPingActive(!point.isSeen);
+				}
+
+				foreach (var point in GetInactiveInteractionPoints())
+				{
+					point.point.SetActive(false);
 				}
 
 				//NOTE(Simon): Activate hit interactionPoint
@@ -558,6 +563,7 @@ public class Player : MonoBehaviour
 
 		point.panel.SetActive(true);
 
+		//NOTE(Simon): We do this here, because each interactionType has its own script. So that mean adding the event in many places
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
 		button.onClick.RemoveAllListeners();
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
@@ -566,6 +572,8 @@ public class Player : MonoBehaviour
 		point.isSeen = true;
 
 		videoController.Pause();
+
+		InteractionPointers.Instance.ShouldRender(false);
 
 		//NOTE(Simon): No two eventsystems can be active at the same, so disable the main one. The main one is used for all screenspace UI.
 		//NOTE(Simon): The other eventsystem, that remains active, handles input for the spherical UI.
@@ -580,6 +588,8 @@ public class Player : MonoBehaviour
 			activeInteractionPoint.panel.SetActive(false);
 			activeInteractionPoint = null;
 			videoController.Play();
+
+			InteractionPointers.Instance.ShouldRender(true);
 
 			mainEventSystem.enabled = true;
 		}
@@ -727,6 +737,40 @@ public class Player : MonoBehaviour
 	public Controller[] GetControllers()
 	{
 		return new [] { trackedControllerLeft, trackedControllerRight};
+	}
+
+	public List<InteractionPointPlayer> GetActiveInteractionPoints()
+	{
+		var interactions = new List<InteractionPointPlayer>();
+		
+		for (int i = 0; i < interactionPoints.Count; i++)
+		{
+			bool pointActive = videoController.currentTime >= interactionPoints[i].startTime
+								&& videoController.currentTime <= interactionPoints[i].endTime;
+			if (pointActive)
+			{
+				interactions.Add(interactionPoints[i]);
+			}
+		}
+
+		return interactions;
+	}
+
+	public List<InteractionPointPlayer> GetInactiveInteractionPoints()
+	{
+		var interactions = new List<InteractionPointPlayer>();
+
+		for (int i = 0; i < interactionPoints.Count; i++)
+		{
+			bool pointActive = videoController.currentTime >= interactionPoints[i].startTime
+								&& videoController.currentTime <= interactionPoints[i].endTime;
+			if (!pointActive)
+			{
+				interactions.Add(interactionPoints[i]);
+			}
+		}
+
+		return interactions;
 	}
 
 	//NOTE(Simon): This needs to be a coroutine so that we can wait a frame before recalculating point positions. If this were run in the first frame, collider positions would not be up to date yet.

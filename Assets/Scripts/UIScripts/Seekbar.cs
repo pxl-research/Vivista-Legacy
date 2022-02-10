@@ -241,18 +241,16 @@ public class Seekbar : MonoBehaviour
 		}
 	}
 
-	public void RenderBlips(List<InteractionPointPlayer> interactionPoints)
+	public void RenderBlips(List<InteractionPointPlayer> activeInteractionPoints)
 	{
-		var activePoints = new List<InteractionPointPlayer>();
+		var blipsToShow = new List<InteractionPointPlayer>();
 
 		//NOTE(Simon): Count active points
-		for (int i = 0; i < interactionPoints.Count; i++)
+		for (int i = 0; i < activeInteractionPoints.Count; i++)
 		{
-			var point = interactionPoints[i];
-
-			if (point.point.activeSelf && !point.isSeen)
+			if (!activeInteractionPoints[i].isSeen)
 			{
-				activePoints.Add(point);
+				blipsToShow.Add(activeInteractionPoints[i]);
 			}
 		}
 
@@ -262,11 +260,11 @@ public class Seekbar : MonoBehaviour
 			: "";
 
 		//NOTE(Simon): Update blips, and active/create new blips when necessary
-		for (int i = 0; i < activePoints.Count; i++)
+		for (int i = 0; i < blipsToShow.Count; i++)
 		{
-			var point = activePoints[i];
+			var point = blipsToShow[i];
 
-			if (activeBlips.Count < activePoints.Count)
+			if (activeBlips.Count < blipsToShow.Count)
 			{
 				if (inactiveBlips.Count == 0)
 				{
@@ -285,7 +283,7 @@ public class Seekbar : MonoBehaviour
 		}
 
 		//NOTE(Simon): Deactivate unneeded blips
-		while (activeBlips.Count > activePoints.Count)
+		while (activeBlips.Count > blipsToShow.Count)
 		{
 			var inactive = activeBlips[activeBlips.Count - 1];
 			activeBlips.RemoveAt(activeBlips.Count - 1);

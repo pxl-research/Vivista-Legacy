@@ -115,16 +115,21 @@ public static class MathHelper
 		return new Vector2(orignalSize.x / biggestRatio, orignalSize.y / biggestRatio);
 	}
 
-	public static float smoothstep(float edge0, float edge1, float x)
+	public static float Smoothstep(float edge0, float edge1, float x)
 	{
 		x = Mathf.Clamp01((x - edge0) / (edge1 - edge0));
 		return x * x * (3 - 2 * x);
 	}
 
-	public static float smootherstep(float edge0, float edge1, float x)
+	public static float Smootherstep(float edge0, float edge1, float x)
 	{
 		x = Mathf.Clamp01((x - edge0) / (edge1 - edge0));
 		return x * x * x * (x * (x * 6 - 15) + 10);
+	}
+
+	public static float SmoothPingPong(float x, float length)
+	{
+		return Smoothstep(0, length, Mathf.PingPong(x, length));
 	}
 
 	//NOTE(Simon): Convert a linear(UI) volume value to a logarithmic(mixer) volume value
@@ -158,7 +163,7 @@ public class UIAnimation
 		while (animTime < length)
 		{
 			animTime += Mathf.Clamp01(Time.deltaTime);
-			float step = MathHelper.smootherstep(0, length, animTime);
+			float step = MathHelper.Smootherstep(0, length, animTime);
 			float scale = scaleOffset + (step * .2f);
 			transform.localScale = new Vector3(scale, scale, 1);
 			canvas.alpha = step * endOpacity;
@@ -174,7 +179,7 @@ public class UIAnimation
 		while (animTime < length)
 		{
 			animTime += Mathf.Clamp01(Time.deltaTime);
-			float step = MathHelper.smootherstep(0, length, length - animTime);
+			float step = MathHelper.Smootherstep(0, length, length - animTime);
 			float scale = scaleOffset + (step * .2f);
 			transform.localScale = new Vector3(scale, scale, 1);
 			canvas.alpha = step * startOpacity;
