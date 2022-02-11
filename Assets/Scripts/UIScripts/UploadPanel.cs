@@ -61,6 +61,7 @@ public class UploadPanel : MonoBehaviour
 	public Text resultMessage;
 	public Button viewOnWebsite;
 	public Button tryAgain;
+	public Button close;
 
 	private float time;
 	//NOTE(Simon): This is used to signal other scripts that we're done. As apposed to status.done which is to be used internally
@@ -202,6 +203,7 @@ public class UploadPanel : MonoBehaviour
 
 		viewOnWebsite.gameObject.SetActive(false);
 		tryAgain.gameObject.SetActive(true);
+		close.gameObject.SetActive(true);
 	}
 
 	private void SucceedUpload()
@@ -215,6 +217,7 @@ public class UploadPanel : MonoBehaviour
 
 		viewOnWebsite.gameObject.SetActive(true);
 		tryAgain.gameObject.SetActive(false);
+		close.gameObject.SetActive(true);
 	}
 
 	private void WriteUploadProgress(UploadStatus status)
@@ -346,6 +349,33 @@ public class UploadPanel : MonoBehaviour
 	private void OnUploadProgress(long bytestransferred, long bytestotal)
 	{
 		status.currentFileProgressBytes = (ulong)bytestransferred;
+	}
+
+	public void Close()
+	{
+		done = true;
+	}
+
+	public void ViewOnWebsite()
+	{
+	}
+
+	public void Retry()
+	{
+		var filesToUpload = new Queue<FileUpload>();
+		if (status.fileInProgress != null)
+		{
+			filesToUpload.Enqueue(status.fileInProgress);
+		}
+
+		for (int i = status.filesUploaded.Count - 1; i >= 0; i--)
+		{
+			filesToUpload.Enqueue(status.filesUploaded[i]);
+		}
+
+		status = null;
+
+		StartUpload(filesToUpload);
 	}
 
 	public void Update()

@@ -642,8 +642,11 @@ MonoBehaviour:
   progressTime: {fileID: 114333586870681272}
   progressSpeed: {fileID: 114354786508148184}
   progressBar: {fileID: 114807132409883016}
-  resultMessage: {fileID: 0}
-  time: 0
+  resultMessage: {fileID: 9021084044221443236}
+  viewOnWebsite: {fileID: 8674994250341640258}
+  tryAgain: {fileID: 3919937341971974162}
+  close: {fileID: 323302565380806242}
+  done: 0
 --- !u!1 &1939554863022202
 GameObject:
   m_ObjectHideFlags: 0
@@ -825,7 +828,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3400318538247452720
 RectTransform:
   m_ObjectHideFlags: 0
@@ -927,7 +930,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3661373905191753210}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 114646683466016890}
+        m_TargetAssemblyTypeName: UploadPanel, Assembly-CSharp
+        m_MethodName: Close
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &2953266577487918510
 GameObject:
   m_ObjectHideFlags: 0
@@ -1025,7 +1040,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4312515629868019057
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1127,7 +1142,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 782226487329096471}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 114646683466016890}
+        m_TargetAssemblyTypeName: UploadPanel, Assembly-CSharp
+        m_MethodName: ViewOnWebsite
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &4116194274092995798
 GameObject:
   m_ObjectHideFlags: 0
@@ -1304,7 +1331,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3844400967953294991
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1406,4 +1433,16 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 3422619816231042984}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 114646683466016890}
+        m_TargetAssemblyTypeName: UploadPanel, Assembly-CSharp
+        m_MethodName: Retry
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
