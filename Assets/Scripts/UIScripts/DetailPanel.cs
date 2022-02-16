@@ -121,6 +121,7 @@ public class DetailPanel : MonoBehaviour
 		answerEnableVR = false;
 		indexPanel.SetActive(true);
 		indexPanel.GetComponent<IndexPanel>().modalBackground.SetActive(false);
+		QualitySettings.vSyncCount = 1;
 	}
 
 	public void PlayInVR()
@@ -130,6 +131,7 @@ public class DetailPanel : MonoBehaviour
 		answerEnableVR = true;
 		indexPanel.SetActive(true);
 		indexPanel.GetComponent<IndexPanel>().modalBackground.SetActive(false);
+		QualitySettings.vSyncCount = 0;
 	}
 
 	public void Delete()

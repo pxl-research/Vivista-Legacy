@@ -65,7 +65,7 @@ public class Player : MonoBehaviour
 	private Controller trackedControllerRight;
 
 	private List<InteractionPointPlayer> interactionPoints;
-	private List<InteractionPointPlayer> activeInteractionPoints;
+	private List<InteractionPointPlayer> shownInteractionPoints;
 	private List<InteractionPointPlayer> mandatoryInteractionPoints;
 	private FileLoader fileLoader;
 	private VideoController videoController;
@@ -108,6 +108,7 @@ public class Player : MonoBehaviour
 		Seekbar.instanceVR.compass.SetActive(false);
 
 		interactionPoints = new List<InteractionPointPlayer>();
+		shownInteractionPoints = new List<InteractionPointPlayer>();
 		mandatoryInteractionPoints = new List<InteractionPointPlayer>();
 
 		fileLoader = GameObject.Find("FileLoader").GetComponent<FileLoader>();
@@ -156,7 +157,7 @@ public class Player : MonoBehaviour
 
 		if (playerState == PlayerState.Watching)
 		{
-			activeInteractionPoints = GetActiveInteractionPoints();
+			RefreshShownInteractionPoints();
 
 			if (Input.GetKeyDown(KeyCode.Space) && !isVR)
 			{
@@ -165,11 +166,11 @@ public class Player : MonoBehaviour
 
 			if (isVR)
 			{
-				Seekbar.instanceVR.RenderBlips(activeInteractionPoints);
+				Seekbar.instanceVR.RenderBlips(shownInteractionPoints);
 			}
 			else
 			{
-				Seekbar.instance.RenderBlips(activeInteractionPoints);
+				Seekbar.instance.RenderBlips(shownInteractionPoints);
 			}
 
 			//Note(Simon): Interaction with points
@@ -180,7 +181,7 @@ public class Player : MonoBehaviour
 				Physics.Raycast(reversedRay, out var hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
 				//NOTE(Simon): Update visible interactionpoints
-				foreach (var point in activeInteractionPoints)
+				foreach (var point in shownInteractionPoints)
 				{
 					point.point.SetActive(true);
 					point.point.GetComponent<InteractionPointRenderer>().SetPingActive(!point.isSeen);
@@ -739,9 +740,14 @@ public class Player : MonoBehaviour
 		return new [] { trackedControllerLeft, trackedControllerRight};
 	}
 
-	public List<InteractionPointPlayer> GetActiveInteractionPoints()
+	public List<InteractionPointPlayer> GetShownInteractionPoints()
 	{
-		var interactions = new List<InteractionPointPlayer>();
+		return shownInteractionPoints;
+	}
+
+	private void RefreshShownInteractionPoints()
+	{
+		shownInteractionPoints.Clear();
 		
 		for (int i = 0; i < interactionPoints.Count; i++)
 		{
@@ -749,11 +755,9 @@ public class Player : MonoBehaviour
 								&& videoController.currentTime <= interactionPoints[i].endTime;
 			if (pointActive)
 			{
-				interactions.Add(interactionPoints[i]);
+				shownInteractionPoints.Add(interactionPoints[i]);
 			}
 		}
-
-		return interactions;
 	}
 
 	public List<InteractionPointPlayer> GetInactiveInteractionPoints()
