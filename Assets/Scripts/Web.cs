@@ -6,10 +6,11 @@ public class Web : MonoBehaviour
 	
 	public static string apiRootUrl;
 	public static string wwwrootUrl;
-	private static string debugBaseUrl = "http://localhost:5000";
+	private static string debugBaseUrl = "https://localhost:5001";
 
 	public static string indexUrl; //videos
-	public static string videoUrl; //video
+	public static string videoApiUrl; //video
+	public static string videoWebUrl; //video
 	public static string thumbnailUrl; //thumbnail
 	public static string finishUploadUrl; //finish_upload
 	public static string filesUrl; //files
@@ -49,7 +50,8 @@ public class Web : MonoBehaviour
 		apiRootUrl = newUrl + "/api";
 
 		indexUrl = apiRootUrl + "/videos";
-		videoUrl = apiRootUrl + "/video";
+		videoApiUrl = apiRootUrl + "/video";
+		videoWebUrl = wwwrootUrl + "/video";
 		thumbnailUrl = apiRootUrl + "/thumbnail";
 		finishUploadUrl = apiRootUrl + "/finish_upload";
 		filesUrl = apiRootUrl + "/files";

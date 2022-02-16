@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -8,6 +9,7 @@ using UnityEngine.Assertions;
 using UnityEngine.UI;
 using TusDotNetClient;
 using UnityEngine.Networking;
+using Debug = UnityEngine.Debug;
 
 public enum UploadFileType
 {
@@ -358,6 +360,14 @@ public class UploadPanel : MonoBehaviour
 
 	public void ViewOnWebsite()
 	{
+		string id = status.projectId.Encode();
+		string url = $"{Web.videoWebUrl}?id={id}";
+
+		Process.Start(new ProcessStartInfo
+		{
+			FileName = url,
+			UseShellExecute = true
+		});
 	}
 
 	public void Retry()

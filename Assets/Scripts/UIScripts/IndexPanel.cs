@@ -147,7 +147,7 @@ public class IndexPanel : MonoBehaviour
 		if (type == "video" && !String.IsNullOrEmpty(id))
 		{
 			GuidHelpers.TryDecode(id, out var guid);
-			var url = $"{Web.videoUrl}?id={guid}";
+			var url = $"{Web.videoApiUrl}?id={guid}";
 			using (var request = UnityWebRequest.Get(url))
 			{
 				request.SendWebRequest();
