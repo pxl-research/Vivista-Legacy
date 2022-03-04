@@ -11,6 +11,7 @@ public class Web : MonoBehaviour
 	public static string indexUrl; //videos
 	public static string videoApiUrl; //video
 	public static string videoWebUrl; //video
+	public static string editVideoUrl; //edit_video
 	public static string thumbnailUrl; //thumbnail
 	public static string finishUploadUrl; //finish_upload
 	public static string filesUrl; //files
@@ -52,6 +53,7 @@ public class Web : MonoBehaviour
 		indexUrl = apiRootUrl + "/videos";
 		videoApiUrl = apiRootUrl + "/video";
 		videoWebUrl = wwwrootUrl + "/video";
+		editVideoUrl = wwwrootUrl + "/edit_video";
 		thumbnailUrl = apiRootUrl + "/thumbnail";
 		finishUploadUrl = apiRootUrl + "/finish_upload";
 		filesUrl = apiRootUrl + "/files";

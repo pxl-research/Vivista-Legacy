@@ -808,8 +808,10 @@ public class Player : MonoBehaviour
 	public IEnumerator EnableVR()
 	{
 		Instantiate(XRInputPrefab);
-		XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-		StartCoroutine(XRGeneralSettings.Instance.Manager.InitializeLoader());
+		if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+		{
+			StartCoroutine(XRGeneralSettings.Instance.Manager.InitializeLoader());
+		}
 
 		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
@@ -839,21 +841,11 @@ public class Player : MonoBehaviour
 		{
 			Destroy(XRInput.singleton.gameObject);
 			yield return new WaitForEndOfFrame();
+			XRGeneralSettings.Instance.Manager.StopSubsystems();
 			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
 			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 			controllerLeft.SetActive(false);
 			controllerRight.SetActive(false);
 		}
-	}
-
-	private float VideoFadeGetCurrentSpeed(double timeToNextPause)
-	{
-		float speed = (float)(timeToNextPause / pauseFadeTime);
-		if (timeToNextPause < .05f)
-		{
-			speed = 0;
-		}
-
-		return speed;
 	}
 }

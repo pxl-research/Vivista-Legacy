@@ -152,7 +152,7 @@ public class Controller : MonoBehaviour
 		if (IsEventForThisController(side))
 		{
 			int direction = (int)Mathf.Sign(value.x);
-			if (lastRotateTime + 0.5f < Time.time || direction != lastRotateDirection)
+			if (lastRotateTime + 0.3f < Time.time || direction != lastRotateDirection)
 			{
 				if (Mathf.Abs(value.x) > 0.5)
 				{

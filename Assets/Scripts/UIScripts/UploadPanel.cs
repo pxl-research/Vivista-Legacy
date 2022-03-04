@@ -361,7 +361,7 @@ public class UploadPanel : MonoBehaviour
 	public void ViewOnWebsite()
 	{
 		string id = status.projectId.Encode();
-		string url = $"{Web.videoWebUrl}?id={id}";
+		string url = $"{Web.editVideoUrl}?id={id}";
 
 		Process.Start(new ProcessStartInfo
 		{
