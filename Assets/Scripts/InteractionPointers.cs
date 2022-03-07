@@ -99,7 +99,10 @@ public class InteractionPointers : MonoBehaviour
 				rect.localRotation = Quaternion.Euler(0, 0, angle);
 				rect.localScale = Vector3.one * (0.85f + animTime * .3f);
 
-				activeArrows[i].GetComponent<Image>().color = TagManager.Instance.GetTagColorById(point.tagId);
+				float alpha = point.isSeen ? 0.25f : .95f;
+				var color = TagManager.Instance.GetTagColorById(point.tagId);
+				color.a = alpha;
+				activeArrows[i].GetComponent<Image>().color = color;
 			}
 		}
 	}
