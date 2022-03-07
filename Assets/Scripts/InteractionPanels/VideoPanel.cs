@@ -82,7 +82,7 @@ public class VideoPanel : MonoBehaviour
 			increaseVolumeButton.onClick.AddListener(IncreaseVolume);
 		}
 
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
+		if (XRSettings.isDeviceActive)
 		{
 			controllerLeft = GameObject.Find("LeftHand").GetComponentInChildren<Controller>();
 			controllerRight = GameObject.Find("RightHand").GetComponentInChildren<Controller>();
@@ -176,7 +176,7 @@ public class VideoPanel : MonoBehaviour
 
 	private void CheckButtonStates()
 	{
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null
+		if (XRSettings.isDeviceActive
 			&& controllerLeft != null && controllerRight != null
 			&& !(controllerLeft.triggerDown || controllerRight.triggerDown) && (increaseButtonPressed || decreaseButtonPressed))
 		{

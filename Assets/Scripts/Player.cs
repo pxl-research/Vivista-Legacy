@@ -128,7 +128,7 @@ public class Player : MonoBehaviour
 
 	void Update()
 	{
-		bool isVR = VRDevices.loadedSdk != VRDevices.LoadedSdk.None;
+		bool isVR = XRSettings.isDeviceActive;
 		Seekbar.instance.gameObject.SetActive(!isVR);
 		Seekbar.instanceVR.gameObject.SetActive(isVR);
 
@@ -149,7 +149,7 @@ public class Player : MonoBehaviour
 				interactionpointRay = trackedControllerRight.CastRay();
 			}
 
-			if (VRDevices.hasNoControllers && Input.GetMouseButtonUp(0))
+			if (!XRSettings.isDeviceActive && Input.GetMouseButtonUp(0))
 			{
 				interactionpointRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 			}
@@ -713,7 +713,7 @@ public class Player : MonoBehaviour
 
 	public void ShowMandatoryInteractionMessage()
 	{
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
+		if (XRSettings.isDeviceActive)
 		{
 			mandatoryPauseMessageVR.SetActive(true);
 		}
@@ -725,7 +725,7 @@ public class Player : MonoBehaviour
 
 	public void HideMandatoryInteractionMessage()
 	{
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
+		if (XRSettings.isDeviceActive)
 		{
 			mandatoryPauseMessageVR.SetActive(false);
 		}

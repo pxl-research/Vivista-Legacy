@@ -95,7 +95,7 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 				{
 					var localPos = new List<Vector2>();
 
-					if (XRGeneralSettings.Instance.Manager.activeLoader != null)
+					if (XRSettings.isDeviceActive)
 					{
 						//NOTE(Simon): Prefers right controller over left
 						if (VRDevices.hasRightController)

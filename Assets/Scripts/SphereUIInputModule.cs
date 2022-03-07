@@ -73,7 +73,7 @@ public class SphereUIInputModule: StandaloneInputModule
 
 		//NOTE(Simon): There could be more than 1 inputdevice (VR controllers for example), so store them all in a list
 		directions.Clear();
-		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
+		if (XRSettings.isDeviceActive)
 		{
 			if (!VRDevices.hasNoControllers)
 			{

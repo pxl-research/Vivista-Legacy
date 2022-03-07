@@ -1,12 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
+using UnityEngine.XR.Management;
 
 public class InteractionPointers : MonoBehaviour
 {
 	public static InteractionPointers Instance;
 
 	public GameObject arrowPrefab;
+	[Range(0, 1)]
+	public float boundsSize2D;
+	[Range(0, 1)]
+	public float boundsSizeVR;
 
 	private List<GameObject> activeArrows = new List<GameObject>();
 	private List<GameObject> inactiveArrows = new List<GameObject>();
@@ -64,7 +70,8 @@ public class InteractionPointers : MonoBehaviour
 
 			float animTime = MathHelper.SmoothPingPong(Time.time, .6f);
 			var centre = new Vector3(Screen.width, Screen.height) / 2f;
-			var bounds = centre * (0.9f - 0.03f * animTime);
+ 			var boundsSize = XRSettings.isDeviceActive ? boundsSizeVR : boundsSize2D;
+			var bounds = centre * (boundsSize - 0.03f * animTime);
 
 			if (isOffscreen)
 			{
@@ -99,7 +106,7 @@ public class InteractionPointers : MonoBehaviour
 				rect.localRotation = Quaternion.Euler(0, 0, angle);
 				rect.localScale = Vector3.one * (0.85f + animTime * .3f);
 
-				float alpha = point.isSeen ? 0.25f : .95f;
+				float alpha = point.isSeen ? 0.4f : .95f;
 				var color = TagManager.Instance.GetTagColorById(point.tagId);
 				color.a = alpha;
 				activeArrows[i].GetComponent<Image>().color = color;
