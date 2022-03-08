@@ -65,20 +65,15 @@ public class DetailPanel : MonoBehaviour
 			playInVRButton.interactable = false;
 		}
 
-		if (isLocal)
-		{
-			imageDownload = UnityWebRequest.Get("file:///" + Path.Combine(Application.persistentDataPath, video.id, SaveFile.thumbFilename));
-		}
-		else
-		{
-			imageDownload = UnityWebRequest.Get(Web.thumbnailUrl + "?id=" + video.id);
-		}
+		imageDownload = isLocal 
+			? UnityWebRequest.Get("file:///" + Path.Combine(Application.persistentDataPath, video.id, SaveFile.thumbFilename)) 
+			: UnityWebRequest.Get(Web.thumbnailUrl + "?id=" + video.id);
 
 		using (imageDownload)
 		{
 			yield return imageDownload.SendWebRequest();
 
-			if (imageDownload.isNetworkError)
+			if (imageDownload.result != UnityWebRequest.Result.Success)
 			{
 				Debug.Log("Failed to download thumbnail: " + imageDownload.error);
 				imageDownload.Dispose();

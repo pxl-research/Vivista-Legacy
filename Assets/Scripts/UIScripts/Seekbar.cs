@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.XR;
-using UnityEngine.XR.Management;
 
 public class Seekbar : MonoBehaviour
 {
@@ -41,11 +38,12 @@ public class Seekbar : MonoBehaviour
 	public static Seekbar instanceVR;
 	public static Seekbar instance;
 
-	private static List<GameObject> activeBlips;
-	private static Stack<GameObject> inactiveBlips;
+	public static GameObjectPool blipPool;
 
 	void Awake()
 	{
+		blipPool = new GameObjectPool(blipPrefab, compass.transform);
+
 		compass = compassBackground;
 		if (isVRSeekbar)
 		{
@@ -70,8 +68,6 @@ public class Seekbar : MonoBehaviour
 			AttachCompassToSeekbar();
 		}
 
-		activeBlips = new List<GameObject>();
-		inactiveBlips = new Stack<GameObject>();
 		blipCounter = compass.GetComponentInChildren<Text>();
 		isEditor = SceneManager.GetActiveScene().name.Equals("Editor");
 	}
@@ -232,13 +228,7 @@ public class Seekbar : MonoBehaviour
 
 	public static void ClearBlips()
 	{
-		while (activeBlips.Count > 0)
-		{
-			var inactive = activeBlips[activeBlips.Count - 1];
-			activeBlips.RemoveAt(activeBlips.Count - 1);
-			inactiveBlips.Push(inactive);
-			inactive.SetActive(false);
-		}
+		blipPool.ClearActive();
 	}
 
 	public void RenderBlips(List<InteractionPointPlayer> activeInteractionPoints)
@@ -255,40 +245,21 @@ public class Seekbar : MonoBehaviour
 		}
 
 		//NOTE(Simon): Update counter text
-		blipCounter.text = activeBlips.Count != 0
-			? activeBlips.Count.ToString()
+		blipCounter.text = blipPool.Count != 0
+			? blipPool.Count.ToString()
 			: "";
+
+		blipPool.EnsureActiveCount(blipsToShow.Count);
 
 		//NOTE(Simon): Update blips, and active/create new blips when necessary
 		for (int i = 0; i < blipsToShow.Count; i++)
 		{
 			var point = blipsToShow[i];
 
-			if (activeBlips.Count < blipsToShow.Count)
-			{
-				if (inactiveBlips.Count == 0)
-				{
-					inactiveBlips.Push(CreateBlip());
-				}
-
-				var blip = inactiveBlips.Pop();
-				blip.SetActive(true);
-				activeBlips.Add(blip);
-			}
-
 			float blipAngle = point.point.transform.eulerAngles.y;
 			float angle = (VRDevices.loadedSdk == VRDevices.LoadedSdk.None ? compass.transform.parent.localEulerAngles.y : 90) - blipAngle;
-			activeBlips[i].transform.localEulerAngles = new Vector3(0, 0, angle);
-			activeBlips[i].transform.SetParent(compass.transform, false);
-		}
-
-		//NOTE(Simon): Deactivate unneeded blips
-		while (activeBlips.Count > blipsToShow.Count)
-		{
-			var inactive = activeBlips[activeBlips.Count - 1];
-			activeBlips.RemoveAt(activeBlips.Count - 1);
-			inactive.SetActive(false);
-			inactiveBlips.Push(inactive);
+			blipPool[i].transform.localEulerAngles = new Vector3(0, 0, angle);
+			blipPool[i].transform.SetParent(compass.transform, false);
 		}
 	}
 }

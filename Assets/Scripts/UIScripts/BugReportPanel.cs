@@ -63,7 +63,7 @@ public class BugReportPanel : MonoBehaviour
 			{
 				yield return request.SendWebRequest();
 
-				if (request.isNetworkError || request.isHttpError)
+				if (request.result != UnityWebRequest.Result.Success)
 				{
 					errorMessage.gameObject.SetActive(true);
 					yield break;

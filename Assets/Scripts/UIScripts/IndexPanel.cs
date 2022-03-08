@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-using UnityEngine.XR;
 
 [Serializable]
 public class VideoResponseSerialize
@@ -38,15 +35,6 @@ public class VideoSerialize
 
 public class IndexPanel : MonoBehaviour
 {
-	private enum AgeOptions
-	{
-		Forever,
-		Today,
-		ThisWeek,
-		ThisMonth,
-		ThisYear,
-	}
-
 	public bool answered;
 	public string answerVideoId;
 
@@ -65,18 +53,10 @@ public class IndexPanel : MonoBehaviour
 	public Image spinner;
 	public Text noVideos;
 	public GameObject serverConnectionError;
-	public GameObject filters;
 	public GameObject modalBackground;
 	public GameObject updateAvailableNotification;
 
-
-	public bool isLocal;
 	public bool isFinishedLoadingVideos;
-
-	public Dropdown2 searchAge;
-
-	private float lastFilterInteractionTime = float.MaxValue;
-	private const float filterInteractionRefreshTime = 0.4f;
 
 	private int page = 1;
 	private int numPages = 1;
@@ -86,47 +66,22 @@ public class IndexPanel : MonoBehaviour
 	int lastScreenWidth;
 	int lastScreenHeight;
 
-	private int searchParamAgeDays;
-	private string searchParamText;
-	private string searchParamAuthor;
-
 	private VideoResponseSerialize loadedVideos;
 	private VideoSerialize detailVideo;
 
-	private Coroutine loadFunction;
+	private GameObjectPool videoPool;
 
 	public void Start()
 	{
+		videoPool = new GameObjectPool(videoPrefab, videoContainer.transform);
+
 		OpenVideoFromCmdArgument();
 
 		videoContainer.GetComponent<FlowLayoutGroup>().OnLayoutChange += OnLayoutChange;
 
-		SetLocal();
-
 		pageLabels = new List<GameObject>();
-		isLocal = true;
 
 		LoadPage();
-
-		searchAge.options.Clear();
-		foreach (var option in Enum.GetNames(typeof(AgeOptions)))
-		{
-			var cleanName = new StringBuilder();
-
-			for (int i = 0; i < option.Length; i++)
-			{
-				if (option[i] > 65 && option[i] < 90)
-				{
-					cleanName.Append(" ");
-				}
-
-				cleanName.Append(option[i]);
-			}
-
-			searchAge.options.Add(new Dropdown.OptionData {text = cleanName.ToString(), image = null});
-		}
-
-		page = 1;
 
 		lastScreenWidth = Screen.width;
 		lastScreenHeight = Screen.height;
@@ -160,7 +115,7 @@ public class IndexPanel : MonoBehaviour
 				if (detailVideo != null && detailVideo.id != null)
 				{
 					detailVideo.realTimestamp = DateTime.Parse(detailVideo.timestamp);
-					ShowVideoDetails(detailVideo);
+					ShowVideoDetails(detailVideo, isLocal: false);
 					return;
 				}
 			}
@@ -284,12 +239,6 @@ public class IndexPanel : MonoBehaviour
 			}
 		}
 
-		if (Time.time > lastFilterInteractionTime + filterInteractionRefreshTime)
-		{
-			LoadPage();
-			lastFilterInteractionTime = float.MaxValue;
-		}
-
 		if (lastScreenWidth != Screen.width || lastScreenHeight != Screen.height)
 		{
 			lastScreenWidth = Screen.width;
@@ -298,7 +247,7 @@ public class IndexPanel : MonoBehaviour
 		}
 	}
 
-	public void ShowVideoDetails(VideoSerialize video)
+	public void ShowVideoDetails(VideoSerialize video, bool isLocal = true)
 	{
 		detailVideo = video;
 		detailPanel = Instantiate(detailPanelPrefab);
@@ -308,77 +257,6 @@ public class IndexPanel : MonoBehaviour
 	}
 
 	public void LoadPage()
-	{
-		if (loadFunction != null)
-		{
-			StopCoroutine(loadFunction);
-		}
-
-		if (isLocal)
-		{
-			LoadLocalPageInternal();
-		}
-		else
-		{
-			loadFunction = StartCoroutine(LoadInternetPageInternal());
-		}
-	}
-
-	public IEnumerator LoadInternetPageInternal()
-	{
-		serverConnectionError.SetActive(false);
-		videoContainer.SetActive(false);
-		spinner.gameObject.SetActive(true);
-		spinner.rectTransform.rotation = Quaternion.identity;
-
-		var offset = (page - 1) * videosPerPage;
-
-		var url = $"{Web.indexUrl}?count={videosPerPage}&offset={offset}";
-		if (searchParamAgeDays > 0)
-		{
-			url += $"&agedays={searchParamAgeDays}";
-		}
-		if (!string.IsNullOrEmpty(searchParamText))
-		{
-			url += $"&search={searchParamText}";
-		}
-		if (!string.IsNullOrEmpty(searchParamAuthor))
-		{
-			url += $"&author={searchParamAuthor}";
-		}
-
-		using (var request = UnityWebRequest.Get(url))
-		{
-
-			yield return request.SendWebRequest();
-			spinner.gameObject.SetActive(false);
-
-			if (request.isNetworkError || request.isHttpError)
-			{
-				serverConnectionError.SetActive(true);
-				yield break;
-			}
-
-			loadedVideos = JsonUtility.FromJson<VideoResponseSerialize>(request.downloadHandler.text);
-
-			videoContainer.SetActive(true);
-			noVideos.enabled = loadedVideos.videos.Count == 0;
-
-			for (int i = offset; i < loadedVideos.videos.Count; i++)
-			{
-				var video = loadedVideos.videos[i];
-				video.realTimestamp = DateTime.Parse(video.timestamp);
-			}
-
-			totalVideos = loadedVideos.totalcount;
-			numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float) videosPerPage));
-			page = loadedVideos.page;
-		}
-
-		BuildVideoGameObjects(false);
-	}
-
-	public void LoadLocalPageInternal()
 	{
 		serverConnectionError.SetActive(false);
 		videoContainer.SetActive(false);
@@ -390,41 +268,61 @@ public class IndexPanel : MonoBehaviour
 		//Note(Simon): Regex to match Guids
 		var localVideos = di.GetDirectories("*-*-*-*-*");
 
-		if (loadedVideos == null) { loadedVideos = new VideoResponseSerialize(); }
-		loadedVideos.videos = new List<VideoSerialize>();
+		if (loadedVideos == null) 
+		{ 
+			loadedVideos = new VideoResponseSerialize(); 
+			loadedVideos.videos = new List<VideoSerialize>();
+		}
 
 		loadedVideos.totalcount = localVideos.Length;
 
 		for (var i = (page - 1) * videosPerPage; i < Mathf.Min(page * videosPerPage, localVideos.Length); i++)
 		{
 			var projectPath = localVideos[i].FullName;
-			var folderInfo = new DirectoryInfo(projectPath);
 
-			try
+			int loadedIndex = i - (page - 1) * videosPerPage;
+
+			if (loadedIndex > loadedVideos.videos.Count - 1)
+			{
+				try
+				{
+					var data = SaveFile.OpenFile(projectPath);
+					var folderInfo = new DirectoryInfo(projectPath);
+
+					loadedVideos.videos.Add(new VideoSerialize
+					{
+						title = data.meta.title,
+						description = data.meta.description,
+						downloadsize = FileHelpers.DirectorySize(folderInfo),
+						realTimestamp = folderInfo.LastWriteTime,
+						id = localVideos[i].Name,
+						compatibleVersion = !(data.meta.version > SaveFile.VERSION)
+					});
+				}
+				catch
+				{
+					loadedVideos.videos.Add(new VideoSerialize
+					{
+						title = "Corrupted file",
+						description = "",
+						downloadsize = 0,
+						realTimestamp = DateTime.MinValue,
+						id = localVideos[i].Name,
+						compatibleVersion = true
+					});
+				}
+			}
+			else if(localVideos[i].Name != loadedVideos.videos[loadedIndex].id)
 			{
 				var data = SaveFile.OpenFile(projectPath);
+				var folderInfo = new DirectoryInfo(projectPath);
 
-				loadedVideos.videos.Add(new VideoSerialize
-				{
-					title = data.meta.title,
-					description = data.meta.description,
-					downloadsize = FileHelpers.DirectorySize(folderInfo),
-					realTimestamp = folderInfo.LastWriteTime,
-					id = localVideos[i].Name,
-					compatibleVersion = !(data.meta.version > SaveFile.VERSION)
-				});
-			}
-			catch
-			{
-				loadedVideos.videos.Add(new VideoSerialize
-				{
-					title = "Corrupted file",
-					description = "",
-					downloadsize = 0,
-					realTimestamp = DateTime.MinValue,
-					id = localVideos[i].Name,
-					compatibleVersion = true
-				});
+				loadedVideos.videos[loadedIndex].title = data.meta.title;
+				loadedVideos.videos[loadedIndex].description = data.meta.description;
+				loadedVideos.videos[loadedIndex].downloadsize = FileHelpers.DirectorySize(folderInfo);
+				loadedVideos.videos[loadedIndex].realTimestamp = folderInfo.LastWriteTime;
+				loadedVideos.videos[loadedIndex].id = localVideos[i].Name;
+				loadedVideos.videos[loadedIndex].compatibleVersion = !(data.meta.version > SaveFile.VERSION);
 			}
 		}
 
@@ -459,57 +357,6 @@ public class IndexPanel : MonoBehaviour
 		LoadPage();
 	}
 
-	public void SetSearchAge(int index)
-	{
-		switch ((AgeOptions)index)
-		{
-			case AgeOptions.Today:
-				searchParamAgeDays = 1;
-				break;
-			case AgeOptions.ThisWeek:
-				searchParamAgeDays = 7;
-				break;
-			case AgeOptions.ThisMonth:
-				searchParamAgeDays = 31;
-				break;
-			case AgeOptions.ThisYear:
-				searchParamAgeDays = 365;
-				break;
-			case AgeOptions.Forever:
-				searchParamAgeDays = -1;
-				break;
-		}
-
-		lastFilterInteractionTime = Time.time;
-		page = 1;
-	}
-
-	public void SetSearchText(string text)
-	{
-		searchParamText = text;
-		lastFilterInteractionTime = Time.time;
-		page = 1;
-	}
-
-	public void SetAuthorText(string author)
-	{
-		searchParamAuthor = author;
-		lastFilterInteractionTime = Time.time;
-		page = 1;
-	}
-
-	public void SetLocal()
-	{
-		isLocal = true;
-		filters.SetActive(false);
-	}
-
-	public void SetInternet()
-	{
-		isLocal = false;
-		filters.SetActive(true);
-	}
-
 	public void StartImportVideo()
 	{
 		//NOTE(Simon): Hide window by making scale 0
@@ -517,6 +364,12 @@ public class IndexPanel : MonoBehaviour
 
 		//NOTE(Simon): Wait for import path from explorer panel
 		importPanel = Instantiate(UIPanels.Instance.importPanel, Canvass.main.transform, false);
+	}
+
+	public void PlayVideoVR(VideoSerialize video)
+	{
+		StartCoroutine(Player.Instance.EnableVR());
+		PlayVideo(video);
 	}
 
 	public void PlayVideo(VideoSerialize video)
@@ -530,34 +383,19 @@ public class IndexPanel : MonoBehaviour
 		}
 	}
 
-	public void PlayVideoVR(VideoSerialize video)
-	{
-		StartCoroutine(Player.Instance.EnableVR());
-		PlayVideo(video);
-	}
-
 	private void BuildVideoGameObjects(bool isLocal)
 	{
 		isFinishedLoadingVideos = false;
 
 		var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-		while (videos.Count < Mathf.Min(videosPerPage, videosThisPage.Count))
-		{
-			var video = Instantiate(videoPrefab);
-			video.transform.SetParent(videoContainer.transform, false);
-			videos.Add(video);
-		}
-		while (videos.Count > Mathf.Min(videosPerPage, videosThisPage.Count))
-		{
-			var video = videos[videos.Count - 1];
-			videos.RemoveAt(videos.Count - 1);
-			Destroy(video);
-		}
+		int videoDisplayCount = Mathf.Min(videosPerPage, videosThisPage.Count);
 
-		for (int i = 0; i < videosThisPage.Count; i++)
+		videoPool.EnsureActiveCount(videoDisplayCount);
+		
+		for (int i = 0; i < videoDisplayCount; i++)
 		{
 			var v = videosThisPage[i];
-			StartCoroutine(videos[i].GetComponent<IndexPanelVideo>().SetData(v, isLocal, this));
+			StartCoroutine(videoPool[i].GetComponent<IndexPanelVideo>().SetData(v, isLocal, this));
 		}
 
 		isFinishedLoadingVideos = true;

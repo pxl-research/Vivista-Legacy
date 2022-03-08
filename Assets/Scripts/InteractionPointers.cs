@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
@@ -14,8 +13,7 @@ public class InteractionPointers : MonoBehaviour
 	[Range(0, 1)]
 	public float boundsSizeVR;
 
-	private List<GameObject> activeArrows = new List<GameObject>();
-	private List<GameObject> inactiveArrows = new List<GameObject>();
+	private GameObjectPool arrowPool;
 
 	private Plane[] cameraPlanes = new Plane[6];
 
@@ -25,6 +23,8 @@ public class InteractionPointers : MonoBehaviour
 	{
 		Instance = this;
 		shouldRender = true;
+
+		arrowPool = new GameObjectPool(arrowPrefab, transform);
 	}
 
 	private void Update()
@@ -36,29 +36,7 @@ public class InteractionPointers : MonoBehaviour
 			return;
 		}
 
-		while (activeInteractions.Count > activeArrows.Count)
-		{
-			if (inactiveArrows.Count > 0)
-			{
-				var arrow = inactiveArrows[inactiveArrows.Count - 1];
-				inactiveArrows.RemoveAt(inactiveArrows.Count - 1);
-				arrow.SetActive(true);
-				activeArrows.Add(arrow);
-			}
-			else
-			{
-				var arrow = Instantiate(arrowPrefab, transform, false);
-				activeArrows.Add(arrow);
-			}
-		}
-
-		while (activeInteractions.Count < activeArrows.Count)
-		{
-			var arrow = activeArrows[activeArrows.Count - 1];
-			activeArrows.RemoveAt(activeArrows.Count - 1);
-			arrow.SetActive(false);
-			inactiveArrows.Add(arrow);
-		}
+		arrowPool.EnsureActiveCount(activeInteractions.Count);
 
 		for (int i = 0; i < activeInteractions.Count; i++)
 		{
@@ -66,7 +44,7 @@ public class InteractionPointers : MonoBehaviour
 
 			GeometryUtility.CalculateFrustumPlanes(Camera.main, cameraPlanes);
 			bool isOffscreen = !GeometryUtility.TestPlanesAABB(cameraPlanes, point.point.GetComponent<Renderer>().bounds);
-			activeArrows[i].SetActive(isOffscreen && shouldRender);
+			arrowPool[i].SetActive(isOffscreen && shouldRender);
 
 			float animTime = MathHelper.SmoothPingPong(Time.time, .6f);
 			var centre = new Vector3(Screen.width, Screen.height) / 2f;
@@ -101,7 +79,7 @@ public class InteractionPointers : MonoBehaviour
 					pos = new Vector3(-bounds.y / slope, -bounds.y, 0);
 				}
 
-				var rect = activeArrows[i].GetComponent<RectTransform>();
+				var rect = arrowPool[i].GetComponent<RectTransform>();
 				rect.localPosition = pos;
 				rect.localRotation = Quaternion.Euler(0, 0, angle);
 				rect.localScale = Vector3.one * (0.85f + animTime * .3f);
@@ -109,7 +87,7 @@ public class InteractionPointers : MonoBehaviour
 				float alpha = point.isSeen ? 0.4f : .95f;
 				var color = TagManager.Instance.GetTagColorById(point.tagId);
 				color.a = alpha;
-				activeArrows[i].GetComponent<Image>().color = color;
+				arrowPool[i].GetComponent<Image>().color = color;
 			}
 		}
 	}

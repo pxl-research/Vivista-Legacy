@@ -56,14 +56,9 @@ public class IndexPanelVideo : MonoBehaviour
 			error.transform.parent.gameObject.SetActive(false);
 		}
 
-		if (isLocal)
-		{
-			imageDownload = UnityWebRequestTexture.GetTexture("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename)));
-		}
-		else
-		{
-			imageDownload = UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + video.id);
-		}
+		imageDownload = isLocal 
+			? UnityWebRequestTexture.GetTexture("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename))) 
+			: UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + video.id);
 
 		using (imageDownload)
 		{
@@ -74,7 +69,7 @@ public class IndexPanelVideo : MonoBehaviour
 				Assert.IsTrue(false, "This isn't supposed to happen. Investigate! " + imageDownload.url);
 			}
 
-			if (imageDownload.isNetworkError || imageDownload.isHttpError)
+			if (imageDownload.result != UnityWebRequest.Result.Success)
 			{
 				Debug.Log("Failed to download thumbnail " + imageDownload.url + ": " + imageDownload.error);
 			}
