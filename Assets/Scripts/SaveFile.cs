@@ -127,16 +127,22 @@ public static class SaveFile
 		var result = JsonGetValueFromLine(raw, 0);
 		int fileVersion = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
 
+		bool shouldReloadRaw = false;
 		if (fileVersion < VERSION)
 		{
 			var saveFileDataCompat = ParseForVersion(raw, fileVersion);
 			var currentSaveFile = ConvertCompatToCurrent(saveFileDataCompat);
 			WriteFile(projectFolder, currentSaveFile);
+			shouldReloadRaw = true;
 		}
 
 		var saveFileData = new SaveFileData();
 
-		raw = GetMetaContents(projectFolder);
+		if (shouldReloadRaw)
+		{
+			raw = GetMetaContents(projectFolder);
+		}
+
 		result = JsonGetValueFromLine(raw, 0);
 		saveFileData.meta.version = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
 
