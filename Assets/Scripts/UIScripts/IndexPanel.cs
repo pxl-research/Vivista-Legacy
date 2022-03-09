@@ -47,12 +47,10 @@ public class IndexPanel : MonoBehaviour
 	public GameObject pageLabelContainer;
 	public GameObject videoContainer;
 	public List<GameObject> pageLabels;
-	public List<GameObject> videos;
 	public Button previousPage;
 	public Button nextPage;
 	public Image spinner;
 	public Text noVideos;
-	public GameObject serverConnectionError;
 	public GameObject modalBackground;
 	public GameObject updateAvailableNotification;
 
@@ -60,11 +58,12 @@ public class IndexPanel : MonoBehaviour
 
 	private int page = 1;
 	private int numPages = 1;
-	private int videosPerPage => videoContainer.GetComponent<FlowLayoutGroup>().CalcMaxChildren(videoPrefab.GetComponent<RectTransform>().sizeDelta);
-	private int totalVideos = 1;
+	private int videosPerPage;
 
 	int lastScreenWidth;
 	int lastScreenHeight;
+	float lastLayoutRebuildTime;
+	bool layoutDirty;
 
 	private VideoResponseSerialize loadedVideos;
 	private VideoSerialize detailVideo;
@@ -77,7 +76,7 @@ public class IndexPanel : MonoBehaviour
 
 		OpenVideoFromCmdArgument();
 
-		videoContainer.GetComponent<FlowLayoutGroup>().OnLayoutChange += OnLayoutChange;
+		//videoContainer.GetComponent<FlowLayoutGroup>().OnLayoutChange += OnLayoutChange;
 
 		pageLabels = new List<GameObject>();
 
@@ -243,7 +242,14 @@ public class IndexPanel : MonoBehaviour
 		{
 			lastScreenWidth = Screen.width;
 			lastScreenHeight = Screen.height;
-			OnLayoutChange();
+			layoutDirty = true;
+		}
+
+		if (layoutDirty && lastLayoutRebuildTime < Time.time - .5f)
+		{
+			LoadPage();
+			lastLayoutRebuildTime = Time.time;
+			layoutDirty = false;
 		}
 	}
 
@@ -258,7 +264,8 @@ public class IndexPanel : MonoBehaviour
 
 	public void LoadPage()
 	{
-		serverConnectionError.SetActive(false);
+		videosPerPage = CalculateNumVideosPerPage();
+
 		videoContainer.SetActive(false);
 		spinner.gameObject.SetActive(true);
 		spinner.rectTransform.rotation = Quaternion.identity;
@@ -268,6 +275,12 @@ public class IndexPanel : MonoBehaviour
 		//Note(Simon): Regex to match Guids
 		var localVideos = di.GetDirectories("*-*-*-*-*");
 
+		numPages = Mathf.Max(1, Mathf.CeilToInt(localVideos.Length / (float)videosPerPage));
+		if (page > numPages)
+		{
+			page = numPages;
+		}
+
 		if (loadedVideos == null) 
 		{ 
 			loadedVideos = new VideoResponseSerialize(); 
@@ -275,12 +288,12 @@ public class IndexPanel : MonoBehaviour
 		}
 
 		loadedVideos.totalcount = localVideos.Length;
-
-		for (var i = (page - 1) * videosPerPage; i < Mathf.Min(page * videosPerPage, localVideos.Length); i++)
+		int i;
+		for (i = (page - 1) * videosPerPage; i < Mathf.Min(page * videosPerPage, localVideos.Length); i++)
 		{
 			var projectPath = localVideos[i].FullName;
 
-			int loadedIndex = i - (page - 1) * videosPerPage;
+			int loadedIndex = i % videosPerPage;
 
 			if (loadedIndex > loadedVideos.videos.Count - 1)
 			{
@@ -292,7 +305,6 @@ public class IndexPanel : MonoBehaviour
 					loadedVideos.videos.Add(new VideoSerialize
 					{
 						title = data.meta.title,
-						description = data.meta.description,
 						downloadsize = FileHelpers.DirectorySize(folderInfo),
 						realTimestamp = folderInfo.LastWriteTime,
 						id = localVideos[i].Name,
@@ -304,7 +316,6 @@ public class IndexPanel : MonoBehaviour
 					loadedVideos.videos.Add(new VideoSerialize
 					{
 						title = "Corrupted file",
-						description = "",
 						downloadsize = 0,
 						realTimestamp = DateTime.MinValue,
 						id = localVideos[i].Name,
@@ -316,23 +327,26 @@ public class IndexPanel : MonoBehaviour
 			{
 				var data = SaveFile.OpenFile(projectPath);
 				var folderInfo = new DirectoryInfo(projectPath);
-
-				loadedVideos.videos[loadedIndex].title = data.meta.title;
-				loadedVideos.videos[loadedIndex].description = data.meta.description;
-				loadedVideos.videos[loadedIndex].downloadsize = FileHelpers.DirectorySize(folderInfo);
-				loadedVideos.videos[loadedIndex].realTimestamp = folderInfo.LastWriteTime;
-				loadedVideos.videos[loadedIndex].id = localVideos[i].Name;
-				loadedVideos.videos[loadedIndex].compatibleVersion = !(data.meta.version > SaveFile.VERSION);
+				loadedVideos.videos[loadedIndex] = new VideoSerialize
+				{
+					title = data.meta.title,
+					downloadsize = FileHelpers.DirectorySize(folderInfo),
+					realTimestamp = folderInfo.LastWriteTime,
+					id = localVideos[i].Name,
+					compatibleVersion = !(data.meta.version > SaveFile.VERSION)
+				};
+				
 			}
 		}
+
+		var index = (i - 1) % videosPerPage + 1;
+		loadedVideos.videos.RemoveRange(index, loadedVideos.videos.Count - index);
 
 		videoContainer.SetActive(true);
 		spinner.gameObject.SetActive(false);
 
 		noVideos.enabled = loadedVideos.videos.Count == 0;
 
-		totalVideos = loadedVideos.totalcount;
-		numPages = Mathf.Max(1, Mathf.CeilToInt(totalVideos / (float)videosPerPage));
 
 		BuildVideoGameObjects(true);
 	}
@@ -387,23 +401,15 @@ public class IndexPanel : MonoBehaviour
 	{
 		isFinishedLoadingVideos = false;
 
-		var videosThisPage = loadedVideos.videos ?? new List<VideoSerialize>();
-		int videoDisplayCount = Mathf.Min(videosPerPage, videosThisPage.Count);
-
-		videoPool.EnsureActiveCount(videoDisplayCount);
+		videoPool.EnsureActiveCount(loadedVideos.videos.Count);
 		
-		for (int i = 0; i < videoDisplayCount; i++)
+		for (int i = 0; i < loadedVideos.videos.Count; i++)
 		{
-			var v = videosThisPage[i];
+			var v = loadedVideos.videos[i];
 			StartCoroutine(videoPool[i].GetComponent<IndexPanelVideo>().SetData(v, isLocal, this));
 		}
 
 		isFinishedLoadingVideos = true;
-	}
-
-	private void OnLayoutChange()
-	{
-		LoadPage();
 	}
 
 	//NOTE(Simon): This is used as a callback, which is why it receives the seemingly unnecessary 'shouldShow' parameter
@@ -427,5 +433,10 @@ public class IndexPanel : MonoBehaviour
 	public void OnUpdateCancel()
 	{
 		modalBackground.SetActive(false);
+	}
+
+	private int CalculateNumVideosPerPage()
+	{
+		return videoContainer.GetComponent<FlowLayoutGroup>().CalcMaxChildren(videoPrefab.GetComponent<RectTransform>().sizeDelta);
 	}
 }

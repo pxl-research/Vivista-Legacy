@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 224999548518761288}
   - component: {fileID: 222801622868749114}
-  - component: {fileID: 114604780571941226}
   - component: {fileID: 114785672552148976}
   m_Layer: 5
   m_Name: IndexPanel
@@ -48,20 +47,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1024259770959666}
   m_CullTransparentMesh: 0
---- !u!114 &114604780571941226
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1024259770959666}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HorizontalFit: 0
-  m_VerticalFit: 0
 --- !u!114 &114785672552148976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -87,18 +72,14 @@ MonoBehaviour:
   pageLabelContainer: {fileID: 1081546806700426}
   videoContainer: {fileID: 1422200165704646}
   pageLabels: []
-  videos: []
   previousPage: {fileID: 114950418458193776}
   nextPage: {fileID: 114792020720109514}
   spinner: {fileID: 114078340667181608}
   noVideos: {fileID: 114400342272599986}
   serverConnectionError: {fileID: 1922417829072846}
-  filters: {fileID: 1495414012127968}
   modalBackground: {fileID: 1214737054777464927}
   updateAvailableNotification: {fileID: 8378585466527675361}
-  isLocal: 0
   isFinishedLoadingVideos: 0
-  searchAge: {fileID: 114523339683077670}
 --- !u!1 &1081546806700426
 GameObject:
   m_ObjectHideFlags: 0
@@ -1173,7 +1154,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224548412732898500}
-  - component: {fileID: 114030154552913860}
   - component: {fileID: 5293459313846918258}
   m_Layer: 5
   m_Name: Videos
@@ -1201,30 +1181,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -5}
   m_SizeDelta: {x: -40, y: -150}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &114030154552913860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1422200165704646}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 5
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 0
-  m_StartCorner: 0
-  m_StartAxis: 0
-  m_CellSize: {x: 240, y: 195}
-  m_Spacing: {x: 30, y: 10}
-  m_Constraint: 0
-  m_ConstraintCount: 3
 --- !u!114 &5293459313846918258
 MonoBehaviour:
   m_ObjectHideFlags: 0
