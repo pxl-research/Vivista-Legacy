@@ -14,16 +14,14 @@ public class HelpMenu : MonoBehaviour
 		path = Path.Combine(Application.persistentDataPath, "Player.log");
 		path = path.Replace('/', '\\');
 		Process.Start("explorer.exe", $"/select,\"{path}\"");
-#endif
-
-#if UNITY_STANDALONE_OSX
+#elif UNITY_STANDALONE_OSX
 		path = "~/Library/Logs/Unity/Player.log";
 		Process.Start("open", "-R " + path);
-#endif
-
-#if UNITY_STANDALONE_LINUX
+#elif UNITY_STANDALONE_LINUX
 		var path = Path.Combine(Application.persistentDataPath, "Player.log");
 		Process.Start("xdg-open", path);
+#else
+#error Function not defined for this platform
 #endif
 	}
 

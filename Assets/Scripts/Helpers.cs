@@ -226,14 +226,12 @@ public static class ExplorerHelper
 #if UNITY_STANDALONE_WIN
 		path = path.Replace('/', '\\');
 		Process.Start("explorer.exe", $"/select,\"{path}\"");
-#endif
-
-#if UNITY_STANDALONE_OSX
+#elif UNITY_STANDALONE_OSX
 		Process.Start("open", "-R " + path);
-#endif
-
-#if UNITY_STANDALONE_LINUX
+#elif UNITY_STANDALONE_LINUX
 		Process.Start("xdg-open", path);
+#else
+#error Function not defined for this platform
 #endif
 	}
 }

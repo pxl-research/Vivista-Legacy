@@ -60,6 +60,8 @@ public class AutoUpdatePanel : MonoBehaviour
 	{
 		installerFolder = Path.Combine(Application.persistentDataPath, "installers");
 
+		Directory.CreateDirectory(installerFolder);
+
 		//NOTE(Simon): Delete old installers
 		foreach (string file in Directory.GetFiles(installerFolder))
 		{

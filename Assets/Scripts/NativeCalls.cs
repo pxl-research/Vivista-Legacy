@@ -16,8 +16,8 @@ public static class NativeCalls
 		{
 			return path;
 		}
-#else 
-		return "";
+#else
+#error Function not defined for this platform
 #endif
 	}
 
