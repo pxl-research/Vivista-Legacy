@@ -127,13 +127,13 @@ public class ChapterManager : MonoBehaviour
 
 	public void GoToChapter(Chapter chapter)
 	{
-		Debug.Log("Hit");
 		if (controller == null)
 		{
 			controller = GameObject.Find("FileLoader").GetComponent<FileLoader>().controller;
 		}
 
-		controller.Seek(chapter.time);
+		//NOTE(Simon): Offset by 1 frame, to ensure we're in the correct chapter after rounding time to nearest frame.
+		controller.Seek(chapter.time + 1.0 / controller.video.frameRate);
 	}
 
 	public void Refresh()

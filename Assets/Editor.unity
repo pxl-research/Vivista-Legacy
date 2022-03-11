@@ -1217,6 +1217,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114933417644068934, guid: 952afe5089bbb844f9d3402123092fb5,
         type: 3}
+      propertyPath: compass
+      value: 
+      objectReference: {fileID: 1434656334}
+    - target: {fileID: 114933417644068934, guid: 952afe5089bbb844f9d3402123092fb5,
+        type: 3}
       propertyPath: iconPlay
       value: 
       objectReference: {fileID: 2800000, guid: 33656b95c6241cb4686736a803d137bb, type: 3}

@@ -13,9 +13,7 @@ public class ChapterPanelSphere : MonoBehaviour
 	public void Init(string newTitle, int newChapterId, Player player)
 	{
 		Debug.Log("Requested id: " + newChapterId);
-
-
-
+		
 		this.player = player;
 		chapter = ChapterManager.Instance.GetChapterById(newChapterId);
 		Debug.Log($"Chapter found? {chapter == null}");
@@ -28,6 +26,5 @@ public class ChapterPanelSphere : MonoBehaviour
 	public void OnGoToChapter()
 	{
 		ChapterManager.Instance.GoToChapter(chapter);
-		player.DeactivateActiveInteractionPoint();
 	}
 }

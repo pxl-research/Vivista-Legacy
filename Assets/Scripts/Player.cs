@@ -258,13 +258,14 @@ public class Player : MonoBehaviour
 			if (!chapterTransitionActive && !mandatoryPauseActive)
 			{
 				var currentChapter = ChapterManager.Instance.ChapterForTime(videoController.currentTime);
-				if (currentChapter != previousChapter)
+				if (currentChapter != previousChapter && currentChapter != null)
 				{
-					videoController.SetPlaybackSpeed(0);
+ 					videoController.SetPlaybackSpeed(0);
 					chapterTransitionActive = true;
 					chapterTransitionPanel.SetChapter(currentChapter);
 					chapterTransitionPanel.StartTransition(OnChapterTransitionFinish);
 					previousChapter = currentChapter;
+					mainEventSystem.enabled = false;
 				}
 			}
 		}
@@ -352,10 +353,11 @@ public class Player : MonoBehaviour
 
 	private void OnChapterTransitionFinish()
 	{
-		Debug.Log("Animation done");
 		videoController.SetPlaybackSpeed(1);
+		DeactivateActiveInteractionPoint();
 		
 		chapterTransitionActive = false;
+		mainEventSystem.enabled = true;
 	}
 
 	private bool OpenFile(string projectPath)
