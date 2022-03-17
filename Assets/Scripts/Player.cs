@@ -555,7 +555,7 @@ public class Player : MonoBehaviour
 	{
 		indexPanel = Instantiate(indexPanelPrefab);
 		indexPanel.transform.SetParent(Canvass.main.transform, false);
-		Canvass.modalBackground.SetActive(true);
+		indexPanel.transform.SetSiblingIndex(2);
 		playerState = PlayerState.Opening;
 	}
 

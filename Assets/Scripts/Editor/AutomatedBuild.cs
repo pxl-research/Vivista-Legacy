@@ -356,7 +356,7 @@ public class AutomatedBuild : EditorWindow
 
 		File.WriteAllText(Path.Combine(Application.dataPath, "..", "version.iss"), $"#define MyAppVersion \"{cleanNumber}\"");
 
-		File.WriteAllText(Path.Combine(Application.dataPath, "version.txt"), cleanNumber);
+		File.WriteAllText(Path.Combine(Application.streamingAssetsPath, "version.txt"), cleanNumber);
 	}
 
 	private static void UpdateGitInfo()

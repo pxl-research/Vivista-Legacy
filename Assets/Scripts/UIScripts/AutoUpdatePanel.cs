@@ -68,7 +68,7 @@ public class AutoUpdatePanel : MonoBehaviour
 			File.Delete(file);
 		}
 
-		var versionFilePath = Path.Combine(Application.dataPath, "version.txt");
+		var versionFilePath = Path.Combine(Application.streamingAssetsPath, "version.txt");
 		var currentVersion = File.ReadAllText(versionFilePath);
 		using (var request = UnityWebRequest.Get(Web.versionNumberUrl))
 		{

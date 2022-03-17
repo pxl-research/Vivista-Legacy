@@ -86,6 +86,11 @@ public class VideoDownloadManager : MonoBehaviour
 		}
 	}
 
+	public Download GetDownload(string guid)
+	{
+		return queued.ContainsKey(guid) ? queued[guid] : null;
+	}
+
 	public void AddDownload(VideoSerialize video)
 	{
 		if (!queued.ContainsKey(video.id))

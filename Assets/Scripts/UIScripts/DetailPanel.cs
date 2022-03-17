@@ -19,6 +19,7 @@ public class DetailPanel : MonoBehaviour
 	public Button playButton;
 	public Button playInVRButton;
 	public Button downloadButton;
+	public Button downloadingButton;
 	public Button deleteButton;
 
 	public bool answered;
@@ -95,8 +96,13 @@ public class DetailPanel : MonoBehaviour
 	
 	public void Refresh()
 	{
-		bool downloaded = Directory.Exists(Path.Combine(Application.persistentDataPath, video.id));
-		downloadButton.gameObject.SetActive(!downloaded);
+		bool directoryExists = Directory.Exists(Path.Combine(Application.persistentDataPath, video.id));
+		bool isDownloading = VideoDownloadManager.Main.GetDownload(video.id) != null;
+
+		bool downloaded = directoryExists && !isDownloading;
+
+		downloadingButton.gameObject.SetActive(!downloaded && isDownloading);
+		downloadButton.gameObject.SetActive(!downloaded && !isDownloading);
 		playButton.gameObject.SetActive(downloaded);
 		playInVRButton.gameObject.SetActive(downloaded);
 		deleteButton.gameObject.SetActive(downloaded);
