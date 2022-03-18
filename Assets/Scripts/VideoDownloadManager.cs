@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using UnityEngine;
 
 public class Download
 {
 	public VideoSerialize video;
-	public WebClient client;
 	public float progress;
 	public long totalBytes;
 	public long bytesDownloaded;
-	public long previousBytesDownloaded;
 	public bool failed;
+	public string directory;
 	public DownloadPanel panel;
 	public Queue<DownloadItem> filesToDownload;
 	public DownloadItem currentlyDownloading;
@@ -27,8 +26,9 @@ public class DownloadItem
 
 public class VideoDownloadManager : MonoBehaviour
 {
-	public Transform DownloadList;
-	public GameObject DownloadPanelPrefab;
+	public Transform downloadList;
+	public GameObject downloadPanelPrefab;
+	public GameObject downloadInProgressPanelPrefab;
 
 	public static VideoDownloadManager Main
 	{
@@ -36,7 +36,12 @@ public class VideoDownloadManager : MonoBehaviour
 	}
 	private static VideoDownloadManager _main;
 
+	private HttpClient client;
+
+	private bool forceQuit;
 	private Dictionary<string, Download> queued;
+	private Download currentDownload;
+
 	//NOTE(Simon): Can't call Application.persistentDataPath from another thread, so cache it
 	private string dataPath;
 	//NOTE(Simon): Used to temporarily cache elemenets to be removed from queued. Can't remove from Dictionary while looping.
@@ -44,34 +49,36 @@ public class VideoDownloadManager : MonoBehaviour
 
 	void Start()
 	{
-		Main.queued = new Dictionary<string, Download>();
+		queued = new Dictionary<string, Download>();
 		dataPath = Application.persistentDataPath;
+		Application.wantsToQuit += OnWantsToQuit;
+		client = new HttpClient();
 	}
 
 	void Update()
 	{
 		foreach (var kvp in queued)
 		{
-			var download = kvp.Value;
-			download.panel.UpdatePanel(download.progress);
+			currentDownload = kvp.Value;
+			currentDownload.panel.UpdatePanel(currentDownload.progress);
 
-			if (download.failed)
+			if (currentDownload.failed)
 			{
-				download.panel.Fail();
+				currentDownload.panel.Fail();
 			}
-			else if (download.panel.ShouldRetry)
+			else if (currentDownload.panel.ShouldRetry)
 			{
-				download.client.DownloadFileAsync(new Uri(download.currentlyDownloading.url), download.currentlyDownloading.path, kvp.Key);
-				download.failed = false;
-				download.panel.Reset();
+				RetryDownload(currentDownload);
+				currentDownload.failed = false;
+				currentDownload.panel.Reset();
 			}
-			else if (download.panel.ShouldCancel)
+			else if (currentDownload.panel.ShouldCancel)
 			{
-				download.client.CancelAsync();
+				client.CancelPendingRequests();
 			}
-			else if (download.progress >= 1f)
+			else if (currentDownload.progress >= 1f)
 			{
-				StartCoroutine(download.panel.Done());
+				StartCoroutine(currentDownload.panel.Done());
 				indexesToRemove.Add(kvp.Key);
 			}
 		}
@@ -91,16 +98,13 @@ public class VideoDownloadManager : MonoBehaviour
 		return queued.ContainsKey(guid) ? queued[guid] : null;
 	}
 
-	public void AddDownload(VideoSerialize video)
+	public async void AddDownload(VideoSerialize video)
 	{
 		if (!queued.ContainsKey(video.id))
 		{
-			var client = new WebClient();
-
-			var panel = Instantiate(DownloadPanelPrefab, DownloadList, false);
+			var panel = Instantiate(downloadPanelPrefab, downloadList, false);
 			var download = new Download
 			{
-				client = client,
 				video = video,
 				panel = panel.GetComponent<DownloadPanel>(),
 				filesToDownload = new Queue<DownloadItem>()
@@ -110,47 +114,32 @@ public class VideoDownloadManager : MonoBehaviour
 			queued.Add(video.id, download);
 			download.totalBytes = download.video.downloadsize;
 
-			client.DownloadStringCompleted += OnExtraListDownloaded;
-			client.DownloadStringAsync(new Uri(Web.filesUrl + "?videoid=" + video.id), download);
+			string extraList = await client.GetStringAsync(Web.filesUrl + "?videoid=" + video.id);
+			OnExtraListDownloaded(extraList, download);
 		}
 	}
 
-	private void OnExtraListDownloaded(object sender, DownloadStringCompletedEventArgs e)
+	private void OnExtraListDownloaded(string extraList, Download download)
 	{
-		var download = (Download)e.UserState;
-		var videoGuid = download.video.id;
-		download.client.DownloadStringCompleted -= OnExtraListDownloaded;
-
-		var files = JsonHelper.ToArray<string>(e.Result);
-
-		string directory = Path.Combine(dataPath, videoGuid);
+		string videoGuid = download.video.id;
+		string[] files = JsonHelper.ToArray<string>(extraList);
+		download.directory = Path.Combine(dataPath, videoGuid);
 
 		foreach (string file in files)
 		{
 			download.filesToDownload.Enqueue(new DownloadItem
 			{
 				url = $"{Web.fileUrl}?videoid={videoGuid}&filename={file}",
-				path = Path.Combine(directory, file)
+				path = Path.Combine(download.directory, file)
 			});
 		}
 
-		download.client.DownloadFileCompleted += OnFileDownloaded;
-		download.client.DownloadProgressChanged += OnProgress;
 		StartNextDownload(download);
 	}
 
-	private void OnFileDownloaded(object sender, AsyncCompletedEventArgs e)
+	private void OnFileDownloaded(Download download)
 	{
-		var download = (Download)e.UserState;
-
-		if (e.Error != null)
-		{
-			Debug.LogError(e.Error);
-			//TODO(Simon): Error handling
-			//TODO(Simon): Do not remove if error, but keep in queue to retry
-			download.failed = true;
-		}
-		else if (download.filesToDownload.Count > 0)
+		if (download.filesToDownload.Count > 0)
 		{
 			StartNextDownload(download);
 		}
@@ -160,28 +149,88 @@ public class VideoDownloadManager : MonoBehaviour
 		}
 	}
 
-	private void StartNextDownload(Download download)
+	private async void StartNextDownload(Download download)
 	{
 		var item = download.filesToDownload.Dequeue();
 		Directory.CreateDirectory(Path.GetDirectoryName(item.path));
+
 		download.currentlyDownloading = item;
-		download.client.DownloadFileAsync(new Uri(item.url), item.path, download);
+
+		//NOTE(Simon): 65k buffer
+		byte[] buffer = new byte[1 << 16];
+
+		using (var response = await client.GetAsync(item.url, HttpCompletionOption.ResponseHeadersRead))
+		using (var stream = await response.Content.ReadAsStreamAsync())
+		using (var fileStream = new FileStream(item.path, FileMode.Create))
+		{
+			int bytesRead;
+			while((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+			{
+				fileStream.Write(buffer, 0, bytesRead);
+				OnProgress(bytesRead, download);
+			}
+		}
+
+		OnFileDownloaded(download);
 	}
 
-	private void OnProgress(object sender, DownloadProgressChangedEventArgs e)
+	private void RetryDownload(Download download)
 	{
-		//NOTE(Simon): EventArgs only holds the total bytes downloaded of the currently downloading file.
-		//NOTE(cont.): So we can't easily figure out how many bytes we've downloaded in total. So first we check if bytesReceives < previousBytesReceived.
-		//NOTE(cont.): This means a new file has started downloading. In that case, reset previousBytesReceived.
-		//NOTE(cont.): Then calculate the delta and add it to the total
-		var download = (Download)e.UserState;
-		if (e.BytesReceived < download.previousBytesDownloaded)
-		{
-			download.previousBytesDownloaded = 0;
-		}
-		var delta = e.BytesReceived - download.previousBytesDownloaded;
-		download.bytesDownloaded += delta;
+		download.filesToDownload.Enqueue(download.currentlyDownloading);
+		StartNextDownload(download);
+	}
+
+	private void OnProgress(int bytes, Download download)
+	{
+		download.bytesDownloaded += bytes;
 		download.progress = (float)download.bytesDownloaded / download.totalBytes;
-		download.previousBytesDownloaded = e.BytesReceived;
+	}
+
+	private bool OnWantsToQuit()
+	{
+#if UNITY_EDITOR
+		client.CancelPendingRequests();
+		client.Dispose();
+#endif
+		if (forceQuit)
+		{
+			return true;
+		}
+
+
+		if (queued.Count > 0)
+		{
+			var go = Instantiate(downloadInProgressPanelPrefab);
+			go.transform.SetParent(Canvass.main.transform, false);
+			var panel = go.GetComponent<DownloadInProgressPanel>();
+			Canvass.modalBackground.SetActive(true);
+
+			panel.OnAbortDownload += () =>
+			{
+				client.CancelPendingRequests();
+				client.Dispose();
+
+				Directory.Delete(currentDownload.directory, true);
+
+				ForceQuit();
+			};
+			panel.OnContinue += () =>
+			{
+				Destroy(panel.gameObject);
+				Canvass.modalBackground.SetActive(false);
+			};
+
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	private void ForceQuit()
+	{
+		forceQuit = true;
+		Application.Quit();
 	}
 }

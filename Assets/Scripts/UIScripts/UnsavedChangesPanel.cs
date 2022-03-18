@@ -6,10 +6,10 @@ public class UnsavedChangesPanel : MonoBehaviour
 	public SaveEvent OnSave;
 
 	public delegate void DiscardEvent();
-	public SaveEvent OnDiscard;
+	public DiscardEvent OnDiscard;
 
 	public delegate void CancelEvent();
-	public SaveEvent OnCancel;
+	public CancelEvent OnCancel;
 
 	public void Save()
 	{

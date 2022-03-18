@@ -96,6 +96,13 @@ public class DetailPanel : MonoBehaviour
 	
 	public void Refresh()
 	{
+		//NOTE(Simon): This happens if a local video was deleted. In that case there is no more info to show, so hide DetailPanel
+		if (video == null)
+		{
+			Back();
+			return;
+		}
+
 		bool directoryExists = Directory.Exists(Path.Combine(Application.persistentDataPath, video.id));
 		bool isDownloading = VideoDownloadManager.Main.GetDownload(video.id) != null;
 
@@ -143,11 +150,35 @@ public class DetailPanel : MonoBehaviour
 		{
 			Directory.Delete(path, true);
 		}
+		//NOTE(Simon): After deleting we should check if this video exists on the server. Refresh() handles updating display
+		UpdateVideoFromWeb(video.id);
 		Refresh();
 	}
 
 	public void Download()
 	{
 		VideoDownloadManager.Main.AddDownload(video);
+	}
+
+	public void UpdateVideoFromWeb(string id)
+	{
+		var url = $"{Web.videoApiUrl}?id={id}";
+		using (var request = UnityWebRequest.Get(url))
+		{
+			request.SendWebRequest();
+		
+			while (!request.isDone)
+			{
+			}
+
+			if (request.result != UnityWebRequest.Result.Success)
+			{
+				video = null;
+			}
+			else
+			{
+				video = JsonUtility.FromJson<VideoSerialize>(request.downloadHandler.text);
+			}
+		}
 	}
 }
