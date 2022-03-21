@@ -204,7 +204,8 @@ public class VideoDownloadManager : MonoBehaviour
 			go.transform.SetParent(Canvass.main.transform, false);
 			var panel = go.GetComponent<DownloadInProgressPanel>();
 			Canvass.modalBackground.SetActive(true);
-
+			dsadsa
+				//TODO(Simon): Fix Abort Screen
 			panel.OnAbortDownload += () =>
 			{
 				client.CancelPendingRequests();
