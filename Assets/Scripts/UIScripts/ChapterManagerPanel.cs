@@ -54,7 +54,7 @@ public class ChapterManagerPanel : MonoBehaviour
 		var chapterItem = chapterGo.GetComponent<ChapterItemEditable>();
 		chapterGo.transform.SetParent(chapterItemHolder.transform);
 		chapterItem.Init(chapter);
-		chapterItem.deleteButton.onClick.AddListener(() => OnRemove(chapterGo, name));
+		chapterItem.deleteButton.onClick.AddListener(() => OnRemove(chapterGo, chapter.name));
 	}
 
 	public void OnRemove(GameObject chapterGo, string name)
