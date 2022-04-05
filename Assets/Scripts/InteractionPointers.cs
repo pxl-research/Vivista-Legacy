@@ -12,6 +12,7 @@ public class InteractionPointers : MonoBehaviour
 	public float boundsSize2D;
 	[Range(0, 1)]
 	public float boundsSizeVR;
+	private Canvas canvas;
 
 	private GameObjectPool arrowPool;
 
@@ -25,10 +26,13 @@ public class InteractionPointers : MonoBehaviour
 		shouldRender = true;
 
 		arrowPool = new GameObjectPool(arrowPrefab, transform);
+		canvas = GetComponent<Canvas>();
 	}
 
 	private void Update()
 	{
+		 canvas.renderMode = XRSettings.isDeviceActive ? RenderMode.WorldSpace : RenderMode.ScreenSpaceOverlay;
+
 		var activeInteractions = Player.Instance.GetShownInteractionPoints();
 
 		if (Player.playerState != PlayerState.Watching)
@@ -37,19 +41,21 @@ public class InteractionPointers : MonoBehaviour
 		}
 
 		arrowPool.EnsureActiveCount(activeInteractions.Count);
+		
+		GeometryUtility.CalculateFrustumPlanes(Camera.main, cameraPlanes);
+
+		float animTime = MathHelper.SmoothPingPong(Time.time, .6f);
+		var centre = new Vector3(Screen.width, Screen.height) / 2f;
+		var boundsSize = XRSettings.isDeviceActive ? boundsSizeVR : boundsSize2D;
+		var bounds = centre * (boundsSize - 0.03f * animTime);
+		Debug.Log(centre);
 
 		for (int i = 0; i < activeInteractions.Count; i++)
 		{
 			var point = activeInteractions[i];
 
-			GeometryUtility.CalculateFrustumPlanes(Camera.main, cameraPlanes);
 			bool isOffscreen = !GeometryUtility.TestPlanesAABB(cameraPlanes, point.point.GetComponent<Renderer>().bounds);
 			arrowPool[i].SetActive(isOffscreen && shouldRender);
-
-			float animTime = MathHelper.SmoothPingPong(Time.time, .6f);
-			var centre = new Vector3(Screen.width, Screen.height) / 2f;
- 			var boundsSize = XRSettings.isDeviceActive ? boundsSizeVR : boundsSize2D;
-			var bounds = centre * (boundsSize - 0.03f * animTime);
 
 			if (isOffscreen)
 			{
