@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR;
-using UnityEngine.XR.Management;
 
 public class InteractionPointers : MonoBehaviour
 {
@@ -48,7 +47,6 @@ public class InteractionPointers : MonoBehaviour
 		var centre = new Vector3(Screen.width, Screen.height) / 2f;
 		var boundsSize = XRSettings.isDeviceActive ? boundsSizeVR : boundsSize2D;
 		var bounds = centre * (boundsSize - 0.03f * animTime);
-		Debug.Log(centre);
 
 		for (int i = 0; i < activeInteractions.Count; i++)
 		{

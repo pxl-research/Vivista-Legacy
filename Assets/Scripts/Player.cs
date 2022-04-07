@@ -135,23 +135,21 @@ public class Player : MonoBehaviour
 		//NOTE(Simon): Sync videoController/videoMesh pos with camera pos. 
 		videoController.transform.position = Camera.main.transform.position;
 
-		var interactionpointRay = new Ray();
+		var interactionpointRays = new List<KeyValuePair<Ray, bool>>(4);
 		//NOTE(Kristof): Deciding on which object the Ray will be based on
-		//NOTE(Simon): Prefers right over left controller
+		//NOTE(Simon): Prefers left over right controller
 		{
-			if (trackedControllerLeft != null && trackedControllerLeft.triggerPressed)
+			if (trackedControllerLeft != null)
 			{
-				interactionpointRay = trackedControllerLeft.CastRay();
+				interactionpointRays.Add(new KeyValuePair<Ray, bool>(trackedControllerLeft.CastRay(), trackedControllerLeft.triggerPressed));
 			}
-
-			if (trackedControllerRight != null && trackedControllerRight.triggerPressed)
+			if (trackedControllerRight != null)
 			{
-				interactionpointRay = trackedControllerRight.CastRay();
+				interactionpointRays.Add(new KeyValuePair<Ray, bool>(trackedControllerRight.CastRay(), trackedControllerRight.triggerPressed));
 			}
-
-			if (!XRSettings.isDeviceActive && Input.GetMouseButtonUp(0))
+			if (!XRSettings.isDeviceActive)
 			{
-				interactionpointRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+				interactionpointRays.Add(new KeyValuePair<Ray, bool>(Camera.main.ScreenPointToRay(Input.mousePosition), Input.GetMouseButtonUp(0)));
 			}
 		}
 
@@ -176,15 +174,11 @@ public class Player : MonoBehaviour
 			//Note(Simon): Interaction with points
 			if (!chapterTransitionActive)
 			{
-				var reversedRay = interactionpointRay.ReverseRay();
-				//Note(Simon): Create a reversed raycast to find positions on the sphere with 
-				Physics.Raycast(reversedRay, out var hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
-
 				//NOTE(Simon): Update visible interactionpoints
 				foreach (var point in shownInteractionPoints)
 				{
 					point.point.SetActive(true);
-					point.point.GetComponent<InteractionPointRenderer>().SetPingActive(!point.isSeen);
+					point.point.GetComponent<InteractionPointRenderer>().SetAnimationActive(!point.isSeen);
 				}
 
 				foreach (var point in GetInactiveInteractionPoints())
@@ -192,22 +186,30 @@ public class Player : MonoBehaviour
 					point.point.SetActive(false);
 				}
 
-				//NOTE(Simon): Activate hit interactionPoint
-				if (activeInteractionPoint == null && hit.transform != null)
+				foreach (var ray in interactionpointRays)
 				{
-					var pointGO = hit.transform.gameObject;
-					InteractionPointPlayer point = null;
+					//Note(Simon): Create a reversed raycast to find positions on the sphere with 
+					Physics.Raycast(ray.Key.ReverseRay(), out var hit, 100, 1 << LayerMask.NameToLayer("interactionPoints"));
 
-					for (int i = 0; i < interactionPoints.Count; i++)
+					//NOTE(Simon): Activate hit interactionPoint
+					if (activeInteractionPoint == null && hit.transform != null)
 					{
-						if (pointGO == interactionPoints[i].point)
+						var pointGO = hit.transform.gameObject;
+
+						for (int i = 0; i < interactionPoints.Count; i++)
 						{
-							point = interactionPoints[i];
-							break;
+							if (pointGO == interactionPoints[i].point)
+							{
+								if (ray.Value)
+								{
+									ActivateInteractionPoint(interactionPoints[i]);
+									break;
+								}
+
+								interactionPoints[i].point.GetComponent<InteractionPointRenderer>().Hover();
+							}
 						}
 					}
-
-					ActivateInteractionPoint(point);
 				}
 
 				//NOTE(Simon): Disable active interactionPoint if playback was started through seekbar
@@ -301,13 +303,24 @@ public class Player : MonoBehaviour
 
 		//NOTE(Simon): Interaction with Hittables
 		{
-			Physics.Raycast(interactionpointRay, out var hit, 100, LayerMask.GetMask("UI", "WorldUI"));
-
 			var controllerList = new List<Controller>
 			{
 				trackedControllerLeft,
 				trackedControllerRight
 			};
+
+			//NOTE(Simon): Set hover state when hovered by controllers
+			foreach (var con in controllerList)
+			{
+				if (con.uiHovering && con.hoveredGo != null)
+				{
+					var hittable = con.hoveredGo.GetComponent<Hittable>();
+					if (hittable != null)
+					{
+						hittable.hovering = true;
+					}
+				}
+			}
 
 			//NOTE(Simon): Reset all hittables
 			foreach (var hittable in hittables)
@@ -326,26 +339,20 @@ public class Player : MonoBehaviour
 				hittable.hovering = false;
 			}
 
-			//NOTE(Simon): Set hover state when hovered by controllers
-			foreach (var con in controllerList)
+
+			//NOTE(Simon): We can't use Controller.hoveredGo here, because that would ignore mouse input.
+			foreach (var ray in interactionpointRays)
 			{
-				if (con.uiHovering && con.hoveredGo != null)
+				Physics.Raycast(ray.Key, out var hit, 100, LayerMask.GetMask("UI", "WorldUI"));
+				
+				//NOTE(Simon): Set hitting and hovering in hittables
+				if (hit.transform != null && ray.Value)
 				{
-					var hittable = con.hoveredGo.GetComponent<Hittable>();
+					var hittable = hit.transform.GetComponent<Hittable>();
 					if (hittable != null)
 					{
-						hittable.hovering = true;
+						hittable.hitting = true;
 					}
-				}
-			}
-
-			//NOTE(Simon): Set hitting and hovering in hittables
-			if (hit.transform != null)
-			{
-				var hittable = hit.transform.GetComponent<Hittable>();
-				if (hittable != null)
-				{
-					hittable.hitting = true;
 				}
 			}
 		}

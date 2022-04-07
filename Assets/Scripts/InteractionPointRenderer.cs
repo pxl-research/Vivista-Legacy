@@ -1,16 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR;
-using UnityEngine.XR.Management;
 
 public class InteractionPointRenderer : MonoBehaviour
 {
 	public SpriteRenderer interactionType;
 	public SpriteRenderer mandatory;
-	public GameObject ping;
 
 	private bool viewed;
 	private Vector3 startScale;
+	private const float animScale = 0.3f;
+
+	private bool hovering;
 
 	private bool isEditor;
 
@@ -35,7 +36,6 @@ public class InteractionPointRenderer : MonoBehaviour
 
 		//NOTE(Simon): Add a sprite to interaction points, indicating InteractionType
 		interactionType.sprite = InteractionTypeSprites.GetSprite(point.type);
-		ping.SetActive(false);
 		point.panel.SetActive(false);
 
 		mandatory.enabled = point.mandatory;
@@ -48,7 +48,13 @@ public class InteractionPointRenderer : MonoBehaviour
 		if (!viewed && !isEditor)
 		{
 			startScale = XRSettings.isDeviceActive ? new Vector3(5f, 5f, 5f) : new Vector3(10f, 10f, 10f);
-			transform.localScale = startScale * (1 + Mathf.SmoothStep(0, 0.3f, Mathf.PingPong(Time.time, 1)));
+			transform.localScale = startScale * (1 + Mathf.SmoothStep(0, animScale, Mathf.PingPong(Time.time, 1)));
+		}
+
+		if (hovering)
+		{
+			transform.localScale = startScale * (1 + animScale * 1.5f);
+			hovering = false;
 		}
 	}
 
@@ -62,13 +68,17 @@ public class InteractionPointRenderer : MonoBehaviour
 		interactionType.color = tag.color.IdealTextColor();
 	}
 
-	public void SetPingActive(bool active)
+	public void SetAnimationActive(bool active)
 	{
-		//ping.SetActive(active);
 		if (!active)
 		{
 			viewed = true;
 			transform.localScale = startScale;
 		}
+	}
+
+	public void Hover()
+	{
+		hovering = true;
 	}
 }
