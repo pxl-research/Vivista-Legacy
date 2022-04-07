@@ -187,7 +187,7 @@ public class Editor : MonoBehaviour
 	private float timelineZoomTarget = 1;
 	private float timelineZoom = 1;
 	private float timelineOffsetTime;
-	private float timelineOffsetPixels;
+	private float timelineLeftMargin;
 	private float timelineWidthPixels;
 	private bool timelineLabelsDirty;
 
@@ -1433,8 +1433,8 @@ public class Editor : MonoBehaviour
 			timelineWindowStartTime = windowMiddle - zoomedLength / 2;
 			timelineWindowEndTime = windowMiddle + zoomedLength / 2;
 
-			timelineOffsetPixels = timelineFirstColumnWidth.rect.width;
-			timelineWidthPixels = timeline.rect.width - timelineOffsetPixels;
+			timelineLeftMargin = timelineFirstColumnWidth.rect.width;
+			timelineWidthPixels = timeline.rect.width - timelineLeftMargin;
 		}
 
 		//NOTE(Simon): Timeline labels
@@ -1453,19 +1453,16 @@ public class Editor : MonoBehaviour
 			var realNumLabels = (maxNumLabels - lowerNumLabels) > (upperNumLabels - maxNumLabels) ? lowerNumLabels : upperNumLabels;
 			realNumLabels += 2;
 
-			if (timelineLabelsDirty)
+			while (timeLabels.Count < realNumLabels)
 			{
-				while (timeLabels.Count < realNumLabels)
-				{
-					var label = Instantiate(timeLabelPrefab, timeLabelHolder.transform);
-					timeLabels.Add(label);
-				}
+				var label = Instantiate(timeLabelPrefab, timeLabelHolder.transform);
+				timeLabels.Add(label);
+			}
 
-				while (timeLabels.Count > realNumLabels)
-				{
-					Destroy(timeLabels[timeLabels.Count - 1].gameObject);
-					timeLabels.RemoveAt(timeLabels.Count - 1);
-				}
+			while (timeLabels.Count > realNumLabels)
+			{
+				Destroy(timeLabels[timeLabels.Count - 1].gameObject);
+				timeLabels.RemoveAt(timeLabels.Count - 1);
 			}
 
 			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / closestNiceTime);
@@ -1488,6 +1485,7 @@ public class Editor : MonoBehaviour
 					timeLabels[i].enabled = false;
 				}
 			}
+
 			timelineLabelsDirty = false;
 		}
 
@@ -1546,10 +1544,10 @@ public class Editor : MonoBehaviour
 			var moveRect = move.GetComponent<RectTransform>();
 			var mandatoryRect = mandatory.GetComponent<RectTransform>();
 
-			deleteRect.position = new Vector3(timelineOffsetPixels - 20, deleteRect.position.y);
-			editRect.position = new Vector3(timelineOffsetPixels - 40, editRect.position.y);
-			moveRect.position = new Vector3(timelineOffsetPixels - 60, moveRect.position.y);
-			mandatoryRect.position = new Vector3(timelineOffsetPixels - 80, mandatoryRect.position.y);
+			deleteRect.position = new Vector3(timelineLeftMargin - 20, deleteRect.position.y);
+			editRect.position = new Vector3(timelineLeftMargin - 40, editRect.position.y);
+			moveRect.position = new Vector3(timelineLeftMargin - 60, moveRect.position.y);
+			mandatoryRect.position = new Vector3(timelineLeftMargin - 80, mandatoryRect.position.y);
 
 			if (!point.filled)
 			{
@@ -1988,7 +1986,7 @@ public class Editor : MonoBehaviour
 			if (dragMode == TimelineDragMode.None)
 			{
 				var verticalRect = new Rect(new Vector2(0, timelineContainer.rect.height - 4), new Vector2(timelineContainer.rect.width, 4));
-				var horizontalRect = new Rect(new Vector2(timelineOffsetPixels + 1, 0), new Vector2(4, timelineContainer.rect.height - timeLabelHolder.sizeDelta.y));
+				var horizontalRect = new Rect(new Vector2(timelineLeftMargin + 1, 0), new Vector2(4, timelineContainer.rect.height - timeLabelHolder.sizeDelta.y));
 
 				if (verticalRect.Contains(Input.mousePosition))
 				{
@@ -2217,6 +2215,8 @@ public class Editor : MonoBehaviour
 		{
 			var pointerEvent = (PointerEventData)e;
 			timelineOffsetTime += PxToRelativeTime(pointerEvent.delta.x) * 2;
+			
+			timelineOffsetTime = Mathf.Clamp(timelineOffsetTime, (float)-videoController.videoLength, (float)videoController.videoLength);
 			timelineLabelsDirty = true;
 		}
 	}
@@ -2835,12 +2835,12 @@ public class Editor : MonoBehaviour
 			return -1000;
 		}
 		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
-		return (float)(timelineOffsetPixels + (fraction * timelineWidthPixels));
+		return (float)(timelineLeftMargin + (fraction * timelineWidthPixels));
 	}
 
 	public float PxToAbsTime(double px)
 	{
-		var realPx = px - timelineOffsetPixels;
+		var realPx = px - timelineLeftMargin;
 		var fraction = realPx / timelineWidthPixels;
 		var time = fraction * (timelineWindowEndTime - timelineWindowStartTime) + timelineWindowStartTime;
 		return (float)time;
