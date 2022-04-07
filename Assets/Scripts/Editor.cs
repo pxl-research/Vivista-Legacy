@@ -46,7 +46,8 @@ public enum TimelineDragMode
 	TimelineItem,
 	TimelineItemResize,
 	TimelineHorizontal,
-	TimelineVertical
+	TimelineVertical,
+	TimelineRowReorder
 }
 
 [Serializable]
@@ -199,6 +200,8 @@ public class Editor : MonoBehaviour
 	private bool isResizingStart;
 	public RectTransform timelineFirstColumnWidth;
 	private Chapter chapterBeingDragged;
+	private Transform timelineRowBeingDragged;
+	private GameObject timelineRowPlaceholder;
 
 	private TimeTooltip timeTooltip;
 	private TimelineTooltip textTooltip;
@@ -1453,16 +1456,19 @@ public class Editor : MonoBehaviour
 			var realNumLabels = (maxNumLabels - lowerNumLabels) > (upperNumLabels - maxNumLabels) ? lowerNumLabels : upperNumLabels;
 			realNumLabels += 2;
 
-			while (timeLabels.Count < realNumLabels)
+			if (timelineLabelsDirty)
 			{
-				var label = Instantiate(timeLabelPrefab, timeLabelHolder.transform);
-				timeLabels.Add(label);
-			}
+				while (timeLabels.Count < realNumLabels)
+				{
+					var label = Instantiate(timeLabelPrefab, timeLabelHolder.transform);
+					timeLabels.Add(label);
+				}
 
-			while (timeLabels.Count > realNumLabels)
-			{
-				Destroy(timeLabels[timeLabels.Count - 1].gameObject);
-				timeLabels.RemoveAt(timeLabels.Count - 1);
+				while (timeLabels.Count > realNumLabels)
+				{
+					Destroy(timeLabels[timeLabels.Count - 1].gameObject);
+					timeLabels.RemoveAt(timeLabels.Count - 1);
+				}
 			}
 
 			var numTicksOffScreen = Mathf.FloorToInt(timelineWindowStartTime / closestNiceTime);
@@ -1512,7 +1518,6 @@ public class Editor : MonoBehaviour
 
 			indicatorRect.position = new Vector2(TimeToPx(zoomedStartTime), indicatorRect.position.y);
 			indicatorRect.sizeDelta = new Vector2(TimeToPx(zoomedEndTime) - TimeToPx(zoomedStartTime), indicatorRect.sizeDelta.y);
-
 		}
 
 		//Note(Simon): Colors
@@ -1844,8 +1849,7 @@ public class Editor : MonoBehaviour
 				{
 					var indicatorRect = point.timelineRow.indicator.rectTransform;
 
-					RectTransformUtility.ScreenPointToLocalPointInRectangle(indicatorRect, Input.mousePosition, null,
-						out var rectPixel);
+					RectTransformUtility.ScreenPointToLocalPointInRectangle(indicatorRect, Input.mousePosition, null, out var rectPixel);
 					var leftAreaX = 5;
 					var rightAreaX = indicatorRect.rect.width - 5;
 
@@ -1902,8 +1906,6 @@ public class Editor : MonoBehaviour
 				}
 				else
 				{
-					//var newStart = Mathf.Max(0.0f, (float) timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x));
-					//var newEnd = Mathf.Min(timelineEndTime, (float) timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x));
 					float newStart = (float)timelineItemBeingDragged.startTime + PxToRelativeTime(mouseDelta.x);
 					float newEnd = (float)timelineItemBeingDragged.endTime + PxToRelativeTime(mouseDelta.x);
 					if (newStart < 0.0f)
@@ -1981,6 +1983,82 @@ public class Editor : MonoBehaviour
 			}
 		}
 
+		//NOTE(Simon): Reordering of timeline rows
+		{
+			if (dragMode == TimelineDragMode.None)
+			{
+				foreach (var point in interactionPoints)
+				{
+					var reorderRect = point.timelineRow.reorder.rectTransform;
+
+					if (RectTransformUtility.RectangleContainsScreenPoint(reorderRect, Input.mousePosition))
+					{
+						desiredCursor = Cursors.Instance.CursorDrag;
+						if (Input.GetMouseButtonDown(0))
+						{
+							dragMode = TimelineDragMode.TimelineRowReorder;
+							timelineRowBeingDragged = point.timelineRow.transform;
+							DisableTimelineScroll();
+
+							timelineRowPlaceholder = new GameObject();
+							timelineRowPlaceholder.transform.SetParent(timelineRowBeingDragged.parent);
+							timelineRowPlaceholder.transform.SetSiblingIndex(timelineRowBeingDragged.GetSiblingIndex());
+							var rect = timelineRowPlaceholder.AddComponent<RectTransform>();
+							rect.pivot = Vector2.one;
+							rect.sizeDelta = timelineRowBeingDragged.GetComponent<RectTransform>().sizeDelta;
+
+							timelineRowBeingDragged.SetParent(Canvass.main.transform);
+						}
+					}
+				}
+			}
+			else if (dragMode == TimelineDragMode.TimelineRowReorder)
+			{
+				if (!Input.GetMouseButton(0))
+				{
+					var newIndex = timelineRowPlaceholder.transform.GetSiblingIndex();
+					timelineRowBeingDragged.SetParent(timelineRowPlaceholder.transform.parent);
+					timelineRowBeingDragged.SetSiblingIndex(newIndex);
+
+					var point = interactionPoints.Find(x => x.timelineRow.transform == timelineRowBeingDragged);
+					interactionPoints.Remove(point);
+					interactionPoints.Insert(newIndex, point);
+
+					Destroy(timelineRowPlaceholder);
+
+					timelineRowBeingDragged = null;
+					dragMode = TimelineDragMode.None;
+					EnableTimelineScroll();
+					UnsavedChangesTracker.Instance.unsavedChanges = true;
+				}
+				else
+				{
+					var pos = timelineRowBeingDragged.position;
+					pos.y = Input.mousePosition.y;
+					timelineRowBeingDragged.position = pos;
+
+					var placeHolderParent = timelineRowPlaceholder.transform.parent;
+					int newSiblingIndex = 0;
+
+					for (int i = placeHolderParent.childCount - 1; i >= 0; i--)
+					{
+						if (timelineRowBeingDragged.position.y < placeHolderParent.GetChild(i).position.y)
+						{
+							newSiblingIndex = i;
+							if (timelineRowPlaceholder.transform.GetSiblingIndex() < newSiblingIndex)
+							{
+								newSiblingIndex++;
+							}
+							break;
+						}
+					}
+
+					timelineRowPlaceholder.transform.SetSiblingIndex(newSiblingIndex);
+
+					desiredCursor = Cursors.Instance.CursorDrag;
+				}
+			}
+		}
 		//Note(Simon): Resizing of timeline
 		{
 			if (dragMode == TimelineDragMode.None)

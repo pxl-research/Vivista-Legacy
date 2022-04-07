@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 public class TimelineRow : MonoBehaviour
 {
+	public Image reorder;
 	public Image tagShape;
 	public Text title;
 	public Image indicator;
