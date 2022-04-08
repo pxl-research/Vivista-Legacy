@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using UnityEngine;
 
 public class Download
@@ -32,12 +33,13 @@ public class VideoDownloadManager : MonoBehaviour
 
 	public static VideoDownloadManager Main
 	{
-		get { return _main ?? (_main = GameObject.Find("VideoDownloadManager").GetComponent<VideoDownloadManager>()); }
+		get { return _main ??= GameObject.Find("VideoDownloadManager").GetComponent<VideoDownloadManager>(); }
 	}
 	private static VideoDownloadManager _main;
 
 	private HttpClient client;
 
+	private bool shouldCloseStreams;
 	private bool forceQuit;
 	private Dictionary<string, Download> queued;
 	private Download currentDownload;
@@ -166,6 +168,11 @@ public class VideoDownloadManager : MonoBehaviour
 			int bytesRead;
 			while((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
 			{
+				if (shouldCloseStreams)
+				{
+					break;
+				}
+
 				fileStream.Write(buffer, 0, bytesRead);
 				OnProgress(bytesRead, download);
 			}
@@ -192,11 +199,15 @@ public class VideoDownloadManager : MonoBehaviour
 		client.CancelPendingRequests();
 		client.Dispose();
 #endif
+		if (shouldCloseStreams)
+		{
+			Directory.Delete(currentDownload.directory, true);
+		}
+
 		if (forceQuit)
 		{
 			return true;
 		}
-
 
 		if (queued.Count > 0)
 		{
@@ -204,14 +215,13 @@ public class VideoDownloadManager : MonoBehaviour
 			go.transform.SetParent(Canvass.main.transform, false);
 			var panel = go.GetComponent<DownloadInProgressPanel>();
 			Canvass.modalBackground.SetActive(true);
-			//dsadsa
-				//TODO(Simon): Fix Abort Screen
+
 			panel.OnAbortDownload += () =>
 			{
+				shouldCloseStreams = true;
+
 				client.CancelPendingRequests();
 				client.Dispose();
-
-				Directory.Delete(currentDownload.directory, true);
 
 				ForceQuit();
 			};
