@@ -76,7 +76,7 @@ public class DetailPanel : MonoBehaviour
 
 			if (imageDownload.result != UnityWebRequest.Result.Success)
 			{
-				Debug.Log("Failed to download thumbnail: " + imageDownload.error);
+				Debug.LogError("Failed to download thumbnail: " + imageDownload.error);
 				imageDownload.Dispose();
 				imageDownload = null;
 			}

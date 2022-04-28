@@ -101,8 +101,6 @@ public class VideoPanel : MonoBehaviour
 
 	private void OnPrepareComplete(VideoPlayer source)
 	{
-		Debug.Log("Done preparing");
-
 		isDonePreparing = true;
 		var heightFactor = source.texture.height / videoSurface.rectTransform.rect.height;
 		var widthFactor = source.texture.width / videoSurface.rectTransform.rect.width;
@@ -121,7 +119,6 @@ public class VideoPanel : MonoBehaviour
 	{
 		if (!isDonePreparing)
 		{
-			Debug.Log("Begin preparing");
 			videoPlayer.prepareCompleted -= OnPrepareComplete;
 			videoPlayer.prepareCompleted += OnPrepareComplete;
 			videoPlayer.Prepare();

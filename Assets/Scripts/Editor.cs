@@ -2532,7 +2532,7 @@ public class Editor : MonoBehaviour
 				case InteractionType.None:
 				{
 					isValidPoint = false;
-					Debug.Log("InteractionPoint with Type None encountered");
+					Debug.LogError("InteractionPoint with Type None encountered");
 					break;
 				}
 				case InteractionType.Text:

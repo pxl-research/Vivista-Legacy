@@ -355,7 +355,6 @@ public static class SaveFile
 
 					if (File.Exists(to))
 					{
-						Debug.Log($"{to} already exists");
 						File.Copy(from, to, true);
 						File.Delete(from);
 					}

@@ -194,7 +194,7 @@ public class UploadPanel : MonoBehaviour
 	{
 		if (e != null)
 		{
-			Debug.Log(e);
+			Debug.LogError(e);
 		}
 
 		status.failed = true;

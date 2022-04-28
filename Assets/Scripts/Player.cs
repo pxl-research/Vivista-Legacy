@@ -413,7 +413,7 @@ public class Player : MonoBehaviour
 				case InteractionType.None:
 				{
 					isValidPoint = false;
-					Debug.Log("InteractionPoint with Type None encountered");
+					Debug.LogError("InteractionPoint with Type None encountered");
 					break;
 				}
 				case InteractionType.Text:
@@ -729,7 +729,6 @@ public class Player : MonoBehaviour
 
 	public void ShowMandatoryInteractionMessage()
 	{
-		Debug.Log("Showing");
 		if (XRSettings.isDeviceActive)
 		{
 			mandatoryPauseMessageVR.SetActive(true);
@@ -742,7 +741,6 @@ public class Player : MonoBehaviour
 
 	public void HideMandatoryInteractionMessage()
 	{
-		Debug.Log("Hiding");
 		if (XRSettings.isDeviceActive)
 		{
 			mandatoryPauseMessageVR.SetActive(false);

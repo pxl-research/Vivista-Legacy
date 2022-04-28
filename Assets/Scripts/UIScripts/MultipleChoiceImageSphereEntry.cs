@@ -47,6 +47,5 @@ public class MultipleChoiceImageSphereEntry : MonoBehaviour
 		preview.texture = texture;
 
 		initialized = true;
-		Debug.Log("Done initializing");
 	}
 }

@@ -164,8 +164,6 @@ public class ExportPanel : MonoBehaviour
 		}
 
 		stopwatch.Stop();
-		Debug.Log(stopwatch.Elapsed.TotalSeconds + "s");
-		Debug.Log(totalWritten / stopwatch.Elapsed.TotalSeconds / 1024 / 1024 + "MB/s");
 
 		OnExportEnd(destFile);
 	}

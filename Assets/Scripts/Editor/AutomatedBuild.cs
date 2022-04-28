@@ -293,7 +293,6 @@ public class AutomatedBuild : EditorWindow
 	public static void ShowInWindowsExplorer(string folder)
 	{
 		var cleaned = Path.GetFullPath(folder);
-		UnityEngine.Debug.Log(cleaned);
 		var proc = new Process
 		{
 			StartInfo = new ProcessStartInfo

@@ -103,8 +103,6 @@ public class FindAreaPanelSphere : MonoBehaviour
 	{
 		title.text = newTitle;
 		areas = newAreas;
-		var watch = Stopwatch.StartNew();
-
 		foreach (var area in areas)
 		{
 			var areaRenderer = Instantiate(areaRendererPrefab).GetComponent<AreaRenderer>();
@@ -116,8 +114,6 @@ public class FindAreaPanelSphere : MonoBehaviour
 
 			areaRenderer.gameObject.SetActive(false);
 		}
-
-		UnityEngine.Debug.Log($"Area collider generation time: {watch.Elapsed.TotalMilliseconds} ms");
 	}
 
 	public void OnStartFindArea()

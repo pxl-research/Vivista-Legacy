@@ -91,9 +91,6 @@ namespace TusDotNetClient
 
 							request.OnUploadProgressed(totalBytesWritten, segment.Count);
 
-							//FieldInfo type = requestStream.GetType().GetField("disposed", BindingFlags.NonPublic | BindingFlags.Instance);
-							//Debug.Log((bool)type.GetValue(requestStream));
-
 							await requestStream.WriteAsync(buffer, 0, bytesWritten, request.CancelToken).ConfigureAwait(false);
 
 							bytesWritten = await inputStream.ReadAsync(buffer, 0, buffer.Length, request.CancelToken).ConfigureAwait(false);

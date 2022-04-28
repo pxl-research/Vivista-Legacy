@@ -202,15 +202,15 @@ public class AudioControl : MonoBehaviour
 			}
 			else if (www.isNetworkError)
 			{
-				Debug.Log(www.error);
+				Debug.LogError(www.error);
 			}
 			else if (www.isHttpError)
 			{
-				Debug.Log(www.error);
+				Debug.LogError(www.error);
 			}
 			else
 			{
-				Debug.Log("Something went wrong while downloading audio file. No errors, but not done either.");
+				Debug.LogError("Something went wrong while downloading audio file. No errors, but not done either.");
 			}
 		}
 	}

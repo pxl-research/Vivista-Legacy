@@ -71,7 +71,7 @@ public class IndexPanelVideo : MonoBehaviour
 
 			if (imageDownload.result != UnityWebRequest.Result.Success)
 			{
-				Debug.Log("Failed to download thumbnail " + imageDownload.url + ": " + imageDownload.error);
+				Debug.LogError("Failed to download thumbnail " + imageDownload.url + ": " + imageDownload.error);
 			}
 			else if (imageDownload.isDone)
 			{

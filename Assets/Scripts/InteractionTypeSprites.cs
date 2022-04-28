@@ -53,7 +53,7 @@ public class InteractionTypeSprites : MonoBehaviour
 		}
 		else
 		{
-			Debug.Log($"Sprite for {type} not found");
+			Debug.LogError($"Sprite for {type} not found");
 			return null;
 		}
 	}

@@ -111,7 +111,6 @@ public class ChapterManager : MonoBehaviour
 
 	public void SetChapters(List<Chapter> newChapters)
 	{
-		Debug.Log("Setting chapters");
 		chapters = newChapters;
 
 		for (int i = 0; i < chapters.Count; i++)

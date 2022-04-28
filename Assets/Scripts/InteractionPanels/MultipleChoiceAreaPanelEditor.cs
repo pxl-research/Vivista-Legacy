@@ -82,7 +82,6 @@ public class MultipleChoiceAreaPanelEditor : MonoBehaviour
 
 	void Update()
 	{
-		Debug.Log(answerAreas.Count);
 		if (areaPicker != null && areaPicker.answered)
 		{
 			//NOTE(Simon): If areaPicker was not cancelled
