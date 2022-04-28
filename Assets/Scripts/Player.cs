@@ -573,7 +573,7 @@ public class Player : MonoBehaviour
 
 		point.panel.SetActive(true);
 
-		//NOTE(Simon): We do this here, because each interactionType has its own script. So that mean adding the event in many places
+		//NOTE(Simon): We do this here, because each interactionType has its own script. So that means adding the event in many places
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
 		button.onClick.RemoveAllListeners();
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
@@ -588,6 +588,8 @@ public class Player : MonoBehaviour
 		//NOTE(Simon): No two eventsystems can be active at the same, so disable the main one. The main one is used for all screenspace UI.
 		//NOTE(Simon): The other eventsystem, that remains active, handles input for the spherical UI.
 		mainEventSystem.enabled = false;
+
+		HideMandatoryInteractionMessage();
 	}
 
 	public void DeactivateActiveInteractionPoint()
@@ -602,6 +604,11 @@ public class Player : MonoBehaviour
 			InteractionPointers.Instance.ShouldRender(true);
 
 			mainEventSystem.enabled = true;
+
+			if (mandatoryPauseActive)
+			{
+				ShowMandatoryInteractionMessage();
+			}
 		}
 	}
 
@@ -722,6 +729,7 @@ public class Player : MonoBehaviour
 
 	public void ShowMandatoryInteractionMessage()
 	{
+		Debug.Log("Showing");
 		if (XRSettings.isDeviceActive)
 		{
 			mandatoryPauseMessageVR.SetActive(true);
@@ -734,6 +742,7 @@ public class Player : MonoBehaviour
 
 	public void HideMandatoryInteractionMessage()
 	{
+		Debug.Log("Hiding");
 		if (XRSettings.isDeviceActive)
 		{
 			mandatoryPauseMessageVR.SetActive(false);
