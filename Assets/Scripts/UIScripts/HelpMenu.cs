@@ -5,6 +5,7 @@ using UnityEngine;
 public class HelpMenu : MonoBehaviour
 {
 	public GameObject bugReportPanelPrefab;
+	public GameObject aboutPanelPrefab;
 
 	//NOTE(Simon): For now this shows the log file in the appropriate explorer-like application on the various OSes
 	public void ExportLog()
@@ -29,5 +30,11 @@ public class HelpMenu : MonoBehaviour
 	{
 		Canvass.modalBackground.SetActive(true);
 		Instantiate(bugReportPanelPrefab, Canvass.main.transform, false);
+	}
+
+	public void About()
+	{
+		Canvass.modalBackground.SetActive(true);
+		Instantiate(aboutPanelPrefab, Canvass.main.transform, false);
 	}
 }
