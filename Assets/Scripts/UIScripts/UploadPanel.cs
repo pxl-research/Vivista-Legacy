@@ -378,9 +378,9 @@ public class UploadPanel : MonoBehaviour
 			filesToUpload.Enqueue(status.fileInProgress);
 		}
 
-		for (int i = status.filesUploaded.Count - 1; i >= 0; i--)
+		while (status.filesToUpload.Count > 0)
 		{
-			filesToUpload.Enqueue(status.filesUploaded[i]);
+			filesToUpload.Enqueue(status.filesToUpload.Dequeue());
 		}
 
 		status = null;
