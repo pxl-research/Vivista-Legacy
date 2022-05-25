@@ -142,10 +142,16 @@ namespace TusDotNetClient
 			{
 				var response = (HttpWebResponse)ex.Response;
 
+				string body;
+				using (var reader = new StreamReader(response.GetResponseStream()))
+				{
+					body = reader.ReadToEnd();
+				}
+
 				var result = new TusHttpResponse(
 					response.StatusCode,
 					response.Headers.AllKeys.ToDictionary(headerName => headerName, headerName => response.Headers.Get(headerName)),
-					Encoding.UTF8.GetBytes(response.StatusDescription));
+					Encoding.UTF8.GetBytes(body));
 
 				return result;
 			}
