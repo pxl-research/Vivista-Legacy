@@ -145,8 +145,9 @@ MonoBehaviour:
   result: {fileID: 1259856367519722930}
   areaRendererPrefab: {fileID: 5627738579661189201, guid: f8fa131f73342364ea6e6fa601788632,
     type: 3}
-  incorrectBackground: {r: 1, g: 0, b: 0, a: 0.5019608}
-  incorrectOutline: {r: 1, g: 0, b: 0, a: 1}
+  unknownColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  incorrectColor: {r: 0.8396226, g: 0, b: 0, a: 1}
+  correctColor: {r: 0.059739172, g: 0.8490566, b: 0, a: 1}
 --- !u!1 &3778234480165387115
 GameObject:
   m_ObjectHideFlags: 0

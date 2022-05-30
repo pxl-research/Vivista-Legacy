@@ -70,9 +70,10 @@ public class AreaRenderer : MonoBehaviour
 		return meshFilter.mesh.bounds;
 	}
 
-	public void SetColor(Color backgroundColor, Color outlineColor)
+	public void SetColor(Color color)
 	{
-		meshRenderer.material.color = backgroundColor;
-		outlineRenderer.material.color = outlineColor;
+		outlineRenderer.material.color = color;
+		color.a = .5f;
+		meshRenderer.material.color = color;
 	}
 }

@@ -15,8 +15,9 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 	public GameObject areaRendererPrefab;
 	private List<AreaRenderer> areaRenderers = new List<AreaRenderer>();
 
-	public Color incorrectBackground;
-	public Color incorrectOutline;
+	public Color unknownColor;
+	public Color incorrectColor;
+	public Color correctColor;
 
 	private bool isFindingArea;
 	private bool completed;
@@ -73,10 +74,7 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 					areaRenderer.EnableRenderer();
 					areaRenderer.DisableCollider();
 
-					if (i != correct)
-					{
-						areaRenderer.SetColor(incorrectBackground, incorrectOutline);
-					}
+					areaRenderer.SetColor(correctIndex == i ? correctColor: incorrectColor);
 				}
 
 				Player.Instance.UnsuspendInteractionPoint();
@@ -95,6 +93,10 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 		for (int i = 0; i < areaRenderers.Count; i++)
 		{
 			areaRenderers[i].EnableRenderer();
+			if (!completed)
+			{
+				areaRenderers[i].SetColor(unknownColor);
+			}
 		}
 	}
 
