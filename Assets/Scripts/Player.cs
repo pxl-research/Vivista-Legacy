@@ -546,7 +546,7 @@ public class Player : MonoBehaviour
 
 		StartCoroutine(UpdatePointPositions());
 
-		if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+		if (!XRSettings.isDeviceActive)
 		{
 			Seekbar.instance.compass.SetActive(true);
 		}
@@ -573,7 +573,7 @@ public class Player : MonoBehaviour
 
 		point.panel.SetActive(true);
 
-		//NOTE(Simon): We do this here, because each interactionType has its own script. So that means adding the event in many places
+		//NOTE(Simon): We do this here, because each interactionType has its own script. So that would mean adding the event in many places
 		var button = point.panel.transform.Find("CloseSpherePanelButton").GetComponent<Button>();
 		button.onClick.RemoveAllListeners();
 		button.onClick.AddListener(DeactivateActiveInteractionPoint);
@@ -803,9 +803,7 @@ public class Player : MonoBehaviour
 		{
 			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
 
-			RaycastHit hit;
-
-			if (Physics.Raycast(ray, out hit, 100, 1 << LayerMask.NameToLayer("Default")))
+			if (Physics.Raycast(ray, out var hit, 100, 1 << LayerMask.NameToLayer("Default")))
 			{
 				var drawLocation = hit.point;
 				var trans = interactionPoint.point.transform;
@@ -832,7 +830,6 @@ public class Player : MonoBehaviour
 		if (XRGeneralSettings.Instance.Manager.activeLoader != null)
 		{
 			XRGeneralSettings.Instance.Manager.StartSubsystems();
-			VRDevices.loadedSdk = VRDevices.LoadedSdk.OpenVr;
 
 			VRDevices.BeginHandlingVRDeviceEvents();
 			controllerLeft.SetActive(true);
@@ -840,7 +837,6 @@ public class Player : MonoBehaviour
 		}
 		else
 		{
-			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 			controllerLeft.SetActive(false);
 			controllerRight.SetActive(false);
 		}
@@ -853,13 +849,12 @@ public class Player : MonoBehaviour
 
 	public IEnumerator DisableVR()
 	{
-		if (VRDevices.loadedSdk != VRDevices.LoadedSdk.None)
+		if (XRSettings.isDeviceActive)
 		{
 			Destroy(XRInput.singleton.gameObject);
 			yield return new WaitForEndOfFrame();
 			XRGeneralSettings.Instance.Manager.StopSubsystems();
 			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-			VRDevices.loadedSdk = VRDevices.LoadedSdk.None;
 			controllerLeft.SetActive(false);
 			controllerRight.SetActive(false);
 		}

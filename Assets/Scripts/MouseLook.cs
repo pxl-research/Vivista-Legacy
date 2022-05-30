@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.XR;
 using UnityEngine.XR.Management;
 
 public class MouseLook : MonoBehaviour 
@@ -48,7 +49,7 @@ public class MouseLook : MonoBehaviour
 		//NOTE(Simon): Do not use mouselook in VR
 		//NOTE(Simon): Do use mouselook if not in editor
 		//NOTE(Simon): Do use mouselook if in editor and correct editorstate
-		if (VRDevices.loadedSdk == VRDevices.LoadedSdk.None)
+		if (!XRSettings.isDeviceActive)
 		{
 			if (forceActive || editor == null || 
 									  (editor.editorState == EditorState.Active

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,7 +12,6 @@ public class FindAreaPanelSphere : MonoBehaviour
 
 	public GameObject areaRendererPrefab;
 
-	private Player player;
 	private Controller[] controllers;
 	private List<Ray> rays;
 
@@ -34,7 +32,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 			if (Input.GetMouseButtonDown(0))
 			{
 				var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-				//NOTE(Simon): Add both directions, because winding order determines from wich direction a mesh can collide
+				//NOTE(Simon): Add both directions, because winding order determines from which direction a mesh can collide
 				rays.Add(ray);
 				rays.Add(ray.ReverseRay());
 			}
@@ -44,7 +42,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 				if (controllers[i].triggerPressed)
 				{
 					var ray = controllers[i].CastRay();
-					//NOTE(Simon): Add both directions, because winding order determines from wich direction a mesh can collide
+					//NOTE(Simon): Add both directions, because winding order determines from which direction a mesh can collide
 					rays.Add(ray);
 					rays.Add(ray.ReverseRay());
 				}
@@ -69,7 +67,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 					areaRenderer.DisableCollider();
 				}
 
-				player.UnsuspendInteractionPoint();
+				Player.Instance.UnsuspendInteractionPoint();
 
 				startButton.gameObject.SetActive(false);
 				result.gameObject.SetActive(true);
@@ -123,9 +121,8 @@ public class FindAreaPanelSphere : MonoBehaviour
 			areaRenderers[i].gameObject.SetActive(true);
 		}
 
-		player = GameObject.Find("Player").GetComponent<Player>();
-		controllers = player.GetControllers();
-		player.SuspendInteractionPoint();
+		controllers = Player.Instance.GetControllers();
+		Player.Instance.SuspendInteractionPoint();
 
 		isFindingArea = true;
 	}

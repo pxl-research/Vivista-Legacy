@@ -3,13 +3,6 @@ using VRstudios;
 
 public static class VRDevices
 {
-	public enum LoadedSdk
-	{
-		None,
-		OpenVr
-	}
-
-	public static LoadedSdk loadedSdk;
 	public static XRInputControllerType loadedControllerSet;
 
 	public static bool hasLeftController;

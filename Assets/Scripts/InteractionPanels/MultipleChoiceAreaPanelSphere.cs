@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 {
@@ -10,7 +10,7 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 	public Text result;
 
 	private List<Area> areas;
-	private int correct;
+	private int correctIndex;
 
 	public GameObject areaRendererPrefab;
 	private List<AreaRenderer> areaRenderers = new List<AreaRenderer>();
@@ -21,46 +21,51 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 	private bool isFindingArea;
 	private bool completed;
 
-	private Player player;
 	private Controller[] controllers;
-	private List<Ray> rays = new List<Ray>();
+	private List<Ray> clickRays = new List<Ray>();
 
 	void Update()
 	{
 		if (isFindingArea)
 		{
-			rays.Clear();
+			clickRays.Clear();
 
-			if (Input.GetMouseButtonDown(0))
+			if (!XRSettings.isDeviceActive)
 			{
-				var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-				//NOTE(Simon): Add both directions, because winding order determines from wich direction a mesh can collide
-				rays.Add(ray);
-				rays.Add(ray.ReverseRay());
-			}
 
-			for (int i = 0; i < controllers.Length; i++)
-			{
-				if (controllers[i].triggerPressed)
+				if (Input.GetMouseButtonDown(0))
 				{
-					var ray = controllers[i].CastRay();
-					//NOTE(Simon): Add both directions, because winding order determines from wich direction a mesh can collide
-					rays.Add(ray);
-					rays.Add(ray.ReverseRay());
+					//NOTE(Simon): Add both directions, because winding order determines from which direction a mesh can collide
+					var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+					clickRays.Add(ray);
+					clickRays.Add(ray.ReverseRay());
+				}
+			}
+			else
+			{
+				for (int i = 0; i < controllers.Length; i++)
+				{
+					if (controllers[i].triggerPressed)
+					{
+						var ray = controllers[i].CastRay();
+						//NOTE(Simon): Add both directions, because winding order determines from which direction a mesh can collide
+						clickRays.Add(ray);
+						clickRays.Add(ray.ReverseRay());
+					}
 				}
 			}
 
-			AreaRenderer target = null;
-			for (int i = 0; i < rays.Count; i++)
+			AreaRenderer clickTarget = null;
+			for (int i = 0; i < clickRays.Count; i++)
 			{
-				if (Physics.Raycast(rays[i], out var hit, Mathf.Infinity, LayerMask.GetMask("Area")))
+				if (Physics.Raycast(clickRays[i], out var hit, Mathf.Infinity, LayerMask.GetMask("Area")))
 				{
-					target = hit.transform.GetComponent<AreaRenderer>();
+					clickTarget = hit.transform.GetComponent<AreaRenderer>();
 					break;
 				}
 			}
 
-			if (target != null)
+			if (clickTarget != null)
 			{
 				for (int i = 0; i < areaRenderers.Count; i++)
 				{
@@ -74,7 +79,7 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 					}
 				}
 
-				player.UnsuspendInteractionPoint();
+				Player.Instance.UnsuspendInteractionPoint();
 
 				startButton.gameObject.SetActive(false);
 				result.gameObject.SetActive(true);
@@ -103,7 +108,7 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 
 	public void Init(string newTitle, List<Area> newAreas, int newCorrect)
 	{
-		correct = newCorrect;
+		correctIndex = newCorrect;
 		title.text = newTitle;
 		areas = newAreas;
 
@@ -127,9 +132,8 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 			areaRenderers[i].gameObject.SetActive(true);
 		}
 
-		player = GameObject.Find("Player").GetComponent<Player>();
-		controllers = player.GetControllers();
-		player.SuspendInteractionPoint();
+		controllers = Player.Instance.GetControllers();
+		Player.Instance.SuspendInteractionPoint();
 
 		isFindingArea = true;
 	}

@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class Seekbar : MonoBehaviour
 {
@@ -63,7 +64,7 @@ public class Seekbar : MonoBehaviour
 	public void Start()
 	{
 		curSeekbarHeight = maxSeekbarHeight;
-		if (VRDevices.loadedSdk != VRDevices.LoadedSdk.None)
+		if (XRSettings.isDeviceActive)
 		{
 			AttachCompassToSeekbar();
 		}
@@ -149,7 +150,7 @@ public class Seekbar : MonoBehaviour
 		}
 
 		//NOTE(Kristof): Rotating the seekbar
-		if (VRDevices.loadedSdk != VRDevices.LoadedSdk.None && isVRSeekbar)
+		if (XRSettings.isDeviceActive && isVRSeekbar)
 		{
 			//NOTE(Kristof): Seekbar rotation is the same as the seekbar's angle on the circle
 			var seekbarAngle = Vector2.SignedAngle(new Vector2(transform.position.x, transform.position.z), Vector2.up);
@@ -257,7 +258,7 @@ public class Seekbar : MonoBehaviour
 			var point = blipsToShow[i];
 
 			float blipAngle = point.point.transform.eulerAngles.y;
-			float angle = (VRDevices.loadedSdk == VRDevices.LoadedSdk.None ? compass.transform.parent.localEulerAngles.y : 90) - blipAngle;
+			float angle = (XRSettings.isDeviceActive ? 90 : compass.transform.parent.localEulerAngles.y) - blipAngle;
 			blipPool[i].transform.localEulerAngles = new Vector3(0, 0, angle);
 			blipPool[i].transform.SetParent(compass.transform, false);
 		}
