@@ -84,7 +84,6 @@ GameObject:
   - component: {fileID: 222581700996484358}
   - component: {fileID: 114131325525984934}
   - component: {fileID: 114392055799705612}
-  - component: {fileID: 114120260001341070}
   - component: {fileID: 65230450214649800}
   m_Layer: 5
   m_Name: Play
@@ -207,52 +206,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &114120260001341070
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1145159015752820}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a55c192d4c687e2499ca1a05c83260f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onHit:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 114422890627186682}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: TogglePlay
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onHitDown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHitUp:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverStay:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverEnd:
-    m_PersistentCalls:
-      m_Calls: []
-  image: {fileID: 0}
-  hoverColor: {r: 0, g: 0, b: 0, a: 0}
-  hitting: 0
-  hovering: 0
 --- !u!65 &65230450214649800
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -830,7 +783,6 @@ GameObject:
   - component: {fileID: 222514212145203984}
   - component: {fileID: 114385968948829910}
   - component: {fileID: 114160220099594908}
-  - component: {fileID: 114819596102517902}
   - component: {fileID: 65839752726201608}
   m_Layer: 5
   m_Name: Restart
@@ -953,52 +905,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &114819596102517902
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1264980720368192}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a55c192d4c687e2499ca1a05c83260f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onHit:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 114422890627186682}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Restart
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onHitDown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHitUp:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverStay:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverEnd:
-    m_PersistentCalls:
-      m_Calls: []
-  image: {fileID: 0}
-  hoverColor: {r: 0, g: 0, b: 0, a: 0}
-  hitting: 0
-  hovering: 0
 --- !u!65 &65839752726201608
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1582,12 +1488,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2d262ffaf1a049c4aaa3c804d4cae787, type: 3}
---- !u!224 &1894374782498010150 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 2362536843972441144, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
-    type: 3}
-  m_PrefabInstance: {fileID: 4216285616448438302}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &5943158707138868540 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7564101474510681378, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
@@ -1600,3 +1500,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!224 &1894374782498010150 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2362536843972441144, guid: 2d262ffaf1a049c4aaa3c804d4cae787,
+    type: 3}
+  m_PrefabInstance: {fileID: 4216285616448438302}
+  m_PrefabAsset: {fileID: 0}

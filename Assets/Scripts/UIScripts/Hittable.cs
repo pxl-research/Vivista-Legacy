@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -23,11 +24,13 @@ public class Hittable : MonoBehaviour
 	private bool oldHitting;
 	private bool oldHovering;
 
+	private static List<Hittable> hittables = new List<Hittable>();
+
 	void Start()
 	{
 		if (!SceneManager.GetActiveScene().name.Equals("Editor"))
 		{
-			Player.hittables.Add(this);
+			hittables.Add(this);
 		}
 	}
 
@@ -80,9 +83,48 @@ public class Hittable : MonoBehaviour
 	void OnDestroy()
 	{
 		// NOTE(Lander): Remove the items only when used in Player 
-		if (Player.hittables != null)
+		if (hittables != null)
 		{
-			Player.hittables.Remove(this);
+			hittables.Remove(this);
+		}
+	}
+
+	public static void UpdateAllHittables(Controller[] controllers, List<KeyValuePair<Ray, bool>> interactionpointRays)
+	{
+		//NOTE(Simon): Reset all hittables
+		foreach (var hittable in hittables)
+		{
+			if (hittable == null)
+			{
+				continue;
+			}
+
+			//NOTE(Jitse): Check if a hittable is being held down
+			if (!(controllers[0].triggerDown || controllers[1].triggerDown))
+			{
+				hittable.hitting = false;
+			}
+
+			hittable.hovering = false;
+		}
+
+		//NOTE(Simon): Set hitting and hovering in hittables
+		foreach (var ray in interactionpointRays)
+		{
+			Physics.Raycast(ray.Key, out var hit, 100, LayerMask.GetMask("UI", "WorldUI"));
+
+			if (hit.transform != null)
+			{
+				var hittable = hit.transform.GetComponent<Hittable>();
+				if (hittable != null)
+				{
+					if (ray.Value)
+					{
+						hittable.hitting = true;
+					}
+					hittable.hovering = true;
+				}
+			}
 		}
 	}
 }

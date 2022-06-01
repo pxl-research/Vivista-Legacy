@@ -40,7 +40,6 @@ public class Player : MonoBehaviour
 {
 	public static Player Instance;
 	public static PlayerState playerState;
-	public static List<Hittable> hittables;
 
 	public GameObject interactionPointPrefab;
 	public GameObject indexPanelPrefab;
@@ -92,7 +91,6 @@ public class Player : MonoBehaviour
 
 	void Awake()
 	{
-		hittables = new List<Hittable>();
 		Physics.autoSimulation = false;
 
 		SaveFile.MoveProjectsToCorrectFolder();
@@ -302,60 +300,7 @@ public class Player : MonoBehaviour
 		}
 
 		//NOTE(Simon): Interaction with Hittables
-		{
-			var controllerList = new List<Controller>
-			{
-				trackedControllerLeft,
-				trackedControllerRight
-			};
-
-			//NOTE(Simon): Set hover state when hovered by controllers
-			foreach (var con in controllerList)
-			{
-				if (con.uiHovering && con.hoveredGo != null)
-				{
-					var hittable = con.hoveredGo.GetComponent<Hittable>();
-					if (hittable != null)
-					{
-						hittable.hovering = true;
-					}
-				}
-			}
-
-			//NOTE(Simon): Reset all hittables
-			foreach (var hittable in hittables)
-			{
-				if (hittable == null)
-				{
-					continue;
-				}
-
-				//NOTE(Jitse): Check if a hittable is being held down
-				if (!(controllerList[0].triggerDown || controllerList[1].triggerDown))
-				{
-					hittable.hitting = false;
-				}
-
-				hittable.hovering = false;
-			}
-
-
-			//NOTE(Simon): We can't use Controller.hoveredGo here, because that would ignore mouse input.
-			foreach (var ray in interactionpointRays)
-			{
-				Physics.Raycast(ray.Key, out var hit, 100, LayerMask.GetMask("UI", "WorldUI"));
-				
-				//NOTE(Simon): Set hitting and hovering in hittables
-				if (hit.transform != null && ray.Value)
-				{
-					var hittable = hit.transform.GetComponent<Hittable>();
-					if (hittable != null)
-					{
-						hittable.hitting = true;
-					}
-				}
-			}
-		}
+		Hittable.UpdateAllHittables(new[] { trackedControllerLeft, trackedControllerRight }, interactionpointRays);
 	}
 
 	private void OnChapterTransitionFinish()

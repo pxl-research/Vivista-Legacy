@@ -11,11 +11,6 @@ public class AudioPanel : MonoBehaviour
 
 	public void Init(string newTitle, string fullPath)
 	{
-		if (Player.hittables != null)
-		{
-			GetComponentInChildren<Hittable>().enabled = true;
-		}
-
 		if (!File.Exists(fullPath))
 		{
 			Toasts.AddToast(5, "Corrupted audio, ABORT ABORT ABORT");

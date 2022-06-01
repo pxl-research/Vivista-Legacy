@@ -92,8 +92,6 @@ GameObject:
   - component: {fileID: 472791694917817505}
   - component: {fileID: 472791694917817506}
   - component: {fileID: 4120970320916550941}
-  - component: {fileID: 5927831214474704251}
-  - component: {fileID: 7680819115515266291}
   m_Layer: 5
   m_Name: ChapterSelectorItem
   m_TagString: Untagged
@@ -223,53 +221,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!65 &5927831214474704251
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 472791694917817516}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 210, y: 60, z: 0.1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7680819115515266291
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 472791694917817516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a55c192d4c687e2499ca1a05c83260f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onHit:
-    m_PersistentCalls:
-      m_Calls: []
-  onHitDown:
-    m_PersistentCalls:
-      m_Calls: []
-  onHitUp:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverStay:
-    m_PersistentCalls:
-      m_Calls: []
-  onHoverEnd:
-    m_PersistentCalls:
-      m_Calls: []
-  image: {fileID: 0}
-  hoverColor: {r: 0, g: 0, b: 0, a: 0}
-  hitting: 0
-  hovering: 0
 --- !u!1 &472791695858483596
 GameObject:
   m_ObjectHideFlags: 0
