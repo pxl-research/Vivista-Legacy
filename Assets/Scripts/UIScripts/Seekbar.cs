@@ -12,6 +12,7 @@ public class Seekbar : MonoBehaviour
 	public RectTransform seekbarBackground;
 	public RectTransform seekbarPreview;
 	public RectTransform seekbarCurrent;
+	public GameObject compass;
 	public GameObject compassBackground;
 	public GameObject compassForeground;
 	public Text timeText;
@@ -34,7 +35,6 @@ public class Seekbar : MonoBehaviour
 
 	public float timeSinceLastTextUpdate;
 
-	public GameObject compass;
 	public static List<Seekbar> instances = new List<Seekbar>();
 	public static Seekbar instanceVR;
 	public static Seekbar instance;
@@ -45,7 +45,6 @@ public class Seekbar : MonoBehaviour
 	{
 		blipPool = new GameObjectPool(blipPrefab, compass.transform);
 
-		compass = compassBackground;
 		if (isVRSeekbar)
 		{
 			instanceVR = this;
@@ -63,7 +62,7 @@ public class Seekbar : MonoBehaviour
 
 	public void Start()
 	{
-		curSeekbarHeight = maxSeekbarHeight;
+		curSeekbarHeight = minSeekbarHeight;
 		if (XRSettings.isDeviceActive)
 		{
 			AttachCompassToSeekbar();
@@ -217,16 +216,6 @@ public class Seekbar : MonoBehaviour
 		videoController.TogglePlay();
 	}
 
-	public GameObject CreateBlip()
-	{
-		var blip = Instantiate(blipPrefab);
-		blip.transform.localEulerAngles = Vector3.zero;
-		blip.transform.localScale = Vector3.one;
-		blip.transform.localPosition = Vector3.zero;
-		blip.transform.GetComponent<RectTransform>().anchoredPosition = Vector3.zero;
-		return blip;
-	}
-
 	public static void ClearBlips()
 	{
 		blipPool.ClearActive();
@@ -258,9 +247,9 @@ public class Seekbar : MonoBehaviour
 			var point = blipsToShow[i];
 
 			float blipAngle = point.point.transform.eulerAngles.y;
-			float angle = (XRSettings.isDeviceActive ? 90 : compass.transform.parent.localEulerAngles.y) - blipAngle;
+			float angle = (XRSettings.isDeviceActive ? 90 : compass.transform.localEulerAngles.y) - blipAngle;
 			blipPool[i].transform.localEulerAngles = new Vector3(0, 0, angle);
-			blipPool[i].transform.SetParent(compass.transform, false);
+			blipPool[i].transform.SetParent(compassBackground.transform, false);
 		}
 	}
 }
