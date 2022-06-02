@@ -305,7 +305,8 @@ public class ProjectPanel : MonoBehaviour
 
 		selectedIndex = i;
 
-		deleteButton.interactable = true;
+		//NOTE(Simon): Disable delete button on currently opened project
+		deleteButton.interactable = files[selectedIndex].guid != Editor.Instance.currentProjectGuid.ToString();
 		renameButton.interactable = true;
 		openButton.interactable = true;
 		saveButton.interactable = true;
