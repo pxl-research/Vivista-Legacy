@@ -27,6 +27,7 @@ public class Area
 	}
 }
 
+[RequireComponent(typeof(TabNav))]
 public class FindAreaPanelEditor : MonoBehaviour
 {
 	public GameObject areaPickerPrefab;

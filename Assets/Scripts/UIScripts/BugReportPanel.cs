@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(TabNav))]
 public class BugReportPanel : MonoBehaviour
 {
 	public InputField problemInput;

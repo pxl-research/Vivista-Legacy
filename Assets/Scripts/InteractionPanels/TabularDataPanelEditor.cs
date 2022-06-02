@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(TabNav))]
 public class TabularDataPanelEditor : MonoBehaviour
 {
 	public InputField title;

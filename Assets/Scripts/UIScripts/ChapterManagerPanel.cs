@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(TabNav))]
 public class ChapterManagerPanel : MonoBehaviour
 {
 	public GameObject chapterItemPrefab;

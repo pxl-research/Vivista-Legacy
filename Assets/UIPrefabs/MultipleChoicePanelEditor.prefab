@@ -332,6 +332,7 @@ GameObject:
   - component: {fileID: 224184357999296542}
   - component: {fileID: 114461006918833054}
   - component: {fileID: 2565436002163711501}
+  - component: {fileID: 8654205671211864321}
   m_Layer: 5
   m_Name: MultipleChoicePanelEditor
   m_TagString: Untagged
@@ -394,6 +395,22 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &8654205671211864321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1371653262795046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86dac9b44352c4b41a9c9a133c53bd6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputs:
+  - {fileID: 114153786373461222}
+  - {fileID: 8765336148938405830}
+  inputIndex: 0
 --- !u!1 &1506920069124868
 GameObject:
   m_ObjectHideFlags: 0
@@ -1464,3 +1481,15 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 8947288817336747233}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8765336148938405830 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 400711580321559335, guid: 7f5a83b8483e6fe4eb427c1724adee55,
+    type: 3}
+  m_PrefabInstance: {fileID: 8947288817336747233}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

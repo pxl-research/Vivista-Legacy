@@ -2,10 +2,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(TabNav))]
 public class AudioPanelEditor : MonoBehaviour
 {
-	public Button done;
-
 	public InputField url;
 	public InputField title;
 	public AudioControl audioControl;

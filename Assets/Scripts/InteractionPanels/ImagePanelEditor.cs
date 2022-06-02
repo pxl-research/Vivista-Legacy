@@ -9,6 +9,7 @@ public enum ImageEditorState
 	Showing
 }
 
+[RequireComponent(typeof(TabNav))]
 public class ImagePanelEditor : MonoBehaviour
 {
 	public InputField title;

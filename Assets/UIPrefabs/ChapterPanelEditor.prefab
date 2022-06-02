@@ -187,6 +187,7 @@ GameObject:
   - component: {fileID: 1382697467998937445}
   - component: {fileID: 1121579050164257323}
   - component: {fileID: 1164318646736671676}
+  - component: {fileID: 2801752763293196327}
   m_Layer: 5
   m_Name: ChapterPanelEditor
   m_TagString: Untagged
@@ -251,6 +252,22 @@ MonoBehaviour:
   answered: 0
   answerTitle: 
   answerChapterId: 0
+--- !u!114 &2801752763293196327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1164318646736671677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86dac9b44352c4b41a9c9a133c53bd6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputs:
+  - {fileID: 1275801621263634527}
+  - {fileID: 6562661744106015117}
+  inputIndex: 0
 --- !u!1 &1164340512387136103
 GameObject:
   m_ObjectHideFlags: 0
@@ -2432,3 +2449,15 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 6817569242386250410}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6562661744106015117 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 400711580321559335, guid: 7f5a83b8483e6fe4eb427c1724adee55,
+    type: 3}
+  m_PrefabInstance: {fileID: 6817569242386250410}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

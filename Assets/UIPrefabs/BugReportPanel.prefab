@@ -350,11 +350,11 @@ RectTransform:
   m_Father: {fileID: 1151479936642796158}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -515}
-  m_SizeDelta: {x: 160, y: 40}
-  m_Pivot: {x: 0.5, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 20}
+  m_SizeDelta: {x: -40, y: 40}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &1151479936246509762
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -683,6 +683,7 @@ GameObject:
   - component: {fileID: 1151479936642796157}
   - component: {fileID: 1151479936642796156}
   - component: {fileID: 1151479936642796159}
+  - component: {fileID: 549731551537032561}
   m_Layer: 5
   m_Name: BugReportPanel
   m_TagString: Untagged
@@ -773,6 +774,23 @@ MonoBehaviour:
   reproduction: {fileID: 1151479936995198376}
   email: {fileID: 1151479936589330094}
   errorMessage: {fileID: 5841489575591774449}
+--- !u!114 &549731551537032561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1151479936642796153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86dac9b44352c4b41a9c9a133c53bd6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputs:
+  - {fileID: 1151479936771531924}
+  - {fileID: 1151479936995198376}
+  - {fileID: 1151479936589330094}
+  inputIndex: 0
 --- !u!1 &1151479936740328091
 GameObject:
   m_ObjectHideFlags: 0

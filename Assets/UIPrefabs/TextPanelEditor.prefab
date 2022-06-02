@@ -184,7 +184,7 @@ MonoBehaviour:
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
+    m_FadeDuration: 0
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -393,6 +393,7 @@ GameObject:
   - component: {fileID: 224788067093338474}
   - component: {fileID: 114857279946337036}
   - component: {fileID: 3431183397969861105}
+  - component: {fileID: 6796624876731551063}
   m_Layer: 5
   m_Name: TextPanelEditor
   m_TagString: Untagged
@@ -434,7 +435,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   title: {fileID: 114346141344958244}
   body: {fileID: 114819425056952008}
-  done: {fileID: 114809802351649614}
   answered: 0
   answerTitle: 
   answerBody: 
@@ -450,6 +450,23 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &6796624876731551063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1343544309744014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86dac9b44352c4b41a9c9a133c53bd6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputs:
+  - {fileID: 114346141344958244}
+  - {fileID: 114819425056952008}
+  - {fileID: 7740017546634659856}
+  inputIndex: 0
 --- !u!1 &1353552846797626
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,7 +651,7 @@ MonoBehaviour:
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
+    m_FadeDuration: 0
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -1256,6 +1273,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 224809980213780376}
     m_Modifications:
+    - target: {fileID: 400711580321559335, guid: 7f5a83b8483e6fe4eb427c1724adee55,
+        type: 3}
+      propertyPath: m_Colors.m_FadeDuration
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3090055648477148621, guid: 7f5a83b8483e6fe4eb427c1724adee55,
         type: 3}
       propertyPath: m_Pivot.x
@@ -1374,3 +1396,15 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 7990949229122075447}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7740017546634659856 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 400711580321559335, guid: 7f5a83b8483e6fe4eb427c1724adee55,
+    type: 3}
+  m_PrefabInstance: {fileID: 7990949229122075447}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

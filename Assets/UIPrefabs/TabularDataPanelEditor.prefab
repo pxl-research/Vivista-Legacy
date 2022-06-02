@@ -1510,6 +1510,7 @@ GameObject:
   - component: {fileID: 6508139984302540488}
   - component: {fileID: 8851749040041662683}
   - component: {fileID: 2136346459895991725}
+  - component: {fileID: 3172667192314725707}
   m_Layer: 5
   m_Name: TabularDataPanelEditor
   m_TagString: Untagged
@@ -1578,6 +1579,22 @@ MonoBehaviour:
   answerTabularData: []
   answerRows: 1
   answerColumns: 1
+--- !u!114 &3172667192314725707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6433716609371219952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86dac9b44352c4b41a9c9a133c53bd6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputs:
+  - {fileID: 6401997619193680432}
+  - {fileID: 2371499661828354320}
+  inputIndex: 0
 --- !u!1 &6433838428293591506
 GameObject:
   m_ObjectHideFlags: 0
@@ -2578,6 +2595,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 2695087097451070007}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2371499661828354320 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 400711580321559335, guid: 7f5a83b8483e6fe4eb427c1724adee55,
+    type: 3}
+  m_PrefabInstance: {fileID: 2695087097451070007}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7994812812726141242
 PrefabInstance:
   m_ObjectHideFlags: 0

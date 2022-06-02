@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(TabNav))]
 public class VideoPanelEditor : MonoBehaviour {
 
 	public InputField url;

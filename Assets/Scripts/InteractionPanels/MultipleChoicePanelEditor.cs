@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(TabNav))]
 public class MultipleChoicePanelEditor : MonoBehaviour
 {
 	public Transform layoutPanelTransform;

@@ -835,6 +835,7 @@ GameObject:
   - component: {fileID: 224539511763365320}
   - component: {fileID: 114455846673542934}
   - component: {fileID: 5448740717150935696}
+  - component: {fileID: 1742227868422377855}
   m_Layer: 5
   m_Name: AudioPanelEditor
   m_TagString: Untagged
@@ -874,7 +875,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 966490e70a7c5c045977a427116fe9a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  done: {fileID: 114413321680859984}
   url: {fileID: 114390178015543742}
   title: {fileID: 114522442244028420}
   audioControl: {fileID: 114691017296216258}
@@ -893,6 +893,22 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &1742227868422377855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1468043211349640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86dac9b44352c4b41a9c9a133c53bd6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputs:
+  - {fileID: 114522442244028420}
+  - {fileID: 1531861278211001236}
+  inputIndex: 0
 --- !u!1 &1530948709704000
 GameObject:
   m_ObjectHideFlags: 0
@@ -2516,7 +2532,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Highlighted
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 114392486457841614}
   m_TextComponent: {fileID: 114045955408691674}
   m_Placeholder: {fileID: 114987174753623970}
@@ -2693,6 +2709,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1210868758005086387}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1531861278211001236 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 400711580321559335, guid: 7f5a83b8483e6fe4eb427c1724adee55,
+    type: 3}
+  m_PrefabInstance: {fileID: 1210868758005086387}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2394133884694722936
 PrefabInstance:
   m_ObjectHideFlags: 0
