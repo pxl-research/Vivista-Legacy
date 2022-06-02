@@ -36,6 +36,7 @@ public class InteractionPointers : MonoBehaviour
 
 		if (Player.playerState != PlayerState.Watching)
 		{
+			arrowPool.EnsureActiveCount(0);
 			return;
 		}
 
