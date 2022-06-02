@@ -174,7 +174,7 @@ public class VideoController : MonoBehaviour
 		}
 
 		Graphics.SetRenderTarget(screenshots.targetTexture);
-		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24, false, true);
+		var tex = new Texture2D(screenshots.texture.width, screenshots.texture.height, TextureFormat.RGB24, false, false);
 		tex.ReadPixels(new Rect(0, 0, screenshots.texture.width, screenshots.texture.height), 0, 0);
 		TextureScale.Bilinear(tex, (int)screenshotParams.width, (int)screenshotParams.height);
 
@@ -309,21 +309,22 @@ public class VideoController : MonoBehaviour
 	{
 		var descriptor = baseRenderTexture.descriptor;
 		descriptor.sRGB = false;
-				descriptor.width = width;
-				descriptor.height = height;
+		descriptor.width = width;
+		descriptor.height = height;
 
-				var renderTexture = new RenderTexture(descriptor);
-				RenderSettings.skybox.mainTexture = renderTexture;
-				video.targetTexture = renderTexture;
+		var renderTexture = new RenderTexture(descriptor);
+		RenderSettings.skybox.mainTexture = renderTexture;
+		video.targetTexture = renderTexture;
 
-				//TODO(Simon) Fix colors, looks way too dark
-				if (screenshots != null)
-				{
-					screenshots.targetTexture = new RenderTexture(descriptor);
-				}
+		//TODO(Simon) Fix colors, looks way too dark
+		if (screenshots != null)
+		{
+			descriptor.sRGB = true;
+			screenshots.targetTexture = new RenderTexture(descriptor);
+		}
 
-				transform.localScale = Vector3.one;
-				transform.position = Vector3.zero;
+		transform.localScale = Vector3.one;
+		transform.position = Vector3.zero;
 	}
 
 	private void CheckButtonStates()
