@@ -277,16 +277,15 @@ public class VideoController : MonoBehaviour
 		{
 			int videoWidth = video.texture.width;
 			int videoHeight = video.texture.height;
-			var perspective = Perspective.PerspectiveFlat;
 			if (videoWidth == videoHeight * 2)
 			{
-				perspective = Perspective.Perspective360;
+				CreateRenderTexture(videoWidth, videoHeight);
 			}
-			else if (videoWidth == videoHeight)
+			else
 			{
-				perspective = Perspective.Perspective180;
+				Debug.Log("Tried to load a non-360 video");
 			}
-			SetPerspective(perspective, videoWidth, videoHeight);
+
 
 			videoLoaded = true;
 
@@ -306,14 +305,10 @@ public class VideoController : MonoBehaviour
 		};
 	}
 
-	public void SetPerspective(Perspective perspective, int width, int height)
+	public void CreateRenderTexture(int width, int height)
 	{
-		switch (perspective)
-		{
-			case Perspective.Perspective360:
-			{
-				var descriptor = baseRenderTexture.descriptor;
-				descriptor.sRGB = false;
+		var descriptor = baseRenderTexture.descriptor;
+		descriptor.sRGB = false;
 				descriptor.width = width;
 				descriptor.height = height;
 
@@ -329,38 +324,6 @@ public class VideoController : MonoBehaviour
 
 				transform.localScale = Vector3.one;
 				transform.position = Vector3.zero;
-				break;
-			}
-			/*
-			NOTE(Simon): This was used when I special cased types of video. Might be needed in the future.
-			case Perspective.Perspective180:
-			{
-				//currentCamera = Instantiate(camera180);
-				GetComponent<MeshFilter>().sharedMesh = Mesh180;
-
-				Destroy(GetComponent<BoxCollider>());
-				gameObject.AddComponent<SphereCollider>();
-
-				GetComponent<MeshRenderer>().material = Material180;
-				transform.localScale = Vector3.one;
-				transform.position = Vector3.zero;
-				break;
-			}
-			case Perspective.PerspectiveFlat:
-			{
-				//currentCamera = Instantiate(cameraFlat);
-				GetComponent<MeshFilter>().sharedMesh = MeshFlat;
-
-				Destroy(GetComponent<BoxCollider>());
-				gameObject.AddComponent<BoxCollider>();
-
-				GetComponent<MeshRenderer>().material = MaterialFlat;
-				transform.localScale = new Vector3(1.536f, 0.864f, 1);
-				transform.position = new Vector3(0, 0, 1);
-				break;
-			}
-			*/
-		}
 	}
 
 	private void CheckButtonStates()

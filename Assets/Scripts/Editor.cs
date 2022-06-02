@@ -31,13 +31,6 @@ public enum EditorState
 	Exporting
 }
 
-public enum Perspective
-{
-	Perspective360,
-	Perspective180,
-	PerspectiveFlat
-}
-
 public enum TimelineDragMode
 {
 	None,
