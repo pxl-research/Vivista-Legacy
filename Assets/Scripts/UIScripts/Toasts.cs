@@ -9,6 +9,7 @@ public class Toast
 	public GameObject gameObject;
 }
 
+//NOTE(Simon): Handles Toasts. Scene should contain a panel in which toasts can appear. A prefab of such a toast should also be assigned.
 public class Toasts : MonoBehaviour 
 {
 	public RectTransform toastHolder;

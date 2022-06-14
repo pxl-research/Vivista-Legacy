@@ -11,7 +11,6 @@ public struct Line
 }
 
 //NOTE(Simon): Immediate-ish mode line drawer. Lines to be drawn need to be re-added every frame.
-//TODO(Simon): Performance test
 public class UILineRenderer : Graphic
 {
 	public static List<Line> lines;

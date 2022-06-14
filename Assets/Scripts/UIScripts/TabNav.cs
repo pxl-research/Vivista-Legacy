@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+//NOTE(Simon): Add this script somwhere in your window. Add all eligible UI elements to "inputs" (only elements inheriting from Selectable allowed). Script will cycle through them in the same order. Shift-tabbing works as well.
+//NOTE(Simon): Also handles cleanup of tab characters in multiline inputs.
 public class TabNav : MonoBehaviour
 {
 	public List<Selectable> inputs;
