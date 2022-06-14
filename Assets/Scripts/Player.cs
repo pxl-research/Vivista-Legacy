@@ -756,7 +756,8 @@ public class Player : MonoBehaviour
 				trans.position = drawLocation;
 				trans.LookAt(Camera.main.transform);
 				//NOTE(Kristof): Turn it around so it actually faces the camera
-				trans.localEulerAngles = new Vector3(0, trans.localEulerAngles.y + 180, 0);
+				var angles = trans.localEulerAngles;
+				trans.localEulerAngles = new Vector3(-angles.x, angles.y - 180, 0);
 
 				interactionPoint.position = drawLocation;
 			}
