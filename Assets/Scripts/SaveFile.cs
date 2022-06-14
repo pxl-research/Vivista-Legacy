@@ -32,6 +32,7 @@ public class InteractionPointSerialize
 	public double endTime;
 	public int tagId;
 	public bool mandatory;
+	public int id;
 
 	public Vector3 returnRayOrigin;
 
@@ -49,6 +50,8 @@ public class InteractionPointSerialize
 			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode missing items as default(T), 0 in this case. -1 means no tag
 			tagId = compat.tagId <= 0 ? -1 : compat.tagId,
 			mandatory = compat.mandatory,
+			//NOTE(Simon): In old savefiles id is missing. Unity will decode missing items as default(T), 0 in this case. -1 means no tag
+			id = compat.id <= 0 ? -1 : compat.id,
 		};
 
 		return serialize;
@@ -117,6 +120,7 @@ public class InteractionPointSerializeCompat
 	public double endTime;
 	public int tagId;
 	public bool mandatory;
+	public int id;
 
 	public Vector3 returnRayOrigin;
 	[Obsolete("Deprecated. But used to upgrade old saves")]

@@ -58,6 +58,7 @@ public class InteractionPointEditor
 	public int tagId;
 	public bool mandatory;
 	public bool filled;
+	public int id;
 
 	public Vector3 returnRayOrigin;
 }
@@ -74,6 +75,9 @@ public class Editor : MonoBehaviour
 
 	public EditorState editorState;
 
+	//NOTE(Simon): Should start from 1. Upgraded savefiles will receive an id of default(T), i.e. 0
+	public int InteractionPointIdCounter = 1;
+
 	public Guid currentProjectGuid => meta.guid;
 
 	public GameObject timeTooltipPrefab;
@@ -84,6 +88,9 @@ public class Editor : MonoBehaviour
 	private InteractionPointEditor pointToMove;
 	private InteractionPointEditor pointToEdit;
 	private InteractionPointEditor lastPlacedPoint;
+
+	private VideoController videoController;
+	private FileLoader fileLoader;
 
 	private InteractionTypePicker interactionTypePicker;
 	private GameObject interactionEditor;
@@ -98,6 +105,7 @@ public class Editor : MonoBehaviour
 	private SettingsPanel settingsPanel;
 	public GameObject updateAvailableNotification;
 
+	#region timeline data
 	public RectTransform timelineContainer;
 	public RectTransform timelineScrollView;
 	public RectTransform timeline;
@@ -111,9 +119,7 @@ public class Editor : MonoBehaviour
 
 	private List<Text> timeLabels = new List<Text>();
 	private List<RectTransform> chapterLabels = new List<RectTransform>();
-	private VideoController videoController;
 	private Slider audioSlider;
-	private FileLoader fileLoader;
 	private InteractionPointEditor pinnedHoverPoint;
 	private float timelineStartTime;
 	private float timelineWindowStartTime;
@@ -139,6 +145,7 @@ public class Editor : MonoBehaviour
 
 	private TimeTooltip timeTooltip;
 	private TimelineTooltip textTooltip;
+	#endregion
 
 	private Metadata meta;
 	private Dictionary<string, InteractionPointEditor> allExtras = new Dictionary<string, InteractionPointEditor>();
@@ -291,6 +298,7 @@ public class Editor : MonoBehaviour
 					startTime = startTime,
 					endTime = startTime + (length / 10),
 					tagId = -1,
+					id = InteractionPointIdCounter++
 				};
 
 				lastPlacedPoint = point;
@@ -2382,6 +2390,7 @@ public class Editor : MonoBehaviour
 						tagId = point.tagId,
 						mandatory = point.mandatory,
 						returnRayOrigin = point.returnRayOrigin,
+						id = point.id
 					});
 				}
 			}
@@ -2413,6 +2422,8 @@ public class Editor : MonoBehaviour
 
 		interactionPoints.Clear();
 
+		InteractionPointIdCounter = 1;
+
 		var data = SaveFile.OpenFile(projectFolder);
 		meta = data.meta;
 		var videoPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), SaveFile.videoFilename);
@@ -2439,6 +2450,18 @@ public class Editor : MonoBehaviour
 		{
 			var newPoint = Instantiate(interactionPointPrefab);
 
+			int idInFile = point.id;
+
+			//NOTE(Simon): If < 0, this is an upgraded savefile. Generate ids for all points.
+			if (idInFile < 0)
+			{
+				idInFile = InteractionPointIdCounter++;
+			}
+			else if (idInFile >= InteractionPointIdCounter)
+			{
+				InteractionPointIdCounter = idInFile + 1;
+			}
+
 			var newInteractionPoint = new InteractionPointEditor
 			{
 				startTime = point.startTime,
@@ -2452,6 +2475,7 @@ public class Editor : MonoBehaviour
 				tagId = point.tagId,
 				mandatory = point.mandatory,
 				returnRayOrigin = point.returnRayOrigin,
+				id = idInFile
 			};
 
 			bool isValidPoint = true;

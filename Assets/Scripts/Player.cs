@@ -31,6 +31,7 @@ public class InteractionPointPlayer
 	public int tagId;
 	public bool mandatory;
 	public bool isSeen;
+	public int id;
 
 	public Vector3 returnRayOrigin;
 }
@@ -345,6 +346,7 @@ public class Player : MonoBehaviour
 				tagId = point.tagId,
 				mandatory = point.mandatory,
 				returnRayOrigin = point.returnRayOrigin,
+				id = point.id
 			};
 
 			bool isValidPoint = true;
