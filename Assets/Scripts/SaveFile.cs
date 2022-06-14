@@ -74,7 +74,7 @@ public static class SaveFile
 	public static string miniaturesPath = "areaMiniatures";
 
 
-	public static string GetMetaContents(string projectFolder)
+	private static string GetMetaContents(string projectFolder)
 	{
 		string str;
 		using (var fileContents = File.OpenText(Path.Combine(projectFolder, metaFilename)))
@@ -83,18 +83,6 @@ public static class SaveFile
 		}
 
 		return str;
-	}
-
-	public static byte[] GetFileContentsBinary(string path)
-	{
-		byte[] data;
-		using (var fileContents = File.OpenRead(path))
-		{
-			data = new byte[(int)fileContents.Length];
-			fileContents.Read(data, 0, (int)fileContents.Length);
-		}
-
-		return data;
 	}
 
 	public static string GetPathForTitle(string title)
@@ -136,40 +124,20 @@ public static class SaveFile
 			shouldReloadRaw = true;
 		}
 
-		var saveFileData = new SaveFileData();
-
 		if (shouldReloadRaw)
 		{
 			raw = GetMetaContents(projectFolder);
 		}
 
-		result = JsonGetValueFromLine(raw, 0);
-		saveFileData.meta.version = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
-
-		result = JsonGetValueFromLine(raw, result.endindex);
-		saveFileData.meta.guid = new Guid(result.value);
-
-		result = JsonGetValueFromLine(raw, result.endindex);
-		saveFileData.meta.title = result.value;
-
-		result = JsonGetValueFromLine(raw, result.endindex);
-		saveFileData.meta.description = result.value;
-
-		result = JsonGetValueFromLine(raw, result.endindex);
-		saveFileData.meta.length = Convert.ToSingle(result.value, CultureInfo.InvariantCulture);
-
-		saveFileData.points = new List<InteractionPointSerialize>();
-
-		foreach (var obj in ParseInteractionPoints(raw, result.endindex))
-		{
-			saveFileData.points.Add(JsonUtility.FromJson<InteractionPointSerialize>(obj));
-		}
+		var compat = ParseForVersion(raw, VERSION);
+		var saveFileData = ConvertCompatToCurrent(compat);
 
 		return saveFileData;
 	}
 
-	public static List<Tag> ReadTags(string projectFolder)
+	public static List<Tag> ReadTags(Guid guid)
 	{
+		string projectFolder = Path.Combine(Application.persistentDataPath, guid.ToString());
 		string tagsname = Path.Combine(projectFolder, tagsFilename);
 
 		List<Tag> tags;
@@ -198,8 +166,9 @@ public static class SaveFile
 		return tags;
 	}
 
-	public static List<Chapter> ReadChapters(string projectFolder)
+	public static List<Chapter> ReadChapters(Guid guid)
 	{
+		string projectFolder = Path.Combine(Application.persistentDataPath, guid.ToString());
 		string chaptersname = Path.Combine(projectFolder, chaptersFilename);
 
 		List<Chapter> chapters;
@@ -230,11 +199,9 @@ public static class SaveFile
 
 	public static bool WriteFile(SaveFileData data)
 	{
-		var meta = data.meta;
+		string projectFolder = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString());
 
-		var path = GetPathForTitle(meta.title);
-
-		return WriteFile(path, data);
+		return WriteFile(projectFolder, data);
 	}
 
 	public static bool WriteFile(string projectFolder, SaveFileData data)
@@ -298,10 +265,11 @@ public static class SaveFile
 		return true;
 	}
 
-	public static bool WriteTags(string projectFolder, List<Tag> tags)
+	public static bool WriteTags(Guid guid, List<Tag> tags)
 	{
 		try
 		{
+			string projectFolder = Path.Combine(Application.persistentDataPath, guid.ToString());
 			string tagsname = Path.Combine(projectFolder, tagsFilename);
 			using (var file = File.CreateText(tagsname))
 			{
@@ -317,10 +285,11 @@ public static class SaveFile
 		return true;
 	}
 
-	public static bool WriteChapters(string projectFolder, List<Chapter> chapters)
+	public static bool WriteChapters(Guid guid, List<Chapter> chapters)
 	{
 		try
 		{
+			string projectFolder = Path.Combine(Application.persistentDataPath, guid.ToString());
 			string chaptersName = Path.Combine(projectFolder, chaptersFilename);
 			using (var file = File.CreateText(chaptersName))
 			{
@@ -378,7 +347,7 @@ public static class SaveFile
 		}
 	}
 
-	public static List<string> ParseInteractionPoints(string str, int startIndex)
+	private static List<string> ParseInteractionPoints(string str, int startIndex)
 	{
 		var stringObjects = new List<string>();
 		var level = 0;
@@ -421,13 +390,13 @@ public static class SaveFile
 		return stringObjects;
 	}
 
-	public class ParsedJsonLine
+	private class ParsedJsonLine
 	{
 		public string value;
 		public int endindex;
 	}
 
-	public static ParsedJsonLine JsonGetValueFromLine(string json, int startIndex)
+	private static ParsedJsonLine JsonGetValueFromLine(string json, int startIndex)
 	{
 		var startValue = json.IndexOf(':', startIndex) + 1;
 		var endValue = json.IndexOf('\n', startIndex) + 1;
@@ -439,17 +408,17 @@ public static class SaveFile
 	}
 
 	//NOTE(Simon): Parses the input version to the compat version
-	public static SaveFileDataCompat ParseForVersion(string raw, int version)
+	private static SaveFileDataCompat ParseForVersion(string raw, int version)
 	{
 		switch (version)
 		{
-			case 3: return ParseToCompatV3toV4(raw);
-			case 4: return ParseToCompatV3toV4(raw);
+			case 3: return ParseToCompatV3V4(raw);
+			case 4: return ParseToCompatV3V4(raw);
 			default: throw new IndexOutOfRangeException("This save file is deprecated");
 		}
 	}
 
-	public static SaveFileData ConvertCompatToCurrent(SaveFileDataCompat compatData)
+	private static SaveFileData ConvertCompatToCurrent(SaveFileDataCompat compatData)
 	{
 		var currentData = new SaveFileData();
 		currentData.meta = Metadata.FromCompat(compatData.meta);
@@ -464,7 +433,7 @@ public static class SaveFile
 	//NOTE(Simon): These function parse a specific version to the current Compat class.
 	//NOTE(Simon): Add more of these when changing the savefile version.
 	#region Upgraders
-	public static SaveFileDataCompat ParseToCompatV3toV4(string raw)
+	private static SaveFileDataCompat ParseToCompatV3V4(string raw)
 	{
 		var saveFileData = new SaveFileDataCompat();
 

@@ -316,15 +316,13 @@ public class Player : MonoBehaviour
 	{
 		data = SaveFile.OpenFile(projectPath);
 
-		openVideo = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), SaveFile.videoFilename));
+		openVideo = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), SaveFile.videoFilename);
 		fileLoader.LoadFile(openVideo);
 
-		var tagsPath = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString());
-		var tags = SaveFile.ReadTags(tagsPath);
+		var tags = SaveFile.ReadTags(data.meta.guid);
 		TagManager.Instance.SetTags(tags);
 
-		var chaptersPath = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString());
-		var chapters = SaveFile.ReadChapters(chaptersPath);
+		var chapters = SaveFile.ReadChapters(data.meta.guid);
 		ChapterManager.Instance.SetChapters(chapters);
 
 		//NOTE(Simon): Sort all interactionpoints based on their timing

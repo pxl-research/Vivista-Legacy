@@ -198,7 +198,7 @@ public class ProjectPanel : MonoBehaviour
 				}
 			};
 
-			SaveFile.WriteFile(projectFolder, data);
+			SaveFile.WriteFile(data);
 		}
 		else
 		{
@@ -246,7 +246,7 @@ public class ProjectPanel : MonoBehaviour
 
 			var data = SaveFile.OpenFile(path);
 			data.meta.title = newTitle;
-			SaveFile.WriteFile(path, data);
+			SaveFile.WriteFile(data);
 		}
 	}
 

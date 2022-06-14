@@ -62,69 +62,12 @@ public class InteractionPointEditor
 	public Vector3 returnRayOrigin;
 	public Vector3 returnRayDirection;
 }
-
-//NOTE(Simon): If you change something here, update SaveFile and InteractionPointSerializeCompat as well
-public class InteractionPointSerialize
-{
-	public InteractionType type;
-	public string title;
-	public string body;
-	public string filename;
-	public double startTime;
-	public double endTime;
-	public int tagId;
-	public bool mandatory;
-
-	public Vector3 returnRayOrigin;
-	public Vector3 returnRayDirection;
-
-	public static InteractionPointSerialize FromCompat(InteractionPointSerializeCompat compat)
-	{
-		var serialize = new InteractionPointSerialize
-		{
-			type = compat.type,
-			title = compat.title,
-			body = compat.body,
-			filename = compat.filename,
-			startTime = compat.startTime,
-			endTime = compat.endTime,
-			returnRayOrigin = compat.returnRayOrigin,
-			returnRayDirection = compat.returnRayDirection,
-			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode missing items as default(T), 0 in this case. -1 means no tag
-			tagId = compat.tagId <= 0 ? -1 : compat.tagId,
-			mandatory = compat.mandatory,
-		};
-
-		return serialize;
-	}
 }
 
 public struct Timing
 {
 	public float time;
 	public float totalUploaded;
-}
-
-//NOTE(Simon): If you change something here, update SaveFile and MetaDataCompat as well
-public struct Metadata
-{
-	public int version;
-	public string title;
-	public string description;
-	public Guid guid;
-	public float length;
-
-	public static Metadata FromCompat(MetaDataCompat compat)
-	{
-		return new Metadata
-		{
-			version = SaveFile.VERSION,
-			title = compat.title,
-			description = compat.description,
-			guid = compat.guid,
-			length = compat.length
-		};
-	}
 }
 
 public class Editor : MonoBehaviour
@@ -2457,8 +2400,8 @@ public class Editor : MonoBehaviour
 			videoController.Screenshot(thumbname, 10, 1000, 1000);
 		}
 
-		SaveFile.WriteTags(path, TagManager.Instance.tags);
-		SaveFile.WriteChapters(path, ChapterManager.Instance.chapters);
+		SaveFile.WriteTags(meta.guid, TagManager.Instance.tags);
+		SaveFile.WriteChapters(meta.guid, ChapterManager.Instance.chapters);
 
 		CleanExtras();
 		UnsavedChangesTracker.Instance.unsavedChanges = false;
@@ -2484,7 +2427,7 @@ public class Editor : MonoBehaviour
 
 		fileLoader.LoadFile(videoPath);
 
-		for (var j = interactionPoints.Count - 1; j >= 0; j--)
+		var tags = SaveFile.ReadTags(meta.guid);
 		{
 			RemoveItemFromTimeline(interactionPoints[j]);
 		}
@@ -2494,8 +2437,7 @@ public class Editor : MonoBehaviour
 		var tags = SaveFile.ReadTags(tagsPath);
 		TagManager.Instance.SetTags(tags);
 		
-		var chaptersPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var chapters = SaveFile.ReadChapters(chaptersPath);
+		var chapters = SaveFile.ReadChapters(meta.guid);
 		ChapterManager.Instance.SetChapters(chapters);
 
 		foreach (var point in data.points)
