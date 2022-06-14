@@ -60,8 +60,6 @@ public class InteractionPointEditor
 	public bool filled;
 
 	public Vector3 returnRayOrigin;
-	public Vector3 returnRayDirection;
-}
 }
 
 public struct Timing
@@ -288,7 +286,6 @@ public class Editor : MonoBehaviour
 				var point = new InteractionPointEditor
 				{
 					returnRayOrigin = ray.origin,
-					returnRayDirection = ray.direction,
 					point = newPoint,
 					type = InteractionType.None,
 					startTime = startTime,
@@ -707,7 +704,6 @@ public class Editor : MonoBehaviour
 			{
 				pointToMove.filled = true;
 				pointToMove.returnRayOrigin = ray.origin;
-				pointToMove.returnRayDirection = ray.direction;
 
 				SetEditorActive(true);
 				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
@@ -2386,7 +2382,6 @@ public class Editor : MonoBehaviour
 						tagId = point.tagId,
 						mandatory = point.mandatory,
 						returnRayOrigin = point.returnRayOrigin,
-						returnRayDirection = point.returnRayDirection,
 					});
 				}
 			}
@@ -2457,7 +2452,6 @@ public class Editor : MonoBehaviour
 				tagId = point.tagId,
 				mandatory = point.mandatory,
 				returnRayOrigin = point.returnRayOrigin,
-				returnRayDirection = point.returnRayDirection
 			};
 
 			bool isValidPoint = true;
@@ -2614,7 +2608,7 @@ public class Editor : MonoBehaviour
 
 		foreach (var interactionPoint in interactionPoints)
 		{
-			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
+			var ray = new Ray(interactionPoint.returnRayOrigin, -interactionPoint.returnRayOrigin.normalized);
 
 			if (Physics.Raycast(ray, out var hit, 100))
 			{

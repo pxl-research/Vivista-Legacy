@@ -33,7 +33,6 @@ public class InteractionPointPlayer
 	public bool isSeen;
 
 	public Vector3 returnRayOrigin;
-	public Vector3 returnRayDirection;
 }
 
 public class Player : MonoBehaviour
@@ -346,7 +345,6 @@ public class Player : MonoBehaviour
 				tagId = point.tagId,
 				mandatory = point.mandatory,
 				returnRayOrigin = point.returnRayOrigin,
-				returnRayDirection = point.returnRayDirection
 			};
 
 			bool isValidPoint = true;
@@ -744,7 +742,7 @@ public class Player : MonoBehaviour
 
 		foreach (var interactionPoint in interactionPoints)
 		{
-			var ray = new Ray(interactionPoint.returnRayOrigin, interactionPoint.returnRayDirection);
+			var ray = new Ray(interactionPoint.returnRayOrigin, -interactionPoint.returnRayOrigin.normalized);
 
 			if (Physics.Raycast(ray, out var hit, 100, 1 << LayerMask.NameToLayer("Default")))
 			{

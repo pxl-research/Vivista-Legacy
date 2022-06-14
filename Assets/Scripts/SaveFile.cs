@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 
 //NOTE(Simon): If you change something here, update SaveFile and SaveFileDataCompat as well
+[Serializable]
 public class SaveFileData
 {
 	public Metadata meta;
@@ -17,8 +18,70 @@ public class SaveFileData
 	}
 }
 
+//NOTE(Simon): If you change something here, update SaveFile and InteractionPointSerializeCompat as well
+//NOTE(Simon): This is the data that needs to be saved to disk. Player and Editor have a variation on this specific to their needs
+//NOTE(Simon): But they both convert to/from this type when reading/writing from disk.
+[Serializable]
+public class InteractionPointSerialize
+{
+	public InteractionType type;
+	public string title;
+	public string body;
+	public string filename;
+	public double startTime;
+	public double endTime;
+	public int tagId;
+	public bool mandatory;
+
+	public Vector3 returnRayOrigin;
+
+	public static InteractionPointSerialize FromCompat(InteractionPointSerializeCompat compat)
+	{
+		var serialize = new InteractionPointSerialize
+		{
+			type = compat.type,
+			title = compat.title,
+			body = compat.body,
+			filename = compat.filename,
+			startTime = compat.startTime,
+			endTime = compat.endTime,
+			returnRayOrigin = compat.returnRayOrigin,
+			//NOTE(Simon): In old savefiles tagId is missing. Unity will decode missing items as default(T), 0 in this case. -1 means no tag
+			tagId = compat.tagId <= 0 ? -1 : compat.tagId,
+			mandatory = compat.mandatory,
+		};
+
+		return serialize;
+	}
+}
+
+//NOTE(Simon): If you change something here, update SaveFile and MetaDataCompat as well
+[Serializable]
+public struct Metadata
+{
+	[NonSerialized]
+	public int version;
+	public string title;
+	public string description;
+	public Guid guid;
+	public float length;
+
+	public static Metadata FromCompat(MetaDataCompat compat)
+	{
+		return new Metadata
+		{
+			version = SaveFile.VERSION,
+			title = compat.title,
+			description = compat.description,
+			guid = compat.guid,
+			length = compat.length
+		};
+	}
+}
+
 //NOTE(Simon): This is a compatibility structure. The idea is to keep all data in here that has ever been in SaveFileData.
 //NOTE(Simon): SaveFileData converts from this to the current version.
+[Serializable]
 public class SaveFileDataCompat
 {
 	public MetaDataCompat meta;
@@ -57,6 +120,7 @@ public class InteractionPointSerializeCompat
 	public bool mandatory;
 
 	public Vector3 returnRayOrigin;
+	//NOTE(Simon): Deprecated. But used to upgrade old saves
 	public Vector3 returnRayDirection;
 }
 
@@ -204,7 +268,7 @@ public static class SaveFile
 		return WriteFile(projectFolder, data);
 	}
 
-	public static bool WriteFile(string projectFolder, SaveFileData data)
+	private static bool WriteFile(string projectFolder, SaveFileData data)
 	{
 		var sb = new StringBuilder();
 		var meta = data.meta;
