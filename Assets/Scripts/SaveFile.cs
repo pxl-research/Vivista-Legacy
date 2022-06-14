@@ -63,8 +63,7 @@ public struct Metadata
 	public int version;
 	public string title;
 	public string description;
-	public Guid guid;
-	public float length;
+	public SerializableGuid guid;
 
 	public static Metadata FromCompat(MetaDataCompat compat)
 	{
@@ -74,7 +73,6 @@ public struct Metadata
 			title = compat.title,
 			description = compat.description,
 			guid = compat.guid,
-			length = compat.length
 		};
 	}
 }
@@ -101,7 +99,8 @@ public class MetaDataCompat
 	public int version;
 	public string title;
 	public string description;
-	public Guid guid;
+	public SerializableGuid guid;
+	[Obsolete("Deprecated. But used to upgrade old saves")]
 	public float length;
 }
 
@@ -120,13 +119,13 @@ public class InteractionPointSerializeCompat
 	public bool mandatory;
 
 	public Vector3 returnRayOrigin;
-	//NOTE(Simon): Deprecated. But used to upgrade old saves
+	[Obsolete("Deprecated. But used to upgrade old saves")]
 	public Vector3 returnRayDirection;
 }
 
 public static class SaveFile
 {
-	public const int VERSION = 4;
+	public const int VERSION = 5;
 
 	public static string metaFilename = "meta.json";
 	public static string videoFilename = "main.mp4";
@@ -176,8 +175,7 @@ public static class SaveFile
 	{
 		var raw = GetMetaContents(projectFolder);
 
-		var result = JsonGetValueFromLine(raw, 0);
-		int fileVersion = Convert.ToInt32(result.value, CultureInfo.InvariantCulture);
+		int fileVersion = ExtractVersion(raw);
 
 		bool shouldReloadRaw = false;
 		if (fileVersion < VERSION)
@@ -271,46 +269,9 @@ public static class SaveFile
 	private static bool WriteFile(string projectFolder, SaveFileData data)
 	{
 		var sb = new StringBuilder();
-		var meta = data.meta;
-
-		data.meta = meta;
-
-		sb.Append("version:").Append(VERSION)
-			.Append(",\n");
-
-		sb.Append("uuid:")
-			.Append(meta.guid)
-			.Append(",\n");
-
-		sb.Append("title:")
-			.Append(meta.title)
-			.Append(",\n");
-
-		sb.Append("description:")
-			.Append(meta.description)
-			.Append(",\n");
-
-		sb.Append("length:")
-			.Append(meta.length)
-			.Append(",\n");
-
-		sb.Append("[");
-		if (data.points.Count > 0)
-		{
-			foreach (var point in data.points)
-			{
-				sb.Append(JsonUtility.ToJson(point, true));
-				sb.Append(",");
-			}
-
-			sb.Remove(sb.Length - 1, 1);
-		}
-		else
-		{
-			sb.Append("[]");
-		}
-
-		sb.Append("]");
+		
+		sb.Append($"version: {VERSION}").AppendLine();
+		sb.Append(JsonUtility.ToJson(data, true));
 
 		try
 		{
@@ -462,13 +423,20 @@ public static class SaveFile
 
 	private static ParsedJsonLine JsonGetValueFromLine(string json, int startIndex)
 	{
-		var startValue = json.IndexOf(':', startIndex) + 1;
-		var endValue = json.IndexOf('\n', startIndex) + 1;
+		int startValue = json.IndexOf(':', startIndex) + 1;
+		int endValue = json.IndexOf('\n', startIndex) + 1;
 		return new ParsedJsonLine
 		{
 			value = json.Substring(startValue, (endValue - startValue) - 2),
 			endindex = endValue
 		};
+	}
+
+	private static int ExtractVersion(string raw)
+	{
+		int startValue = raw.IndexOf(':', 0) + 1;
+		int endValue = raw.IndexOf('\n', 0) + 1;
+		return Convert.ToInt32(raw.Substring(startValue, (endValue - startValue) - 2));
 	}
 
 	//NOTE(Simon): Parses the input version to the compat version
@@ -478,6 +446,7 @@ public static class SaveFile
 		{
 			case 3: return ParseToCompatV3V4(raw);
 			case 4: return ParseToCompatV3V4(raw);
+			case 5: return ParseToCompatV5(raw);
 			default: throw new IndexOutOfRangeException("This save file is deprecated");
 		}
 	}
@@ -516,7 +485,9 @@ public static class SaveFile
 		saveFileData.meta.description = result.value;
 
 		result = JsonGetValueFromLine(raw, result.endindex);
+#pragma warning disable CS0618 //Obsolete
 		saveFileData.meta.length = Convert.ToSingle(result.value, CultureInfo.InvariantCulture);
+#pragma warning restore CS0618
 
 		saveFileData.points = new List<InteractionPointSerializeCompat>();
 
@@ -526,5 +497,14 @@ public static class SaveFile
 		}
 		return saveFileData;
 	}
+
+	private static SaveFileDataCompat ParseToCompatV5(string raw)
+	{
+		int start = raw.IndexOf("{", StringComparison.InvariantCulture);
+		raw = raw.Substring(start);
+		var parsed = JsonUtility.FromJson<SaveFileDataCompat>(raw);
+		return parsed;
+	}
+
 	#endregion
 }
