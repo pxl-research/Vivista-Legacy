@@ -2411,6 +2411,13 @@ public class Editor : MonoBehaviour
 
 	private bool OpenProject(string projectFolder)
 	{
+		for (var j = interactionPoints.Count - 1; j >= 0; j--)
+		{
+			RemoveItemFromTimeline(interactionPoints[j]);
+		}
+
+		interactionPoints.Clear();
+
 		var data = SaveFile.OpenFile(projectFolder);
 		meta = data.meta;
 		var videoPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString(), SaveFile.videoFilename);
@@ -2428,13 +2435,6 @@ public class Editor : MonoBehaviour
 		fileLoader.LoadFile(videoPath);
 
 		var tags = SaveFile.ReadTags(meta.guid);
-		{
-			RemoveItemFromTimeline(interactionPoints[j]);
-		}
-
-		interactionPoints.Clear();
-		var tagsPath = Path.Combine(Application.persistentDataPath, meta.guid.ToString());
-		var tags = SaveFile.ReadTags(tagsPath);
 		TagManager.Instance.SetTags(tags);
 		
 		var chapters = SaveFile.ReadChapters(meta.guid);
