@@ -148,7 +148,7 @@ public class LoginPanel : MonoBehaviour
 				registerError.text = www.downloadHandler.text;
 				return;
 			}
-			if (www.isNetworkError || www.isHttpError)
+			if (www.result != UnityWebRequest.Result.Success)
 			{
 				registerError.text = www.error;
 				return;

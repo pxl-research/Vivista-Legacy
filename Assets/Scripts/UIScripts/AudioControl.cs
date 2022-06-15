@@ -184,34 +184,20 @@ public class AudioControl : MonoBehaviour
 		using (var www = UnityWebRequestMultimedia.GetAudioClip("file://" + urlToLoad, audioType))
 		{
 			www.timeout = 2;
-			www.SendWebRequest();
+			yield return www.SendWebRequest();
 
-			while (!www.isDone)
-			{
-				yield return null;
-			}
-
-			if (www.isDone)
-			{
-				clip = DownloadHandlerAudioClip.GetContent(www);
-				clip.LoadAudioData();
-				audioSource.clip = clip;
-				ShowAudioPlayTime();
-
-				fullClipLength = clip.length;
-			}
-			else if (www.isNetworkError)
+			if (www.result != UnityWebRequest.Result.Success)
 			{
 				Debug.LogError(www.error);
+				yield break;
 			}
-			else if (www.isHttpError)
-			{
-				Debug.LogError(www.error);
-			}
-			else
-			{
-				Debug.LogError("Something went wrong while downloading audio file. No errors, but not done either.");
-			}
+
+			clip = DownloadHandlerAudioClip.GetContent(www);
+			clip.LoadAudioData();
+			audioSource.clip = clip;
+			ShowAudioPlayTime();
+
+			fullClipLength = clip.length;
 		}
 	}
 
