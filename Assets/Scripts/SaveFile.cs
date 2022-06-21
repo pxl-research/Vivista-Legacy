@@ -439,8 +439,13 @@ public static class SaveFile
 	private static int ExtractVersion(string raw)
 	{
 		int startValue = raw.IndexOf(':', 0) + 1;
-		int endValue = raw.IndexOf('\n', 0) + 1;
-		return Convert.ToInt32(raw.Substring(startValue, (endValue - startValue) - 2));
+		int endValue = raw.IndexOf("\r", 0);
+		if (endValue < 0)
+		{
+			endValue = raw.IndexOf('\n', 0);
+		}
+
+		return Convert.ToInt32(raw.Substring(startValue, (endValue + 1) - startValue));
 	}
 
 	//NOTE(Simon): Parses the input version to the compat version

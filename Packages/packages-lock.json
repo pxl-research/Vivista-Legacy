@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.htc.upm.vive.openxr.controllers": {
-      "version": "file:C:/Users/Simon/Downloads/com_htc_upm_vive.openxr.controllers-1.0.0.tgz",
+      "version": "file:com_htc_upm_vive.openxr.controllers-1.0.0.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
@@ -38,6 +38,15 @@
       "depth": 2,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.ide.rider": {
+      "version": "2.0.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.1"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
@@ -172,7 +181,7 @@
       "url": "https://packages.unity.com"
     },
     "com.valvesoftware.unity.openvr": {
-      "version": "file:C:/Users/Simon/Downloads/com.valvesoftware.unity.openvr-1.1.4.tgz",
+      "version": "file:com.valvesoftware.unity.openvr-1.1.4.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {

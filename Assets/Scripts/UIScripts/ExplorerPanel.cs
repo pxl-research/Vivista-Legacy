@@ -141,8 +141,10 @@ public class ExplorerPanel : MonoBehaviour
 		HidePreview();
 	}
 
-	public void InitSaveAs(string startDirectory = "C:\\", string defaultExtension = "", string searchPattern = "*", string title = "Select file")
+	public void InitSaveAs(string startDirectory = "", string defaultExtension = "", string searchPattern = "*", string title = "Select file")
 	{
+		
+		
 		InitCommon(startDirectory);
 
 		explorerMode = ExplorerMode.Save;
@@ -181,7 +183,19 @@ public class ExplorerPanel : MonoBehaviour
 
 			if (!Directory.Exists(startDirectory))
 			{
-				startDirectory = "C:\\";
+				if (String.IsNullOrEmpty(startDirectory))
+				{
+					if (Application.platform == RuntimePlatform.WindowsEditor ||
+					    Application.platform == RuntimePlatform.WindowsPlayer)
+					{
+						startDirectory = "C:\\";
+					}
+					else if (Application.platform == RuntimePlatform.OSXEditor ||
+					         Application.platform == RuntimePlatform.OSXPlayer)
+					{
+						startDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+					}
+				}
 			}
 		}
 
