@@ -320,4 +320,18 @@ public static class FileHelpers
 	{
 		return new FileInfo(path).Length;
 	}
+
+	public static string GetDriveName(string path)
+	{
+		var drive = new DriveInfo(path);
+
+		if (String.IsNullOrEmpty(drive.VolumeLabel) || drive.VolumeLabel == drive.Name)
+		{
+			return $"Local Disk ({path})";
+		}
+		else
+		{
+			return $"{drive.VolumeLabel} ({path})";
+		}
+	}
 }

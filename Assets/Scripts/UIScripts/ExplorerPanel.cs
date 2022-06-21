@@ -466,7 +466,8 @@ public class ExplorerPanel : MonoBehaviour
 			var drives = Directory.GetLogicalDrives();
 			foreach (var drive in drives)
 			{
-				sidebarItems.Add(NewSidebarDrive(NativeCalls.GetDriveName(drive), drive));
+
+				sidebarItems.Add(NewSidebarDrive(FileHelpers.GetDriveName(drive), drive));
 			}
 		}
 	}
