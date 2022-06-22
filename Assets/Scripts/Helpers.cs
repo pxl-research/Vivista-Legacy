@@ -225,9 +225,17 @@ public static class ExplorerHelper
 	{
 #if UNITY_STANDALONE_WIN
 		path = path.Replace('/', '\\');
-		Process.Start("explorer.exe", $"/select,\"{path}\"");
+		Process.Start("explorer.exe", $"/select,\"{path}\""); 
 #elif UNITY_STANDALONE_OSX
-		Process.Start("open", "-R " + path);
+		//NOTE(Simon): If path is a file we need to include the "-R" parameter
+		if (Directory.Exists(path))
+		{
+			Process.Start("open", $"\"{path}\"");
+		}
+		else if (File.Exists(path))
+		{
+			Process.Start("open", $"-R \"{path}\"");
+		}
 #elif UNITY_STANDALONE_LINUX
 		Process.Start("xdg-open", path);
 #else
