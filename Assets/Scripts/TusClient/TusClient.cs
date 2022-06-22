@@ -93,6 +93,18 @@ namespace TusDotNetClient
 				throw new Exception("Invalid Location Header");
 			}
 
+			//NOTE(Simon): Fix up URLs on UNIX. Uri.TryCreate() receives a Uri of the format "/api/file/<guid>". This is a valid local file path on UNIX.
+			//NOTE(cont.): So TryCreate turns this into "file:///api/file/<guid>". This block turns file:// into https://
+			if (locationUri.Scheme == "file")
+			{
+				var uri = new UriBuilder(locationUri);
+
+				bool hadDefaultPort = uri.Uri.IsDefaultPort;
+				uri.Scheme = Uri.UriSchemeHttps;
+				uri.Port = hadDefaultPort ? -1 : uri.Port;
+				locationUri = uri.Uri;
+			}
+
 			if (!locationUri.IsAbsoluteUri)
 			{
 				locationUri = new Uri(requestUri, locationUri);
