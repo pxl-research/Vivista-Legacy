@@ -119,8 +119,10 @@ namespace VRstudios
                 switch (apiType)
                 {
                     case XRInputAPIType.UnityEngine_XR: api = new UnityEngine_XR(); break;
+#if !UNITY_EDITOR_OSX && !UNITY_STANDALONE_OSX
                     case XRInputAPIType.OpenVR: api = new OpenVR_New(); break;
                     case XRInputAPIType.OpenVR_Legacy: api = new OpenVR_Legacy(); break;
+#endif
                     default: throw new NotImplementedException();
                 }
 

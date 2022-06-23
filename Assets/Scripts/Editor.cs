@@ -156,8 +156,10 @@ public class Editor : MonoBehaviour
 		Physics.autoSimulation = false;
 		Instance = this;
 		//NOTE(Kristof): This needs to be called in awake so we're guaranteed it isn't in VR mode
+#if !UNITY_EDITOR_OSX && !UNITY_STANDALONE_OSX
 		XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-		Screen.SetResolution(Screen.width - 50, Screen.height - 50, FullScreenMode.Windowed);
+#endif
+        Screen.SetResolution(Screen.width - 50, Screen.height - 50, FullScreenMode.Windowed);
 
 		SaveFile.MoveProjectsToCorrectFolder();
 		StartCoroutine(AutoUpdatePanel.IsUpdateAvailable(ShowUpdateNoticeIfNecessary));

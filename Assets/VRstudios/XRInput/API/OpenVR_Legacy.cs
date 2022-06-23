@@ -4,6 +4,8 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Text;
 
+#if !UNITY_EDITOR_OSX && !UNITY_STANDALONE_OSX
+
 #if UNITY_STANDALONE && !XRINPUT_DISABLE_STEAMVR
 using Valve.VR;
 #endif
@@ -289,3 +291,5 @@ namespace VRstudios.API
 	}
 #endif
 }
+
+#endif
