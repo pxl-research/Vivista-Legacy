@@ -88,29 +88,16 @@ namespace TusDotNetClient
 				throw new Exception("Location Header Missing");
 			}
 
-			if (!Uri.TryCreate(response.Headers["Location"], UriKind.RelativeOrAbsolute, out var locationUri))
+			//NOTE(Simon): Code changed to handle UNIX. Original version on UNIX would interpret relative URL (i.e. /api/file<guid>) as absolute URL, because it is a valid file path on UNIX.
+			//NOTE(Simon): It would parse the URL as file:///api/file/<guid>.
+			if (Uri.TryCreate(response.Headers["Location"], UriKind.Absolute, out var locationUri))
 			{
-				throw new Exception("Invalid Location Header");
+				return (200, locationUri.ToString());
 			}
-
-			//NOTE(Simon): Fix up URLs on UNIX. Uri.TryCreate() receives a Uri of the format "/api/file/<guid>". This is a valid local file path on UNIX.
-			//NOTE(cont.): So TryCreate turns this into "file:///api/file/<guid>". This block turns file:// into https://
-			if (locationUri.Scheme == "file")
+			else
 			{
-				var uri = new UriBuilder(locationUri);
-
-				bool hadDefaultPort = uri.Uri.IsDefaultPort;
-				uri.Scheme = Uri.UriSchemeHttps;
-				uri.Port = hadDefaultPort ? -1 : uri.Port;
-				locationUri = uri.Uri;
+				return (200, new Uri(requestUri, response.Headers["Location"]).ToString());
 			}
-
-			if (!locationUri.IsAbsoluteUri)
-			{
-				locationUri = new Uri(requestUri, locationUri);
-			}
-
-			return (200, locationUri.ToString());
 		}
 
 		/// <summary>
