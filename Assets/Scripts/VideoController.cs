@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
@@ -275,23 +276,7 @@ public class VideoController : MonoBehaviour
 
 		video.prepareCompleted += _ =>
 		{
-			int videoWidth = video.texture.width;
-			int videoHeight = video.texture.height;
-			if (videoWidth == videoHeight * 2)
-			{
-				CreateRenderTexture(videoWidth, videoHeight);
-			}
-			else
-			{
-				Debug.Log("Tried to load a non-360 video");
-			}
-
-
-			videoLoaded = true;
-			videoLength = video.length;
-
-			video.frame = 2;
-			video.Pause();
+			StartCoroutine(OnPrepareCompleted());
 		};
 
 
@@ -304,6 +289,31 @@ public class VideoController : MonoBehaviour
 		{
 			Debug.LogError(message);
 		};
+	}
+
+	public IEnumerator OnPrepareCompleted()
+	{
+		int videoWidth = video.texture.width;
+		int videoHeight = video.texture.height;
+		if (videoWidth == videoHeight * 2)
+		{
+			CreateRenderTexture(videoWidth, videoHeight);
+		}
+		else
+		{
+			Debug.Log("Tried to load a non-360 video");
+		}
+
+
+		videoLoaded = true;
+		while (video.length == 0)
+		{
+			yield return null;
+		}
+
+		videoLength = video.length;
+		video.frame = 2;
+		video.Pause();
 	}
 
 	public void CreateRenderTexture(int width, int height)
