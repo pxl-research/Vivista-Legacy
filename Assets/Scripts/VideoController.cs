@@ -118,7 +118,7 @@ public class VideoController : MonoBehaviour
 	{
 		CheckButtonStates();
 
-		videoLength = video.frameCount > 0 ? video.frameCount / video.frameRate : 0;
+		//videoLength = video.frameCount > 0 ? video.frameCount / video.frameRate : 0;
 		currentFractionalTime = video.frameCount > 0 ? video.frame / (double)video.frameCount : 0;
 		rawCurrentTime = videoLength * currentFractionalTime;
 
@@ -288,6 +288,7 @@ public class VideoController : MonoBehaviour
 
 
 			videoLoaded = true;
+			videoLength = video.length;
 
 			video.frame = 2;
 			video.Pause();
