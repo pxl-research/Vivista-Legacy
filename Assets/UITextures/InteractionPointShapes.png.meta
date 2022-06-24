@@ -69,7 +69,7 @@ TextureImporter:
       213: -6899339843757555408
     second: InteractionPointShapes_10
   externalObjects: {}
-  serializedVersion: 10
+  serializedVersion: 11
   mipmaps:
     mipMapMode: 0
     enableMipMap: 1
@@ -89,6 +89,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -99,7 +101,7 @@ TextureImporter:
     serializedVersion: 2
     filterMode: 2
     aniso: 1
-    mipBias: -100
+    mipBias: 0
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -120,9 +122,13 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -392,6 +398,18 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      InteractionPointShapes_1: 4210332612297676502
+      InteractionPointShapes_5: -6540630752421673372
+      InteractionPointShapes_3: 5573080476631345696
+      InteractionPointShapes_4: 8560640101036081043
+      InteractionPointShapes_8: 5515471159330549976
+      InteractionPointShapes_7: 7824498263719902834
+      InteractionPointShapes_0: -9097879145267478111
+      InteractionPointShapes_2: -6303006865794429876
+      InteractionPointShapes_10: -6899339843757555408
+      InteractionPointShapes_9: 616917943661334379
+      InteractionPointShapes_6: -4397342334119842130
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

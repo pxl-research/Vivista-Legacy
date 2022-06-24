@@ -93,8 +93,14 @@ public class IndexPanelVideo : MonoBehaviour
 		buttonHolder.gameObject.SetActive(true);
 	}
 
-	public void OnPointerExit()
+	public void OnPointerExit(BaseEventData eventData)
 	{
+		var ev = (PointerEventData)eventData;
+		if (!ev.fullyExited)
+		{
+			return;
+		}
+
 		buttonHolder.gameObject.SetActive(false);
 	}
 

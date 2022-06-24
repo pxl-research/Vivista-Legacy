@@ -276,8 +276,8 @@ public class Player : MonoBehaviour
 
 			if (panel.answered)
 			{
-				var projectPath = Path.Combine(Application.persistentDataPath, panel.answerVideoId);
-				if (OpenFile(projectPath))
+				var guid = Guid.Parse(panel.answerVideoId);
+				if (OpenFile(guid))
 				{
 					Destroy(indexPanel);
 					playerState = PlayerState.Watching;
@@ -312,8 +312,9 @@ public class Player : MonoBehaviour
 		mainEventSystem.enabled = true;
 	}
 
-	private bool OpenFile(string projectPath)
+	private bool OpenFile(Guid guid)
 	{
+		string projectPath = Path.Combine(Application.persistentDataPath, guid.ToString());
 		data = SaveFile.OpenFile(projectPath);
 
 		openVideo = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), SaveFile.videoFilename);

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 
 [ExecuteInEditMode]
 public class UISphere : MonoBehaviour
@@ -73,6 +74,7 @@ public class UISphere : MonoBehaviour
 		}
 		Canvass.sphereUIWrapper.SetActive(false);
 		Canvass.sphereUIRenderer.SetActive(false);
+		Canvass.sphereUIWrapper.GetComponentInChildren<EventSystem>().enabled = true;
 		yield return null;
 	}
 
@@ -86,6 +88,8 @@ public class UISphere : MonoBehaviour
 
 	public void Deactivate()
 	{
+		//NOTE(Simon): Deactivate the eventsystem while animating, so we don't have two eventsystems active at once.
+		Canvass.sphereUIWrapper.GetComponentInChildren<EventSystem>().enabled = false;
 		StartCoroutine(FadeOut());
 	}
 
