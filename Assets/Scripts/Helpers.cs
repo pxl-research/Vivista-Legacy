@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 public static class MathHelper
@@ -200,6 +201,43 @@ public class JsonHelper
 	{
 		var wrapper = new Wrapper<T> { array = array };
 		return JsonUtility.ToJson(wrapper);
+	}
+
+	//NOTE(Simon): JsonUtlity doesn't support Dictionaries, so do it manually.
+	public static string ToJson(IDictionary dictionary, bool prettyPrint = false)
+	{
+		var sb = new StringBuilder();
+
+		sb.Append("{");
+		if (prettyPrint)
+		{
+			sb.Append('\n');
+		}
+
+		var keys = dictionary.Keys.GetEnumerator();
+		var values = dictionary.Values.GetEnumerator();
+
+		while (keys.MoveNext())
+		{
+			values.MoveNext();
+			if (prettyPrint)
+			{
+				sb.Append($"\t\"{keys.Current}\": \"{values.Current}\",\n");
+			}
+			else
+			{
+				sb.Append($"\"{keys.Current}\":\"{values.Current}\",");
+			}
+		}
+
+		if (dictionary.Count > 0)
+		{
+			var lastCommaIndex = sb.Length - (prettyPrint ? 2 : 1);
+			sb.Remove(lastCommaIndex, 1);
+		}
+
+		sb.Append("}");
+		return sb.ToString();
 	}
 
 	[Serializable]

@@ -19,6 +19,7 @@ public class Web : MonoBehaviour
 	public static string registerUrl; //register
 	public static string loginUrl; //login
 	public static string bugReportUrl; //report_bug
+	public static string videoResultApiUrl; //video_result
 
 	public static string versionNumberUrl; //latest_version_number
 	public static string latestPlayerUrl; //latest_version_player_url
@@ -45,6 +46,7 @@ public class Web : MonoBehaviour
 		SetUrls(debugBaseUrl);
 	}
 
+	//NOTE(Simon): By making newUrl a parameter, the server location is not hardcoded
 	private static void SetUrls(string newUrl)
 	{
 		wwwrootUrl = newUrl;
@@ -61,6 +63,7 @@ public class Web : MonoBehaviour
 		registerUrl = apiRootUrl + "/register";
 		loginUrl = apiRootUrl + "/login";
 		bugReportUrl = apiRootUrl + "/report_bug";
+		videoResultApiUrl = apiRootUrl + "/video_result";
 
 		//Note(Simon): We ignore the baseUrl in the following endpoints on purpose. Downloading updates should always happen from official servers. So we look up the versionNumber there.
 		versionNumberUrl = apiRootUrl + "/latest_version_number";

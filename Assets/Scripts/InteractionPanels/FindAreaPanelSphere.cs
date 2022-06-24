@@ -18,6 +18,8 @@ public class FindAreaPanelSphere : MonoBehaviour
 	private bool isFindingArea;
 	private bool completed;
 
+	private int id;
+
 	void Awake()
 	{
 		rays = new List<Ray>();
@@ -68,6 +70,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 				}
 
 				Player.Instance.UnsuspendInteractionPoint();
+				VideoResultTracker.RegisterQuestionResult(id, 1);
 
 				startButton.gameObject.SetActive(false);
 				result.gameObject.SetActive(true);
@@ -97,10 +100,11 @@ public class FindAreaPanelSphere : MonoBehaviour
 		}
 	}
 
-	public void Init(string newTitle, List<Area> newAreas)
+	public void Init(string newTitle, List<Area> newAreas, int id)
 	{
 		title.text = newTitle;
 		areas = newAreas;
+		this.id = id;
 		foreach (var area in areas)
 		{
 			var areaRenderer = Instantiate(areaRendererPrefab).GetComponent<AreaRenderer>();

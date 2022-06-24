@@ -283,6 +283,8 @@ public class Player : MonoBehaviour
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
 
+					VideoResultTracker.StartResultSet(guid);
+
 					chapterTransitionActive = false;
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
 					if (isVR)
@@ -411,7 +413,7 @@ public class Player : MonoBehaviour
 					var panel = Instantiate(findAreaPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, newInteractionPoint.body);
 
-					panel.GetComponent<FindAreaPanelSphere>().Init(newInteractionPoint.title, areas);
+					panel.GetComponent<FindAreaPanelSphere>().Init(newInteractionPoint.title, areas, newInteractionPoint.id);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -642,6 +644,7 @@ public class Player : MonoBehaviour
 	public void BackToBrowser()
 	{
 		StartCoroutine(DisableVR());
+		StartCoroutine(VideoResultTracker.SubmitResultSet());
 
 		previousChapter = null;
 
