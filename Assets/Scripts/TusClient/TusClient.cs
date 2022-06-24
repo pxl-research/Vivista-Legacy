@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace TusDotNetClient
 {
@@ -90,13 +91,27 @@ namespace TusDotNetClient
 
 			//NOTE(Simon): Code changed to handle UNIX. Original version on UNIX would interpret relative URL (i.e. /api/file<guid>) as absolute URL, because it is a valid file path on UNIX.
 			//NOTE(Simon): It would parse the URL as file:///api/file/<guid>.
-			if (Uri.TryCreate(response.Headers["Location"], UriKind.Absolute, out var locationUri))
+			if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer)
 			{
-				return (200, locationUri.ToString());
+				if (Uri.TryCreate(response.Headers["Location"], UriKind.Absolute, out var locationUri))
+				{
+					return (200, locationUri.ToString());
+				}
+
+				return (200, new Uri(requestUri, response.Headers["Location"]).ToString());
+			}
+			else if (Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer)
+			{
+				if (Uri.TryCreate(response.Headers["Location"], UriKind.Relative, out var locationUri))
+				{
+					return (200, new Uri(requestUri, locationUri).ToString());
+				}
+
+				return (200, response.Headers["Location"]);
 			}
 			else
 			{
-				return (200, new Uri(requestUri, response.Headers["Location"]).ToString());
+				throw new NotSupportedException();
 			}
 		}
 
