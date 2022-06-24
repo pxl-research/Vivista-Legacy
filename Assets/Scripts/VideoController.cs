@@ -312,8 +312,18 @@ public class VideoController : MonoBehaviour
 		}
 
 		videoLength = video.length;
+
 		video.frame = 2;
 		video.Pause();
+	}
+
+	public IEnumerator SimulateMacBug()
+	{
+		videoLength = 0;
+
+		yield return new WaitForSeconds(3);
+
+		videoLength = video.length;
 	}
 
 	public void CreateRenderTexture(int width, int height)

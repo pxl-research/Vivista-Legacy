@@ -1284,8 +1284,8 @@ public class Editor : MonoBehaviour
 		point.point.transform.LookAt(Vector3.zero, Vector3.up);
 		point.point.transform.RotateAround(point.point.transform.position, point.point.transform.up, 180);
 
-		//Note(Simon): By default, make interactionPoint panels invisible on load
 		interactionPoints.Add(point);
+		//Note(Simon): By default, make interactionPoint panels invisible on load
 		if (point.panel != null && hidden)
 		{
 			point.panel.SetActive(false);
@@ -2867,7 +2867,14 @@ public class Editor : MonoBehaviour
 		{
 			return -1000;
 		}
-		var fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
+
+		double fraction = (time - timelineWindowStartTime) / (timelineWindowEndTime - timelineWindowStartTime);
+
+		if (double.IsNaN(fraction))
+		{
+			fraction = 0;
+		}
+
 		return (float)(timelineLeftMargin + (fraction * timelineWidthPixels));
 	}
 
