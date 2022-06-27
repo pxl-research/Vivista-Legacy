@@ -445,7 +445,15 @@ public static class SaveFile
 			endValue = raw.IndexOf('\n', 0);
 		}
 
-		return Convert.ToInt32(raw.Substring(startValue, (endValue + 1) - startValue));
+		int commaPos = raw.IndexOf(',', startValue, endValue - startValue);
+
+		if (commaPos > -1)
+		{
+			endValue = commaPos;
+		}
+
+		var part = raw.Substring(startValue, (endValue) - startValue);
+		return Convert.ToInt32(part);
 	}
 
 	//NOTE(Simon): Parses the input version to the compat version
