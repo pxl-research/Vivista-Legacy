@@ -19,6 +19,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 	private bool completed;
 
 	private int id;
+	private int wrongAnswersTried;
 
 	void Awake()
 	{
@@ -62,21 +63,37 @@ public class FindAreaPanelSphere : MonoBehaviour
 
 			if (target != null)
 			{
+				int selectedAnswer = -1;
 				for (int i = 0; i < areaRenderers.Count; i++)
 				{
 					var areaRenderer = areaRenderers[i].GetComponent<AreaRenderer>();
 					areaRenderer.EnableRenderer();
 					areaRenderer.DisableCollider();
+
+					if (areaRenderer.gameObject == target.gameObject)
+					{
+						selectedAnswer = i;
+					}
 				}
 
 				Player.Instance.UnsuspendInteractionPoint();
-				VideoResultTracker.RegisterQuestionResult(id, 1);
+				VideoResultTracker.RegisterQuestionResult(new QuestionResult
+				{
+					interactionId = id,
+					type = InteractionType.FindArea,
+					answerChosen = selectedAnswer,
+					wrongAnswersTried = wrongAnswersTried
+				});
 
 				startButton.gameObject.SetActive(false);
 				result.gameObject.SetActive(true);
 
 				isFindingArea = false;
 				completed = true;
+			}
+			else
+			{
+				wrongAnswersTried++;
 			}
 		}
 	}
@@ -105,6 +122,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 		title.text = newTitle;
 		areas = newAreas;
 		this.id = id;
+
 		foreach (var area in areas)
 		{
 			var areaRenderer = Instantiate(areaRendererPrefab).GetComponent<AreaRenderer>();

@@ -18,6 +18,8 @@ public class MultipleChoiceImagePanelSphere : MonoBehaviour
 	private readonly Color lightGreyColour = new Color(0.78f, 0.78f, 0.78f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
+	private int id;
+
 	public void OnEnable()
 	{
 		for (int i = 0; i < entries.Count; i++)
@@ -26,11 +28,12 @@ public class MultipleChoiceImagePanelSphere : MonoBehaviour
 		}
 	}
 
-	public void Init(string newQuestion, List<string> newAnswers, int newCorrect)
+	public void Init(string newQuestion, List<string> newAnswers, int newCorrect, int id)
 	{
 		question.text = newQuestion;
 		correct = newCorrect;
 		answers = newAnswers;
+		this.id = id;
 
 		for (int i = 0; i < answers.Count; i++)
 		{
@@ -73,5 +76,12 @@ public class MultipleChoiceImagePanelSphere : MonoBehaviour
 			entries[selected].button.targetGraphic.color = Color.red;
 			entries[correct].button.targetGraphic.color = greenColour;
 		}
+
+		VideoResultTracker.RegisterQuestionResult(new QuestionResult
+		{
+			type = InteractionType.MultipleChoiceImage,
+			interactionId = id,
+			answerChosen = selected
+		});
 	}
 }

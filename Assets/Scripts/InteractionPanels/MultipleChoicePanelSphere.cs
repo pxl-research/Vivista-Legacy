@@ -22,10 +22,13 @@ public class MultipleChoicePanelSphere : MonoBehaviour
 	private readonly Color darkGreyColour = new Color(0.48f, 0.48f, 0.48f);
 	private readonly Color greenColour = new Color(0.19f, 0.39f, 0.15f);
 
-	public void Init(string newQuestion, int correctAnswer, string[] newAnswers)
+	private int id;
+
+	public void Init(string newQuestion, int correctAnswer, string[] newAnswers, int id)
 	{
 		toggleGroup = answerPanel.GetComponent<ToggleGroup>();
 		question.text = newQuestion;
+		this.id = id;
 
 		if (newAnswers == null || newAnswers.Length <= 1)
 		{
@@ -103,6 +106,13 @@ public class MultipleChoicePanelSphere : MonoBehaviour
 		{
 			toggles[selectedIndex].transform.GetComponentsInChildren<Image>()[1].color = greenColour;
 		}
+
+		VideoResultTracker.RegisterQuestionResult(new QuestionResult
+		{
+			type = InteractionType.MultipleChoice,
+			interactionId = id,
+			answerChosen = selectedIndex,
+		});
 
 		answerButton.interactable = false;
 	}

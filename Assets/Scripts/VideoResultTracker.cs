@@ -5,9 +5,19 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
 
+[Serializable]
+public class QuestionResult
+{
+	public InteractionType type;
+	public int interactionId;
+	public int answerChosen;
+	//NOTE(Simon): In case of Find Area
+	public int wrongAnswersTried;
+}
+
 public class VideoResultTracker : MonoBehaviour
 {
-	private static Dictionary<int, int> results;
+	private static List<QuestionResult> results;
 	private static Guid id;
 
 	private static bool submitted;
@@ -17,34 +27,29 @@ public class VideoResultTracker : MonoBehaviour
 		Assert.IsTrue(results != null && !submitted, "Forgot to call SubmitResultSet() before starting a new ResultSet");
 
 		id = videoId;
-		results = new Dictionary<int, int>();
+		results = new List<QuestionResult>();
 	}
 
-	public static void RegisterQuestionResult(int interactionId, int answer)
+	public static void RegisterQuestionResult(QuestionResult result)
 	{
 		Assert.IsNotNull(results, "Forgot to call StartResultSet() before registering a Result");
 
-		results.Add(interactionId, answer);
-	}
-
-	public static void RegisterQuestionResult(int interactionId, bool correct)
-	{
-		Assert.IsNotNull(results, "Forgot to call StartResultSet() before registering a Result");
-
-		results.Add(interactionId, correct ? 1 : 0);
+		results.Add(result);
 	}
 
 	public static IEnumerator SubmitResultSet()
 	{
 		Assert.IsNotNull(results, "Forgot to call StartResultSet() before submitting a Result");
 
-		string json = JsonHelper.ToJson(results);
+		string json = JsonHelper.ToJson(results.ToArray());
 
 		using (var www = UnityWebRequest.Post(Web.videoResultApiUrl + $"?id={id}", json))
 		{
 			www.SetRequestHeader("Cookie", Web.formattedCookieHeader);
 			yield return www.SendWebRequest();
 			submitted = true;
+
+			results = null;
 		}
 	}
 }

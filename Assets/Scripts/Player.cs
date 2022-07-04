@@ -396,7 +396,7 @@ public class Player : MonoBehaviour
 					var split = newInteractionPoint.body.Split(new[] { '\f' }, 2);
 					int correct = Int32.Parse(split[0]);
 					var panel = Instantiate(multipleChoicePrefab, Canvass.sphereUIPanelWrapper.transform);
-					panel.GetComponent<MultipleChoicePanelSphere>().Init(newInteractionPoint.title, correct, split[1].Split('\f'));
+					panel.GetComponent<MultipleChoicePanelSphere>().Init(newInteractionPoint.title, correct, split[1].Split('\f'), newInteractionPoint.id);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -425,7 +425,7 @@ public class Player : MonoBehaviour
 					var panel = Instantiate(multipleChoiceAreaPanelPrefab, Canvass.sphereUIPanelWrapper.transform);
 					var areas = Area.ParseFromSave(newInteractionPoint.filename, areaJson);
 
-					panel.GetComponent<MultipleChoiceAreaPanelSphere>().Init(newInteractionPoint.title, areas, correct);
+					panel.GetComponent<MultipleChoiceAreaPanelSphere>().Init(newInteractionPoint.title, areas, correct, newInteractionPoint.id);
 					newInteractionPoint.panel = panel;
 					break;
 				}
@@ -440,7 +440,7 @@ public class Player : MonoBehaviour
 						string url = Path.Combine(Application.persistentDataPath, Path.Combine(data.meta.guid.ToString(), file));
 						urls.Add(url);
 					}
-					panel.GetComponent<MultipleChoiceImagePanelSphere>().Init(newInteractionPoint.title, urls, correct);
+					panel.GetComponent<MultipleChoiceImagePanelSphere>().Init(newInteractionPoint.title, urls, correct, newInteractionPoint.id);
 					newInteractionPoint.panel = panel;
 					break;
 				}

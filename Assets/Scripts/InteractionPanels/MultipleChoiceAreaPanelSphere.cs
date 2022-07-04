@@ -25,6 +25,8 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 	private Controller[] controllers;
 	private List<Ray> clickRays = new List<Ray>();
 
+	private int id;
+
 	void Update()
 	{
 		if (isFindingArea)
@@ -68,16 +70,33 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 
 			if (clickTarget != null)
 			{
+				int answerChosen = -1;
 				for (int i = 0; i < areaRenderers.Count; i++)
 				{
 					var areaRenderer = areaRenderers[i].GetComponent<AreaRenderer>();
 					areaRenderer.EnableRenderer();
 					areaRenderer.DisableCollider();
 
-					areaRenderer.SetColor(correctIndex == i ? correctColor: incorrectColor);
+					if (correctIndex == i)
+					{
+						areaRenderer.SetColor(correctColor);
+						answerChosen = i;
+					}
+					else
+					{
+						areaRenderer.SetColor(incorrectColor);
+					}
+
 				}
 
 				Player.Instance.UnsuspendInteractionPoint();
+
+				VideoResultTracker.RegisterQuestionResult(new QuestionResult
+				{
+					type = InteractionType.MultipleChoiceArea,
+					interactionId = id,
+					answerChosen = answerChosen,
+				});
 
 				startButton.gameObject.SetActive(false);
 				result.gameObject.SetActive(true);
@@ -108,11 +127,12 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 		}
 	}
 
-	public void Init(string newTitle, List<Area> newAreas, int newCorrect)
+	public void Init(string newTitle, List<Area> newAreas, int newCorrect, int id)
 	{
 		correctIndex = newCorrect;
 		title.text = newTitle;
 		areas = newAreas;
+		this.id = id;
 
 		foreach (var area in areas)
 		{
