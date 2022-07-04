@@ -15,7 +15,7 @@ public class Tag
 		new Tag
 		{
 			name = "No tag",
-			color = Color.white,
+			color = new Color(.9f, .9f, .9f),
 			id = -1,
 			shapeIndex = 0
 		};

@@ -55,7 +55,7 @@ public class TagPicker : MonoBehaviour
 
 			var itemWrapperTransform = itemWrapper.AddComponent<RectTransform>();
 			itemWrapperTransform.SetParent(tagSuggestionWrapper);
-			itemWrapperTransform.sizeDelta = new Vector2(itemWrapperTransform.sizeDelta.x, 38);
+			itemWrapperTransform.sizeDelta = new Vector2(itemWrapperTransform.sizeDelta.x, 40);
 
 			var image = itemWrapper.AddComponent<Image>();
 			image.sprite = tagBackground;
@@ -94,10 +94,6 @@ public class TagPicker : MonoBehaviour
 
 			var shapeImage = shape.AddComponent<Image>();
 			shapeImage.sprite = TagManager.Instance.ShapeForIndex(tags[i].shapeIndex);
-			if (tags[i].id == -1)
-			{
-				shapeImage.sprite = null;
-			}
 		}
 	}
 
@@ -118,10 +114,5 @@ public class TagPicker : MonoBehaviour
 		tagItemText.color = currentTag.color.IdealTextColor();
 		tagItemColor.color = currentTag.color;
 		tagItemShape.sprite = TagManager.Instance.ShapeForIndex(currentTag.shapeIndex);
-
-		if (currentTag.id == -1)
-		{
-			tagItemShape.sprite = null;
-		}
 	}
 }
