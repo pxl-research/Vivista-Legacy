@@ -6,7 +6,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.XR;
-using UnityEngine.XR.Management;
 
 public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -27,10 +26,7 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 	{
 		if (!String.IsNullOrEmpty(url) && !loaded)
 		{
-			if (!url.StartsWith("file:///"))
-			{
-				url = "file:///" + url;
-			}
+			url = "file://" + url;
 
 			using (request = UnityWebRequestTexture.GetTexture(url))
 			{

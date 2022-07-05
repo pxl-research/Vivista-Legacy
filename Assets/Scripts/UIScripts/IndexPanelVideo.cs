@@ -57,7 +57,7 @@ public class IndexPanelVideo : MonoBehaviour
 		}
 
 		imageDownload = isLocal 
-			? UnityWebRequestTexture.GetTexture("file:///" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename))) 
+			? UnityWebRequestTexture.GetTexture("file://" + Path.Combine(Application.persistentDataPath, Path.Combine(video.id, SaveFile.thumbFilename))) 
 			: UnityWebRequestTexture.GetTexture(Web.thumbnailUrl + "?id=" + video.id);
 
 		using (imageDownload)

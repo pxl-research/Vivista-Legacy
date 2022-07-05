@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class ImagePanel : MonoBehaviour
 {
 	public Text title;
-	public List<string> imageURLs;
 	public ScrollRect imageScrollRect;
 	public RectTransform imagePanelContent;
 	public List<ImagePanelImage> images;
@@ -40,8 +39,7 @@ public class ImagePanel : MonoBehaviour
 		nextButton.onClick.AddListener(NextImage);
 
 		title.text = newTitle;
-		imageURLs = urls;
-		foreach (var url in imageURLs)
+		foreach (var url in urls)
 		{
 			AddNewImage(url);
 		}

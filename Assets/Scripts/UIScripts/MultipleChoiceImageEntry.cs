@@ -23,7 +23,7 @@ public class MultipleChoiceImageEntry : MonoBehaviour
 
 		Texture2D texture;
 
-		using (var request = UnityWebRequestTexture.GetTexture("file:///" + imageUrl))
+		using (var request = UnityWebRequestTexture.GetTexture("file://" + imageUrl))
 		{
 			yield return request.SendWebRequest();
 

@@ -24,7 +24,7 @@ public class ImageAlbumEntry : MonoBehaviour
 			url = newUrl;
 			if (!newUrl.StartsWith("http://") && !newUrl.StartsWith("https://"))
 			{
-				newUrl = "file:///" + newUrl;
+				newUrl = "file://" + newUrl;
 			}
 
 			filename.text = newUrl.Substring(newUrl.LastIndexOf("\\", StringComparison.Ordinal) + 1);

@@ -67,7 +67,7 @@ public class DetailPanel : MonoBehaviour
 		}
 
 		imageDownload = isLocal 
-			? UnityWebRequest.Get("file:///" + Path.Combine(Application.persistentDataPath, video.id, SaveFile.thumbFilename)) 
+			? UnityWebRequest.Get("file://" + Path.Combine(Application.persistentDataPath, video.id, SaveFile.thumbFilename)) 
 			: UnityWebRequest.Get(Web.thumbnailUrl + "?id=" + video.id);
 
 		using (imageDownload)

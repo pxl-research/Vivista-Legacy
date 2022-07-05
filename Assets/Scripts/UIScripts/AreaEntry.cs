@@ -23,7 +23,7 @@ public class AreaEntry : MonoBehaviour
 
 		Texture2D texture;
 
-		using (var request = UnityWebRequestTexture.GetTexture("file:///" + miniatureUrl))
+		using (var request = UnityWebRequestTexture.GetTexture("file://" + miniatureUrl))
 		{
 			yield return request.SendWebRequest();
 
