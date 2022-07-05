@@ -26,7 +26,10 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 	{
 		if (!String.IsNullOrEmpty(url) && !loaded)
 		{
-			url = "file://" + url;
+			if (!url.StartsWith("file://"))
+			{
+				url = "file://" + url;
+			}
 
 			using (request = UnityWebRequestTexture.GetTexture(url))
 			{
