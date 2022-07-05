@@ -32,21 +32,26 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 				url = "file:///" + url;
 			}
 
-			Texture2D texture;
-
 			using (request = UnityWebRequestTexture.GetTexture(url))
 			{
 				yield return request.SendWebRequest();
 
-				loaded = true;
-				texture = DownloadHandlerTexture.GetContent(request);
+				if (request.result == UnityWebRequest.Result.Success)
+				{
+					var texture = DownloadHandlerTexture.GetContent(request);
+					var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), defaultImageSize);
+
+					originalSize = newSize;
+					image.rectTransform.sizeDelta = newSize;
+					image.texture = texture;
+					loaded = true;
+				}
+				else
+				{
+					Debug.Log(request.result);
+					loaded = false;
+				}
 			}
-
-			var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), defaultImageSize);
-
-			originalSize = newSize;
-			image.rectTransform.sizeDelta = newSize;
-			image.texture = texture;
 		}
 	}
 
