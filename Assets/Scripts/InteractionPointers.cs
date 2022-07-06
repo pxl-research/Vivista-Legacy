@@ -53,7 +53,17 @@ public class InteractionPointers : MonoBehaviour
 		{
 			var point = activeInteractions[i];
 
-			bool isOffscreen = !GeometryUtility.TestPlanesAABB(cameraPlanes, point.point.GetComponent<Renderer>().bounds);
+			bool isOffscreen;
+
+			if (point.point == null)
+			{
+				isOffscreen = true;
+			}
+			else
+			{
+				isOffscreen = !GeometryUtility.TestPlanesAABB(cameraPlanes, point.point.GetComponent<Renderer>().bounds);
+			}
+
 			arrowPool[i].SetActive(isOffscreen && shouldRender);
 
 			if (isOffscreen)
