@@ -22,7 +22,7 @@ public class TabNav : MonoBehaviour
 				if (field != null && field.lineType != InputField.LineType.SingleLine)
 				{
 					field.onValidateInput += RemoveTabs;
-					
+					field.onValidateInput += RemoveReturnsFromMultilineSubmit;
 				}
 			}
 		}
@@ -31,6 +31,21 @@ public class TabNav : MonoBehaviour
 	private char RemoveTabs(string text, int charindex, char addedchar)
 	{
 		return addedchar == '\t' ? '\0' : addedchar;
+	}
+
+	private char RemoveReturnsFromMultilineSubmit(string text, int charindex, char addedchar)
+	{
+		if (addedchar == '\n' || addedchar == '\r')
+		{
+			var currentGo = EventSystem.current.currentSelectedGameObject;
+			var inputField= currentGo.GetComponent<Selectable>() as InputField;
+			if (inputField != null && inputField.lineType == InputField.LineType.MultiLineSubmit)
+			{
+				return '\0';
+			}
+		}
+
+		return addedchar;
 	}
 
 	void Update()
