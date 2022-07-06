@@ -253,6 +253,7 @@ GameObject:
   - component: {fileID: 114150273821716204}
   - component: {fileID: 114195266542340396}
   - component: {fileID: 6030222026677387337}
+  - component: {fileID: 8987819020061375609}
   m_Layer: 5
   m_Name: IndexPanelVideo
   m_TagString: Untagged
@@ -388,6 +389,19 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!114 &8987819020061375609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1176122437876594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ShowMaskGraphic: 1
 --- !u!1 &1259290908172828
 GameObject:
   m_ObjectHideFlags: 0
@@ -839,7 +853,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &224316295389606528
 RectTransform:
   m_ObjectHideFlags: 0
