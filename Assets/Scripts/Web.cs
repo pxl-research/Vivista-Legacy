@@ -70,5 +70,26 @@ public class Web : MonoBehaviour
 		latestPlayerUrl = apiRootUrl + "/latest_version_player_url";
 		latestEditorUrl = apiRootUrl + "/latest_version_editor_url";
 
+#if DEBUG
+		//NOTE(Simon): Check whether all URLs have been filled.
+		var fields = Assembly.GetExecutingAssembly()
+						.GetType(nameof(Web)).GetFields(BindingFlags.Static | BindingFlags.Public)
+						.Where(x => x.FieldType == typeof(string)).ToArray();
+
+		foreach (var field in fields)
+		{
+			Assert.IsFalse(field.GetValue(null) == null, $"{field.Name} was not intialised in SetUrls()");
+		}
+
+		//NOTE(Simon): Check if all URLs are unique. To catch copy paste errors.
+		var hashSet = new HashSet<string>();
+		foreach (var field in fields)
+		{
+			if (!hashSet.Add((string)field.GetValue(null)))
+			{
+				Debug.LogError("One of the URLs in Web is dueplicated. Is this correct?");
+			}
+		}
+#endif
 }
 }
