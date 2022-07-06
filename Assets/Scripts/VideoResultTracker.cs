@@ -15,7 +15,7 @@ public class QuestionResult
 	public int wrongAnswersTried;
 }
 
-public class VideoResultTracker : MonoBehaviour
+public class VideoResultTracker
 {
 	private static List<QuestionResult> results;
 	private static Guid id;
@@ -24,9 +24,10 @@ public class VideoResultTracker : MonoBehaviour
 
 	public static void StartResultSet(Guid videoId)
 	{
-		Assert.IsTrue(results != null && !submitted, "Forgot to call SubmitResultSet() before starting a new ResultSet");
+		Assert.IsTrue(results == null || submitted, "Forgot to call SubmitResultSet() before starting a new ResultSet");
 
 		id = videoId;
+		submitted = false;
 		results = new List<QuestionResult>();
 	}
 
@@ -45,6 +46,7 @@ public class VideoResultTracker : MonoBehaviour
 
 		using (var www = UnityWebRequest.Post(Web.videoResultApiUrl + $"?id={id}", json))
 		{
+			Debug.Log("Submitting resultset");
 			www.SetRequestHeader("Cookie", Web.formattedCookieHeader);
 			yield return www.SendWebRequest();
 			submitted = true;
