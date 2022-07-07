@@ -646,7 +646,7 @@ public class Player : MonoBehaviour
 	{
 		StartCoroutine(DisableVR());
 		StartCoroutine(VideoResultTracker.SubmitResultSet());
-		StartCoroutine(VideoViewTracker.Submit(videoController.currentTime));
+		StartCoroutine(VideoViewTracker.Submit(videoController.currentTime, videoController.videoLength));
 
 		previousChapter = null;
 

@@ -39,7 +39,6 @@ public class VideoViewTracker
 	{
 		if (SceneManager.GetActiveScene().name == "Player")
 		{
-			Debug.Log("Added new period to VideoViewTracking");
 			Assert.IsNotNull(results, "Forgot to call StartResultSet() before registering a Result");
 
 			results.Add(new ViewPeriod
@@ -52,7 +51,8 @@ public class VideoViewTracker
 		}
 	}
 
-	public static IEnumerator Submit(double endTime)
+	//NOTE(Simon): We ask for the video length at the end, because some platforms (e.g. OSX) don't have this info available at the moment we would like to call Start()
+	public static IEnumerator Submit(double endTime, double videoLength)
 	{
 		if (SceneManager.GetActiveScene().name == "Player")
 		{
@@ -64,9 +64,9 @@ public class VideoViewTracker
 
 			Assert.IsNotNull(results, "Forgot to call Start() before submitting");
 
-			string json = JsonHelper.ToJson(results.ToArray());
+			int[] simplified = Simplify(results, (float)videoLength);
 
-			Debug.Log(JsonHelper.ToJson(results.ToArray(), true));
+			string json = JsonHelper.ToJson(simplified);
 
 			using (var www = UnityWebRequest.Post(Web.videoViewApiUrl + $"?id={id}", json))
 			{
@@ -78,5 +78,25 @@ public class VideoViewTracker
 				results = null;
 			}
 		}
+	}
+
+	private static int[] Simplify(List<ViewPeriod> data, float length)
+	{
+		var steps = 100;
+		var simplified = new int[steps];
+		float interval = length / steps;
+
+		for (int i = 0; i < data.Count; i++)
+		{
+			int startStep = Mathf.RoundToInt(data[i].start / interval);
+			int endStep = Mathf.RoundToInt(data[i].end / interval);
+
+			for (int j = startStep; j < endStep; j++)
+			{
+				simplified[j]++;
+			}
+		}
+
+		return simplified;
 	}
 }
