@@ -197,10 +197,10 @@ public class JsonHelper
 		return wrapper.array;
 	}
 
-	public static string ToJson<T>(T[] array)
+	public static string ToJson<T>(T[] array, bool prettyPrint = false)
 	{
 		var wrapper = new Wrapper<T> { array = array };
-		return JsonUtility.ToJson(wrapper);
+		return JsonUtility.ToJson(wrapper, prettyPrint);
 	}
 
 	//NOTE(Simon): JsonUtlity doesn't support Dictionaries, so do it manually.

@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class Web : MonoBehaviour
+public class Web
 {
 	
 	public static string apiRootUrl;
@@ -24,6 +24,7 @@ public class Web : MonoBehaviour
 	public static string loginUrl; //login
 	public static string bugReportUrl; //report_bug
 	public static string videoResultApiUrl; //video_result
+	public static string videoViewApiUrl; //video_view
 
 	public static string versionNumberUrl; //latest_version_number
 	public static string latestPlayerUrl; //latest_version_player_url
@@ -68,6 +69,7 @@ public class Web : MonoBehaviour
 		loginUrl = apiRootUrl + "/login";
 		bugReportUrl = apiRootUrl + "/report_bug";
 		videoResultApiUrl = apiRootUrl + "/video_result";
+		videoViewApiUrl = apiRootUrl + "/video_view";
 
 		//Note(Simon): We ignore the baseUrl in the following endpoints on purpose. Downloading updates should always happen from official servers. So we look up the versionNumber there.
 		versionNumberUrl = apiRootUrl + "/latest_version_number";

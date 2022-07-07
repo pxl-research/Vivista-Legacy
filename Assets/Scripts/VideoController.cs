@@ -198,26 +198,27 @@ public class VideoController : MonoBehaviour
 	public void Seek(double newTime)
 	{
 		var correctedTime = OnSeek?.Invoke(newTime);
+		VideoViewTracker.StartNewPeriod(video.time, newTime);
+
 		video.time = correctedTime ?? newTime;
 	}
 
 	public void SeekRelative(double delta)
 	{
 		var newTime = video.time + delta;
-		var correctedTime = OnSeek?.Invoke(newTime);
-		video.time = correctedTime ?? newTime;
+		Seek(newTime);
 	}
 
 	public void SeekFractional(double fractionalTime)
 	{
 		var newTime = fractionalTime * videoLength;
-		var correctedTime = OnSeek?.Invoke(newTime);
-		video.time = correctedTime ?? newTime;
+		Seek(newTime);
 	}
 
 	public void SeekNoTriggers(double time)
 	{
 		video.time = time;
+		VideoViewTracker.StartNewPeriod(video.time, time);
 	}
 
 	public void SetPlaybackSpeed(float speed)

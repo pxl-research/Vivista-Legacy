@@ -2001,6 +2001,7 @@ public class Editor : MonoBehaviour
 				}
 			}
 		}
+		
 		//Note(Simon): Resizing of timeline
 		{
 			if (dragMode == TimelineDragMode.None)

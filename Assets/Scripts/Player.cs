@@ -284,6 +284,7 @@ public class Player : MonoBehaviour
 					Canvass.modalBackground.SetActive(false);
 
 					VideoResultTracker.StartResultSet(guid);
+					VideoViewTracker.Start(guid, 0);
 
 					chapterTransitionActive = false;
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();
@@ -645,6 +646,7 @@ public class Player : MonoBehaviour
 	{
 		StartCoroutine(DisableVR());
 		StartCoroutine(VideoResultTracker.SubmitResultSet());
+		StartCoroutine(VideoViewTracker.Submit(videoController.currentTime));
 
 		previousChapter = null;
 
