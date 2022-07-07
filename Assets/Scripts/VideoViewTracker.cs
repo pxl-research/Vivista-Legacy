@@ -82,18 +82,18 @@ public class VideoViewTracker
 
 	private static int[] Simplify(List<ViewPeriod> data, float length)
 	{
-		var steps = 100;
-		var simplified = new int[steps];
-		float interval = length / steps;
+		var bins = 100;
+		var simplified = new int[bins];
+		float width = length / bins;
 
 		for (int i = 0; i < data.Count; i++)
 		{
-			int startStep = Mathf.RoundToInt(data[i].start / interval);
-			int endStep = Mathf.RoundToInt(data[i].end / interval);
+			int startBin = Mathf.FloorToInt(data[i].start / width);
+			int endBin = Mathf.FloorToInt(data[i].end / width);
 
-			for (int j = startStep; j < endStep; j++)
+			for (int bin = startBin; bin <= endBin; bin++)
 			{
-				simplified[j]++;
+				simplified[bin]++;
 			}
 		}
 
