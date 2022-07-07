@@ -2818,7 +2818,7 @@ public class Editor : MonoBehaviour
 
 	private void SetTimelineItemTitleWidth(InteractionPointEditor point)
 	{
-		float iconWidth = 102;
+		float iconWidth = 122;
 		float tagShapeWidth = point.timelineRow.tagShape.rectTransform.sizeDelta.x;
 		float columnWidth = timelineFirstColumnWidth.sizeDelta.x;
 		float newWidth = columnWidth - tagShapeWidth - iconWidth;
