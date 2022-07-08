@@ -381,3 +381,16 @@ public static class FileHelpers
 		}
 	}
 }
+
+public static class Texture2DHelpers
+{
+	//NOTE(Simon): Intended to be used with images downloaded from URL. That API has no option to enable and generate mipmaps
+	public static Texture2D TextureWithMipMaps(this Texture2D texture, int mipCount, TextureFormat textureFormat = TextureFormat.RGB24)
+	{
+		var mippedTexture = new Texture2D(texture.width, texture.height, textureFormat, mipCount, false);
+		mippedTexture.SetPixelData(texture.GetRawTextureData<byte>(), 0);
+		mippedTexture.Apply(true);
+
+		return mippedTexture;
+	}
+}

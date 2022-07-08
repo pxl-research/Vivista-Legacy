@@ -37,12 +37,14 @@ public class ImagePanelImage : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
 				if (request.result == UnityWebRequest.Result.Success)
 				{
-					var texture = DownloadHandlerTexture.GetContent(request);
+					var texture = DownloadHandlerTexture.GetContent(request).TextureWithMipMaps(4);
+					
 					var newSize = MathHelper.ScaleRatio(new Vector2(texture.width, texture.height), defaultImageSize);
 
 					originalSize = newSize;
 					image.rectTransform.sizeDelta = newSize;
 					image.texture = texture;
+					image.texture.filterMode = FilterMode.Bilinear;
 					loaded = true;
 				}
 				else
