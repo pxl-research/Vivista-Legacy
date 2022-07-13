@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class AudioSlider : MonoBehaviour
@@ -16,8 +17,6 @@ public class AudioSlider : MonoBehaviour
 	private bool muted;
 	private bool volumeSliderHovered;
 	private bool isDragging;
-	private bool volumeChanging;
-	private bool hitClicked;
 	private float oldAudioValue;
 	private Coroutine coroutineVolumeSlider;
 
@@ -78,96 +77,21 @@ public class AudioSlider : MonoBehaviour
 
 		if (RectTransformUtility.RectangleContainsScreenPoint(icon.GetComponent<RectTransform>(), Input.mousePosition))
 		{
-			background.gameObject.SetActive(true);
-			slider.fillRect.gameObject.SetActive(true);
 			RefreshSliderCoroutine();
 		}
-		else
-		{
-			if (!isDragging
+		else if (!isDragging
 				&& !RectTransformUtility.RectangleContainsScreenPoint(slider.GetComponent<RectTransform>(), Input.mousePosition)
 				&& !volumeSliderHovered)
-			{
-				background.gameObject.SetActive(false);
-				slider.fillRect.gameObject.SetActive(false);
-			}
-
-			if (volumeChanging)
-			{
-				RefreshSliderCoroutine();
-			}
-
-			if (hitClicked)
-			{
-				RefreshSliderCoroutine();
-			}
-
-			if (Input.GetMouseButtonUp(0))
-			{
-				volumeChanging = false;
-			}
-		}
-
-		SetIconState();
-	}
-
-	private void SetIconState()
-	{
-		if (muted)
 		{
-			icon.sprite = iconMuted;
+			background.gameObject.SetActive(false);
+			slider.fillRect.gameObject.SetActive(false);
 		}
-		else if (slider.value <= 0.001)
-		{
-			icon.sprite = icon0;
-		}
-		else if (slider.value <= 0.33)
-		{
-			icon.sprite = icon33;
-		}
-		else if (slider.value <= 0.66)
-		{
-			icon.sprite = icon66;
-		}
-		else
-		{
-			icon.sprite = iconDefault;
-		}
-	}
 
-	public void OnHit()
-	{
-		if (muted)
-		{
-			Mute();
-		}
-		hitClicked = true;
-	}
-
-	public void OnHitUp()
-	{
-		hitClicked = false;
-	}
-
-	public void OnDragSlider()
-	{
-		isDragging = true;
-		muted = false;
-	}
-
-	public void OnPointerDownSlider()
-	{
-		oldAudioValue = -1f;
-
-		if (muted)
-		{
-			Mute();
-		}
-	}
-
-	public void OnPointerUpSlider()
-	{
-		isDragging = false;
+		if (muted) { icon.sprite = iconMuted; }
+		else if (slider.value <= 0.001) { icon.sprite = icon0; }
+		else if (slider.value <= 0.33) { icon.sprite = icon33; }
+		else if (slider.value <= 0.66) { icon.sprite = icon66; }
+		else { icon.sprite = iconDefault; }
 	}
 
 	public void Mute()
@@ -188,19 +112,32 @@ public class AudioSlider : MonoBehaviour
 		muted = !muted;
 	}
 
+	//Note(Simon): Happens when releasing mouse while dragging
+	public void OnPointerUpSlider()
+	{
+		isDragging = false;
+	}
+
+	//Note(Simon): Happens every frame while dragging
+	public void OnDragSlider(BaseEventData ev)
+	{
+		var eventData = (PointerEventData)ev;
+		UILineRenderer.DrawLine(eventData.position - Vector2.one * 10, eventData.position + Vector2.one * 10, 4, Color.green);
+		UILineRenderer.DrawLine(eventData.position - new Vector2(1, -1) * 10, eventData.position + new Vector2(1, -1) * 10, 4, Color.green);
+
+		isDragging = true;
+		muted = false;
+	}
+
+	//Note(Simon): Happens when pressing down VR volume button
 	public void OnPointerDownVolumeButton()
 	{
 		if (muted)
 		{
 			Mute();
 		}
-
-		volumeChanging = true;
-	}
-
-	public void OnPointerUpVolumeButton()
-	{
-		volumeChanging = false;
+		
+		RefreshSliderCoroutine();
 	}
 
 	private void RefreshSliderCoroutine()
