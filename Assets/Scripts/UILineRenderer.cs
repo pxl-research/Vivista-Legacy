@@ -16,11 +16,12 @@ public class UILineRenderer : Graphic
 	public static List<Line> lines;
 	private static UIVertex[] verts = new UIVertex[4];
 
-	void Update()
+	private static bool dirty;
+
+	public void Update()
 	{
-		if (lines != null && lines.Count > 0)
+		if (dirty)
 		{
-			lines.Clear();
 			SetAllDirty();
 		}
 	}
@@ -38,6 +39,8 @@ public class UILineRenderer : Graphic
 			thickness = thickness,
 			color = color
 		});
+
+		dirty = true;
 	}
 
 	protected override void OnPopulateMesh(VertexHelper vh)
@@ -52,7 +55,7 @@ public class UILineRenderer : Graphic
 					var dx = line.end.x - line.start.x;
 					var dy = line.end.y - line.start.y;
 					perpendicular.x = -dy;
-					perpendicular.y = -dx;
+					perpendicular.y = dx;
 					perpendicular.Normalize();
 				}
 
@@ -73,6 +76,11 @@ public class UILineRenderer : Graphic
 
 				vh.AddUIVertexQuad(verts);
 			}
+		}
+
+		if (lines != null && lines.Count > 0)
+		{
+			lines.Clear();
 		}
 	}
 }
