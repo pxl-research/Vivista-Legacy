@@ -14,7 +14,7 @@ public class AudioSlider : MonoBehaviour
 	public Sprite icon0;
 
 	private bool muted;
-	private bool buttonPressed;
+	private bool volumeSliderHovered;
 	private bool isDragging;
 	private bool volumeChanging;
 	private bool hitClicked;
@@ -45,6 +45,37 @@ public class AudioSlider : MonoBehaviour
 
 	void Update()
 	{
+		var iconRect = icon.GetComponent<RectTransform>();
+		var fillRect = slider.fillRect;
+		var handleRect = slider.handleRect;
+
+		{
+			var min = (Vector2)iconRect.position + iconRect.rect.position;
+			var max = min + iconRect.rect.size;
+			UILineRenderer.DrawLine(new Vector2(min.x, max.y), new Vector2(max.x, max.y), 1, Color.magenta);
+			UILineRenderer.DrawLine(new Vector2(max.x, min.y), new Vector2(max.x, max.y), 1, Color.magenta);
+			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(max.x, min.y), 1, Color.magenta);
+			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(min.x, max.y), 1, Color.magenta);
+		}
+		
+		{
+			var min = (Vector2)fillRect.position + fillRect.rect.position;
+			var max = min + fillRect.rect.size;
+			UILineRenderer.DrawLine(new Vector2(min.x, max.y), new Vector2(max.x, max.y), 1, Color.blue);
+			UILineRenderer.DrawLine(new Vector2(max.x, min.y), new Vector2(max.x, max.y), 1, Color.blue);
+			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(max.x, min.y), 1, Color.blue);
+			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(min.x, max.y), 1, Color.blue);
+		}
+		
+		{
+			var min = (Vector2)handleRect.position + handleRect.rect.position;
+			var max = min + handleRect.rect.size;
+			UILineRenderer.DrawLine(new Vector2(min.x, max.y), new Vector2(max.x, max.y), 1, Color.yellow);
+			UILineRenderer.DrawLine(new Vector2(max.x, min.y), new Vector2(max.x, max.y), 1, Color.yellow);
+			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(max.x, min.y), 1, Color.yellow);
+			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(min.x, max.y), 1, Color.yellow);
+		}
+
 		if (RectTransformUtility.RectangleContainsScreenPoint(icon.GetComponent<RectTransform>(), Input.mousePosition))
 		{
 			background.gameObject.SetActive(true);
@@ -55,7 +86,7 @@ public class AudioSlider : MonoBehaviour
 		{
 			if (!isDragging
 				&& !RectTransformUtility.RectangleContainsScreenPoint(slider.GetComponent<RectTransform>(), Input.mousePosition)
-				&& !buttonPressed)
+				&& !volumeSliderHovered)
 			{
 				background.gameObject.SetActive(false);
 				slider.fillRect.gameObject.SetActive(false);
@@ -187,10 +218,10 @@ public class AudioSlider : MonoBehaviour
 		background.gameObject.SetActive(true);
 		slider.fillRect.gameObject.SetActive(true);
 
-		buttonPressed = true;
+		volumeSliderHovered = true;
 
 		yield return new WaitForSeconds(delay);
 
-		buttonPressed = false;
+		volumeSliderHovered = false;
 	}
 }

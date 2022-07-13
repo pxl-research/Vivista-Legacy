@@ -207,6 +207,12 @@ public class Editor : MonoBehaviour
 
 	private void Update()
 	{
+		List<RaycastResult> results = new List<RaycastResult>();
+		EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = Input.mousePosition }, results);
+		foreach (var result in results)
+			if (result.gameObject.name is "Image" or "Fill" or "Background")
+				Debug.LogError($"{Time.frameCount} - {result.gameObject.name}");
+		
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
