@@ -394,3 +394,16 @@ public static class Texture2DHelpers
 		return mippedTexture;
 	}
 }
+
+public static class InputHelpers
+{
+	//NOTE(Simon): Does ctrl on windows/linux/others, command on mac
+	public static bool ControlHeld()
+	{
+#if UNITY_STANDALONE_OSX
+		return Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
+#else
+		return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+#endif
+	}
+}

@@ -739,7 +739,7 @@ public class ExplorerPanel : MonoBehaviour
 		int index = EntryIndexForGO(item);
 		var entry = entries[index];
 
-		bool controlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+		bool controlHeld = InputHelpers.ControlHeld();
 		bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift);
 		bool doubleclick = lastClickIndex == index && (Time.unscaledTime - lastClickTime) < 0.5f;
 

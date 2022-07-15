@@ -207,15 +207,15 @@ public class Editor : MonoBehaviour
 
 	private void Update()
 	{
-		List<RaycastResult> results = new List<RaycastResult>();
-		EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = Input.mousePosition }, results);
-		foreach (var result in results)
-		{
-			if (result.gameObject.name is "Image" or "Fill" or "Background")
-			{
-				//Debug.LogError($"{Time.frameCount} - {result.gameObject.name}");
-			}
-		}
+		//List<RaycastResult> results = new List<RaycastResult>();
+		//EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = Input.mousePosition }, results);
+		//foreach (var result in results)
+		//{
+		//	if (result.gameObject.name is "Image" or "Fill" or "Background")
+		//	{
+		//		Debug.LogError($"{Time.frameCount} - {result.gameObject.name}");
+		//	}
+		//}
 		
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
@@ -1228,7 +1228,7 @@ public class Editor : MonoBehaviour
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
+		if (InputHelpers.ControlHeld() && Input.GetKeyDown(KeyCode.O) && AreFileOpsAllowed())
 #endif
 		{
 			InitOpenProjectPanel();
@@ -1237,7 +1237,7 @@ public class Editor : MonoBehaviour
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.S) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S) && AreFileOpsAllowed())
+		if (InputHelpers.ControlHeld() && Input.GetKeyDown(KeyCode.S) && AreFileOpsAllowed())
 #endif
 		{
 			InitSaveProjectPanel();
@@ -1246,7 +1246,7 @@ public class Editor : MonoBehaviour
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.U) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.U) && AreFileOpsAllowed())
+		if (InputHelpers.ControlHeld() && Input.GetKeyDown(KeyCode.U) && AreFileOpsAllowed())
 #endif
 		{
 			InitUpload();
@@ -1255,7 +1255,7 @@ public class Editor : MonoBehaviour
 #if UNITY_EDITOR
 		if (Input.GetKey(KeyCode.Z) && Input.GetKeyDown(KeyCode.L) && AreFileOpsAllowed())
 #else
-		if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.L) && AreFileOpsAllowed())
+		if (InputHelpers.ControlHeld() && Input.GetKeyDown(KeyCode.L) && AreFileOpsAllowed())
 #endif
 		{
 			InitLoginPanel();
@@ -1343,7 +1343,7 @@ public class Editor : MonoBehaviour
 			if (RectTransformUtility.RectangleContainsScreenPoint(timelineContainer, Input.mousePosition))
 			{
 				//NOTE(Simon): Zoom only when Ctrl is pressed. Else scroll list.
-				if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+				if (InputHelpers.ControlHeld())
 				{
 					DisableTimelineScroll();
 					if (Input.mouseScrollDelta.y > 0)
