@@ -136,7 +136,12 @@ public static class MathHelper
 	//NOTE(Simon): Convert a linear(UI) volume value to a logarithmic(mixer) volume value
 	public static float LinearToLogVolume(float value)
 	{
-		return Mathf.Log10(value) * 20;
+		if (value > 0)
+		{
+			return Mathf.Log10(value) * 20;
+		}
+
+		return -80;
 	}
 
 	public static void ClipWorldCorners(Vector3[] outerRect, Vector3[] innerRect)

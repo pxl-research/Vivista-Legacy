@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class AudioSlider : MonoBehaviour
@@ -12,7 +11,6 @@ public class AudioSlider : MonoBehaviour
 	public Sprite iconDefault;
 	public Sprite icon66;
 	public Sprite icon33;
-	public Sprite icon0;
 
 	private bool muted;
 	private bool volumeSliderHovered;
@@ -22,9 +20,6 @@ public class AudioSlider : MonoBehaviour
 
 	void Start()
 	{
-		muted = false;
-		isDragging = false;
-
 		slider.handleRect.gameObject.SetActive(false);
 		slider.fillRect.gameObject.SetActive(false);
 		background.gameObject.SetActive(false);
@@ -44,38 +39,7 @@ public class AudioSlider : MonoBehaviour
 
 	void Update()
 	{
-		var iconRect = icon.GetComponent<RectTransform>();
-		var fillRect = slider.fillRect;
-		var handleRect = slider.handleRect;
-
-		{
-			var min = (Vector2)iconRect.position + iconRect.rect.position;
-			var max = min + iconRect.rect.size;
-			UILineRenderer.DrawLine(new Vector2(min.x, max.y), new Vector2(max.x, max.y), 1, Color.magenta);
-			UILineRenderer.DrawLine(new Vector2(max.x, min.y), new Vector2(max.x, max.y), 1, Color.magenta);
-			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(max.x, min.y), 1, Color.magenta);
-			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(min.x, max.y), 1, Color.magenta);
-		}
-		
-		{
-			var min = (Vector2)fillRect.position + fillRect.rect.position;
-			var max = min + fillRect.rect.size;
-			UILineRenderer.DrawLine(new Vector2(min.x, max.y), new Vector2(max.x, max.y), 1, Color.blue);
-			UILineRenderer.DrawLine(new Vector2(max.x, min.y), new Vector2(max.x, max.y), 1, Color.blue);
-			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(max.x, min.y), 1, Color.blue);
-			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(min.x, max.y), 1, Color.blue);
-		}
-		
-		{
-			var min = (Vector2)handleRect.position + handleRect.rect.position;
-			var max = min + handleRect.rect.size;
-			UILineRenderer.DrawLine(new Vector2(min.x, max.y), new Vector2(max.x, max.y), 1, Color.yellow);
-			UILineRenderer.DrawLine(new Vector2(max.x, min.y), new Vector2(max.x, max.y), 1, Color.yellow);
-			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(max.x, min.y), 1, Color.yellow);
-			UILineRenderer.DrawLine(new Vector2(min.x, min.y), new Vector2(min.x, max.y), 1, Color.yellow);
-		}
-
-		if (RectTransformUtility.RectangleContainsScreenPoint(icon.GetComponent<RectTransform>(), Input.mousePosition))
+		if (RectTransformUtility.RectangleContainsScreenPoint(icon.GetComponent<RectTransform>(), Input.mousePosition) || isDragging)
 		{
 			RefreshSliderCoroutine();
 		}
@@ -87,8 +51,7 @@ public class AudioSlider : MonoBehaviour
 			slider.fillRect.gameObject.SetActive(false);
 		}
 
-		if (muted) { icon.sprite = iconMuted; }
-		else if (slider.value <= 0.001) { icon.sprite = icon0; }
+		if (muted || slider.value <= 0.001) { icon.sprite = iconMuted; }
 		else if (slider.value <= 0.33) { icon.sprite = icon33; }
 		else if (slider.value <= 0.66) { icon.sprite = icon66; }
 		else { icon.sprite = iconDefault; }
@@ -98,10 +61,7 @@ public class AudioSlider : MonoBehaviour
 	{
 		if (muted)
 		{
-			if (oldAudioValue != -1f)
-			{
-				slider.value = oldAudioValue;
-			}
+			slider.value = oldAudioValue;
 		}
 		else
 		{
@@ -112,22 +72,27 @@ public class AudioSlider : MonoBehaviour
 		muted = !muted;
 	}
 
-	//Note(Simon): Happens when releasing mouse while dragging
-	public void OnPointerUpSlider()
+	public void OnBeginDragSlider()
 	{
-		isDragging = false;
-	}
-
-	//Note(Simon): Happens every frame while dragging
-	public void OnDragSlider(BaseEventData ev)
-	{
-		var eventData = (PointerEventData)ev;
-		UILineRenderer.DrawLine(eventData.position - Vector2.one * 10, eventData.position + Vector2.one * 10, 4, Color.green);
-		UILineRenderer.DrawLine(eventData.position - new Vector2(1, -1) * 10, eventData.position + new Vector2(1, -1) * 10, 4, Color.green);
-
+		oldAudioValue = slider.value;
 		isDragging = true;
 		muted = false;
 	}
+
+	public void OnEndDragSlider()
+	{
+		isDragging = false;
+		if (slider.value > .001f)
+		{
+			oldAudioValue = slider.value;
+		}
+		else
+		{
+			muted = true;
+			slider.value = 0;
+		}
+	}
+
 
 	//Note(Simon): Happens when pressing down VR volume button
 	public void OnPointerDownVolumeButton()

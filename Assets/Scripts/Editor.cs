@@ -119,7 +119,6 @@ public class Editor : MonoBehaviour
 
 	private List<Text> timeLabels = new List<Text>();
 	private List<RectTransform> chapterLabels = new List<RectTransform>();
-	private Slider audioSlider;
 	private InteractionPointEditor pinnedHoverPoint;
 	private float timelineStartTime;
 	private float timelineWindowStartTime;
@@ -207,16 +206,6 @@ public class Editor : MonoBehaviour
 
 	private void Update()
 	{
-		//List<RaycastResult> results = new List<RaycastResult>();
-		//EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = Input.mousePosition }, results);
-		//foreach (var result in results)
-		//{
-		//	if (result.gameObject.name is "Image" or "Fill" or "Background")
-		//	{
-		//		Debug.LogError($"{Time.frameCount} - {result.gameObject.name}");
-		//	}
-		//}
-		
 		mouseDelta = new Vector2(Input.mousePosition.x - prevMousePosition.x, Input.mousePosition.y - prevMousePosition.y);
 		prevMousePosition = Input.mousePosition;
 
