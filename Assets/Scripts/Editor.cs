@@ -25,7 +25,6 @@ public enum EditorState
 	EditingInteractionPoint,
 	Opening,
 	PickingVideo,
-	PickingPerspective,
 	SavingThenUploading,
 	LoggingIn,
 	Exporting
@@ -1254,8 +1253,7 @@ public class Editor : MonoBehaviour
 	private bool AreFileOpsAllowed()
 	{
 		return editorState != EditorState.Saving
-			&& editorState != EditorState.Opening
-			&& editorState != EditorState.PickingPerspective;
+			&& editorState != EditorState.Opening;
 	}
 
 	private void SetEditorActive(bool active)
