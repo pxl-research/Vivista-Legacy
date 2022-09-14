@@ -2620,16 +2620,7 @@ public class Editor : MonoBehaviour
 			}
 		}
 
-		StartCoroutine(UpdatePointPositions());
-
-		return true;
-	}
-
-	private IEnumerator UpdatePointPositions()
-	{
-		//NOTE(Simon): wait one frame
-		yield return null;
-
+		//NOTE(Simon): Position interactionPoints on the sphere
 		foreach (var interactionPoint in interactionPoints)
 		{
 			var ray = new Ray(interactionPoint.returnRayOrigin, -interactionPoint.returnRayOrigin.normalized);
@@ -2640,6 +2631,8 @@ public class Editor : MonoBehaviour
 				interactionPoint.panel.transform.position = hit.point;
 			}
 		}
+
+		return true;
 	}
 
 	private void SetInteractionpointPosition(GameObject point, Vector3 pos)
