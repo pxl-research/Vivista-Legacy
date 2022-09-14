@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 public class ConfirmationPanel : MonoBehaviour
@@ -12,12 +14,21 @@ public class ConfirmationPanel : MonoBehaviour
 
 	public void Init(string message, string confirmMessage, string denyMessage)
 	{
+		Assert.IsTrue(!String.IsNullOrEmpty(confirmMessage));
+
 		this.message.text = message;
 		confirmButton.GetComponentInChildren<Text>().text = confirmMessage;
-		denyButton.GetComponentInChildren<Text>().text = denyMessage;
-
 		confirmButton.onClick.AddListener(OnConfirm);
-		denyButton.onClick.AddListener(OnDeny);
+
+		if (!String.IsNullOrEmpty(denyMessage))
+		{
+			denyButton.GetComponentInChildren<Text>().text = denyMessage;
+			denyButton.onClick.AddListener(OnDeny);
+		}
+		else
+		{
+			denyButton.gameObject.SetActive(false);
+		}
 	}
 
 	public void OnConfirm()

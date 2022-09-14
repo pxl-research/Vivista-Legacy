@@ -2432,9 +2432,7 @@ public class Editor : MonoBehaviour
 
 		if (!File.Exists(videoPath))
 		{
-			InitExplorerPanel("*.mp4", "Choose a video to enrich");
-			projectPanel.gameObject.SetActive(false);
-			editorState = EditorState.PickingVideo;
+			InitVideoPicker();
 			return false;
 		}
 
@@ -2645,15 +2643,37 @@ public class Editor : MonoBehaviour
 		trans.localEulerAngles = new Vector3(-angles.x, angles.y - 180, 0);
 	}
 
-	private void SetInteractionPointTag(InteractionPointEditor point)
+	public IEnumerator ShowVideoNot360Error()
 	{
-		var shape = point.point.GetComponent<SpriteRenderer>();
-		var interactionTypeRenderer = point.point.GetComponentInChildren<SpriteRenderer>(excludeSelf: true);
-		var tag = TagManager.Instance.GetTagById(point.tagId);
+		var panel = Instantiate(UIPanels.Instance.confirmationPanel, Canvass.main.transform).GetComponent<ConfirmationPanel>();
+		panel.Init("This video is not a 360 video. Choose another video.", "OK", "");
+		
+		string videoPath = Path.Combine(Application.persistentDataPath, Path.Combine(meta.guid.ToString(), SaveFile.videoFilename));
 
-		shape.sprite = TagManager.Instance.ShapeForIndex(tag.shapeIndex);
-		shape.color = tag.color;
-		interactionTypeRenderer.color = tag.color.IdealTextColor();
+		if (File.Exists(videoPath))
+		{
+			File.Delete(videoPath);
+		}
+
+		while (!panel.answered)
+		{
+			yield return null;
+		}
+
+		Destroy(panel.gameObject);
+
+		InitVideoPicker();
+	}
+
+	private void InitVideoPicker()
+	{
+		InitExplorerPanel("*.mp4", "Choose a video to enrich");
+		if (projectPanel != null)
+		{
+			projectPanel.gameObject.SetActive(false);
+		}
+
+		editorState = EditorState.PickingVideo;
 	}
 
 	private void UploadProject()

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -275,21 +276,30 @@ public class VideoController : MonoBehaviour
 			screenshots.url = filename;
 		}
 
-		video.prepareCompleted += _ =>
+		video.prepareCompleted -= PrepareCompletedHandler;
+		video.prepareCompleted += PrepareCompletedHandler;
+
+		video.errorReceived -= ErrorReceivedHandler;
+		video.errorReceived += ErrorReceivedHandler;
+
+		screenshots.errorReceived -= ScreenshotErrorReceivedHandler;
+		screenshots.errorReceived += ScreenshotErrorReceivedHandler;
+
+		void PrepareCompletedHandler(VideoPlayer _)
 		{
 			StartCoroutine(OnPrepareCompleted());
-		};
+		}
 
-
-		video.errorReceived += (player, message) =>
+		void ErrorReceivedHandler(VideoPlayer _, string message)
 		{
 			videoLoaded = false;
 			Debug.LogError(message);
-		};
-		screenshots.errorReceived += (player, message) =>
+		}
+
+		void ScreenshotErrorReceivedHandler(VideoPlayer _, string message)
 		{
 			Debug.LogError(message);
-		};
+		}
 	}
 
 	public IEnumerator OnPrepareCompleted()
@@ -303,6 +313,11 @@ public class VideoController : MonoBehaviour
 		else
 		{
 			Debug.Log("Tried to load a non-360 video");
+			if (SceneManager.GetActiveScene().name == "Editor")
+			{
+				StartCoroutine(Editor.Instance.ShowVideoNot360Error());
+				yield break;
+			}
 		}
 
 
