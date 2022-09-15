@@ -6,7 +6,6 @@ using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
-using UnityEngine.XR;
 
 public struct ScreenshotParams
 {

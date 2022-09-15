@@ -28,6 +28,12 @@ public class ConfirmationPanel : MonoBehaviour
 		else
 		{
 			denyButton.gameObject.SetActive(false);
+			var confirmRect = confirmButton.GetComponent<RectTransform>();
+			var denyRect = denyButton.GetComponent<RectTransform>();
+
+			confirmRect.anchorMin = denyRect.anchorMin;
+			confirmRect.anchorMax = denyRect.anchorMax;
+			confirmRect.localPosition = denyRect.localPosition;
 		}
 	}
 
