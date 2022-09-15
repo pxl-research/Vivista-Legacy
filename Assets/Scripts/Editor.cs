@@ -224,6 +224,13 @@ public class Editor : MonoBehaviour
 
 			pointToMove?.point.SetActive(true);
 		}
+		else
+		{
+			foreach (var point in interactionPoints)
+			{
+				point.point.SetActive(true);
+			}
+		}
 
 		if (videoController.videoLoaded)
 		{
