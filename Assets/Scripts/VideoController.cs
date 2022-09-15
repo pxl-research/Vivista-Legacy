@@ -260,7 +260,7 @@ public class VideoController : MonoBehaviour
 		playing = false;
 	}
 
-	public void PlayFile(string filename)
+	public void PlayFile(string filename, Func<IEnumerator> videoNot360Callback)
 	{
 		video.source = VideoSource.Url;
 		video.controlledAudioTrackCount = 1;
@@ -276,33 +276,31 @@ public class VideoController : MonoBehaviour
 			screenshots.url = filename;
 		}
 
-		video.prepareCompleted -= PrepareCompletedHandler;
-		video.prepareCompleted += PrepareCompletedHandler;
+		video.prepareCompleted += PrepareHandler;
+		video.errorReceived += ErrorHandler;
+		screenshots.errorReceived += ScreenshotErrorHandler;
 
-		video.errorReceived -= ErrorReceivedHandler;
-		video.errorReceived += ErrorReceivedHandler;
-
-		screenshots.errorReceived -= ScreenshotErrorReceivedHandler;
-		screenshots.errorReceived += ScreenshotErrorReceivedHandler;
-
-		void PrepareCompletedHandler(VideoPlayer _)
+		void PrepareHandler(VideoPlayer _)
 		{
-			StartCoroutine(OnPrepareCompleted());
+			StartCoroutine(OnPrepareCompleted(videoNot360Callback));
+			video.prepareCompleted -= PrepareHandler;
 		}
 
-		void ErrorReceivedHandler(VideoPlayer _, string message)
+		void ErrorHandler(VideoPlayer _, string m)
 		{
 			videoLoaded = false;
-			Debug.LogError(message);
+			Debug.LogError(m);
+			video.errorReceived -= ErrorHandler;
 		}
 
-		void ScreenshotErrorReceivedHandler(VideoPlayer _, string message)
+		void ScreenshotErrorHandler(VideoPlayer _, string m)
 		{
-			Debug.LogError(message);
+			Debug.LogError(m);
+			screenshots.errorReceived -= ScreenshotErrorHandler;
 		}
 	}
 
-	public IEnumerator OnPrepareCompleted()
+	public IEnumerator OnPrepareCompleted(Func<IEnumerator> videoNot360Callback)
 	{
 		int videoWidth = video.texture.width;
 		int videoHeight = video.texture.height;
@@ -312,14 +310,12 @@ public class VideoController : MonoBehaviour
 		}
 		else
 		{
-			Debug.Log("Tried to load a non-360 video");
-			if (SceneManager.GetActiveScene().name == "Editor")
+			if (videoNot360Callback != null)
 			{
-				StartCoroutine(Editor.Instance.ShowVideoNot360Error());
+				StartCoroutine(videoNot360Callback.Invoke());
 				yield break;
 			}
 		}
-
 
 		videoLoaded = true;
 		while (video.length == 0)

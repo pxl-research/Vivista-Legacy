@@ -2436,7 +2436,7 @@ public class Editor : MonoBehaviour
 			return false;
 		}
 
-		fileLoader.LoadFile(videoPath);
+		fileLoader.LoadFile(videoPath, ShowVideoNot360Error);
 
 		var tags = SaveFile.ReadTags(meta.guid);
 		TagManager.Instance.SetTags(tags);

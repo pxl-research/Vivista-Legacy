@@ -2602,17 +2602,17 @@ PrefabInstance:
     - target: {fileID: 6423883586802230866, guid: d2acb0cd53716894ab309e369a9d14cd,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1009.40784
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6423883586802230866, guid: d2acb0cd53716894ab309e369a9d14cd,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 705.1291
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6423883586802230866, guid: d2acb0cd53716894ab309e369a9d14cd,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -16.208023
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6423883586802230866, guid: d2acb0cd53716894ab309e369a9d14cd,
         type: 3}
@@ -2667,6 +2667,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: ChapterPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 8949556346837892350, guid: 6406e2a48ac0f71468649e982af1e91a,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9162756195343943860, guid: 6406e2a48ac0f71468649e982af1e91a,
         type: 3}

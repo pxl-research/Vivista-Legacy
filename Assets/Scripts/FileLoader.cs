@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using UnityEngine;
 
 public class FileLoader : MonoBehaviour 
 {
@@ -16,8 +18,8 @@ public class FileLoader : MonoBehaviour
 		}
 	}
 
-	public void LoadFile(string filename)
+	public void LoadFile(string filename, Func<IEnumerator> videoNot360Callback)
 	{
-		controller.PlayFile(filename);
+		controller.PlayFile(filename, videoNot360Callback);
 	}
 }

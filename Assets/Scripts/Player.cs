@@ -321,7 +321,7 @@ public class Player : MonoBehaviour
 		data = SaveFile.OpenFile(projectPath);
 
 		openVideo = Path.Combine(Application.persistentDataPath, data.meta.guid.ToString(), SaveFile.videoFilename);
-		fileLoader.LoadFile(openVideo);
+		fileLoader.LoadFile(openVideo, null);
 
 		var tags = SaveFile.ReadTags(data.meta.guid);
 		TagManager.Instance.SetTags(tags);
