@@ -119,6 +119,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 		ray.direction = -ray.origin;
 		RaycastHit hit;
 
+		//NOTE(Simon): Moving an existing point
 		if (isDragging)
 		{
 			if (Input.GetMouseButtonUp(0))
@@ -127,6 +128,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 				isDragging = false;
 				dragObject = null;
 				indicator.SetActive(true);
+				MouseLook.Instance.forceActive = true;
 			}
 			else if (Input.GetKeyDown(KeyCode.Escape))
 			{
@@ -135,6 +137,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 				dragObject = null;
 				dirty = true;
 				indicator.SetActive(true);
+				MouseLook.Instance.forceActive = true;
 			}
 			else if (Physics.Raycast(ray, out hit, 100f))
 			{
@@ -145,6 +148,7 @@ public class AreaPicker : MonoBehaviour, IDisposable
 				indicator.transform.position = hit.point;
 			}
 		}
+		//NOTE(Simon): Figure out if trying to move existing point
 		else if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask("Area")))
 		{
 			if (hit.transform.gameObject != areaRenderer)
@@ -160,9 +164,11 @@ public class AreaPicker : MonoBehaviour, IDisposable
 					dragStartPost = hit.transform.position;
 					dragObject = hit.transform.gameObject;
 					dragIndex = answerArea.vertices.IndexOf(dragStartPost);
+					MouseLook.Instance.forceActive = false;
 				}
 			}
 		}
+		//NOTE(Simon): Placing a new point
 		else if (Physics.Raycast(ray, out hit, 100f))
 		{
 			Cursors.isOverridingCursor = false;

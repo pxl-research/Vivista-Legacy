@@ -82,9 +82,9 @@ public class Editor : MonoBehaviour
 	public GameObject timeTooltipPrefab;
 	public GameObject textTooltipPrefab;
 	public GameObject interactionPointPrefab;
-	private GameObject interactionPointTemp;
 	private List<InteractionPointEditor> interactionPoints;
 	private InteractionPointEditor pointToMove;
+	private bool interactionMoveStartedThisFrame;
 	private InteractionPointEditor pointToEdit;
 	private InteractionPointEditor lastPlacedPoint;
 
@@ -165,9 +165,6 @@ public class Editor : MonoBehaviour
 
 	private void Start()
 	{
-		interactionPointTemp = Instantiate(interactionPointPrefab);
-		interactionPointTemp.name = "Temp InteractionPoint";
-
 		interactionPoints = new List<InteractionPointEditor>();
 
 		timeTooltip = Instantiate(timeTooltipPrefab, new Vector3(-1000, -1000), Quaternion.identity, Canvass.main.transform).GetComponent<TimeTooltip>();
@@ -282,19 +279,17 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.PlacingInteractionPoint && !EventSystem.current.IsPointerOverGameObject())
 		{
-			if (Physics.Raycast(ray, out hit, 100))
-			{
-				SetInteractionpointPosition(interactionPointTemp, hit.point);
-			}
-
 			if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
 			{
 				SetEditorActive(true);
 			}
 
-			if (Input.GetMouseButtonUp(0))
+			if (Input.GetMouseButtonUp(0) && !MouseLook.Instance.isDragging)
 			{
-				var newPoint = Instantiate(interactionPointPrefab, interactionPointTemp.transform.position, interactionPointTemp.transform.rotation);
+				Physics.Raycast(ray, out hit, 100);
+
+				var newPoint = Instantiate(interactionPointPrefab);
+				SetInteractionpointPosition(newPoint, hit.point);
 				var startTime = Double.IsNaN(videoController.rawCurrentTime) ? 0 : videoController.rawCurrentTime;
 				var length = Double.IsNaN(videoController.videoLength) ? 10 : videoController.videoLength;
 				var point = new InteractionPointEditor
@@ -314,7 +309,6 @@ public class Editor : MonoBehaviour
 				interactionTypePicker = Instantiate(UIPanels.Instance.interactionTypePicker, Canvass.main.transform, false);
 
 				editorState = EditorState.PickingInteractionType;
-				ResetInteractionPointTemp();
 			}
 
 			if (Input.GetKeyUp(KeyCode.Escape))
@@ -709,20 +703,30 @@ public class Editor : MonoBehaviour
 
 		if (editorState == EditorState.MovingInteractionPoint)
 		{
-			if (Physics.Raycast(ray, out hit, 100))
+			if (interactionMoveStartedThisFrame)
+			{
+				interactionMoveStartedThisFrame = false;
+				return;
+			}
+
+			if (MouseLook.Instance.isDragging)
+			{
+				pointToMove.point.transform.localPosition = new Vector3(1000, 1000, 1000);
+			}
+			else if (Physics.Raycast(ray, out hit, 100))
 			{
 				SetInteractionpointPosition(pointToMove.point, hit.point);
 				transform.position = hit.point;
-			}
 
-			if (Input.GetMouseButtonDown(0))
-			{
-				pointToMove.filled = true;
-				pointToMove.returnRayOrigin = ray.origin;
+				if (Input.GetMouseButtonUp(0))
+				{
+					pointToMove.filled = true;
+					pointToMove.returnRayOrigin = ray.origin;
 
-				SetEditorActive(true);
-				pointToMove.timelineRow.transform.Find("Content/Move").GetComponent<Toggle2>().isOn = false;
-				UnsavedChangesTracker.Instance.unsavedChanges = true;
+					SetEditorActive(true);
+					pointToMove.timelineRow.move.GetComponent<Toggle2>().isOn = false;
+					UnsavedChangesTracker.Instance.unsavedChanges = true;
+				}
 			}
 
 			if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
@@ -1265,8 +1269,6 @@ public class Editor : MonoBehaviour
 
 	private void SetEditorActive(bool active)
 	{
-		ResetInteractionPointTemp();
-
 		if (active)
 		{
 			editorState = EditorState.Active;
@@ -1648,6 +1650,7 @@ public class Editor : MonoBehaviour
 				UnpinPoint();
 
 				editorState = EditorState.MovingInteractionPoint;
+				interactionMoveStartedThisFrame = true;
 				pointToMove = point;
 				pointToMove.filled = false;
 				break;
@@ -2819,11 +2822,6 @@ public class Editor : MonoBehaviour
 
 		allExtras.Add(newFilename, point);
 		return newFilename;
-	}
-
-	private void ResetInteractionPointTemp()
-	{
-		interactionPointTemp.transform.position = new Vector3(1000, 1000, 1000);
 	}
 
 	public void ShowProjectInExplorer()

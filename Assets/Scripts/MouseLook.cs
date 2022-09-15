@@ -22,6 +22,9 @@ public class MouseLook : MonoBehaviour
 
 	public Quaternion originalRotation;
 
+	private Vector3 dragStartPos;
+	public bool isDragging;
+
 	public Editor editor;
 
 	void Awake()
@@ -57,21 +60,38 @@ public class MouseLook : MonoBehaviour
 									|| editor.editorState == EditorState.MovingInteractionPoint
 									|| editor.editorState == EditorState.PlacingInteractionPoint))
 			{
-				if (Input.GetMouseButton(1) && !EventSystem.current.IsPointerOverGameObject())
+				if (!EventSystem.current.IsPointerOverGameObject())
 				{
-					int invertHorizontal = Config.InvertMouseHorizontal ? -1 : 1;
-					int invertVertical = Config.InvertMouseVertical ? -1 : 1;
+					if (Input.GetMouseButtonDown(0))
+					{
+						dragStartPos = Input.mousePosition;
+						isDragging = false;
+					}
 
-					float zoomFactor = Camera.main.fieldOfView / 120f;
-					mouseRotX += invertHorizontal * mouseDelta.x * sensivity * zoomFactor;
-					mouseRotY += invertVertical * mouseDelta.y * sensivity * zoomFactor;
-					mouseRotX = ClampAngle(mouseRotX, minX, maxX);
-					mouseRotY = ClampAngle(mouseRotY, minY, maxY);
+					if (Input.GetMouseButton(0))
+					{
+						if ((Input.mousePosition - dragStartPos).sqrMagnitude > 40)
+						{
+							isDragging = true;
+						}
 
-					var newRotx = Quaternion.AngleAxis(mouseRotX, Vector3.up);
-					var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
+						if (isDragging)
+						{
+							int invertHorizontal = Config.InvertMouseHorizontal ? -1 : 1;
+							int invertVertical = Config.InvertMouseVertical ? -1 : 1;
 
-					transform.localRotation = originalRotation * newRotx * newRoty;
+							float zoomFactor = Camera.main.fieldOfView / 120f;
+							mouseRotX += invertHorizontal * mouseDelta.x * sensivity * zoomFactor;
+							mouseRotY += invertVertical * mouseDelta.y * sensivity * zoomFactor;
+							mouseRotX = ClampAngle(mouseRotX, minX, maxX);
+							mouseRotY = ClampAngle(mouseRotY, minY, maxY);
+
+							var newRotx = Quaternion.AngleAxis(mouseRotX, Vector3.up);
+							var newRoty = Quaternion.AngleAxis(mouseRotY, -Vector3.right);
+
+							transform.localRotation = originalRotation * newRotx * newRoty;
+						}
+					}
 				}
 
 				if (Input.mouseScrollDelta.y != 0 && !EventSystem.current.IsPointerOverGameObject())
@@ -79,6 +99,14 @@ public class MouseLook : MonoBehaviour
 					Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView - Input.mouseScrollDelta.y * 5, 40, 120);
 				}
 			}
+		}
+	}
+
+	public void LateUpdate()
+	{
+		if (Input.GetMouseButtonUp(0))
+		{
+			isDragging = false;
 		}
 	}
 

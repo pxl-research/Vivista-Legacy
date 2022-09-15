@@ -28,7 +28,11 @@ public class AreaRenderer : MonoBehaviour
 		var triangulator = new Triangulator(mesh.vertices);
 		mesh.triangles = triangulator.Triangulate();
 
-		meshCollider.sharedMesh = mesh;
+		//NOTE(Simon): Throws error is < 3 vertices are used for a meshCollider
+		if (vertices.Length > 2)
+		{
+			meshCollider.sharedMesh = mesh;
+		}
 		//NOTE(Simon): Should this be mesh instead of sharedMesh???
 		meshFilter.sharedMesh = mesh;
 
@@ -39,7 +43,11 @@ public class AreaRenderer : MonoBehaviour
 
 		//NOTE(Simon): Generate indices for a line strip.
 		var indices = new int[outlineVertices.Length];
-		for (int i = 0; i < indices.Length; i++) { indices[i] = i; }
+		for (int i = 0; i < indices.Length; i++)
+		{
+			indices[i] = i;
+		}
+
 		outlineFilter.mesh.SetIndices(indices, MeshTopology.LineStrip, 0);
 	}
 
