@@ -81,7 +81,8 @@ public class MultipleChoiceImagePanelSphere : MonoBehaviour
 		{
 			type = InteractionType.MultipleChoiceImage,
 			interactionId = id,
-			answerChosen = selected
+			answerChosen = selected,
+			correctAnswer = correct
 		});
 	}
 }

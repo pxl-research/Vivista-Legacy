@@ -283,8 +283,9 @@ public class Player : MonoBehaviour
 					playerState = PlayerState.Watching;
 					Canvass.modalBackground.SetActive(false);
 
-					VideoResultTracker.StartResultSet(guid);
+					VideoResultTracker.StartResultSet(guid, interactionPoints);
 					VideoViewTracker.Start(guid, 0);
+					GazeTracking.Start(guid);
 
 					chapterTransitionActive = false;
 					chapterSelector = Instantiate(chapterSelectorPrefab, Canvass.main.transform, false).GetComponent<ChapterSelectorPanel>();

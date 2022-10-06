@@ -82,6 +82,7 @@ public class FindAreaPanelSphere : MonoBehaviour
 					interactionId = id,
 					type = InteractionType.FindArea,
 					answerChosen = selectedAnswer,
+					correctAnswer = selectedAnswer,
 					wrongAnswersTried = wrongAnswersTried
 				});
 

@@ -80,6 +80,7 @@ public class VideoViewTracker
 		}
 	}
 
+	//NOTE(Simon): Simplify this dataset so it fits within a 100 buckets, no matter the video length. A video of 50 seconds will have 100 0.5-second buckets, a video of 300 seconds will have 100 3-second buckets.
 	private static int[] Simplify(List<ViewPeriod> data, float length)
 	{
 		var bins = 100;

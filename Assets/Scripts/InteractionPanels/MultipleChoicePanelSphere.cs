@@ -112,6 +112,7 @@ public class MultipleChoicePanelSphere : MonoBehaviour
 			type = InteractionType.MultipleChoice,
 			interactionId = id,
 			answerChosen = selectedIndex,
+			correctAnswer = correctAnswer
 		});
 
 		answerButton.interactable = false;

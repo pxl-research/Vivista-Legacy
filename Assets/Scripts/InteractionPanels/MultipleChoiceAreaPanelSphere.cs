@@ -96,6 +96,7 @@ public class MultipleChoiceAreaPanelSphere : MonoBehaviour
 					type = InteractionType.MultipleChoiceArea,
 					interactionId = id,
 					answerChosen = answerChosen,
+					correctAnswer = correctIndex
 				});
 
 				startButton.gameObject.SetActive(false);
