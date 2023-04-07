@@ -68,9 +68,12 @@ public class VideoViewTracker
 
 			string json = JsonHelper.ToJson(simplified);
 
-			using (var www = UnityWebRequest.Post(Web.videoViewApiUrl + $"?id={id}", json))
+			var form = new WWWForm();
+			form.AddField("values", json);
+
+			using (var www = UnityWebRequest.Post(Web.videoViewApiUrl + $"?id={id}", form))
 			{
-				Debug.Log("Submitting ViewViewTracking Results");
+				Debug.Log("Submitting VideoViewTracking Results");
 				www.SetRequestHeader("Cookie", Web.formattedCookieHeader);
 				yield return www.SendWebRequest();
 				submitted = true;

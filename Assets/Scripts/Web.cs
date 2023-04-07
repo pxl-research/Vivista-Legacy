@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿	using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -70,7 +70,7 @@ public class Web
 		loginUrl = apiRootUrl + "/login";
 		bugReportUrl = apiRootUrl + "/report_bug";
 		videoResultApiUrl = apiRootUrl + "/video_result";
-		videoViewApiUrl = apiRootUrl + "/video_view";
+		videoViewApiUrl = apiRootUrl + "/video_view_result";
 		gazeTrackingApiUrl = apiRootUrl + "/gaze_tracking";
 
 		//Note(Simon): We ignore the baseUrl in the following endpoints on purpose. Downloading updates should always happen from official servers. So we look up the versionNumber there.

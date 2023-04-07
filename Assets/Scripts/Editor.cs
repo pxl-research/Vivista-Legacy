@@ -1321,6 +1321,7 @@ public class Editor : MonoBehaviour
 
 		timelineStartTime = 0;
 		timelineEndTime = (float)videoController.videoLength;
+
 		//NOTE(Simon): This happens when a video isn't fully loaded yet. So don't update timeline until it is.
 		if (float.IsNaN(timelineEndTime))
 		{
